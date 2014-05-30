@@ -25,11 +25,11 @@ import org.apache.cloudstack.api.ApiCommandJobType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseListTaggedResourcesCmd;
 import org.apache.cloudstack.api.Parameter;
+import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
-
 import org.apache.log4j.Logger;
 
 import com.cloud.template.VirtualMachineTemplate.TemplateFilter;
@@ -81,7 +81,10 @@ public class ListIsosCmd extends BaseListTaggedResourcesCmd {
 
     @Parameter(name=ApiConstants.SHOW_REMOVED, type=CommandType.BOOLEAN, description="show removed ISOs as well")
     private Boolean showRemoved;
-
+    
+    @Parameter(name=ApiConstants.GUEST_OS_ID, type=CommandType.STRING, description="operation system id")
+    private String guestOsId;
+    
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -121,6 +124,10 @@ public class ListIsosCmd extends BaseListTaggedResourcesCmd {
 
     public Boolean getShowRemoved() {
         return (showRemoved != null ? showRemoved : false);
+    }
+
+    public String getGuestOsId() {
+        return guestOsId;
     }
 
     public boolean listInReadyState() {

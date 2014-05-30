@@ -79,6 +79,15 @@ public class ListNetworksCmd extends BaseListTaggedResourcesCmd {
 
     @Parameter(name = ApiConstants.FOR_VPC, type = CommandType.BOOLEAN, description = "the network belongs to vpc")
     private Boolean forVpc;
+    
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "list networks by name")
+    private String name;
+    
+    @Parameter(name = ApiConstants.CIDR, type = CommandType.STRING, description = "list networks by cidr")
+    private String cidr;
+    
+    @Parameter(name = ApiConstants.VLAN_ID, type = CommandType.INTEGER, description = "list networks by vlan id")
+    private Integer vlanId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -134,6 +143,18 @@ public class ListNetworksCmd extends BaseListTaggedResourcesCmd {
 
     public Boolean getForVpc() {
         return forVpc;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getCidr() {
+        return cidr;
+    }
+
+    public Integer getVlanId() {
+        return vlanId;
     }
 
     /////////////////////////////////////////////////////

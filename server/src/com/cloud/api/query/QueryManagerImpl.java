@@ -752,6 +752,8 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         c.addCriteria(Criteria.ISO_ID, cmd.getIsoId());
         c.addCriteria(Criteria.VPC_ID, cmd.getVpcId());
         c.addCriteria(Criteria.AFFINITY_GROUP_ID, cmd.getAffinityGroupId());
+        c.addCriteria(Criteria.NAME_OR_IP, cmd.getNameOrIp());
+        c.addCriteria(Criteria.GUEST_OS_ID, cmd.getGuestOsId());
 
         if (domainId != null) {
             c.addCriteria(Criteria.DOMAINID, domainId);
@@ -812,6 +814,8 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         Object isoId = c.getCriteria(Criteria.ISO_ID);
         Object vpcId = c.getCriteria(Criteria.VPC_ID);
         Object affinityGroupId = c.getCriteria(Criteria.AFFINITY_GROUP_ID);
+        Object guestOsId = c.getCriteria(Criteria.GUEST_OS_ID);
+        Object nameOrIP = c.getCriteria(Criteria.NAME_OR_IP);
 
         sb.and("displayName", sb.entity().getDisplayName(), SearchCriteria.Op.LIKE);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
@@ -827,6 +831,8 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         sb.and("templateId", sb.entity().getTemplateId(), SearchCriteria.Op.EQ);
         sb.and("isoId", sb.entity().getIsoId(), SearchCriteria.Op.EQ);
         sb.and("instanceGroupId", sb.entity().getInstanceGroupId(), SearchCriteria.Op.EQ);
+        sb.and("guestOsUuid", sb.entity().getGuestOsUuid(), SearchCriteria.Op.EQ);
+        sb.and("privateIpAddress", sb.entity().getPrivateIpAddress(), SearchCriteria.Op.LIKE);
 
         if (groupId != null && (Long) groupId != -1) {
             sb.and("instanceGroupId", sb.entity().getInstanceGroupId(), SearchCriteria.Op.EQ);
@@ -960,6 +966,21 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         if(!isRootAdmin){
             sc.setParameters("displayVm", 1);
         }
+        
+        if(guestOsId != null){
+            sc.setParameters("guestOsUuid", guestOsId);
+        }
+        
+        if (nameOrIP != null) {
+            SearchCriteria<UserVmJoinVO> ssc = _userVmJoinDao.createSearchCriteria();
+            ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + nameOrIP + "%");
+            ssc.addOr("privateIpAddress", SearchCriteria.Op.LIKE, "%" + nameOrIP + "%");
+            ssc.addOr("displayName", SearchCriteria.Op.LIKE, "%" + nameOrIP + "%");
+            ssc.addOr("instanceName", SearchCriteria.Op.LIKE, "%" + nameOrIP + "%");
+
+            sc.addAnd("name", SearchCriteria.Op.SC, ssc);
+        }
+        
         // search vm details by ids
         Pair<List<UserVmJoinVO>, Integer> uniqueVmPair = _userVmJoinDao.searchAndCount(sc, searchFilter);
         Integer count = uniqueVmPair.second();
@@ -2843,14 +2864,14 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
 
         return searchForTemplatesInternal(id, cmd.getTemplateName(), cmd.getKeyword(), templateFilter, false, null,
                 cmd.getPageSizeVal(), cmd.getStartIndex(), cmd.getZoneId(), hypervisorType, showDomr,
-                cmd.listInReadyState(), permittedAccounts, caller, listProjectResourcesCriteria, tags, showRemovedTmpl);
+                cmd.listInReadyState(), cmd.getGuestOsId(), cmd.isReady(), permittedAccounts, caller, listProjectResourcesCriteria, tags, showRemovedTmpl);
     }
 
     private Pair<List<TemplateJoinVO>, Integer> searchForTemplatesInternal(Long templateId, String name,
             String keyword, TemplateFilter templateFilter, boolean isIso, Boolean bootable, Long pageSize,
             Long startIndex, Long zoneId, HypervisorType hyperType, boolean showDomr, boolean onlyReady,
-            List<Account> permittedAccounts, Account caller, ListProjectResourcesCriteria listProjectResourcesCriteria,
-            Map<String, String> tags, boolean showRemovedTmpl) {
+            String guestOsId, Boolean isReady, List<Account> permittedAccounts, Account caller, 
+            ListProjectResourcesCriteria listProjectResourcesCriteria, Map<String, String> tags, boolean showRemovedTmpl) {
 
         // check if zone is configured, if not, just return empty list
         List<HypervisorType> hypers = null;
@@ -3053,11 +3074,25 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
                 readySc.addOr("templateType", SearchCriteria.Op.SC, isoPerhostSc);
                 sc.addAnd("state", SearchCriteria.Op.SC, readySc);
             }
+            
+            if(isReady != null && isReady.booleanValue()){
+                SearchCriteria<TemplateJoinVO> readySc = _templateJoinDao.createSearchCriteria();
+                readySc.addOr("state", SearchCriteria.Op.EQ, TemplateState.Ready);
+                readySc.addOr("format", SearchCriteria.Op.EQ, ImageFormat.BAREMETAL);
+                sc.addAnd("state", SearchCriteria.Op.SC, readySc);
+            }
+            else if(isReady != null && !isReady.booleanValue()){
+                sc.addAnd("state", SearchCriteria.Op.NEQ, TemplateState.Ready);
+            }
 
 
             if (!showDomr) {
                 // excluding system template
                 sc.addAnd("templateType", SearchCriteria.Op.NEQ, Storage.TemplateType.SYSTEM);
+            }
+            
+            if(guestOsId != null){
+                sc.addAnd("guestOSUuid", SearchCriteria.Op.EQ, guestOsId);
             }
         }
 
@@ -3150,7 +3185,7 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
 
         return searchForTemplatesInternal(cmd.getId(), cmd.getIsoName(), cmd.getKeyword(), isoFilter, true,
                 cmd.isBootable(), cmd.getPageSizeVal(), cmd.getStartIndex(), cmd.getZoneId(), hypervisorType, true,
-                cmd.listInReadyState(), permittedAccounts, caller, listProjectResourcesCriteria, tags, showRemovedISO);
+                cmd.listInReadyState(), cmd.getGuestOsId(), cmd.isReady(), permittedAccounts, caller, listProjectResourcesCriteria, tags, showRemovedISO);
     }
 
     @Override

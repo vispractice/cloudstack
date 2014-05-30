@@ -11,12 +11,20 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>cloud-server</artifactId>
+  <version>4.3.1-SNAPSHOT</version>
   <name>Apache CloudStack Server</name>
+  
   <parent>
     <groupId>org.apache.cloudstack</groupId>
     <artifactId>cloudstack</artifactId>
     <version>4.3.0</version>
   </parent>
+  
+  <properties>
+    <cloud-api.version>4.3.1-SNAPSHOT</cloud-api.version>
+    <main.version>4.3.0</main.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>commons-io</groupId>
@@ -29,12 +37,12 @@
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-core</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-framework-cluster</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -48,13 +56,13 @@
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-framework-jobs</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
     </dependency>
     <!-- 
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-engine-orchestration</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
     </dependency>
     -->
     <dependency>
@@ -80,7 +88,7 @@
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-utils</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
       <exclusions>
       	<exclusion>
       		<artifactId>xml-apis</artifactId>
@@ -91,7 +99,7 @@
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-api</artifactId>
-      <version>${project.version}</version>
+      <version>${cloud-api.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -108,32 +116,32 @@
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-api</artifactId>
-      <version>${project.version}</version>
+      <version>${cloud-api.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-engine-schema</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-framework-ipc</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-framework-events</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-framework-config</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.cloudstack</groupId>
       <artifactId>cloud-engine-components-api</artifactId>
-      <version>${project.version}</version>
+      <version>${main.version}</version>
     </dependency>
   </dependencies>
   <build>

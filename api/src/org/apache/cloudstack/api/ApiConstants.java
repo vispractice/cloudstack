@@ -542,6 +542,8 @@ public class ApiConstants {
     public static final String PASSIVE = "passive";
     public static final String VERSION = "version";
     public static final String START = "start";
+    public static final String NAME_OR_IP = "nameorip";
+    public static final String GUEST_OS_ID = "guestosid";
 
     public enum HostDetails {
         all, capacity, events, stats, min;
