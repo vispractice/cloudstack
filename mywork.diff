@@ -1,0 +1,1051 @@
+diff --git a/agent/pom.xml b/agent/pom.xml
+index 4772f22..a0a24ac 100644
+--- a/agent/pom.xml
++++ b/agent/pom.xml
+@@ -25,6 +25,9 @@
+     <artifactId>cloudstack</artifactId>
+     <version>4.3.1</version>
+   </parent>
++  <properties>
++  	<cs.replace.properties>D:\\devgit\\apache\\cloudstack\\build\\replace.properties</cs.replace.properties>
++  </properties>
+   <dependencies>
+     <dependency>
+       <groupId>org.apache.cloudstack</groupId>
+diff --git a/build/replace.properties b/build/replace.properties
+index 265f335..1d82932 100644
+--- a/build/replace.properties
++++ b/build/replace.properties
+@@ -17,14 +17,14 @@
+ 
+ DBUSER=cloud
+ DBPW=cloud
+-DBROOTPW=
++DBROOTPW=123456
+ MSLOG=vmops.log
+ APISERVERLOG=api.log
+-DBHOST=localhost
++DBHOST=127.0.0.1
+ AGENTLOGDIR=logs
+ AGENTLOG=logs/agent.log
+ MSMNTDIR=/mnt
+ COMPONENTS-SPEC=components.xml
+ AWSAPILOG=awsapi.log
+-REMOTEHOST=localhost
+-COMMONLIBDIR=C:\Users\htrippaers\eclipse_workspace\cloudstack\client\target\cloud-client-ui-4.2.0-SNAPSHOT\WEB-INF\classes
++REMOTEHOST=127.0.0.1
++COMMONLIBDIR=D:\devgit\apache\cloudstack\client\target\generated-webapp\WEB-INF\classes
+diff --git a/client/@APISERVERLOG@ b/client/@APISERVERLOG@
+new file mode 100644
+index 0000000..e69de29
+diff --git a/client/pom.xml b/client/pom.xml
+index c2bf4a4..b297a44 100644
+--- a/client/pom.xml
++++ b/client/pom.xml
+@@ -19,6 +19,9 @@
+     <artifactId>cloudstack</artifactId>
+     <version>4.3.1</version>
+   </parent>
++  <properties>
++  	<cs.replace.properties>D:\\devgit\\apache\\cloudstack\\build\\replace.properties</cs.replace.properties>
++  </properties>
+   <dependencies>
+     <dependency>
+       <groupId>org.apache.cloudstack</groupId>
+diff --git a/client/tomcatconf/db.properties.in b/client/tomcatconf/db.properties.in
+index b224cec..518021b 100644
+--- a/client/tomcatconf/db.properties.in
++++ b/client/tomcatconf/db.properties.in
+@@ -22,9 +22,13 @@ cluster.servlet.port=9090
+ region.id=1
+ 
+ # CloudStack database settings
+-db.cloud.username=@DBUSER@
+-db.cloud.password=@DBPW@
+-db.cloud.host=@DBHOST@
++db.usage.username=cloud
++db.usage.password=cloud
++db.usage.host=127.0.0.1
++
++db.cloud.host=127.0.0.1
++db.cloud.username=cloud
++db.cloud.password=cloud
+ db.cloud.port=3306
+ db.cloud.name=cloud
+ 
+@@ -52,9 +56,9 @@ db.cloud.encryption.type=none
+ db.cloud.encrypt.secret=
+ 
+ # usage database settings
+-db.usage.username=@DBUSER@
+-db.usage.password=@DBPW@
+-db.usage.host=@DBHOST@
++db.usage.username=cloud
++db.usage.password=cloud
++db.usage.host=127.0.0.1
+ db.usage.port=3306
+ db.usage.name=cloud_usage
+ 
+@@ -65,16 +69,16 @@ db.usage.maxWait=10000
+ db.usage.url.params=
+ 
+ # awsapi database settings
+-db.awsapi.username=@DBUSER@
+-db.awsapi.password=@DBPW@
+-db.awsapi.host=@DBHOST@
++db.awsapi.username=cloud
++db.awsapi.password=cloud
++db.awsapi.host=127.0.0.1
+ db.awsapi.port=3306
+ db.awsapi.name=cloudbridge
+ 
+ # Simulator database settings
+-db.simulator.username=@DBUSER@
+-db.simulator.password=@DBPW@
+-db.simulator.host=@DBHOST@
++db.simulator.username=cloud
++db.simulator.password=cloud
++db.simulator.host=127.0.0.1
+ db.simulator.port=3306
+ db.simulator.name=simulator
+ db.simulator.maxActive=250
+diff --git a/core/src/com/cloud/agent/api/security/SetupIpSpoofingAnswer.java b/core/src/com/cloud/agent/api/security/SetupIpSpoofingAnswer.java
+new file mode 100644
+index 0000000..36645a4
+--- /dev/null
++++ b/core/src/com/cloud/agent/api/security/SetupIpSpoofingAnswer.java
+@@ -0,0 +1,41 @@
++// Licensed to the Apache Software Foundation (ASF) under one
++// or more contributor license agreements.  See the NOTICE file
++// distributed with this work for additional information
++// regarding copyright ownership.  The ASF licenses this file
++// to you under the Apache License, Version 2.0 (the
++// "License"); you may not use this file except in compliance
++// with the License.  You may obtain a copy of the License at
++//
++//   http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing,
++// software distributed under the License is distributed on an
++// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++// KIND, either express or implied.  See the License for the
++// specific language governing permissions and limitations
++// under the License.
++package com.cloud.agent.api.security;
++
++import com.cloud.agent.api.Answer;
++import com.cloud.agent.api.Command;
++
++public class SetupIpSpoofingAnswer extends Answer {
++
++	public SetupIpSpoofingAnswer() {
++		super();
++	}
++
++	public SetupIpSpoofingAnswer(Command command, boolean success,
++			String details) {
++		super(command, success, details);
++	}
++
++	public SetupIpSpoofingAnswer(Command command, Exception e) {
++		super(command, e);
++	}
++
++	public SetupIpSpoofingAnswer(Command command) {
++		super(command);
++	}
++
++}
+diff --git a/core/src/com/cloud/agent/api/security/SetupIpSpoofingCommand.java b/core/src/com/cloud/agent/api/security/SetupIpSpoofingCommand.java
+new file mode 100644
+index 0000000..f7773aa
+--- /dev/null
++++ b/core/src/com/cloud/agent/api/security/SetupIpSpoofingCommand.java
+@@ -0,0 +1,50 @@
++// Licensed to the Apache Software Foundation (ASF) under one
++// or more contributor license agreements.  See the NOTICE file
++// distributed with this work for additional information
++// regarding copyright ownership.  The ASF licenses this file
++// to you under the Apache License, Version 2.0 (the
++// "License"); you may not use this file except in compliance
++// with the License.  You may obtain a copy of the License at
++//
++//   http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing,
++// software distributed under the License is distributed on an
++// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++// KIND, either express or implied.  See the License for the
++// specific language governing permissions and limitations
++// under the License.
++package com.cloud.agent.api.security;
++
++import java.util.List;
++
++import com.cloud.agent.api.Command;
++import com.cloud.agent.api.to.VirtualMachineTO;
++
++public class SetupIpSpoofingCommand extends Command {
++
++	List<VirtualMachineTO> vms;
++	long hostId;
++	
++	@Override
++	public boolean executeInSequence() {
++		return false;
++	}
++
++	public List<VirtualMachineTO> getVms() {
++		return vms;
++	}
++
++	public void setVms(List<VirtualMachineTO> vms) {
++		this.vms = vms;
++	}
++
++	public long getHostId() {
++		return hostId;
++	}
++
++	public void setHostId(long hostId) {
++		this.hostId = hostId;
++	}
++
++}
+diff --git a/core/src/com/cloud/agent/api/security/TeardownIpSpoofingAnswer.java b/core/src/com/cloud/agent/api/security/TeardownIpSpoofingAnswer.java
+new file mode 100644
+index 0000000..2630ba1
+--- /dev/null
++++ b/core/src/com/cloud/agent/api/security/TeardownIpSpoofingAnswer.java
+@@ -0,0 +1,41 @@
++// Licensed to the Apache Software Foundation (ASF) under one
++// or more contributor license agreements.  See the NOTICE file
++// distributed with this work for additional information
++// regarding copyright ownership.  The ASF licenses this file
++// to you under the Apache License, Version 2.0 (the
++// "License"); you may not use this file except in compliance
++// with the License.  You may obtain a copy of the License at
++//
++//   http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing,
++// software distributed under the License is distributed on an
++// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++// KIND, either express or implied.  See the License for the
++// specific language governing permissions and limitations
++// under the License.
++package com.cloud.agent.api.security;
++
++import com.cloud.agent.api.Answer;
++import com.cloud.agent.api.Command;
++
++public class TeardownIpSpoofingAnswer extends Answer {
++
++	public TeardownIpSpoofingAnswer() {
++		super();
++	}
++
++	public TeardownIpSpoofingAnswer(Command command, boolean success,
++			String details) {
++		super(command, success, details);
++	}
++
++	public TeardownIpSpoofingAnswer(Command command, Exception e) {
++		super(command, e);
++	}
++
++	public TeardownIpSpoofingAnswer(Command command) {
++		super(command);
++	}
++
++}
+diff --git a/core/src/com/cloud/agent/api/security/TeardownIpSpoofingCommand.java b/core/src/com/cloud/agent/api/security/TeardownIpSpoofingCommand.java
+new file mode 100644
+index 0000000..e9b49dd
+--- /dev/null
++++ b/core/src/com/cloud/agent/api/security/TeardownIpSpoofingCommand.java
+@@ -0,0 +1,58 @@
++// Licensed to the Apache Software Foundation (ASF) under one
++// or more contributor license agreements.  See the NOTICE file
++// distributed with this work for additional information
++// regarding copyright ownership.  The ASF licenses this file
++// to you under the Apache License, Version 2.0 (the
++// "License"); you may not use this file except in compliance
++// with the License.  You may obtain a copy of the License at
++//
++//   http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing,
++// software distributed under the License is distributed on an
++// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++// KIND, either express or implied.  See the License for the
++// specific language governing permissions and limitations
++// under the License.
++package com.cloud.agent.api.security;
++
++import java.util.List;
++
++import com.cloud.agent.api.Command;
++import com.cloud.agent.api.to.VirtualMachineTO;
++
++public class TeardownIpSpoofingCommand extends Command{
++	List<VirtualMachineTO> vms;
++	long hostId;
++	boolean teardownAll;
++	
++	@Override
++	public boolean executeInSequence() {
++		return false;
++	}
++
++	public long getHostId() {
++		return hostId;
++	}
++
++	public void setHostId(long hostId) {
++		this.hostId = hostId;
++	}
++
++	public List<VirtualMachineTO> getVms() {
++		return vms;
++	}
++
++	public void setVms(List<VirtualMachineTO> vms) {
++		this.vms = vms;
++	}
++
++	public boolean isTeardownAll() {
++		return teardownAll;
++	}
++
++	public void setTeardownAll(boolean teardownAll) {
++		this.teardownAll = teardownAll;
++	}
++
++}
+diff --git a/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/IpSpoofingOvsVifDriver.java b/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/IpSpoofingOvsVifDriver.java
+new file mode 100644
+index 0000000..a28c5e1
+--- /dev/null
++++ b/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/IpSpoofingOvsVifDriver.java
+@@ -0,0 +1,82 @@
++// Licensed to the Apache Software Foundation (ASF) under one
++// or more contributor license agreements.  See the NOTICE file
++// distributed with this work for additional information
++// regarding copyright ownership.  The ASF licenses this file
++// to you under the Apache License, Version 2.0 (the
++// "License"); you may not use this file except in compliance
++// with the License.  You may obtain a copy of the License at
++//
++//   http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing,
++// software distributed under the License is distributed on an
++// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++// KIND, either express or implied.  See the License for the
++// specific language governing permissions and limitations
++// under the License.
++package com.cloud.hypervisor.kvm.resource;
++
++import java.util.Map;
++
++import javax.naming.ConfigurationException;
++
++import org.apache.log4j.Logger;
++import org.libvirt.LibvirtException;
++
++import com.cloud.agent.api.to.NicTO;
++import com.cloud.exception.InternalErrorException;
++import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.InterfaceDef;
++import com.cloud.network.Networks;
++import com.cloud.utils.NumbersUtil;
++
++public class IpSpoofingOvsVifDriver extends OvsVifDriver {
++	private static final Logger s_logger = Logger.getLogger(IpSpoofingOvsVifDriver.class);
++	private boolean ipspoofingEnabled = false;
++	private int _timeout;
++	private OvsController _controller;
++
++	@Override
++	public void configure(Map<String, Object> params)
++			throws ConfigurationException {
++		super.configure(params);
++
++		String value = (String) params.get("ovs.ipspoofing.protect");
++		ipspoofingEnabled = Boolean.parseBoolean(value);
++
++		value = (String) params.get("scripts.timeout");
++		_timeout = NumbersUtil.parseInt(value, 30 * 60) * 1000;
++		
++		_controller = new OvsController();
++	}
++
++	@Override
++	public InterfaceDef plug(NicTO nic, String guestOsType)
++			throws InternalErrorException, LibvirtException {
++		InterfaceDef def = super.plug(nic, guestOsType);
++
++		if (ipspoofingEnabled) {
++			s_logger.debug("ip spoofing protect is opened while plug nic "+nic.getName());
++			if (nic.getType() == Networks.TrafficType.Guest) {
++				_controller.addIpSpoofingProtectForMac(
++						_bridges.get("guest"), nic.getIp(), nic.getMac());
++				s_logger.debug("ovs ipsoofing plug with "+
++						_bridges.get("guest")+"/"+nic.getIp()+"/"+nic.getMac());
++			}
++		}
++
++		return def;
++	}
++
++	@Override
++	public void unplug(InterfaceDef iface) {
++		super.unplug(iface);
++		if (ipspoofingEnabled) {
++			s_logger.debug("ip spoofing protect is opened while plug iface "+iface.getBrName());
++			_controller.delIpSpoofingProtectForMac(
++					_bridges.get("guest"), "ip", iface.getMacAddress());
++			s_logger.debug("ovs ipsoofing unplug with "+
++					_bridges.get("guest")+"/"+iface.getMacAddress());
++		}
++	}
++
++}
+diff --git a/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/LibvirtComputingResource.java b/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/LibvirtComputingResource.java
+index ab7b9b5..b78f566 100755
+--- a/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/LibvirtComputingResource.java
++++ b/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/LibvirtComputingResource.java
+@@ -57,6 +57,13 @@ import java.util.regex.Pattern;
+ import javax.ejb.Local;
+ import javax.naming.ConfigurationException;
+ 
++import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
++import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
++import org.apache.cloudstack.storage.to.VolumeObjectTO;
++import org.apache.cloudstack.utils.qemu.QemuImg;
++import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
++import org.apache.cloudstack.utils.qemu.QemuImgException;
++import org.apache.cloudstack.utils.qemu.QemuImgFile;
+ import org.apache.commons.io.FileUtils;
+ import org.apache.log4j.Logger;
+ import org.libvirt.Connect;
+@@ -74,15 +81,6 @@ import com.ceph.rados.RadosException;
+ import com.ceph.rbd.Rbd;
+ import com.ceph.rbd.RbdException;
+ import com.ceph.rbd.RbdImage;
+-
+-import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
+-import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
+-import org.apache.cloudstack.storage.to.VolumeObjectTO;
+-import org.apache.cloudstack.utils.qemu.QemuImg;
+-import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
+-import org.apache.cloudstack.utils.qemu.QemuImgException;
+-import org.apache.cloudstack.utils.qemu.QemuImgFile;
+-
+ import com.cloud.agent.api.Answer;
+ import com.cloud.agent.api.AttachIsoCommand;
+ import com.cloud.agent.api.AttachVolumeAnswer;
+@@ -175,6 +173,10 @@ import com.cloud.agent.api.routing.SetNetworkACLAnswer;
+ import com.cloud.agent.api.routing.SetNetworkACLCommand;
+ import com.cloud.agent.api.routing.SetSourceNatAnswer;
+ import com.cloud.agent.api.routing.SetSourceNatCommand;
++import com.cloud.agent.api.security.SetupIpSpoofingAnswer;
++import com.cloud.agent.api.security.SetupIpSpoofingCommand;
++import com.cloud.agent.api.security.TeardownIpSpoofingAnswer;
++import com.cloud.agent.api.security.TeardownIpSpoofingCommand;
+ import com.cloud.agent.api.storage.CopyVolumeAnswer;
+ import com.cloud.agent.api.storage.CopyVolumeCommand;
+ import com.cloud.agent.api.storage.CreateAnswer;
+@@ -317,7 +319,8 @@ ServerResource {
+     private Map<TrafficType, VifDriver> _trafficTypeVifDrivers;
+     protected static final String DEFAULT_OVS_VIF_DRIVER_CLASS_NAME = "com.cloud.hypervisor.kvm.resource.OvsVifDriver";
+     protected static final String DEFAULT_BRIDGE_VIF_DRIVER_CLASS_NAME = "com.cloud.hypervisor.kvm.resource.BridgeVifDriver";
+-
++    private OvsController _ovsController;
++    
+     private static final class KeyValueInterpreter extends OutputInterpreter {
+         private final Map<String, String> map = new HashMap<String, String>();
+ 
+@@ -524,6 +527,7 @@ ServerResource {
+             return false;
+         }
+ 
++        _ovsController = new OvsController();
+         _storage = new JavaStorageLayer();
+         _storage.configure("StorageLayer", params);
+ 
+@@ -1343,6 +1347,10 @@ ServerResource {
+                 return execute((PvlanSetupCommand) cmd);
+             } else if (cmd instanceof CheckOnHostCommand) {
+                 return execute((CheckOnHostCommand)cmd);
++            } else if (cmd instanceof SetupIpSpoofingCommand) {
++                return execute((SetupIpSpoofingCommand)cmd);
++            } else if (cmd instanceof TeardownIpSpoofingCommand) {
++                return execute((TeardownIpSpoofingCommand)cmd);
+             } else {
+                 s_logger.warn("Unsupported command ");
+                 return Answer.createUnsupportedCommandAnswer(cmd);
+@@ -1495,6 +1503,55 @@ ServerResource {
+         }
+ 
+     }
++    
++    //TODO ip spoofing start
++    protected Answer execute(SetupIpSpoofingCommand cmd) {
++    	try{
++    		List<VirtualMachineTO> vms = cmd.getVms();
++        	if(vms != null && !vms.isEmpty()){
++        		for(VirtualMachineTO vm:vms){
++        			NicTO[] nics = vm.getNics();
++        			if(nics != null){
++        				for(NicTO nic:nics){
++        					_ovsController.addIpSpoofingProtectForMac(
++        							_guestBridgeName, nic.getIp(), nic.getMac());
++        				}
++        			}
++        		}
++        	}
++
++        	return new SetupIpSpoofingAnswer(cmd, true, "");
++    	}catch (CloudRuntimeException e){
++    		s_logger.debug("Failed to setup ip spoofing " + e.toString());
++    		return new SetupIpSpoofingAnswer(cmd, e);
++    	}
++    }
++    
++    protected Answer execute(TeardownIpSpoofingCommand cmd) {
++    	try{
++    		if(cmd.isTeardownAll()){
++        		_ovsController.delIpSpoofingRules(_guestBridgeName);
++        	}else{
++        		List<VirtualMachineTO> vms = cmd.getVms();
++            	if(vms != null && !vms.isEmpty()){
++            		for(VirtualMachineTO vm:vms){
++            			NicTO[] nics = vm.getNics();
++            			if(nics != null){
++            				for(NicTO nic:nics){
++            					_ovsController.delIpSpoofingProtectForMac(
++            							_guestBridgeName, nic.getIp(), nic.getMac());
++            				}
++            			}
++            		}
++            	}
++        	}
++    		
++    		return new TeardownIpSpoofingAnswer(cmd, true, "");
++    	}catch (CloudRuntimeException e){
++    		 s_logger.debug("Failed to create volume: " + e.toString());
++             return new TeardownIpSpoofingAnswer(cmd, e);
++    	}
++    }
+ 
+     protected Storage.StorageResourceType getStorageResourceType() {
+         return Storage.StorageResourceType.STORAGE_POOL;
+diff --git a/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/OvsController.java b/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/OvsController.java
+new file mode 100644
+index 0000000..4f4d632
+--- /dev/null
++++ b/plugins/hypervisors/kvm/src/com/cloud/hypervisor/kvm/resource/OvsController.java
+@@ -0,0 +1,68 @@
++/*
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing,
++ * software distributed under the License is distributed on an
++ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++ * KIND, either express or implied.  See the License for the
++ * specific language governing permissions and limitations
++ * under the License.
++ */
++package com.cloud.hypervisor.kvm.resource;
++
++import java.io.File;
++
++import com.cloud.utils.script.Script;
++
++public class OvsController {
++	
++	public void addFlow(String brName, String flow){
++		Script.runSimpleBashScript("ovs-ofctl add-flow " +  flow);
++	}
++	
++	public void addFlows(String brName, File flowFile){
++		
++	}
++	
++	public void delFlow(String brName, String flow){
++		Script.runSimpleBashScript("ovs-ofctl del-flow " +  flow);
++	}
++	
++	public void delFlows(String brName){
++		
++	}
++	
++	public String delIpSpoofingRules(String brName){
++		return null;
++	}
++	
++	public String addIpSpoofingProtectForMac(String brName, String ip, String mac){
++		Script.runSimpleBashScript(addIpSpoofingPassFlow(brName, ip, mac));
++		return Script.runSimpleBashScript(addIpSpoofingDenyFlow(brName, mac));
++	}
++	
++	public String delIpSpoofingProtectForMac(String brName, String ip, String mac){
++		return "";
++	}
++	
++	public String addIpSpoofingPassFlow(String brName, String ip, String mac) {
++		return "ovs-ofctl add-flow " + brName + " \"dl_src=" + mac
++				+ " priority=39000 dl_type=0x0800 nw_src=" + ip
++				+ " idle_timeout=0 action=normal\"";
++	}
++
++	public String addIpSpoofingDenyFlow(String brName, String mac) {
++		return "ovs-ofctl add-flow " + brName + " \"dl_src=" + mac
++				+ " priority=39000 dl_type=0x0800 nw_src=ANY"
++				+ " idle_timeout=0 action=normal\"";
++	}
++	
++}
+diff --git a/plugins/security/ipspoofing/pom.xml b/plugins/security/ipspoofing/pom.xml
+new file mode 100644
+index 0000000..e3049af
+--- /dev/null
++++ b/plugins/security/ipspoofing/pom.xml
+@@ -0,0 +1,29 @@
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
++	<modelVersion>4.0.0</modelVersion>
++	<parent>
++		<groupId>org.apache.cloudstack</groupId>
++		<artifactId>cloudstack-plugins</artifactId>
++		<version>4.3.1</version>
++		<relativePath>../../pom.xml</relativePath>
++	</parent>
++	<groupId>com.vispractice.vcloud.cloudstack.plugin</groupId>
++	<artifactId>cloud-plugin-network-ipspoofing</artifactId>
++	<version>4.3.1</version>
++	<packaging>jar</packaging>
++
++	<name>cloud-plugin-network-ipspoofing</name>
++	<url>http://maven.apache.org</url>
++
++	<properties>
++		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
++	</properties>
++
++	<dependencies>
++		<dependency>
++			<groupId>org.apache.cloudstack</groupId>
++			<artifactId>cloud-plugin-hypervisor-kvm</artifactId>
++			<version>4.3.1</version>
++		</dependency>
++	</dependencies>
++</project>
+diff --git a/plugins/security/ipspoofing/src/main/java/com/cloud/network/ovs/IpSpoofingManager.java b/plugins/security/ipspoofing/src/main/java/com/cloud/network/ovs/IpSpoofingManager.java
+new file mode 100644
+index 0000000..e580ae3
+--- /dev/null
++++ b/plugins/security/ipspoofing/src/main/java/com/cloud/network/ovs/IpSpoofingManager.java
+@@ -0,0 +1,23 @@
++// Licensed to the Apache Software Foundation (ASF) under one
++// or more contributor license agreements.  See the NOTICE file
++// distributed with this work for additional information
++// regarding copyright ownership.  The ASF licenses this file
++// to you under the Apache License, Version 2.0 (the
++// "License"); you may not use this file except in compliance
++// with the License.  You may obtain a copy of the License at
++//
++//   http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing,
++// software distributed under the License is distributed on an
++// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++// KIND, either express or implied.  See the License for the
++// specific language governing permissions and limitations
++// under the License.
++package com.cloud.network.ovs;
++
++import com.cloud.utils.component.Manager;
++
++public interface IpSpoofingManager extends Manager {
++
++}
+diff --git a/plugins/security/ipspoofing/src/main/java/com/cloud/network/ovs/IpSpoofingManagerImpl.java b/plugins/security/ipspoofing/src/main/java/com/cloud/network/ovs/IpSpoofingManagerImpl.java
+new file mode 100644
+index 0000000..87fa3be
+--- /dev/null
++++ b/plugins/security/ipspoofing/src/main/java/com/cloud/network/ovs/IpSpoofingManagerImpl.java
+@@ -0,0 +1,201 @@
++// Licensed to the Apache Software Foundation (ASF) under one
++// or more contributor license agreements.  See the NOTICE file
++// distributed with this work for additional information
++// regarding copyright ownership.  The ASF licenses this file
++// to you under the Apache License, Version 2.0 (the
++// "License"); you may not use this file except in compliance
++// with the License.  You may obtain a copy of the License at
++//
++//   http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing,
++// software distributed under the License is distributed on an
++// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++// KIND, either express or implied.  See the License for the
++// specific language governing permissions and limitations
++// under the License.
++package com.cloud.network.ovs;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Map;
++
++import javax.inject.Inject;
++import javax.naming.ConfigurationException;
++
++import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
++import org.apache.log4j.Logger;
++
++import com.cloud.agent.AgentManager;
++import com.cloud.agent.Listener;
++import com.cloud.agent.api.AgentControlAnswer;
++import com.cloud.agent.api.AgentControlCommand;
++import com.cloud.agent.api.Answer;
++import com.cloud.agent.api.Command;
++import com.cloud.agent.api.StartupCommand;
++import com.cloud.agent.api.StartupRoutingCommand;
++import com.cloud.agent.api.security.SetupIpSpoofingAnswer;
++import com.cloud.agent.api.security.SetupIpSpoofingCommand;
++import com.cloud.agent.api.security.TeardownIpSpoofingAnswer;
++import com.cloud.agent.api.security.TeardownIpSpoofingCommand;
++import com.cloud.agent.api.to.VirtualMachineTO;
++import com.cloud.exception.AgentUnavailableException;
++import com.cloud.exception.ConnectionException;
++import com.cloud.exception.OperationTimedoutException;
++import com.cloud.host.Host;
++import com.cloud.host.Status;
++import com.cloud.service.dao.ServiceOfferingDao;
++import com.cloud.utils.component.ManagerBase;
++import com.cloud.vm.NicProfile;
++import com.cloud.vm.VMInstanceVO;
++import com.cloud.vm.VirtualMachine;
++import com.cloud.vm.VirtualMachineManager;
++import com.cloud.vm.VirtualMachineProfile;
++import com.cloud.vm.VirtualMachineProfileImpl;
++import com.cloud.vm.dao.VMInstanceDao;
++
++public class IpSpoofingManagerImpl extends ManagerBase implements IpSpoofingManager,Listener {
++	private static final Logger s_logger = Logger.getLogger(IpSpoofingManagerImpl.class);
++    @Inject
++    AgentManager _agentMgr;
++    @Inject
++    VMInstanceDao _vmDao;
++    @Inject
++    NetworkOrchestrationService _networkMgr;
++    @Inject
++    ServiceOfferingDao _offeringDao;
++    @Inject
++    VirtualMachineManager _itMgr;
++    
++	private int eventHook = -1;
++	private boolean ipspoofingEnabled = false;
++
++	@Override
++	public boolean configure(String name, Map<String, Object> params)
++			throws ConfigurationException {
++		super.configure(name, params);
++		
++		String value = (String)params.get("ovs.ipspoofing.protect");
++		ipspoofingEnabled = Boolean.parseBoolean(value);
++		
++		return true;
++	}
++
++	@Override
++	public boolean processAnswers(long agentId, long seq, Answer[] answers) {
++		if(answers != null){
++			for(Answer answer:answers){
++				if(answer instanceof SetupIpSpoofingAnswer){
++					s_logger.debug("received setup ip spoofing answer " + answer);
++				}else if(answer instanceof TeardownIpSpoofingAnswer){
++					s_logger.debug("received tear down ip spoofing answer " + answer);
++				}
++			}
++		}
++		return false;
++	}
++
++	@Override
++	public boolean processCommands(long agentId, long seq, Command[] commands) {
++		return false;
++	}
++
++	@Override
++	public AgentControlAnswer processControlCommand(long agentId,
++			AgentControlCommand cmd) {
++		return null;
++	}
++
++	@Override
++	public void processConnect(Host host, StartupCommand cmd,
++			boolean forRebalance) throws ConnectionException {
++		
++		if(cmd instanceof StartupRoutingCommand){
++			try {
++				if(ipspoofingEnabled){
++					_agentMgr.send(host.getId(), genSetupIpSpoofingCommand(host.getId()));
++				}else{
++					_agentMgr.send(host.getId(), genTeardownIpSpoofingCommand(host.getId()));
++				}
++			} catch (AgentUnavailableException e) {
++				s_logger.error("", e);
++			} catch (OperationTimedoutException e) {
++				s_logger.error("", e);
++			}
++		}
++	}
++	
++	private SetupIpSpoofingCommand genSetupIpSpoofingCommand(long hostId){
++		SetupIpSpoofingCommand cmd = new SetupIpSpoofingCommand();
++		List<VMInstanceVO> vmVOs = _vmDao.listByHostId(hostId);
++		cmd.setVms(toVmTO(vmVOs));
++		return cmd;
++	}
++	
++	private TeardownIpSpoofingCommand genTeardownIpSpoofingCommand(long hostId){
++		TeardownIpSpoofingCommand cmd = new TeardownIpSpoofingCommand();
++		List<VMInstanceVO> vmVOs = _vmDao.listByHostId(hostId);
++		cmd.setVms(toVmTO(vmVOs));
++		return cmd;
++	}
++	
++	private List<VirtualMachineTO> toVmTO(List<VMInstanceVO> vmVOs){
++		if(vmVOs != null && !vmVOs.isEmpty()){
++			List<VirtualMachineTO> tos = new ArrayList<VirtualMachineTO>(vmVOs.size());
++			for(VirtualMachine vm:vmVOs){
++				tos.add(toVmTO(vm));
++			}
++			return tos;
++		}
++		
++		return null;
++	}
++	
++	private VirtualMachineTO toVmTO(VirtualMachine vm){
++		VirtualMachineProfile profile = 
++				new VirtualMachineProfileImpl(vm, null, _offeringDao.findById(vm.getId(), vm.getServiceOfferingId()), null, null);
++        for (NicProfile nic : _networkMgr.getNicProfiles(vm)) {
++        	profile.addNic(nic);
++        }
++        
++		return _itMgr.toVmTO(profile);
++	}
++
++	@Override
++	public boolean processDisconnect(long agentId, Status state) {
++		return false;
++	}
++
++	@Override
++	public boolean isRecurring() {
++		return false;
++	}
++
++	@Override
++	public int getTimeout() {
++		return 0;
++	}
++
++	@Override
++	public boolean processTimeout(long agentId, long seq) {
++		return false;
++	}
++
++	@Override
++	public boolean start() {
++		super.start();
++		if(ipspoofingEnabled){
++			eventHook = _agentMgr.registerForHostEvents(this, true, false, true);
++		}
++		return true;
++	}
++
++	@Override
++	public boolean stop() {
++		super.stop();
++		if(eventHook != -1){
++			_agentMgr.unregisterForHostEvents(eventHook);
++		}
++		return true;
++	}
++}
+diff --git a/plugins/security/ipspoofing/src/main/resources/META-INF/cloudstack/ipspoofing/module.properties b/plugins/security/ipspoofing/src/main/resources/META-INF/cloudstack/ipspoofing/module.properties
+new file mode 100644
+index 0000000..9d2ecda
+--- /dev/null
++++ b/plugins/security/ipspoofing/src/main/resources/META-INF/cloudstack/ipspoofing/module.properties
+@@ -0,0 +1,18 @@
++# Licensed to the Apache Software Foundation (ASF) under one
++# or more contributor license agreements.  See the NOTICE file
++# distributed with this work for additional information
++# regarding copyright ownership.  The ASF licenses this file
++# to you under the Apache License, Version 2.0 (the
++# "License"); you may not use this file except in compliance
++# with the License.  You may obtain a copy of the License at
++#
++#   http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing,
++# software distributed under the License is distributed on an
++# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++# KIND, either express or implied.  See the License for the
++# specific language governing permissions and limitations
++# under the License.
++name=ipspoofing
++parent=network
+diff --git a/plugins/security/ipspoofing/src/main/resources/META-INF/cloudstack/ipspoofing/spring-ipspoofing-context.xml b/plugins/security/ipspoofing/src/main/resources/META-INF/cloudstack/ipspoofing/spring-ipspoofing-context.xml
+new file mode 100644
+index 0000000..66b353f
+--- /dev/null
++++ b/plugins/security/ipspoofing/src/main/resources/META-INF/cloudstack/ipspoofing/spring-ipspoofing-context.xml
+@@ -0,0 +1,32 @@
++<!--
++  Licensed to the Apache Software Foundation (ASF) under one
++  or more contributor license agreements. See the NOTICE file
++  distributed with this work for additional information
++  regarding copyright ownership. The ASF licenses this file
++  to you under the Apache License, Version 2.0 (the
++  "License"); you may not use this file except in compliance
++  with the License. You may obtain a copy of the License at
++
++  http://www.apache.org/licenses/LICENSE-2.0
++
++  Unless required by applicable law or agreed to in writing,
++  software distributed under the License is distributed on an
++  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++  KIND, either express or implied. See the License for the
++  specific language governing permissions and limitations
++  under the License.
++-->
++<beans xmlns="http://www.springframework.org/schema/beans"
++       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++       xmlns:context="http://www.springframework.org/schema/context"
++       xmlns:aop="http://www.springframework.org/schema/aop"
++       xsi:schemaLocation="http://www.springframework.org/schema/beans
++                      http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
++                      http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
++                      http://www.springframework.org/schema/context
++                      http://www.springframework.org/schema/context/spring-context-3.0.xsd"
++                      >
++
++    <bean id="ipSpoofingManagerImpl" class="com.cloud.network.ovs.IpSpoofingManagerImpl" />
++    
++</beans>
+diff --git a/server/pom.xml b/server/pom.xml
+index 41b5a02..bb2d4f4 100644
+--- a/server/pom.xml
++++ b/server/pom.xml
+@@ -17,6 +17,9 @@
+     <artifactId>cloudstack</artifactId>
+     <version>4.3.1</version>
+   </parent>
++  <properties>
++  	<cs.replace.properties>D:\\devgit\\apache\\cloudstack\\build\\replace.properties</cs.replace.properties>
++  </properties>
+   <dependencies>
+     <dependency>
+       <groupId>commons-io</groupId>
+diff --git a/systemvm/patches/debian/systemvm.vmx b/systemvm/patches/debian/systemvm.vmx
+index 9b93449..1266c25 100644
+--- a/systemvm/patches/debian/systemvm.vmx
++++ b/systemvm/patches/debian/systemvm.vmx
+@@ -1,3 +1,4 @@
++.encoding = "GBK"
+ config.version = "8"
+ displayname = "systemvm"
+ ethernet0.addressType = "generated"
+@@ -35,3 +36,5 @@ pciBridge7.virtualDev = "pcieRootPort"
+ svga.autodetect = "true"
+ virtualhw.version = "7"
+ vmci0.present = "TRUE"
++extendedConfigFile = "systemvm.vmxf"
++virtualHW.productCompatibility = "hosted"
+diff --git a/usage/conf/db.properties.in b/usage/conf/db.properties.in
+index 0dd49ed..5674487 100644
+--- a/usage/conf/db.properties.in
++++ b/usage/conf/db.properties.in
+@@ -16,9 +16,9 @@
+ # under the License.
+ 
+ # usage database settings
+-db.usage.username=@DBUSER@
+-db.usage.password=@DBPW@
+-db.usage.host=@DBHOST@
++db.usage.username=cloud
++db.usage.password=cloud
++db.usage.host=127.0.0.1
+ db.usage.port=3306
+ db.usage.name=cloud_usage
+ 
+diff --git a/usage/pom.xml b/usage/pom.xml
+index 030d9fb..ee2164a 100644
+--- a/usage/pom.xml
++++ b/usage/pom.xml
+@@ -17,6 +17,9 @@
+     <artifactId>cloudstack</artifactId>
+     <version>4.3.1</version>
+   </parent>
++  <properties>
++  	<cs.replace.properties>D:\\devgit\\apache\\cloudstack\\build\\replace.properties</cs.replace.properties>
++  </properties>
+   <dependencies>
+     <dependency>
+       <groupId>org.apache.cloudstack</groupId>
+diff --git a/utils/conf/db.properties b/utils/conf/db.properties
+index e1b5fe9..c25cff4 100644
+--- a/utils/conf/db.properties
++++ b/utils/conf/db.properties
+@@ -25,8 +25,8 @@ region.id=1
+ # CloudStack database settings
+ db.cloud.username=cloud
+ db.cloud.password=cloud
+-db.root.password=
+-db.cloud.host=localhost
++db.root.password=123456
++db.cloud.host=127.0.0.1
+ db.cloud.port=3306
+ db.cloud.name=cloud
+ 
+@@ -46,7 +46,7 @@ db.cloud.url.params=prepStmtCacheSize=517&cachePrepStmts=true&prepStmtCacheSqlLi
+ # usage database settings
+ db.usage.username=cloud
+ db.usage.password=cloud
+-db.usage.host=localhost
++db.usage.host=127.0.0.1
+ db.usage.port=3306
+ db.usage.name=cloud_usage
+ 
+@@ -59,14 +59,14 @@ db.usage.autoReconnect=true
+ # awsapi database settings
+ db.awsapi.username=cloud
+ db.awsapi.password=cloud
+-db.awsapi.host=localhost
++db.awsapi.host=127.0.0.1
+ db.awsapi.port=3306
+ db.awsapi.name=cloudbridge
+ 
+ # Simulator database settings
+ db.simulator.username=cloud
+ db.simulator.password=cloud
+-db.simulator.host=localhost
++db.simulator.host=127.0.0.1
+ db.simulator.port=3306
+ db.simulator.name=simulator
+ db.simulator.maxActive=250

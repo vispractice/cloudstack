@@ -25,6 +25,9 @@
     <artifactId>cloudstack</artifactId>
     <version>4.3.0</version>
   </parent>
+  <properties>
+  	<cs.replace.properties>D:\\devgit\\apache\\cloudstack\\build\\replace.properties</cs.replace.properties>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.cloudstack</groupId>

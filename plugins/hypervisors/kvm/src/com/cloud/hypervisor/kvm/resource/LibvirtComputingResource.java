@@ -57,6 +57,13 @@ import java.util.regex.Pattern;
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
+import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
+import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
+import org.apache.cloudstack.storage.to.VolumeObjectTO;
+import org.apache.cloudstack.utils.qemu.QemuImg;
+import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
+import org.apache.cloudstack.utils.qemu.QemuImgException;
+import org.apache.cloudstack.utils.qemu.QemuImgFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.libvirt.Connect;
@@ -74,15 +81,6 @@ import com.ceph.rados.RadosException;
 import com.ceph.rbd.Rbd;
 import com.ceph.rbd.RbdException;
 import com.ceph.rbd.RbdImage;
-
-import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
-import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
-import org.apache.cloudstack.storage.to.VolumeObjectTO;
-import org.apache.cloudstack.utils.qemu.QemuImg;
-import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
-import org.apache.cloudstack.utils.qemu.QemuImgException;
-import org.apache.cloudstack.utils.qemu.QemuImgFile;
-
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.AttachIsoCommand;
 import com.cloud.agent.api.AttachVolumeAnswer;
@@ -175,6 +173,10 @@ import com.cloud.agent.api.routing.SetNetworkACLAnswer;
 import com.cloud.agent.api.routing.SetNetworkACLCommand;
 import com.cloud.agent.api.routing.SetSourceNatAnswer;
 import com.cloud.agent.api.routing.SetSourceNatCommand;
+import com.cloud.agent.api.security.SetupIpSpoofingAnswer;
+import com.cloud.agent.api.security.SetupIpSpoofingCommand;
+import com.cloud.agent.api.security.TeardownIpSpoofingAnswer;
+import com.cloud.agent.api.security.TeardownIpSpoofingCommand;
 import com.cloud.agent.api.storage.CopyVolumeAnswer;
 import com.cloud.agent.api.storage.CopyVolumeCommand;
 import com.cloud.agent.api.storage.CreateAnswer;
@@ -313,6 +315,7 @@ ServerResource {
     StorageLayer _storage;
     private KVMStoragePoolManager _storagePoolMgr;
 
+    private OvsController _ovsController;
     private VifDriver _defaultVifDriver;
     private Map<TrafficType, VifDriver> _trafficTypeVifDrivers;
     protected static final String DEFAULT_OVS_VIF_DRIVER_CLASS_NAME = "com.cloud.hypervisor.kvm.resource.OvsVifDriver";
@@ -524,6 +527,7 @@ ServerResource {
             return false;
         }
 
+        _ovsController = new OvsController();
         _storage = new JavaStorageLayer();
         _storage.configure("StorageLayer", params);
 
@@ -1343,7 +1347,11 @@ ServerResource {
                 return execute((PvlanSetupCommand) cmd);
             } else if (cmd instanceof CheckOnHostCommand) {
                 return execute((CheckOnHostCommand)cmd);
-            } else {
+            } else if (cmd instanceof SetupIpSpoofingCommand) {
+                return execute((SetupIpSpoofingCommand)cmd);
+            } else if (cmd instanceof TeardownIpSpoofingCommand) {
+            	return execute((TeardownIpSpoofingCommand)cmd);
+            }else {
                 s_logger.warn("Unsupported command ");
                 return Answer.createUnsupportedCommandAnswer(cmd);
             }
@@ -1494,6 +1502,55 @@ ServerResource {
             return new Answer(cmd, false, "can't get status of host:");
         }
 
+    }
+    
+    //TODO ip spoofing start
+    protected Answer execute(SetupIpSpoofingCommand cmd) {
+    	try{
+    		List<VirtualMachineTO> vms = cmd.getVms();
+    		if(vms != null && !vms.isEmpty()){
+    			for(VirtualMachineTO vm:vms){
+    				NicTO[] nics = vm.getNics();
+    				if(nics != null){
+    					for(NicTO nic:nics){
+    						_ovsController.addIpSpoofingProtectForMac(
+    								_guestBridgeName, nic.getIp(), nic.getMac());
+    					}
+    				}
+    			}
+    		}
+    
+            return new SetupIpSpoofingAnswer(cmd, true, "");
+        }catch (CloudRuntimeException e){
+        	s_logger.debug("Failed to setup ip spoofing " + e.toString());
+        		return new SetupIpSpoofingAnswer(cmd, e);
+        }
+    }
+        
+    protected Answer execute(TeardownIpSpoofingCommand cmd) {
+        try{
+        	if(cmd.isTeardownAll()){
+            	_ovsController.delIpSpoofingRules(_guestBridgeName);
+        	}else{
+            	List<VirtualMachineTO> vms = cmd.getVms();
+                if(vms != null && !vms.isEmpty()){
+                	for(VirtualMachineTO vm:vms){
+                		NicTO[] nics = vm.getNics();
+                		if(nics != null){
+                			for(NicTO nic:nics){
+                				_ovsController.delIpSpoofingProtectForMac(
+                						_guestBridgeName, nic.getIp(), nic.getMac());
+                			}
+                		}
+                	}
+                }
+            }
+        	
+        	return new TeardownIpSpoofingAnswer(cmd, true, "");
+        }catch (CloudRuntimeException e){
+        	s_logger.debug("Failed to tear down ip spoofing: " + e.toString());
+                return new TeardownIpSpoofingAnswer(cmd, e);
+        }
     }
 
     protected Storage.StorageResourceType getStorageResourceType() {
