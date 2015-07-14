@@ -248,7 +248,6 @@ public class SangforADLoadBalancerResource implements ServerResource {
 	
 	/**
 	 * 会话sourceip类型枚举
-	 * @author root
 	 *
 	 */
 	private enum LBSourceBased {
