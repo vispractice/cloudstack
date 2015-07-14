@@ -710,3 +710,10 @@ importLdapUsers=3
 
 #### juniper-contrail commands
 createServiceInstance=1
+
+## sangforAD loadBalancer  commands
+addSangforADLoadBalancer=1
+configureSangforADLoadBalancer=1
+deleteSangforADLoadBalancer=1
+listSangforADLoadBalancerNetworks=1
+listSangforADLoadBalanvers=1

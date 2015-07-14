@@ -306,6 +306,13 @@
       <artifactId>cloud-plugin-host-anti-affinity</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- sangforAD -->
+     <dependency>
+      <groupId>org.apache.cloudstack</groupId>
+      <artifactId>cloud-plugin-network-sangforAD</artifactId>
+      <version>${project.version}</version>
+	</dependency>
+	
   </dependencies>
   <build>
     <plugins>
