@@ -1,0 +1,2607 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2013 (http://www.altova.com) by  () -->
+<wsdl:definitions xmlns:tns="urn:sangfor:ad:api:soap:v1:base" xmlns:ns="urn:sangfor:ad:api:soap:v1:base" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:sangfor:ad:api:soap:v1:base" name="adapi" targetNamespace="urn:sangfor:ad:api:soap:v1:base">
+	<wsdl:types>
+		<xsi:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:sangfor:ad:api:soap:v1:base" elementFormDefault="unqualified" attributeFormDefault="unqualified">
+			<xsi:simpleType name="Base64Type">
+				<xsi:annotation>
+					<xsi:documentation>base64编码</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:base64Binary"/>
+			</xsi:simpleType>
+			<xsi:simpleType name="StringType">
+				<xsi:annotation>
+					<xsi:documentation>string基本类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xs:string"/>
+			</xsi:simpleType>
+			<xsi:simpleType name="BoolType">
+				<xsi:annotation>
+					<xsi:documentation>boolean基本类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:boolean"/>
+			</xsi:simpleType>
+			<xsi:simpleType name="IntegerType">
+				<xsi:annotation>
+					<xsi:documentation>Integer基本类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer"/>
+			</xsi:simpleType>
+			<xsi:simpleType name="UsernameType">
+				<xsi:annotation>
+					<xsi:documentation>用户名 base64编码</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="Base64Type">
+					<xsi:minLength value="0"/>
+					<xsi:maxLength value="63"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="PasswdType">
+				<xsi:annotation>
+					<xsi:documentation>密码 base64编码</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="Base64Type">
+					<xsi:minLength value="0"/>
+					<xsi:maxLength value="49"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="CommonNameType">
+				<xsi:annotation>
+					<xsi:documentation>名称</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="Base64Type">
+					<xsi:minLength value="0"/>
+					<xsi:maxLength value="63"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="IpType">
+				<xsi:annotation>
+					<xsi:documentation>IP地址</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:pattern value="((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3})|(([\da-fA-F]{1,4}:){6}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$|^([\da-fA-F]{1,4}:){1,5}:(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$|^::(([\da-fA-F]{1,4}:){0,5})(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$|^([\da-fA-F]{1,4}::([\da-fA-F]{1,4}:){0,4})(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$|^(([\da-fA-F]{1,4}:){2}:([\da-fA-F]{1,4}:){0,3})(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$|^(([\da-fA-F]{1,4}:){3}:([\da-fA-F]{1,4}:){0,2})(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$|^(([\da-fA-F]{1,4}:){4}:([\da-fA-F]{1,4}:){0,1})(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$|^:((:[\da-fA-F]{1,4}){1,7}|:)$|^([\da-fA-F]{1,4}:){1}((:[\da-fA-F]{1,4}){1,6}|:)$|^([\da-fA-F]{1,4}:){2}((:[\da-fA-F]{1,4}){1,5}|:)$|^([\da-fA-F]{1,4}:){3}((:[\da-fA-F]{1,4}){1,4}|:)$|^([\da-fA-F]{1,4}:){4}((:[\da-fA-F]{1,4}){1,3}|:)$|^([\da-fA-F]{1,4}:){5}((:[\da-fA-F]{1,4}){1,2}|:)$|^([\da-fA-F]{1,4}:){6}((:[\da-fA-F]{1,4})|:)$|^([\da-fA-F]{1,4}:){7}(([\da-fA-F]{1,4})|:))"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="SPortType">
+				<xsi:annotation>
+					<xsi:documentation>端口</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="0"/>
+					<xsi:maxInclusive value="65535"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="SPortExtType">
+				<xsi:annotation>
+					<xsi:documentation>端口, 允许*</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:pattern value="([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5]|\*)"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeConfStatusType">
+				<xsi:annotation>
+					<xsi:documentation>节点配置状态</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="NODE_ENABLE"/>
+					<xsi:enumeration value="NODE_DISABLE"/>
+					<xsi:enumeration value="NODE_OFFLINE"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeCurrentStatusType">
+				<xsi:annotation>
+					<xsi:documentation>节点健康状态</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="NODE_NORMAL"/>
+					<xsi:enumeration value="NODE_BUSY"/>
+					<xsi:enumeration value="NODE_FAIL"/>
+					<xsi:enumeration value="NODE_UNAVAILABLE"/>
+					<xsi:enumeration value="NODE_DISABLE"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeConnectionType">
+				<xsi:annotation>
+					<xsi:documentation>节点连接数</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="0"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeRatioType">
+				<xsi:annotation>
+					<xsi:documentation>节点权值</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="1"/>
+					<xsi:maxInclusive value="100"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeMaxConnectsType">
+				<xsi:annotation>
+					<xsi:documentation>最大连接数，0表示不限制</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="0"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeNewConnectsType">
+				<xsi:annotation>
+					<xsi:documentation>新建连接数，0表示不限制</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="0"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeMaxRequestType">
+				<xsi:annotation>
+					<xsi:documentation>请求上限，0表示不限制</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="0"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeRsVal1Type">
+				<xsi:annotation>
+					<xsi:documentation>关联变量 base64编码</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="Base64Type">
+					<xsi:minLength value="0"/>
+					<xsi:maxLength value="63"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeCookieType">
+				<xsi:annotation>
+					<xsi:documentation>节点cookie</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType"/>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeLbMethodType">
+				<xsi:annotation>
+					<xsi:documentation>节点选择策略</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="NODE_LB_RR"/>
+					<xsi:enumeration value="NODE_LB_WRR"/>
+					<xsi:enumeration value="NODE_LB_LEAST_CONN"/>
+					<xsi:enumeration value="NODE_LB_FAST_RESP"/>
+					<xsi:enumeration value="NODE_LB_FEED_BACK"/>
+					<xsi:enumeration value="NODE_LB_PRIOR"/>
+					<xsi:enumeration value="NODE_LB_HASH"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="NodeHashType">
+				<xsi:annotation>
+					<xsi:documentation>哈希调度的字段类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="HASH_SRC_IP"/>
+					<xsi:enumeration value="HASH_SRC_IPPORT"/>
+					<xsi:enumeration value="HASH_URI"/>
+					<xsi:enumeration value="HASH_HOST"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="AddrType">
+				<xsi:annotation>
+					<xsi:documentation>地址类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="ADDR_ALL"/>
+					<xsi:enumeration value="ADDR_ONE"/>
+					<xsi:enumeration value="ADDR_SCOPE"/>
+					<xsi:enumeration value="ADDR_SUBNET"/>
+					<xsi:enumeration value="ADDR_ISP"/>
+					<xsi:enumeration value="ADDR_INSIDE_GROUP"/>
+					<xsi:enumeration value="ADDR_DOMAIN"/>
+				</xsi:restriction>
+			</xsi:simpleType>	
+			<xsi:simpleType name="NodePoolIntervalType">
+				<xsi:annotation>
+					<xsi:documentation>恢复时间；温暖时间（节点池）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="1"/>
+					<xsi:maxInclusive value="300"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="SchedMethodType">
+				<xsi:annotation>
+					<xsi:documentation>节点池繁忙处理策略</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="SCHED_METHOD_FAIELD"/>
+					<xsi:enumeration value="SCHED_METHOD_FORCE"/>
+					<xsi:enumeration value="SCHED_METHOD_QUEUE"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="VsModeType">
+				<xsi:annotation>
+					<xsi:documentation>负载模式</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="VS_MODE_L4"/>
+					<xsi:enumeration value="VS_MODE_L7"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="ServiceType">
+				<xsi:annotation>
+					<xsi:documentation>服务类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="SRV_UDP"/>
+					<xsi:enumeration value="SRV_TCP"/>
+					<xsi:enumeration value="SRV_HTTP"/>
+					<xsi:enumeration value="SRV_SSL"/>
+					<xsi:enumeration value="SRV_HTTPS"/>
+					<xsi:enumeration value="SRV_RADIUS"/>
+					<xsi:enumeration value="SRV_DNS"/>
+					<xsi:enumeration value="SRV_FTP"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<!-- <xsi:simpleType name="NetIfNameType">
+				<xsi:annotation>
+					<xsi:documentation>网口类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType"/>				
+			</xsi:simpleType> -->
+			<xsi:simpleType name="MonitorType">
+				<xsi:annotation>
+					<xsi:documentation>监视器类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="MONITOR_ICMPV4"/>
+					<xsi:enumeration value="MONITOR_ICMPV6"/>
+					<xsi:enumeration value="MONITOR_CONNECT_TCP"/>
+					<xsi:enumeration value="MONITOR_CONNECT_UDP"/>
+					<xsi:enumeration value="MONITOR_SNMP"/>
+					<xsi:enumeration value="MONITOR_DNS"/>
+					<xsi:enumeration value="MONITOR_RADIUS"/>
+					<xsi:enumeration value="MONITOR_FTP"/>
+					<xsi:enumeration value="MONITOR_TCP_HALF_OPEN"/>
+					<xsi:enumeration value="MONITOR_CONNECT_HTTP"/>
+					<xsi:enumeration value="MONITOR_CONNECT_SSL"/>
+					<xsi:enumeration value="MONITOR_CONNECT_HTTPS"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="PersistType">
+				<xsi:annotation>
+					<xsi:documentation>会话保持类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="PERSIST_SOURCE_IP"/>
+					<xsi:enumeration value="PERSIST_COOKIE"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="STimeOutType">
+				<xsi:annotation>
+					<xsi:documentation>超时时间（SourceIP会话保持 单位：秒）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="1"/>
+					<xsi:maxInclusive value="31536000"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="CookieType">
+				<xsi:annotation>
+					<xsi:documentation>Cookie类型（Cookie会话保持）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="PERSIST_COOKIE_INSERT"/>
+					<xsi:enumeration value="PERSIST_COOKIE_STUDY"/>
+					<xsi:enumeration value="PERSIST_COOKIE_REWRITE"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="CookieNameType">
+				<xsi:annotation>
+					<xsi:documentation>Cookie名称（Cookie会话保持）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="Base64Type">
+					<xsi:minLength value="1"/>
+					<xsi:maxLength value="31"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="CookieDomainType">
+				<xsi:annotation>
+					<xsi:documentation>Cookie作用域名（Cookie会话保持）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:minLength value="0"/>
+					<xsi:maxLength value="255"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="CookiePathType">
+				<xsi:annotation>
+					<xsi:documentation>Cookie作用域路径（Cookie会话保持）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:minLength value="1"/>
+					<xsi:maxLength value="255"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="CTimeOutType">
+				<xsi:annotation>
+					<xsi:documentation>超时时间类型（Cookie会话保持 单位：秒）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="0"/>
+					<xsi:maxInclusive value="31536000"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="MonitorTimeType">
+				<xsi:annotation>
+					<xsi:documentation>间隔，超时时间；尝试次数（Connect节点监视器）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="1"/>
+					<xsi:maxInclusive value="255"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="RecvBufMaxType">
+				<xsi:annotation>
+					<xsi:documentation>回应内容的最大长度（Connect节点监视器）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="1"/>
+					<xsi:maxInclusive value="4096"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="SendMsgType">
+				<xsi:annotation>
+					<xsi:documentation>发送内容（Connect节点监视器）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="StringType">
+					<xsi:minLength value="0"/>
+					<xsi:maxLength value="2048"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="RecvCloseMsgType">
+				<xsi:annotation>
+					<xsi:documentation>接收，发送包含内容（Connect节点监视器）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="StringType">
+					<xsi:minLength value="0"/>
+					<xsi:maxLength value="256"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="SslCiphersType">
+				<xsi:annotation>
+					<xsi:documentation>SSL加密算法列表</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:minLength value="1"/>
+					<xsi:maxLength value="255"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="ThresholdType">
+				<xsi:annotation>
+					<xsi:documentation>百分比（snmp节点监视器）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="xsi:integer">
+					<xsi:minInclusive value="1"/>
+					<xsi:maxInclusive value="100"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="RadiusReqType">
+				<xsi:annotation>
+					<xsi:documentation>Radius请求类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="ACCESS_REQUEST"/>
+					<xsi:enumeration value="ACCOUNTING_REQUEST"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="RadiusAccessType">
+				<xsi:annotation>
+					<xsi:documentation>Radius认证加密类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="ACCESS_TYPE_PAP"/>
+					<xsi:enumeration value="ACCESS_TYPE_CHAP"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="RadiusUsernameType">
+				<xsi:annotation>
+					<xsi:documentation>radius监视器用户名</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="StringType">
+					<xsi:minLength value="1"/>
+					<xsi:maxLength value="253"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="RadiusPasswdType">
+				<xsi:annotation>
+					<xsi:documentation>radius监视器密码</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="StringType">
+					<xsi:minLength value="1"/>
+					<xsi:maxLength value="128"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="RadiusSecretType">
+				<xsi:annotation>
+					<xsi:documentation>radius监视器密钥</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="StringType">
+					<xsi:minLength value="1"/>
+					<xsi:maxLength value="255"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="RadiusAttrType">
+				<xsi:annotation>
+					<xsi:documentation>Radius属性类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="RADIUS_ATTR_UINT32"/>
+					<xsi:enumeration value="RADIUS_ATTR_ADDR"/>
+					<xsi:enumeration value="RADIUS_ATTR_STRING"/>
+					<xsi:enumeration value="RADIUS_ATTR_BYTE_STRING"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:complexType name="AddrElementType">
+				<xsi:annotation>
+					<xsi:documentation>地址范围类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="type" type="tns:AddrType"/>
+					<xsi:element name="info" type="tns:StringType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="RadiusMonitorAttrType">
+				<xsi:annotation>
+					<xsi:documentation>radius配置属性</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="attr_id" type="tns:IntegerType" minOccurs="0"/>
+					<xsi:element name="attr_type" type="tns:RadiusAttrType" minOccurs="0"/>
+					<xsi:element name="attr_int" type="tns:IntegerType" minOccurs="0"/>
+					<xsi:element name="attr_string" type="tns:StringType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:simpleType name="FtpModeType">
+				<xsi:annotation>
+					<xsi:documentation>FTP下载模式</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="PASSIVE_MODE_TYPE"/>
+					<xsi:enumeration value="PORT_MODE_TYPE"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="FtpPwdType">
+				<xsi:annotation>
+					<xsi:documentation>FTP监视器密码</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:minLength value="0"/>
+					<xsi:maxLength value="63"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="FtpPathType">
+				<xsi:annotation>
+					<xsi:documentation>FTP监视器路径</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:minLength value="1"/>
+					<xsi:maxLength value="1024"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:simpleType name="HttpSchedModeType">
+				<xsi:annotation>
+					<xsi:documentation>调度方式（http虚拟服务使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:restriction base="tns:StringType">
+					<xsi:enumeration value="HTTP_SCHED_MODE_FIRST_REQ"/>
+					<xsi:enumeration value="HTTP_SCHED_MODE_EVERY_REQ"/>
+				</xsi:restriction>
+			</xsi:simpleType>
+			<xsi:complexType name="SSLAttrType">
+				<xsi:annotation>
+					<xsi:documentation>七层虚拟服务SSL配置</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="ssl_profile" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="http_redir_enable" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="port" type="tns:IntegerType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="ADAuthType">
+				<xsi:annotation>
+					<xsi:documentation>AD认证类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="username" type="tns:UsernameType"/>
+					<xsi:element name="passwd" type="tns:PasswdType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="PortScopeType">
+				<xsi:annotation>
+					<xsi:documentation>服务端口类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="from" type="tns:SPortType"/>
+					<xsi:element name="to" type="tns:SPortType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="PortListType">
+				<xsi:annotation>
+					<xsi:documentation>端口列表类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="port" type="tns:PortScopeType" minOccurs="1" maxOccurs="16"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="ServiceInfoType">
+				<xsi:annotation>
+					<xsi:documentation>服务信息类型（创建服务时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+					<xsi:element name="type" type="tns:ServiceType"/>
+					<xsi:element name="port_scope" type="tns:PortScopeType" minOccurs="1" maxOccurs="16"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="ServerInfoExType">
+				<xsi:annotation>
+					<xsi:documentation>服务信息类型（更新服务时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="ServiceBaseInfoType">
+				<xsi:annotation>
+					<xsi:documentation>服务信息基本类型（服务列表显示记录）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+					<xsi:element name="type" type="tns:ServiceType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="ServiceInfoListType">
+				<xsi:annotation>
+					<xsi:documentation>服务信息列表类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="service_info" type="tns:ServiceBaseInfoType" minOccurs="0" maxOccurs="100"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="IpInfoType">
+				<xsi:annotation>
+					<xsi:documentation>链路属性类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="netif_name" type="tns:CommonNameType"/>
+					<xsi:element name="ip_addr" type="tns:IpType" minOccurs="1" maxOccurs="32"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="IpInfoListType">
+				<xsi:annotation>
+					<xsi:documentation>链路列表类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="ip_list" type="tns:IpInfoType" minOccurs="0" maxOccurs="100"/>
+				</xsi:sequence>
+			</xsi:complexType>			
+			<xsi:complexType name="IpGroupBaseType">
+				<xsi:annotation>
+					<xsi:documentation>IP组基础信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="IpGroupInfoType">
+				<xsi:annotation>
+					<xsi:documentation>IP组信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+					<xsi:element name="ip_info" type="tns:IpInfoType" minOccurs="1" maxOccurs="32"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="IpGroupInfoListType">
+				<xsi:annotation>
+					<xsi:documentation>IP组信息列表类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="ip_group_list" type="tns:IpGroupBaseType" minOccurs="0" maxOccurs="100"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NetIfNameType">
+				<xsi:annotation>
+					<xsi:documentation>网口类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="ifname" type="tns:CommonNameType"/>
+					<xsi:element name="enable" type="tns:BoolType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="WanIpListType">
+				<xsi:annotation>
+					<xsi:documentation>Wan口IP列表类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="ip_addr" type="tns:StringType" minOccurs="1" maxOccurs="512"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="WanInfoType">
+				<xsi:annotation>
+					<xsi:documentation>WAN口信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="wan_name" type="tns:CommonNameType"/>
+					<xsi:element name="ifname" type="tns:NetIfNameType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="WanInfoListType">
+				<xsi:annotation>
+					<xsi:documentation>WAN口信息列表类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="wan_info" type="tns:WanInfoType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="PersistSourceIpType">
+				<xsi:annotation>
+					<xsi:documentation>SourceIp会话保持信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="mask_v4" type="tns:IpType" minOccurs="0"/>
+					<xsi:element name="mask_v6" type="tns:IpType" minOccurs="0"/>
+					<xsi:element name="sourceip_timeout" type="tns:STimeOutType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="PersistCookieType">
+				<xsi:annotation>
+					<xsi:documentation>Cookie会话保持信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="cookie_type" type="tns:CookieType" minOccurs="0"/>
+					<xsi:element name="cookie_name" type="tns:CookieNameType" minOccurs="0"/>
+					<xsi:element name="cookie_domain" type="tns:CookieDomainType" minOccurs="0"/>
+					<xsi:element name="cookie_path" type="tns:CookiePathType" minOccurs="0"/>
+					<xsi:element name="cookie_timeout" type="tns:CTimeOutType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="PersistBaseInfoType">
+				<xsi:annotation>
+					<xsi:documentation>会话保持基本信息类型（查看列表时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="persist_name" type="tns:CommonNameType"/>
+					<xsi:element name="p_type" type="tns:PersistType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="PersistInfoType">
+				<xsi:annotation>
+					<xsi:documentation>会话保持信息类型（创建/查看时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="persist_name" type="tns:CommonNameType"/>
+					<xsi:element name="p_type" type="tns:PersistType"/>
+					<xsi:element name="prior_to_connect" type="tns:BoolType"/>
+					<xsi:element name="sourceIp" type="tns:PersistSourceIpType" minOccurs="0"/>
+					<xsi:element name="cookie" type="tns:PersistCookieType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="PersistUpdateInfoType">
+				<xsi:annotation>
+					<xsi:documentation>会话保持信息类型(更新时使用)</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="persist_name" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="prior_to_connect" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="sourceIp" type="tns:PersistSourceIpType" minOccurs="0"/>
+					<xsi:element name="cookie" type="tns:PersistCookieType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="PersistInfoListType">
+				<xsi:annotation>
+					<xsi:documentation>会话保持列表信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="persist_info" type="tns:PersistBaseInfoType" minOccurs="0" maxOccurs="50"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorViewInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点监视器信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+					<xsi:element name="type" type="tns:MonitorType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorInfoListType">
+				<xsi:annotation>
+					<xsi:documentation>节点监视器信息列表类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="monitor_info" type="tns:NodeMonitorViewInfoType" minOccurs="0" maxOccurs="50"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorBaseInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点监视器基本信息类型(创建/查看时使用)</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="type" type="tns:MonitorType"/>
+					<xsi:element name="interval" type="tns:MonitorTimeType"/>
+					<xsi:element name="timeout" type="tns:MonitorTimeType"/>
+					<xsi:element name="tryout" type="tns:MonitorTimeType"/>
+					<xsi:element name="addr" type="tns:IpType"/>
+					<xsi:element name="port" type="tns:SPortExtType" minOccurs="0"/>
+					<xsi:element name="debug" type="tns:BoolType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorBaseUpdateInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点监视器基本信息类型(更新时使用)</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="interval" type="tns:MonitorTimeType" minOccurs="0"/>
+					<xsi:element name="timeout" type="tns:MonitorTimeType" minOccurs="0"/>
+					<xsi:element name="tryout" type="tns:MonitorTimeType" minOccurs="0"/>
+					<xsi:element name="addr" type="tns:IpType" minOccurs="0"/>
+					<xsi:element name="port" type="tns:SPortExtType" minOccurs="0"/>
+					<xsi:element name="debug" type="tns:BoolType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorConnectInfoExType">
+				<xsi:annotation>
+					<xsi:documentation>Connect节点监视器信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="recv_buf_max" type="tns:RecvBufMaxType" minOccurs="0"/>
+					<xsi:element name="send_msg" type="tns:SendMsgType" minOccurs="0"/>
+					<xsi:element name="recv_include" type="tns:RecvCloseMsgType" minOccurs="0"/>
+					<xsi:element name="close_send_msg" type="tns:RecvCloseMsgType" minOccurs="0"/>
+					<xsi:element name="resp_code" type="tns:StringType" minOccurs="0"/>
+					<xsi:element name="url_msg" type="tns:StringType" minOccurs="0"/>
+					<xsi:element name="ssl_cert_id" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="ssl_ciphers" type="tns:SslCiphersType" minOccurs="0"/>
+					<xsi:element name="hex" type="tns:BoolType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorSnmpInfoExType">
+				<xsi:annotation>
+					<xsi:documentation>Snmp节点监视器信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="community" type="tns:StringType" minOccurs="0"/>
+					<xsi:element name="cpu_threshold" type="tns:ThresholdType" minOccurs="0"/>
+					<xsi:element name="cpu_ratio" type="tns:ThresholdType" minOccurs="0"/>
+					<xsi:element name="mem_threshold" type="tns:ThresholdType" minOccurs="0"/>
+					<xsi:element name="mem_ratio" type="tns:ThresholdType" minOccurs="0"/>
+					<xsi:element name="disk_threshold" type="tns:ThresholdType" minOccurs="0"/>
+					<xsi:element name="disk_ratio" type="tns:ThresholdType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorDnsInfoExType">
+				<xsi:annotation>
+					<xsi:documentation>dns节点监视器信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="query_domain" type="tns:StringType" minOccurs="0"/>
+					<xsi:element name="match_addr" type="tns:StringType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorRadiusInfoExType">
+				<xsi:annotation>
+					<xsi:documentation>Radius节点监视器信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="req_type" type="tns:RadiusReqType" minOccurs="0"/>
+					<xsi:element name="access_type" type="tns:RadiusAccessType" minOccurs="0"/>
+					<xsi:element name="user_name" type="tns:RadiusUsernameType" minOccurs="0"/>
+					<xsi:element name="password" type="tns:RadiusPasswdType" minOccurs="0"/>
+					<xsi:element name="secret" type="tns:RadiusSecretType" minOccurs="0"/>
+					<xsi:element name="attrs" type="tns:RadiusMonitorAttrType" minOccurs="0" maxOccurs="32"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorFtpInfoExType">
+				<xsi:annotation>
+					<xsi:documentation>ftp节点监视器信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="uname" type="tns:StringType" minOccurs="0"/>
+					<xsi:element name="upwd" type="tns:FtpPwdType" minOccurs="0"/>
+					<xsi:element name="path" type="tns:FtpPathType" minOccurs="0"/>
+					<xsi:element name="mode" type="tns:FtpModeType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorTcpHalfInfoExType">
+				<xsi:annotation>
+					<xsi:documentation>tcp半连接节点监视器信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="src_addr" type="tns:StringType" minOccurs="0"/>
+					<xsi:element name="interface" type="tns:CommonNameType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点监视器信息类型（创建/查看时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="monitor_name" type="tns:CommonNameType"/>
+					<xsi:element name="base_info" type="tns:NodeMonitorBaseInfoType"/>
+					<xsi:element name="connect_ext" type="tns:NodeMonitorConnectInfoExType" minOccurs="0"/>
+					<xsi:element name="snmp_ext" type="NodeMonitorSnmpInfoExType" minOccurs="0"/>
+					<xsi:element name="dns_ext" type="NodeMonitorDnsInfoExType" minOccurs="0"/>
+					<xsi:element name="radius_ext" type="NodeMonitorRadiusInfoExType" minOccurs="0"/>
+					<xsi:element name="ftp_ext" type="NodeMonitorFtpInfoExType" minOccurs="0"/>
+					<xsi:element name="tcphalf_ext" type="NodeMonitorTcpHalfInfoExType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeMonitorUpdateInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点监视器信息类型（更新时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="monitor_name" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="base_info" type="tns:NodeMonitorBaseUpdateInfoType" minOccurs="0"/>
+					<xsi:element name="connect_ext" type="tns:NodeMonitorConnectInfoExType" minOccurs="0"/>
+					<xsi:element name="snmp_ext" type="NodeMonitorSnmpInfoExType" minOccurs="0"/>
+					<xsi:element name="dns_ext" type="NodeMonitorDnsInfoExType" minOccurs="0"/>
+					<xsi:element name="radius_ext" type="NodeMonitorRadiusInfoExType" minOccurs="0"/>
+					<xsi:element name="ftp_ext" type="NodeMonitorFtpInfoExType" minOccurs="0"/>
+					<xsi:element name="tcphalf_ext" type="NodeMonitorTcpHalfInfoExType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="SnatInfoType">
+				<xsi:annotation>
+					<xsi:documentation>SNAT地址集信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="snat_name" type="tns:CommonNameType"/>
+					<xsi:element name="ip_addr" type="tns:AddrElementType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="SnatInfoListType">
+				<xsi:annotation>
+					<xsi:documentation>SNAT地址集列表信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="snat_info" type="tns:SnatInfoType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="SslProfileType">
+				<xsi:annotation>
+					<xsi:documentation>SSL策略信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="ssl_profile_name" type="tns:CommonNameType"/>
+					<xsi:element name="ssl_cert_name" type="tns:CommonNameType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="VsBaseInfoType">
+				<xsi:annotation>
+					<xsi:documentation>虚拟服务基本信息类型（查看虚拟服务列表时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+					<xsi:element name="enable" type="tns:BoolType"/>
+					<xsi:element name="mode" type="tns:VsModeType"/>
+					<xsi:element name="service_name" type="tns:CommonNameType"/>
+					<xsi:element name="ip_group_name" type="tns:CommonNameType"/>
+					<xsi:element name="node_pool_name" type="tns:CommonNameType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="VsBaseInfoListType">
+				<xsi:annotation>
+					<xsi:documentation>虚拟服务信息列表类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="vs_base_info" type="tns:VsBaseInfoType" minOccurs="0" maxOccurs="50"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="VsCreateInfoType">
+				<xsi:annotation>
+					<xsi:documentation>虚拟服务信息类型（创建时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+					<xsi:element name="enable" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="mode" type="tns:VsModeType"/>
+					<xsi:element name="http_sched_mode" type="tns:HttpSchedModeType" minOccurs="0"/>
+					<xsi:element name="tcp_cache_stream" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="tcp_cache_num" type="tns:IntegerType" minOccurs="0"/>
+					<xsi:element name="end_str" type="tns:StringType" minOccurs="0"/>
+					<xsi:element name="pre_rule" type="tns:CommonNameType" minOccurs="0" maxOccurs="100"/>
+					<xsi:element name="service_name" type="tns:CommonNameType"/>
+					<xsi:element name="ip_group_name" type="tns:CommonNameType"/>
+					<xsi:element name="node_pool_name" type="tns:CommonNameType"/>
+					<xsi:element name="auto_snat" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="snat_pool" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="three_transfer" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="ssl" type="tns:SSLAttrType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="VsViewInfoType">
+				<xsi:annotation>
+					<xsi:documentation>虚拟服务信息类型（查看信息时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+					<xsi:element name="enable" type="tns:BoolType"/>
+					<xsi:element name="mode" type="tns:VsModeType"/>
+					<xsi:element name="http_sched_mode" type="tns:HttpSchedModeType" minOccurs="0"/>
+					<xsi:element name="tcp_cache_stream" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="tcp_cache_num" type="tns:IntegerType" minOccurs="0"/>
+					<xsi:element name="end_str" type="tns:StringType" minOccurs="0"/>
+					<xsi:element name="pre_rule" type="tns:CommonNameType" minOccurs="0" maxOccurs="100"/>
+					<xsi:element name="service_name" type="tns:CommonNameType"/>
+					<xsi:element name="ip_group_name" type="tns:CommonNameType"/>
+					<xsi:element name="node_pool_name" type="tns:CommonNameType"/>
+					<xsi:element name="auto_snat" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="snat_pool" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="three_transfer" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="ssl" type="tns:SSLAttrType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="VsUpdateInfoType">
+				<xsi:annotation>
+					<xsi:documentation>虚拟服务信息类型（更新时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="enable" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="http_sched_mode" type="tns:HttpSchedModeType" minOccurs="0"/>
+					<xsi:element name="tcp_cache_stream" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="tcp_cache_num" type="tns:IntegerType" minOccurs="0"/>
+					<xsi:element name="end_str" type="tns:StringType" minOccurs="0"/>
+					<xsi:element name="pre_rule" type="tns:CommonNameType" minOccurs="0" maxOccurs="100"/>
+					<xsi:element name="ip_group_name" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="node_pool_name" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="auto_snat" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="snat_pool" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="three_transfer" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="ssl" type="tns:SSLAttrType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodePoolInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点池基本信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="node_pool_name" type="tns:CommonNameType"/>
+					<xsi:element name="node_number" type="tns:IntegerType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodePoolCreateInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点池详细信息类型（创建时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="node_pool_name" type="tns:CommonNameType"/>
+					<xsi:element name="node_lb_method" type="tns:NodeLbMethodType" minOccurs="0"/>
+					<xsi:element name="hash_type" type="tns:NodeHashType" minOccurs="0"/>
+					<xsi:element name="persist1_name" type="tns:CommonNameType"/>
+					<xsi:element name="persist2_name" type="tns:CommonNameType"/>
+					<xsi:element name="monitors" type="tns:CommonNameType" minOccurs="1" maxOccurs="5"/>
+					<xsi:element name="min_monitors" type="tns:IntegerType"/>
+					<xsi:element name="recover_interval" type="tns:NodePoolIntervalType"/>
+					<xsi:element name="stepper_interval" type="tns:NodePoolIntervalType"/>
+					<xsi:element name="sched_method" type="tns:SchedMethodType"/>
+					<xsi:element name="conn_stat_all" type="tns:BoolType"/>
+					<xsi:element name="queue_length" type="tns:IntegerType" minOccurs="0"/>
+					<xsi:element name="queue_timeout" type="tns:IntegerType" minOccurs="0"/>
+					<xsi:element name="node_info" type="tns:NodeInfoType" minOccurs="1" maxOccurs="500"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodePoolViewInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点池详细信息类型（查看，更新时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="node_pool_name" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="node_lb_method" type="tns:NodeLbMethodType" minOccurs="0"/>
+					<xsi:element name="hash_type" type="tns:NodeHashType" minOccurs="0"/>
+					<xsi:element name="persist1_name" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="persist2_name" type="tns:CommonNameType" minOccurs="0"/>
+					<xsi:element name="monitors" type="tns:CommonNameType" minOccurs="0" maxOccurs="5"/>
+					<xsi:element name="min_monitors" type="tns:IntegerType" minOccurs="0"/>
+					<xsi:element name="recover_interval" type="tns:NodePoolIntervalType" minOccurs="0"/>
+					<xsi:element name="stepper_interval" type="tns:NodePoolIntervalType" minOccurs="0"/>
+					<xsi:element name="sched_method" type="tns:SchedMethodType" minOccurs="0"/>
+					<xsi:element name="conn_stat_all" type="tns:BoolType" minOccurs="0"/>
+					<xsi:element name="queue_length" type="tns:IntegerType" minOccurs="0"/>
+					<xsi:element name="queue_timeout" type="tns:IntegerType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeStatusInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点状态信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="conf_status" type="tns:NodeConfStatusType"/>
+					<xsi:element name="current_status" type="tns:NodeCurrentStatusType"/>
+					<xsi:element name="connection" type="tns:NodeConnectionType"/>
+					<xsi:element name="addr" type="tns:IpType" minOccurs="1"/>
+					<xsi:element name="port" type="tns:SPortType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeInfoType">
+				<xsi:annotation>
+					<xsi:documentation>节点信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="status" type="tns:NodeConfStatusType" minOccurs="0"/>
+					<xsi:element name="ratio" type="tns:NodeRatioType" minOccurs="0"/>
+					<xsi:element name="max_connects" type="tns:NodeMaxConnectsType" minOccurs="0"/>
+					<xsi:element name="new_connects" type="tns:NodeNewConnectsType" minOccurs="0"/>
+					<xsi:element name="max_request" type="tns:NodeMaxRequestType" minOccurs="0"/>
+					<xsi:element name="rs_val1" type="tns:NodeRsVal1Type" minOccurs="0"/>
+					<xsi:element name="addr" type="tns:IpType" minOccurs="0"/>
+					<xsi:element name="port" type="tns:SPortType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeInfoExType">
+				<xsi:annotation>
+					<xsi:documentation>节点信息类型（更新时使用）</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="status" type="tns:NodeConfStatusType" minOccurs="0"/>
+					<xsi:element name="ratio" type="tns:NodeRatioType" minOccurs="0"/>
+					<xsi:element name="max_connects" type="tns:NodeMaxConnectsType" minOccurs="0"/>
+					<xsi:element name="new_connects" type="tns:NodeNewConnectsType" minOccurs="0"/>
+					<xsi:element name="max_request" type="tns:NodeMaxRequestType" minOccurs="0"/>
+					<xsi:element name="rs_val1" type="tns:NodeRsVal1Type" minOccurs="0"/>
+					<xsi:element name="port" type="tns:SPortType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeKeyType">
+				<xsi:annotation>
+					<xsi:documentation>定位节点的键值类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="node_pool_name" type="tns:CommonNameType"/>
+					<xsi:element name="ip" type="tns:IpType"/>
+					<xsi:element name="port" type="tns:SPortType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeKeyExtType">
+				<xsi:annotation>
+					<xsi:documentation>定位节点的键值类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="node_pool_name" type="tns:CommonNameType"/>
+					<xsi:element name="ip" type="tns:IpType"/>
+					<xsi:element name="port" type="tns:SPortExtType" minOccurs="0"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodePoolListType">
+				<xsi:annotation>
+					<xsi:documentation>节点池列表类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="node_pool" type="tns:NodePoolInfoType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="NodeListType">
+				<xsi:annotation>
+					<xsi:documentation>节点列表类型;节点列表和节点信息都会返回这个类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="node" type="tns:NodeInfoType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsi:sequence>
+				<xsi:attribute name="name" type="tns:CommonNameType" use="required"/>
+			</xsi:complexType>
+			<xsi:complexType name="NodeStatusListType">
+				<xsi:annotation>
+					<xsi:documentation>节点状态应答类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="node" type="tns:NodeStatusInfoType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsi:sequence>
+				<xsi:attribute name="name" type="tns:CommonNameType" use="required"/>
+			</xsi:complexType>
+			<xsi:complexType name="VsStatusInfoType">
+				<xsi:annotation>
+					<xsi:documentation>虚拟服务状态信息类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="name" type="tns:CommonNameType"/>
+					<xsi:element name="inbytes" type="tns:StringType"/>
+					<xsi:element name="outbytes" type="tns:StringType"/>
+					<xsi:element name="inpackets" type="tns:StringType"/>
+					<xsi:element name="outpackets" type="tns:StringType"/>
+					<xsi:element name="curconns" type="tns:StringType"/>
+					<xsi:element name="newconns" type="tns:StringType"/>
+					<xsi:element name="maxconns" type="tns:StringType"/>
+					<xsi:element name="totalconns" type="tns:StringType"/>
+					<xsi:element name="requests" type="tns:StringType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="VsStatusListType">
+				<xsi:annotation>
+					<xsi:documentation>虚拟服务状态应答类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="vs_status" type="tns:VsStatusInfoType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="VsSchedType">
+				<xsi:annotation>
+					<xsi:documentation>前置调度策略类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="schedname" type="tns:CommonNameType" minOccurs="0" maxOccurs="unbounded"/>
+					<xsi:element name="service" type="tns:CommonNameType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="VsSchedListType">
+				<xsi:annotation>
+					<xsi:documentation>前置调度策略列表应答类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="schedlist" type="tns:VsSchedType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="SslProfileListType">
+				<xsi:annotation>
+					<xsi:documentation>SSL策略列表应答类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="profilename" type="tns:CommonNameType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="ErrType">
+				<xsi:annotation>
+					<xsi:documentation>错误类型</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="err_code" type="xsi:integer"/>
+					<xsi:element name="err_info" type="tns:StringType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+			<xsi:complexType name="ErrInfoType">
+				<xsi:annotation>
+					<xsi:documentation>错误信息</xsi:documentation>
+				</xsi:annotation>
+				<xsi:sequence>
+					<xsi:element name="error" type="ErrType"/>
+				</xsi:sequence>
+			</xsi:complexType>
+		</xsi:schema>
+	</wsdl:types>
+	<wsdl:message name="getNodeStatusRequest">
+		<wsdl:part name="node_pool_name" type="tns:CommonNameType">
+			<wsdl:documentation>节点池名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodeStatusResponse">
+		<wsdl:part name="node_pool" type="tns:NodeStatusListType">
+			<wsdl:documentation>节点状态列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodePoolListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodePoolListResponse">
+		<wsdl:part name="node_pool_list" type="tns:NodePoolListType">
+			<wsdl:documentation>节点池列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="errorOpr">
+		<wsdl:part name="error" type="tns:ErrInfoType">
+			<wsdl:documentation>错误信息</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodeListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="node_pool_name" type="tns:CommonNameType">
+			<wsdl:documentation>节点池名称</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodeListResponse">
+		<wsdl:part name="node_pool" type="tns:NodeListType">
+			<wsdl:documentation>节点列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodeInfoRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="node_key" type="tns:NodeKeyType">
+			<wsdl:documentation>节点池名称，节点IP/端口</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodeInfoResponse">
+		<wsdl:part name="node_info" type="tns:NodeInfoType">
+			<wsdl:documentation>节点信息详情</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createNodeRequest">
+		<wsdl:part name="node_pool_name" type="tns:CommonNameType">
+			<wsdl:documentation>节点池名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="node_info" type="tns:NodeInfoType">
+			<wsdl:documentation>节点信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createNodeResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateNodeRequest">
+		<wsdl:part name="node_key" type="tns:NodeKeyType">
+			<wsdl:documentation>节点池名称；节点IP/端口</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="node_info" type="tns:NodeInfoExType">
+			<wsdl:documentation>需要更新的节点信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateNodeResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteNodeRequest">
+		<wsdl:part name="node_key" type="tns:NodeKeyExtType">
+			<wsdl:documentation>节点池名称，节点IP/端口</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteNodeResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodePoolInfoRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="node_pool_name" type="tns:CommonNameType">
+			<wsdl:documentation>节点池名称</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodePoolInfoResponse">
+		<wsdl:part name="node_pool_info" type="tns:NodePoolViewInfoType">
+			<wsdl:documentation>节点池信息详情</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createNodePoolInfoRequest">
+		<wsdl:part name="node_pool_info" type="tns:NodePoolCreateInfoType">
+			<wsdl:documentation>待创建的节点池信息（需含节点信息）</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createNodePoolInfoResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateNodePoolInfoRequest">
+		<wsdl:part name="node_pool_name" type="tns:CommonNameType">
+			<wsdl:documentation>节点池名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="node_pool_info" type="tns:NodePoolViewInfoType">
+			<wsdl:documentation>待更新的节点信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateNodePoolInfoResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteNodePoolInfoRequest">
+		<wsdl:part name="node_name" type="tns:CommonNameType">
+			<wsdl:documentation>节点池名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteNodePoolInfoResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getWanInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getWanInfoListResponse">
+		<wsdl:part name="wan_info" type="tns:WanInfoListType">
+			<wsdl:documentation>网络接口WAN口信息列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getWanIpInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="name" type="tns:CommonNameType">
+			<wsdl:documentation>WAN口名称</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getWanIpInfoListResponse">
+		<wsdl:part name="ip_list" type="tns:WanIpListType">
+			<wsdl:documentation>网络接口WAN口IP列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getServPortInfoRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="server_name" type="tns:CommonNameType">
+			<wsdl:documentation>服务名称</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getServPortInfoResponse">
+		<wsdl:part name="serv_port_info" type="tns:PortListType">
+			<wsdl:documentation>获取指定服务的端口列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="addServPortInfoRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="server_name" type="tns:CommonNameType">
+			<wsdl:documentation>服务名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="port_info" type="tns:PortScopeType">
+			<wsdl:documentation>待增加的端口信息</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="addServPortInfoResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteServPortInfoRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="server_name" type="tns:CommonNameType">
+			<wsdl:documentation>服务名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="port_info" type="tns:PortScopeType">
+			<wsdl:documentation>待删除的端口信息</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteServPortInfoResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getServInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getServInfoListResponse">
+		<wsdl:part name="serv_port_info" type="tns:ServiceInfoListType">
+			<wsdl:documentation>获取服务列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createServRequest">
+		<wsdl:part name="server_info" type="tns:ServiceInfoType">
+			<wsdl:documentation>待创建的服务信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createServResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateServRequest">
+		<wsdl:part name="server_name" type="tns:CommonNameType">
+			<wsdl:documentation>服务名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="server_info" type="tns:ServerInfoExType">
+			<wsdl:documentation>需要更新的服务信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateServResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteServRequest">
+		<wsdl:part name="server_name" type="tns:CommonNameType">
+			<wsdl:documentation>服务名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteServResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getIpInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ip_group_name" type="tns:CommonNameType">
+			<wsdl:documentation>IP组名称</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getIpInfoListResponse">
+		<wsdl:part name="ip_info" type="tns:IpInfoListType">
+			<wsdl:documentation>IP列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="addIpInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ip_group_name" type="tns:CommonNameType">
+			<wsdl:documentation>IP组名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ip_info" type="tns:IpInfoType">
+			<wsdl:documentation>待增加的IP信息</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="addIpInfoListResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteIpInfoRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ip_group_name" type="tns:CommonNameType">
+			<wsdl:documentation>IP组名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ip_info" type="tns:IpInfoType">
+			<wsdl:documentation>待删除的IP信息</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteIpInfoResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getIpGroupInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getIpGroupInfoListResponse">
+		<wsdl:part name="ip_group_list" type="tns:IpGroupInfoListType">
+			<wsdl:documentation>IP组列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createIpGroupRequest">
+		<wsdl:part name="ip_group_info" type="tns:IpGroupInfoType">
+			<wsdl:documentation>IP组信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createIpGroupResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateIpGroupRequest">
+		<wsdl:part name="ip_group_name" type="tns:CommonNameType">
+			<wsdl:documentation>IP组名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ip_group_info" type="tns:IpGroupBaseType">
+			<wsdl:documentation>需要更新的IP组信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateIpGroupResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteIpGroupRequest">
+		<wsdl:part name="ip_group_name" type="tns:CommonNameType">
+			<wsdl:documentation>IP组名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteIpGroupResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getPersistInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getPersistInfoListResponse">
+		<wsdl:part name="persist_list" type="tns:PersistInfoListType">
+			<wsdl:documentation>会话保持列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getPersistInfoRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="persist_name" type="tns:CommonNameType">
+			<wsdl:documentation>会话保持名称</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getPersistInfoResponse">
+		<wsdl:part name="persist_info" type="tns:PersistInfoType">
+			<wsdl:documentation>会话保持信息详情</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createPersistRequest">
+		<!-- <wsdl:part name="persist_name" type="tns:CommonNameType">
+			<wsdl:documentation>会话保持名称</wsdl:documentation>
+		</wsdl:part> -->
+		<wsdl:part name="persist_info" type="tns:PersistInfoType">
+			<wsdl:documentation>会话保持信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createPersistResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updatePersistRequest">
+		<wsdl:part name="persist_name" type="tns:CommonNameType">
+			<wsdl:documentation>会话保持名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="persist_info" type="tns:PersistUpdateInfoType">
+			<wsdl:documentation>需要更新的会话保持信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updatePersistResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deletePersistRequest">
+		<wsdl:part name="persist_name" type="tns:CommonNameType">
+			<wsdl:documentation>会话保持名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deletePersistResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodeMonitorInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodeMonitorInfoListResponse">
+		<wsdl:part name="monitor_list" type="tns:NodeMonitorInfoListType">
+			<wsdl:documentation>节点监视器列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodeMonitorInfoRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="monitor_name" type="tns:CommonNameType">
+			<wsdl:documentation>节点监视器名称</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getNodeMonitorInfoResponse">
+		<wsdl:part name="monitor_info" type="tns:NodeMonitorInfoType">
+			<wsdl:documentation>节点监视器详情</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createNodeMonitorRequest">
+		<wsdl:part name="monitor_info" type="tns:NodeMonitorInfoType">
+			<wsdl:documentation>待创建的节点监视器信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createNodeMonitorResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateNodeMonitorRequest">
+		<wsdl:part name="monitor_name" type="tns:CommonNameType">
+			<wsdl:documentation>节点监视器名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="monitor_info" type="tns:NodeMonitorUpdateInfoType">
+			<wsdl:documentation>待更新的节点监视器信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateNodeMonitorResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteNodeMonitorRequest">
+		<wsdl:part name="monitor_name" type="tns:CommonNameType">
+			<wsdl:documentation>节点监视器名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteNodeMonitorResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getSnatInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getSnatInfoListResponse">
+		<wsdl:part name="snat_list" type="tns:SnatInfoListType">
+			<wsdl:documentation>获取SNAT地址集列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getVsSchedRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getVsSchedResponse">
+		<wsdl:part name="schedlist" type="tns:VsSchedListType">
+			<wsdl:documentation>前置调度策略列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getSslProfileRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getSslProfileResponse">
+		<wsdl:part name="profilelist" type="tns:SslProfileListType">
+			<wsdl:documentation>SSL策略列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>	
+	
+	<wsdl:message name="deleteSchedRequest">
+		<wsdl:part name="vs_name" type="tns:CommonNameType">
+			<wsdl:documentation>虚拟服务名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="sched_info" type="tns:CommonNameType">
+			<wsdl:documentation>前置调度策略名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteSchedResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getVsStatusRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getVsStatusResponse">
+		<wsdl:part name="vs_stat" type="tns:VsStatusListType">
+			<wsdl:documentation>虚拟服务状态列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getVsBaseInfoListRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getVsBaseInfoListResponse">
+		<wsdl:part name="vs_info_list" type="tns:VsBaseInfoListType">
+			<wsdl:documentation>获取虚拟服务列表</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getVsInfoRequest">
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="vs_name" type="tns:CommonNameType">
+			<wsdl:documentation>虚拟服务名称</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getVsInfoResponse">
+		<wsdl:part name="vs_info" type="tns:VsViewInfoType">
+			<wsdl:documentation>获取指定虚拟服务详情</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createVsRequest">
+		<wsdl:part name="vs_info" type="tns:VsCreateInfoType">
+			<wsdl:documentation>待创建的虚拟服务信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="createVsResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateVsRequest">
+		<wsdl:part name="vs_name" type="tns:CommonNameType">
+			<wsdl:documentation>虚拟服务名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="vs_info" type="tns:VsUpdateInfoType">
+			<wsdl:documentation>需要更新的虚拟服务信息</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="updateVsResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteVsRequest">
+		<wsdl:part name="vs_name" type="tns:CommonNameType">
+			<wsdl:documentation>虚拟服务名称</wsdl:documentation>
+		</wsdl:part>
+		<wsdl:part name="ad_auth" type="tns:ADAuthType">
+			<wsdl:documentation>用户名/密码; base64编码</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="deleteVsResponse">
+		<wsdl:part name="error" type="tns:ErrType">
+			<wsdl:documentation>请求结果</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:portType name="adapiPortType">
+		<wsdl:operation name="getNodeStatus">
+			<wsdl:documentation>获取指定节点池中节点的状态列表</wsdl:documentation>
+			<wsdl:input message="tns:getNodeStatusRequest"/>
+			<wsdl:output message="tns:getNodeStatusResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getNodePoolList">
+			<wsdl:documentation>获取节点池列表</wsdl:documentation>
+			<wsdl:input message="tns:getNodePoolListRequest"/>
+			<wsdl:output message="tns:getNodePoolListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getNodeList">
+			<wsdl:documentation>获取指定节点池中的节点列表</wsdl:documentation>
+			<wsdl:input message="tns:getNodeListRequest"/>
+			<wsdl:output message="tns:getNodeListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getNodeInfo">
+			<wsdl:documentation>获取指定节点信息</wsdl:documentation>
+			<wsdl:input message="tns:getNodeInfoRequest"/>
+			<wsdl:output message="tns:getNodeInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="createNode">
+			<wsdl:documentation>创建节点</wsdl:documentation>
+			<wsdl:input message="tns:createNodeRequest"/>
+			<wsdl:output message="tns:createNodeResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="updateNode">
+			<wsdl:documentation>更新节点</wsdl:documentation>
+			<wsdl:input message="tns:updateNodeRequest"/>
+			<wsdl:output message="tns:updateNodeResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deleteNode">
+			<wsdl:documentation>删除节点</wsdl:documentation>
+			<wsdl:input message="tns:deleteNodeRequest"/>
+			<wsdl:output message="tns:deleteNodeResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getNodePoolInfo">
+			<wsdl:documentation>获取节点池信息详情</wsdl:documentation>
+			<wsdl:input message="tns:getNodePoolInfoRequest"/>
+			<wsdl:output message="tns:getNodePoolInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="createNodePoolInfo">
+			<wsdl:documentation>创建节点池</wsdl:documentation>
+			<wsdl:input message="tns:createNodePoolInfoRequest"/>
+			<wsdl:output message="tns:createNodePoolInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="updateNodePoolInfo">
+			<wsdl:documentation>更新节点池</wsdl:documentation>
+			<wsdl:input message="tns:updateNodePoolInfoRequest"/>
+			<wsdl:output message="tns:updateNodePoolInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deleteNodePoolInfo">
+			<wsdl:documentation>删除节点池</wsdl:documentation>
+			<wsdl:input message="tns:deleteNodePoolInfoRequest"/>
+			<wsdl:output message="tns:deleteNodePoolInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getWanNameInfo">
+			<wsdl:documentation>获取WAN口信息列表</wsdl:documentation>
+			<wsdl:input message="tns:getWanInfoListRequest"/>
+			<wsdl:output message="tns:getWanInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getServPortInfo">
+			<wsdl:documentation>获取指定服务的端口列表</wsdl:documentation>
+			<wsdl:input message="tns:getServPortInfoRequest"/>
+			<wsdl:output message="tns:getServPortInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="addServPortInfo">
+			<wsdl:documentation>增加指定服务的端口列表</wsdl:documentation>
+			<wsdl:input message="tns:addServPortInfoRequest"/>
+			<wsdl:output message="tns:addServPortInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deleteServPortInfo">
+			<wsdl:documentation>删除指定服务的端口列表</wsdl:documentation>
+			<wsdl:input message="tns:deleteServPortInfoRequest"/>
+			<wsdl:output message="tns:deleteServPortInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getServInfoList">
+			<wsdl:documentation>获取服务列表</wsdl:documentation>
+			<wsdl:input message="tns:getServInfoListRequest"/>
+			<wsdl:output message="tns:getServInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="createServ">
+			<wsdl:documentation>创建服务</wsdl:documentation>
+			<wsdl:input message="tns:createServRequest"/>
+			<wsdl:output message="tns:createServResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="updateServ">
+			<wsdl:documentation>更新服务</wsdl:documentation>
+			<wsdl:input message="tns:updateServRequest"/>
+			<wsdl:output message="tns:updateServResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deleteServ">
+			<wsdl:documentation>删除服务</wsdl:documentation>
+			<wsdl:input message="tns:deleteServRequest"/>
+			<wsdl:output message="tns:deleteServResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getWanIpInfoList">
+			<wsdl:documentation>获取WAN口IP列表信息</wsdl:documentation>
+			<wsdl:input message="tns:getWanIpInfoListRequest"/>
+			<wsdl:output message="tns:getWanIpInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getIpInfoList">
+			<wsdl:documentation>获取指定IP组的IP列表</wsdl:documentation>
+			<wsdl:input message="tns:getIpInfoListRequest"/>
+			<wsdl:output message="tns:getIpInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="addIpInfoList">
+			<wsdl:documentation>待增加的IP信息</wsdl:documentation>
+			<wsdl:input message="tns:addIpInfoListRequest"/>
+			<wsdl:output message="tns:addIpInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deleteIpInfo">
+			<wsdl:documentation>待删除的IP信息</wsdl:documentation>
+			<wsdl:input message="tns:deleteIpInfoRequest"/>
+			<wsdl:output message="tns:deleteIpInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getIpGroupListInfo">
+			<wsdl:documentation>获取IP组列表</wsdl:documentation>
+			<wsdl:input message="tns:getIpGroupInfoListRequest"/>
+			<wsdl:output message="tns:getIpGroupInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="createIpGroup">
+			<wsdl:documentation>创建IP组</wsdl:documentation>
+			<wsdl:input message="tns:createIpGroupRequest"/>
+			<wsdl:output message="tns:createIpGroupResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="updateIpGroup">
+			<wsdl:documentation>更新IP组</wsdl:documentation>
+			<wsdl:input message="tns:updateIpGroupRequest"/>
+			<wsdl:output message="tns:updateIpGroupResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deleteIpGroup">
+			<wsdl:documentation>删除IP组</wsdl:documentation>
+			<wsdl:input message="tns:deleteIpGroupRequest"/>
+			<wsdl:output message="tns:deleteIpGroupResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getPersistInfoList">
+			<wsdl:documentation>获取会话保持列表</wsdl:documentation>
+			<wsdl:input message="tns:getPersistInfoListRequest"/>
+			<wsdl:output message="tns:getPersistInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getPersistInfo">
+			<wsdl:documentation>获取会话保持信息详情</wsdl:documentation>
+			<wsdl:input message="tns:getPersistInfoRequest"/>
+			<wsdl:output message="tns:getPersistInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="createPersist">
+			<wsdl:documentation>创建会话保持</wsdl:documentation>
+			<wsdl:input message="tns:createPersistRequest"/>
+			<wsdl:output message="tns:createPersistResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="updatePersist">
+			<wsdl:documentation>更新会话保持</wsdl:documentation>
+			<wsdl:input message="tns:updatePersistRequest"/>
+			<wsdl:output message="tns:updatePersistResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deletePersist">
+			<wsdl:documentation>删除会话保持</wsdl:documentation>
+			<wsdl:input message="tns:deletePersistRequest"/>
+			<wsdl:output message="tns:deletePersistResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getNodeMonitorInfoList">
+			<wsdl:documentation>获取节点监视器列表</wsdl:documentation>
+			<wsdl:input message="tns:getNodeMonitorInfoListRequest"/>
+			<wsdl:output message="tns:getNodeMonitorInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getNodeMonitorInfo">
+			<wsdl:documentation>获取节点监视器详情</wsdl:documentation>
+			<wsdl:input message="tns:getNodeMonitorInfoRequest"/>
+			<wsdl:output message="tns:getNodeMonitorInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="createNodeMonitor">
+			<wsdl:documentation>创建节点监视器</wsdl:documentation>
+			<wsdl:input message="tns:createNodeMonitorRequest"/>
+			<wsdl:output message="tns:createNodeMonitorResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="updateNodeMonitor">
+			<wsdl:documentation>更新节点监视器</wsdl:documentation>
+			<wsdl:input message="tns:updateNodeMonitorRequest"/>
+			<wsdl:output message="tns:updateNodeMonitorResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deleteNodeMonitor">
+			<wsdl:documentation>删除节点监视器</wsdl:documentation>
+			<wsdl:input message="tns:deleteNodeMonitorRequest"/>
+			<wsdl:output message="tns:deleteNodeMonitorResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getSnatInfoList">
+			<wsdl:documentation>获取SNAT地址集列表</wsdl:documentation>
+			<wsdl:input message="tns:getSnatInfoListRequest"/>
+			<wsdl:output message="tns:getSnatInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getSslProfileList">
+			<wsdl:documentation>获取ssl策略列表</wsdl:documentation>
+			<wsdl:input message="tns:getSslProfileRequest"/>
+			<wsdl:output message="tns:getSslProfileResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getVsSchedList">
+			<wsdl:documentation>获取前置调度策略列表</wsdl:documentation>
+			<wsdl:input message="tns:getVsSchedRequest"/>
+			<wsdl:output message="tns:getVsSchedResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deleteSched">
+			<wsdl:documentation>删除虚拟服务的前置调度策略</wsdl:documentation>
+			<wsdl:input message="tns:deleteSchedRequest"/>
+			<wsdl:output message="tns:deleteSchedResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getVsStatus">
+			<wsdl:documentation>获取虚拟服务的状态列表</wsdl:documentation>
+			<wsdl:input message="tns:getVsStatusRequest"/>
+			<wsdl:output message="tns:getVsStatusResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getVsBaseInfoList">
+			<wsdl:documentation>获取虚拟服务列表</wsdl:documentation>
+			<wsdl:input message="tns:getVsBaseInfoListRequest"/>
+			<wsdl:output message="tns:getVsBaseInfoListResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="getVsInfo">
+			<wsdl:documentation>获取指定虚拟服务详情</wsdl:documentation>
+			<wsdl:input message="tns:getVsInfoRequest"/>
+			<wsdl:output message="tns:getVsInfoResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="createVs">
+			<wsdl:documentation>创建虚拟服务</wsdl:documentation>
+			<wsdl:input message="tns:createVsRequest"/>
+			<wsdl:output message="tns:createVsResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="updateVs">
+			<wsdl:documentation>更新虚拟服务</wsdl:documentation>
+			<wsdl:input message="tns:updateVsRequest"/>
+			<wsdl:output message="tns:updateVsResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+		<wsdl:operation name="deleteVs">
+			<wsdl:documentation>删除虚拟服务</wsdl:documentation>
+			<wsdl:input message="tns:deleteVsRequest"/>
+			<wsdl:output message="tns:deleteVsResponse"/>
+			<wsdl:fault name="errorOprPort" message="tns:errorOpr"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="adapi" type="tns:adapiPortType">
+		<soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name="getNodeStatus">
+			<wsdl:documentation>获取指定节点池中节点的状态列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getNodePoolList">
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getNodeList">
+			<wsdl:documentation>获取指定节点池的节点列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getNodeInfo">
+			<wsdl:documentation>获取指定节点信息</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="createNode">
+			<wsdl:documentation>创建节点</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="updateNode">
+			<wsdl:documentation>更新节点</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deleteNode">
+			<wsdl:documentation>删除节点</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getNodePoolInfo">
+			<wsdl:documentation>获取节点池信息详情</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="createNodePoolInfo">
+			<wsdl:documentation>创建节点池</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="updateNodePoolInfo">
+			<wsdl:documentation>更新节点池</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deleteNodePoolInfo">
+			<wsdl:documentation>删除节点池</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getWanNameInfo">
+			<wsdl:documentation>获取WAN口名称列表信息</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getWanIpInfoList">
+			<wsdl:documentation>获取WAN口IP列表信息</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getServPortInfo">
+			<wsdl:documentation>获取指定服务的端口列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="addServPortInfo">
+			<wsdl:documentation>增加指定服务的端口列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deleteServPortInfo">
+			<wsdl:documentation>删除指定服务的端口列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getServInfoList">
+			<wsdl:documentation>获取服务列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="createServ">
+			<wsdl:documentation>创建服务</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="updateServ">
+			<wsdl:documentation>更新服务</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deleteServ">
+			<wsdl:documentation>删除服务</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getIpInfoList">
+			<wsdl:documentation>获取指定IP组的IP列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="addIpInfoList">
+			<wsdl:documentation>待增加的IP信息</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deleteIpInfo">
+			<wsdl:documentation>待删除的IP信息</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getIpGroupListInfo">
+			<wsdl:documentation>获取IP组列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="createIpGroup">
+			<wsdl:documentation>创建IP组</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="updateIpGroup">
+			<wsdl:documentation>更新IP组</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deleteIpGroup">
+			<wsdl:documentation>删除IP组</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getPersistInfoList">
+			<wsdl:documentation>获取会话保持列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getPersistInfo">
+			<wsdl:documentation>获取会话保持信息详情</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="createPersist">
+			<wsdl:documentation>创建会话保持</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="updatePersist">
+			<wsdl:documentation>更新会话保持</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deletePersist">
+			<wsdl:documentation>删除会话保持</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getNodeMonitorInfoList">
+			<wsdl:documentation>获取节点监视器列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getNodeMonitorInfo">
+			<wsdl:documentation>获取节点监视器详情</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="createNodeMonitor">
+			<wsdl:documentation>创建节点监视器</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="updateNodeMonitor">
+			<wsdl:documentation>更新节点监视器</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deleteNodeMonitor">
+			<wsdl:documentation>删除节点监视器</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getSnatInfoList">
+			<wsdl:documentation>获取SNAT地址集列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getVsSchedList">
+			<wsdl:documentation>获取前置调度策略列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getSslProfileList">
+			<wsdl:documentation>获取ssl策略列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deleteSched">
+			<wsdl:documentation>删除虚拟服务的前置调度</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getVsStatus">
+			<wsdl:documentation>获取虚拟服务的状态列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getVsBaseInfoList">
+			<wsdl:documentation>获取虚拟服务列表</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="getVsInfo">
+			<wsdl:documentation>获取指定虚拟服务详情</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="createVs">
+			<wsdl:documentation>创建虚拟服务</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="updateVs">
+			<wsdl:documentation>更新虚拟服务</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+		<wsdl:operation name="deleteVs">
+			<wsdl:documentation>删除虚拟服务</wsdl:documentation>
+			<soap:operation soapAction="" style="rpc"/>
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="errorOprPort" />
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="adapi">
+		<wsdl:port name="adapi" binding="tns:adapi">
+			<soap:address location="https://SANGFOR:8224/api/soap/adapi_server.cgi"/>
+			<!-- <soap:address location="https://[host]/api/soap/adapi_server.cgi"/>
+            <soap:address location="https://10.252.252.252:443/api/soap/adapi_server.cgi"/> 
+			<soap:address location="https://10.254.254.254:443/api/soap/adapi_server.cgi"/> 
+			-->
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>
