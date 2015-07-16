@@ -52,7 +52,7 @@ public interface LoadBalancingRulesService {
      */
     LoadBalancer createPublicLoadBalancerRule(String xId, String name, String description, 
             int srcPortStart, int srcPortEnd, int defPortStart, int defPortEnd, Long ipAddrId, String protocol, String algorithm,
-            long networkId, long lbOwnerId, boolean openFirewall, String lbProtocol) throws NetworkRuleConflictException, InsufficientAddressCapacityException;
+            long networkId, long lbOwnerId, boolean openFirewall, String lbProtocol,String serviceType) throws NetworkRuleConflictException, InsufficientAddressCapacityException;
 
     LoadBalancer updateLoadBalancerRule(UpdateLoadBalancerRuleCmd cmd);
 

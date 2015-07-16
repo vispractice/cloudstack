@@ -35,7 +35,7 @@ public interface LoadBalancingRulesManager {
 
     LoadBalancer createPublicLoadBalancer(String xId, String name, String description,
             int srcPort, int destPort, long sourceIpId, String protocol, String algorithm,
-            boolean openFirewall, CallContext caller, String lbProtocol)
+            boolean openFirewall, CallContext caller, String lbProtocol,String serviceType)
             throws NetworkRuleConflictException;
 
     boolean removeAllLoadBalanacersForIp(long ipId, Account caller, long callerUserId);

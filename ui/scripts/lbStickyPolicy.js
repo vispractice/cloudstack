@@ -84,7 +84,7 @@
                     ),
                     function(p) {
                         baseFields[p.paramname] = {
-                            label: _l('label.sticky.' + p.paramname),
+                            label: _l('' + p.paramname),
                             isHidden: true,
                             isBoolean: p.isflag,
                             validation: {

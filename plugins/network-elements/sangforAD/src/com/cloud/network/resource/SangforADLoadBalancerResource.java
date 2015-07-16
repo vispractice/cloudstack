@@ -118,7 +118,7 @@ public class SangforADLoadBalancerResource implements ServerResource {
 	private String _routeDomainIdentifier = "%";
 	
 	//虚拟服务
-	private VsModeType _vsModeType;
+	private VsModeType _vsModeType = VsModeType.VS_MODE_L_4;
 	private HttpSchedModeType _vsHttpSchedModeType;
 	private boolean _vsEnable;
 	private boolean _vsTcpCacheStreamEnable;//是否开启TCP流
@@ -447,10 +447,6 @@ public class SangforADLoadBalancerResource implements ServerResource {
 	 * @throws IllegalStateException
 	 */
 	private void getSangforAdProperties() throws IllegalStateException{
-		String vsModeType = _configProps.getProperty("vs.mode.type");
-        if(!stringIsNull(vsModeType)){
-        	_vsModeType = VsModeType.fromValue(vsModeType);
-        }
         String vsHttpSchedModeType = _configProps.getProperty("vs.http.sched.mode");
         if(!stringIsNull(vsHttpSchedModeType)){
         	 _vsHttpSchedModeType = HttpSchedModeType.fromValue(vsHttpSchedModeType);
@@ -707,7 +703,7 @@ public class SangforADLoadBalancerResource implements ServerResource {
 					createIpGroup(ipGroup,ipGroupName);
 					
 					//若不存在创建虚拟服务
-					VsCreateInfoType vs = objectVO.VsVO(vsServerName,serverName,ipGroupName,poolNodeName);
+					VsCreateInfoType vs = objectVO.VsVO(vsServerName,serverName,ipGroupName,poolNodeName,loadBalancer.getServiceType());
 					createVs(vs,vsServerName);
 					
 				} else {
@@ -1612,10 +1608,17 @@ public class SangforADLoadBalancerResource implements ServerResource {
 		}
 		
 		//创建虚拟服务VO
-		private  VsCreateInfoType VsVO(String vsServerName,String serviceName,String ipGroupName ,String nodePoolName){
+		private  VsCreateInfoType VsVO(String vsServerName,String serviceName,String ipGroupName ,String nodePoolName,String serviceType){
 			VsCreateInfoType _vs = new VsCreateInfoType();
 	        _vs.setName(getByets(vsServerName));
 	        _vs.setEnable(_vsEnable);
+	        if(!stringIsNull(serviceType)){
+	        	try {
+	        		_vsModeType = VsModeType.fromValue(serviceType);
+				} catch (IllegalArgumentException e) {
+					_vsModeType = VsModeType.VS_MODE_L_4;
+				}
+	        }
 	        _vs.setMode(_vsModeType);
 	        //http调度方式
 	        if(_serServiceType == ServiceType.SRV_HTTP || _serServiceType == ServiceType.SRV_HTTPS){

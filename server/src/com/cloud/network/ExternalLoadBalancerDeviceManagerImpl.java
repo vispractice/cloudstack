@@ -883,7 +883,7 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
             String srcIp = rule.getSourceIp().addr();
             int srcPort = rule.getSourcePortStart();
             List<LbDestination> destinations = rule.getDestinations();
-
+            String serviceType = rule.getServiceType();
             if (externalLoadBalancerIsInline) {
                 long ipId = _networkModel.getPublicIpAddress(rule.getSourceIp().addr(), network.getDataCenterId()).getId();
                 MappingNic nic = getLoadBalancingIpNic(zone, network, ipId, revoked, null);
@@ -900,7 +900,7 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
             if ((destinations != null && !destinations.isEmpty()) || rule.isAutoScaleConfig()) {
                 boolean inline = _networkMgr.isNetworkInlineMode(network);
                 LoadBalancerTO loadBalancer = new LoadBalancerTO(uuid, srcIp, srcPort, protocol, algorithm, revoked, false, inline, destinations, rule.getStickinessPolicies(),
-                        rule.getHealthCheckPolicies(), rule.getLbSslCert(), rule.getLbProtocol());
+                        rule.getHealthCheckPolicies(), rule.getLbSslCert(), rule.getLbProtocol(),serviceType);
                 if (rule.isAutoScaleConfig()) {
                     loadBalancer.setAutoScaleVmGroup(rule.getAutoScaleVmGroup());
                 }
@@ -1185,7 +1185,7 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
             if ((destinations != null && !destinations.isEmpty()) || !rule.isAutoScaleConfig()) {
                 boolean inline = _networkMgr.isNetworkInlineMode(network);
                 LoadBalancerTO loadBalancer = new LoadBalancerTO(uuid, srcIp, srcPort, protocol, algorithm, revoked,
-                        false, inline, destinations, rule.getStickinessPolicies(), rule.getHealthCheckPolicies(), rule.getLbSslCert(), rule.getLbProtocol());
+                        false, inline, destinations, rule.getStickinessPolicies(), rule.getHealthCheckPolicies(), rule.getLbSslCert(), rule.getLbProtocol(),rule.getServiceType());
                 loadBalancersToApply.add(loadBalancer);
             }
         }

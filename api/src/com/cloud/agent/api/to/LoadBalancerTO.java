@@ -52,6 +52,7 @@ public class LoadBalancerTO {
     private HealthCheckPolicyTO[] healthCheckPolicies;
     private LbSslCert sslCert; /* XXX: Should this be SslCertTO?  */
     private AutoScaleVmGroupTO autoScaleVmGroupTO;
+    private String serviceType;
     final static int MAX_STICKINESS_POLICIES = 1;
     final static int MAX_HEALTHCHECK_POLICIES = 1;
 
@@ -82,12 +83,12 @@ public class LoadBalancerTO {
             List<LbStickinessPolicy> stickinessPolicies) {
 
         this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, inline, arg_destinations,
-                stickinessPolicies, null, null, null);
+                stickinessPolicies, null, null, null,null);
     }
 
     public LoadBalancerTO(String id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked,
             boolean alreadyAdded, boolean inline, List<LbDestination> arg_destinations,
-            List<LbStickinessPolicy> stickinessPolicies, List<LbHealthCheckPolicy> healthCheckPolicies, LbSslCert sslCert, String lbProtocol) {
+            List<LbStickinessPolicy> stickinessPolicies, List<LbHealthCheckPolicy> healthCheckPolicies, LbSslCert sslCert, String lbProtocol,String serviceType) {
         this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, inline, arg_destinations);
         this.stickinessPolicies = null;
         this.healthCheckPolicies = null;
@@ -125,6 +126,7 @@ public class LoadBalancerTO {
 
         this.sslCert = sslCert;
         this.lbProtocol = lbProtocol;
+        this.serviceType = serviceType;
     }
 
     protected LoadBalancerTO() {
@@ -194,7 +196,15 @@ public class LoadBalancerTO {
        return this.sslCert;
     }
 
-    public static class StickinessPolicyTO {
+    public String getServiceType() {
+		return serviceType;
+	}
+
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
+
+	public static class StickinessPolicyTO {
         private String _methodName;
         private List<Pair<String, String>> _paramsList;
 

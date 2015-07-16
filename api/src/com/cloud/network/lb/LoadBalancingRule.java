@@ -38,6 +38,7 @@ public class LoadBalancingRule {
     private List<LbHealthCheckPolicy> healthCheckPolicies;
     private LbSslCert sslCert;
     private String lbProtocol;
+    private String serviceType;
 
     public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations,
                              List<LbStickinessPolicy> stickinessPolicies, List<LbHealthCheckPolicy> healthCheckPolicies, Ip sourceIp) {
@@ -59,6 +60,18 @@ public class LoadBalancingRule {
         this.lbProtocol = lbProtocol;
     }
 
+    public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations,
+            List<LbStickinessPolicy> stickinessPolicies, List<LbHealthCheckPolicy> healthCheckPolicies, Ip sourceIp, LbSslCert sslCert, String lbProtocol,String serviceType) {
+        this.lb = lb;
+        this.destinations = destinations;
+        this.stickinessPolicies = stickinessPolicies;
+        this.healthCheckPolicies = healthCheckPolicies;
+        this.sourceIp = sourceIp;
+        this.sslCert = sslCert;
+        this.lbProtocol = lbProtocol;
+        this.serviceType = serviceType;
+    }
+    
     public long getId() {
         return lb.getId();
     }
@@ -143,8 +156,17 @@ public class LoadBalancingRule {
     public LbSslCert getLbSslCert(){
         return sslCert;
     }
+    
+    public String getServiceType() {
+		return serviceType;
+	}
 
-    public interface Destination {
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
+
+
+	public interface Destination {
         String getIpAddress();
 
         int getDestinationPortStart();

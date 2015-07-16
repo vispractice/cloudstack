@@ -62,7 +62,9 @@ public class LoadBalancerVO extends FirewallRuleVO implements LoadBalancer {
     @Column(name="lb_protocol")
     String lbProtocol;
 
-
+    @Column(name="service_type")
+    String serviceType;
+    
     public LoadBalancerVO() { 
     }
 
@@ -76,6 +78,19 @@ public class LoadBalancerVO extends FirewallRuleVO implements LoadBalancer {
         this.defaultPortEnd = dstPort;
         this.scheme = Scheme.Public;
         this.lbProtocol = lbProtocol;
+    }
+    
+    public LoadBalancerVO(String xId, String name, String description, long srcIpId, int srcPort, int dstPort, String algorithm, long networkId,
+            long accountId, long domainId, String lbProtocol,String serviceType) {
+		super(xId, srcIpId, srcPort, NetUtils.TCP_PROTO, networkId, accountId, domainId, Purpose.LoadBalancing, null, null, null, null);
+		this.name = name;
+		this.description = description;
+		this.algorithm = algorithm;
+		this.defaultPortStart = dstPort;
+		this.defaultPortEnd = dstPort;
+		this.scheme = Scheme.Public;
+		this.lbProtocol = lbProtocol;
+		this.serviceType = serviceType;
     }
     
     @Override
@@ -126,5 +141,14 @@ public class LoadBalancerVO extends FirewallRuleVO implements LoadBalancer {
     @Override
     public Scheme getScheme() {
         return scheme;
-    }  
+    }
+
+	public String getServiceType() {
+		return serviceType;
+	}
+
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}  
+    
 }

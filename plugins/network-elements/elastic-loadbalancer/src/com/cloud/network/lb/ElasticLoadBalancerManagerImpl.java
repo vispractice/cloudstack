@@ -667,7 +667,7 @@ public class ElasticLoadBalancerManagerImpl extends ManagerBase implements Elast
                 
                 result = _lbMgr.createPublicLoadBalancer(lb.getXid(), lb.getName(), lb.getDescription(),
                         lb.getSourcePortStart(), lb.getDefaultPortStart(), ipId.longValue(), lb.getProtocol(),
-                        lb.getAlgorithm(), false, CallContext.current(), lb.getLbProtocol());
+                        lb.getAlgorithm(), false, CallContext.current(), lb.getLbProtocol(),null);
             } catch (NetworkRuleConflictException e) {
                 s_logger.warn("Failed to create LB rule, not continuing with ELB deployment");
                 if (newIp) {

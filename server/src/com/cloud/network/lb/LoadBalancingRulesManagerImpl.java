@@ -1469,7 +1469,7 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
     @ActionEvent(eventType = EventTypes.EVENT_LOAD_BALANCER_CREATE, eventDescription = "creating load balancer")
     public LoadBalancer createPublicLoadBalancerRule(String xId, String name, String description,
             int srcPortStart, int srcPortEnd, int defPortStart, int defPortEnd, Long ipAddrId, String protocol, String algorithm,
-            long networkId, long lbOwnerId, boolean openFirewall, String lbProtocol)
+            long networkId, long lbOwnerId, boolean openFirewall, String lbProtocol,String serviceType)
             throws NetworkRuleConflictException, InsufficientAddressCapacityException {
         Account lbOwner = _accountMgr.getAccount(lbOwnerId);
         
@@ -1530,7 +1530,7 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
                 }
 
                 result = createPublicLoadBalancer(xId, name, description, srcPortStart, defPortStart, ipVO.getId(), protocol,
-                                    algorithm, openFirewall, CallContext.current(), lbProtocol);
+                                    algorithm, openFirewall, CallContext.current(), lbProtocol,serviceType);
             } catch (Exception ex) {
                 s_logger.warn("Failed to create load balancer due to ", ex);
                 if (ex instanceof NetworkRuleConflictException) {
@@ -1561,7 +1561,7 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
     @Override
     public LoadBalancer createPublicLoadBalancer(final String xId, final String name, final String description,
             final int srcPort, final int destPort, final long sourceIpId, final String protocol,
-                final String algorithm, final boolean openFirewall, final CallContext caller, final String lbProtocol)
+                final String algorithm, final boolean openFirewall, final CallContext caller, final String lbProtocol,final String serviceType)
             throws NetworkRuleConflictException {
         
         if (!NetUtils.isValidPort(destPort)) {
@@ -1625,7 +1625,7 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
             public LoadBalancerVO doInTransaction(TransactionStatus status) throws NetworkRuleConflictException {
                 LoadBalancerVO newRule = new LoadBalancerVO(xId, name, description,
                         sourceIpId, srcPort, destPort, algorithm,
-                        networkId, ipAddr.getAllocatedToAccountId(), ipAddr.getAllocatedInDomainId(), lbProtocol);
+                        networkId, ipAddr.getAllocatedToAccountId(), ipAddr.getAllocatedInDomainId(), lbProtocol,serviceType);
 
                 // verify rule is supported by Lb provider of the network
                 Ip sourceIp = getSourceIp(newRule);
@@ -1741,7 +1741,7 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
         List<LbStickinessPolicy> policyList = getStickinessPolicies(lb.getId());
         Ip sourceIp = getSourceIp(lb);
         LbSslCert sslCert = getLbSslCert(lb.getId());
-        LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, null, policyList, null, sourceIp, sslCert, lb.getLbProtocol());
+        LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, null, policyList, null, sourceIp, sslCert, lb.getLbProtocol(),lb.getServiceType());
 
         if (_autoScaleVmGroupDao.isAutoScaleLoadBalancer(lb.getId())) {
             // Get the associated VmGroup

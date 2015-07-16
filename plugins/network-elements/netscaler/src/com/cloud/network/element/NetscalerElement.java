@@ -745,7 +745,7 @@ public class NetscalerElement extends ExternalLoadBalancerDeviceManagerImpl impl
 
             if ((destinations != null && !destinations.isEmpty()) || rule.isAutoScaleConfig()) {
                 LoadBalancerTO loadBalancer = new LoadBalancerTO(lbUuid, srcIp, srcPort, protocol, algorithm, revoked, false, false, destinations,
-                                                    rule.getStickinessPolicies(), rule.getHealthCheckPolicies(), rule.getLbSslCert(), rule.getLbProtocol());
+                                                    rule.getStickinessPolicies(), rule.getHealthCheckPolicies(), rule.getLbSslCert(), rule.getLbProtocol(),rule.getServiceType());
                 if (rule.isAutoScaleConfig()) {
                     loadBalancer.setAutoScaleVmGroup(rule.getAutoScaleVmGroup());
                 }
@@ -907,7 +907,7 @@ public class NetscalerElement extends ExternalLoadBalancerDeviceManagerImpl impl
 
             if ((destinations != null && !destinations.isEmpty()) || rule.isAutoScaleConfig()) {
                 LoadBalancerTO loadBalancer = new LoadBalancerTO(lbUuid, srcIp, srcPort, protocol, algorithm, revoked,
-                        false, false, destinations, null, rule.getHealthCheckPolicies(), rule.getLbSslCert(), rule.getLbProtocol());
+                        false, false, destinations, null, rule.getHealthCheckPolicies(), rule.getLbSslCert(), rule.getLbProtocol(),rule.getServiceType());
                 loadBalancersToApply.add(loadBalancer);
             }
         }

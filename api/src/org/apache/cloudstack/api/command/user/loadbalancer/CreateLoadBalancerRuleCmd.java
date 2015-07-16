@@ -104,6 +104,9 @@ public class CreateLoadBalancerRuleCmd extends BaseAsyncCreateCmd  /*implements 
 
     @Parameter(name=ApiConstants.PROTOCOL, type=CommandType.STRING, description="The protocol for the LB")
     private String lbProtocol;
+    
+    @Parameter(name=ApiConstants.SERVICE_TYPE, type=CommandType.STRING, description="The service type for the LB servcie mode type")
+    private String serviceType;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -289,7 +292,7 @@ public class CreateLoadBalancerRuleCmd extends BaseAsyncCreateCmd  /*implements 
         try {
             LoadBalancer result = _lbService.createPublicLoadBalancerRule(getXid(), getName(), getDescription(), 
                     getSourcePortStart(), getSourcePortEnd(), getDefaultPortStart(), getDefaultPortEnd(), getSourceIpAddressId(), getProtocol(), getAlgorithm(),
-                    getNetworkId(), getEntityOwnerId(), getOpenFirewall(), getLbProtocol());
+                    getNetworkId(), getEntityOwnerId(), getOpenFirewall(), getLbProtocol(),getServiceType());
             this.setEntityId(result.getId());
             this.setEntityUuid(result.getUuid());
         } catch (NetworkRuleConflictException e) {
@@ -398,5 +401,15 @@ public class CreateLoadBalancerRuleCmd extends BaseAsyncCreateCmd  /*implements 
     public Long getSyncObjId() {
         return getNetworkId();
     }
+
+	public String getServiceType() {
+		return serviceType;
+	}
+
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
+    
+    
 }
 
