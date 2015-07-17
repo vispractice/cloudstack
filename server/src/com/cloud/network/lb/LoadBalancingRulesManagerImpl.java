@@ -1528,7 +1528,13 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
                     throw new InvalidParameterValueException("Ip address " + ipVO + " is not assigned to the network "
                             + network);
                 }
-
+                if (serviceType == null || serviceType.equals("")) {
+                	serviceType = "VS_MODE_L4";
+                } else {
+                	if(!serviceType.equals("VS_MODE_L4") && !serviceType.equals("VS_MODE_L7")){
+                		throw new InvalidParameterValueException("service type value is not VS_MODE_L4 or VS_MODE_L7 : " +serviceType);
+                	}
+                }
                 result = createPublicLoadBalancer(xId, name, description, srcPortStart, defPortStart, ipVO.getId(), protocol,
                                     algorithm, openFirewall, CallContext.current(), lbProtocol,serviceType);
             } catch (Exception ex) {
