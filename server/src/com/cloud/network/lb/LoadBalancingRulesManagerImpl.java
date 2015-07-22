@@ -2363,4 +2363,14 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
         this._lbProviders = lbProviders;
     }
 
+	@Override
+	public LoadBalancer createPublicLoadBalancer(String xId, String name,
+			String description, int srcPort, int destPort, long sourceIpId,
+			String protocol, String algorithm, boolean openFirewall,
+			CallContext caller, String lbProtocol)
+			throws NetworkRuleConflictException {
+		
+		return this.createPublicLoadBalancer(xId, name, description, srcPort, destPort, sourceIpId, protocol, algorithm, openFirewall, caller, lbProtocol,null);
+	}
+
 }

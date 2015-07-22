@@ -156,7 +156,7 @@ SangforADLoadBalancerElementService, ExternalLoadBalancerDeviceManager {
         try {
             return manageGuestNetworkWithExternalLoadBalancer(true, guestConfig);
         } catch (InsufficientCapacityException capacityException) {
-            throw new ResourceUnavailableException("There are no SangforAD load balancer devices with the free capacity for implementing this network", DataCenter.class, guestConfig.getDataCenterId());
+        	throw new ResourceUnavailableException("There are no SangforAD load balancer devices with the free capacity for implementing this network", DataCenter.class, guestConfig.getDataCenterId());
         }
     }
 	
@@ -255,8 +255,8 @@ SangforADLoadBalancerElementService, ExternalLoadBalancerDeviceManager {
 		// for load balancing rules
 		lbCapabilities.put(Capability.SupportedLBAlgorithms,"roundrobin,leastconn");
 
-		// specifies that F5 BIG IP network element can provide shared mode only
-		lbCapabilities.put(Capability.SupportedLBIsolation, "dedicated, shared");
+		// specifies that sangforAD network element can provide shared mode only
+		lbCapabilities.put(Capability.SupportedLBIsolation, "shared,dedicated");
 
 		// Specifies that load balancing rules can be made for either TCP or UDP
 		// traffic
@@ -333,7 +333,7 @@ SangforADLoadBalancerElementService, ExternalLoadBalancerDeviceManager {
 	/**
 	 * 关闭提供者实例
 	 * 1.删除网络服务提供者调用
-	 * @param 物理网络服务提供者，
+	 * @param 物理网络服务提供者，addNetworkServiceProvider 
 	 * @param ReservationContext
 	 * @return 关闭实例已经完成
 	 * @throws ConcurrentOperationException,ResourceUnavailableException

@@ -83,12 +83,22 @@ public class LoadBalancerTO {
             List<LbStickinessPolicy> stickinessPolicies) {
 
         this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, inline, arg_destinations,
-                stickinessPolicies, null, null, null,null);
+                stickinessPolicies, null, null, null);
     }
 
+    //add external network devices sangAD,update service  mode type
     public LoadBalancerTO(String id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked,
             boolean alreadyAdded, boolean inline, List<LbDestination> arg_destinations,
             List<LbStickinessPolicy> stickinessPolicies, List<LbHealthCheckPolicy> healthCheckPolicies, LbSslCert sslCert, String lbProtocol,String serviceType) {
+    	
+    	this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, inline, arg_destinations,
+                stickinessPolicies, healthCheckPolicies, sslCert, lbProtocol);
+    	this.serviceType = serviceType;
+    }
+    
+    public LoadBalancerTO(String id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked,
+            boolean alreadyAdded, boolean inline, List<LbDestination> arg_destinations,
+            List<LbStickinessPolicy> stickinessPolicies, List<LbHealthCheckPolicy> healthCheckPolicies, LbSslCert sslCert, String lbProtocol) {
         this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, inline, arg_destinations);
         this.stickinessPolicies = null;
         this.healthCheckPolicies = null;
@@ -126,7 +136,6 @@ public class LoadBalancerTO {
 
         this.sslCert = sslCert;
         this.lbProtocol = lbProtocol;
-        this.serviceType = serviceType;
     }
 
     protected LoadBalancerTO() {

@@ -670,7 +670,10 @@ public class SangforADLoadBalancerResource implements ServerResource {
 					if (stickyPolicies != null && stickyPolicies.length > 0 && stickyPolicies[0] != null){
 						persistName = genObjectName(LBPrefixName.cs_persist,lbProtocol, srcPort, toPort);
 						createOrUpdateStickinessPolicy(stickyPolicies,objectVO,persistName,poolNodeName);
+			        } else {
+			        	deletePersist(genObjectName(LBPrefixName.cs_persist,lbProtocol, srcPort, toPort),poolNodeName);
 			        }
+					
 					//创建，修改,删除健康检查(节点监视器)
 					HealthCheckPolicyTO[] healthCheckPolicys = loadBalancer.getHealthCheckPolicies();
 					if(healthCheckPolicys !=null && healthCheckPolicys.length > 0 && healthCheckPolicys[0] !=null){
