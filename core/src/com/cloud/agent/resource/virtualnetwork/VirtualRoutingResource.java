@@ -36,11 +36,11 @@ import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
 import com.cloud.agent.api.routing.SetMonitorServiceCommand;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
-
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.BumpUpPriorityCommand;
 import com.cloud.agent.api.CheckRouterAnswer;
@@ -66,6 +66,7 @@ import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SavePasswordCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesAnswer;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
+import com.cloud.agent.api.routing.SetMultilineRouteCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesAnswer;
 import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesVpcCommand;
@@ -82,6 +83,7 @@ import com.cloud.agent.api.to.IpAddressTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.StaticNatRuleTO;
 import com.cloud.exception.InternalErrorException;
+import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.network.HAProxyConfigurator;
 import com.cloud.network.LoadBalancerConfigurator;
 import com.cloud.network.rules.FirewallRule;
@@ -172,7 +174,10 @@ public class VirtualRoutingResource implements Manager {
                 return execute((CheckS2SVpnConnectionsCommand)cmd);
             } else if (cmd instanceof SetMonitorServiceCommand) {
                 return execute((SetMonitorServiceCommand) cmd);
-            }
+            //Andrew ling add, accept the multiline route command from the manger
+        	} else if (cmd instanceof SetMultilineRouteCommand) {
+        		return execute((SetMultilineRouteCommand) cmd);
+        	}
             else {
                 return Answer.createUnsupportedCommandAnswer(cmd);
             }
@@ -982,6 +987,56 @@ public class VirtualRoutingResource implements Manager {
         }
         return new Answer(cmd);
 
+    }
+    
+    private Answer execute(SetMultilineRouteCommand cmd){
+//    	String defaultRouteLine = "";
+//    	String multilineTypes = "";
+//    	HashMap <String,Boolean> multilineRulesType = cmd.getMultilineRulesType();
+//    	for(Map.Entry<String, Boolean> entry : multilineRulesType.entrySet()){
+//    		if(entry.getValue()){
+//    			defaultRouteLine = entry.getKey();
+//    		} else {
+//    			multilineTypes =  multilineTypes + " " + entry.getKey();
+//    		}
+//    	}
+//    	if(defaultRouteLine == null || defaultRouteLine == ""){
+//    		throw new InvalidParameterValueException("You must appoint a line to be default line in the VR when using the multiline feature.");
+//    	}
+//    	multilineTypes = defaultRouteLine + " " + multilineTypes;
+//    	String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+//    	String result = routerProxy("multilineRoute.sh", routerIp, multilineTypes);
+//    	if (result != null){
+//    		return new Answer( cmd, false, "SetMultilineRouteCommand failed.");
+//    	}
+    	String script = "none";
+    	String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+    	//In the routeRules HashMap,gateway is key, net and netmask is value. The store format like : <10.204.120.1; 10.204.104.0-255.255.255.0,10.204.105.0-255.255.255.0>
+    	//one route rule like :route add -net 10.204.104.0 netmask 255.255.255.0 gw 10.201.120.1, there will be many rules in the map.
+    	//In this execute operation , if need delete first and then add rule or not? Not delete by now, but it must be remarked.
+    	String routeRules = "";
+    	HashMap<String, String> routeRulesMap = cmd.getRouteRules();
+    	for(Map.Entry<String, String> entry : routeRulesMap.entrySet()){
+    		String gateway = entry.getKey();
+    		String netAndNetmaskStrings = entry.getValue();
+    		String[] netAndNetmaskCouples = netAndNetmaskStrings.split(",");
+    		for(String netAndNetmasks : netAndNetmaskCouples){
+    			String[] netAndNetmask = netAndNetmasks.split("-");
+    			String net = netAndNetmask[0];
+    			String netmask = netAndNetmask[1];
+    			String routeRule = "route add -net " + net + " netmask " + netmask + " gw " + gateway + ";";
+    			routeRules += routeRule;
+    		}
+    	}
+    	if(routeRules == "" || routeRules == null){
+    		throw new InvalidParameterValueException("You must input the route rules in the VR when using the multiline feature.");
+    	}
+    	routeRules = "\"" + routeRules + "\"";
+    	String result = routerProxy(script, routerIp, routeRules);
+    	if (result != null){
+    		return new Answer( cmd, false, "SetMultilineRouteCommand failed.");
+    	}
+    	return new Answer(cmd);
     }
 
     public String assignPublicIpAddress(final String vmName,
