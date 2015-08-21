@@ -235,10 +235,11 @@ static_nat() {
            -j MARK -m state --state NEW --set-mark $tableNo &>>  $OUTFILE || [ "$op" == "-D" ]) &&
   (sudo iptables -t mangle $op PREROUTING -i $dev -d $publicIp \
            -m state --state NEW -j CONNMARK --save-mark &>>  $OUTFILE || [ "$op" == "-D" ]) &&
-  (sudo iptables -t mangle $op  PREROUTING -s $instIp -i eth0  \
-           -j MARK -m state --state NEW --set-mark $tableNo &>>  $OUTFILE || [ "$op" == "-D" ]) &&
-  (sudo iptables -t mangle $op PREROUTING -s $instIp -i eth0  \
-           -m state --state NEW -j CONNMARK --save-mark &>>  $OUTFILE || [ "$op" == "-D" ]) &&
+#Andrew ling add,To fix the mutiline feature, It can't mark the "-i eth0" in the packet, because the packet from the VM want to choose the route rules.
+#  (sudo iptables -t mangle $op  PREROUTING -s $instIp -i eth0  \
+#           -j MARK -m state --state NEW --set-mark $tableNo &>>  $OUTFILE || [ "$op" == "-D" ]) &&
+#  (sudo iptables -t mangle $op PREROUTING -s $instIp -i eth0  \
+#           -m state --state NEW -j CONNMARK --save-mark &>>  $OUTFILE || [ "$op" == "-D" ]) &&
   (sudo iptables -t nat $op  PREROUTING -i $dev -d $publicIp -j DNAT \
            --to-destination $instIp &>>  $OUTFILE || [ "$op" == "-D" ]) &&
   (sudo iptables $op FORWARD -i $dev -o eth0 -d $instIp  -m state \
