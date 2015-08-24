@@ -1000,6 +1000,11 @@ public class VirtualRoutingResource implements Manager {
     	for(Map.Entry<String, String> entry : routeRulesMap.entrySet()){
     		String gateway = entry.getKey();
     		String netAndNetmaskStrings = entry.getValue();
+    		//Delete the old default route rule, and add the new one which is been appointed.
+    		if(netAndNetmaskStrings.equals("0.0.0.0")){
+    			routeRules = "route del default gw $(route -n|grep 0.0.0.0|grep UG|awk -F' ' '{print $2}') ; route add default gw " + gateway + ";";
+    			continue;
+    		}
     		String[] netAndNetmaskCouples = netAndNetmaskStrings.split(",");
     		for(String netAndNetmasks : netAndNetmaskCouples){
     			String[] netAndNetmask = netAndNetmasks.split("-");
