@@ -28,7 +28,6 @@ import org.apache.cloudstack.api.response.IPAddressResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.PhysicalNetworkResponse;
-import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.VlanIpRangeResponse;
 import org.apache.cloudstack.api.response.VpcResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
@@ -78,10 +77,6 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
     @Parameter(name=ApiConstants.ASSOCIATED_NETWORK_ID, type=CommandType.UUID, entityType = NetworkResponse.class,
             description="lists all public IP addresses associated to the network specified")
     private Long associatedNetworkId;
-    
-    @Parameter(name=ApiConstants.ASSOCIATED_NETWORK_NAME, type=CommandType.STRING,
-            description="lists all public IP addresses associated to the network specified")
-    private String associatedNetworkName;
 
     @Parameter(name=ApiConstants.IS_SOURCE_NAT, type=CommandType.BOOLEAN, description="list only source nat ip addresses")
     private Boolean isSourceNat;
@@ -92,18 +87,7 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
     @Parameter(name=ApiConstants.VPC_ID, type=CommandType.UUID, entityType = VpcResponse.class,
             description="List ips belonging to the VPC")
     private Long vpcId;
-    
-    @Parameter(name=ApiConstants.VIRTUAL_MACHINE_ID, type=CommandType.UUID, entityType = UserVmResponse.class,
-            description="List ips associated to the vm")
-    private Long virtualMachineId;
-    
-    @Parameter(name=ApiConstants.VIRTUAL_MACHINE_NAME, type=CommandType.STRING,
-            description="List ips associated to the vm")
-    private String virtualMachineName;
-    
-    @Parameter(name=ApiConstants.STATE, type=CommandType.STRING,  description="lists the specified state")
-    private String state;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -149,22 +133,6 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
 
     public Long getVpcId() {
         return vpcId;
-    }
-
-    public String getAssociatedNetworkName() {
-        return associatedNetworkName;
-    }
-
-    public Long getVirtualMachineId() {
-        return virtualMachineId;
-    }
-
-    public String getVirtualMachineName() {
-        return virtualMachineName;
-    }
-
-    public String getState() {
-        return state;
     }
 
     /////////////////////////////////////////////////////

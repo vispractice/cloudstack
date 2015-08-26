@@ -643,8 +643,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     @Inject
     private UserVmDao _userVmDao;
     @Inject
-    private VMInstanceDao vmInstanceDao;
-    @Inject
     private ConfigurationDao _configDao;
     @Inject
     private ConsoleProxyManager _consoleProxyMgr;
@@ -1955,10 +1953,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         Boolean staticNat = cmd.getIsStaticNat();
         Long vpcId = cmd.getVpcId();
         Map<String, String> tags = cmd.getTags();
-        String networkName = cmd.getAssociatedNetworkName();
-        Long vmId = cmd.getVirtualMachineId();
-        String vmName = cmd.getVirtualMachineName();
-        String state = cmd.getState();
 
         Boolean isAllocated = cmd.isAllocatedOnly();
         if (isAllocated == null) {
@@ -1993,7 +1987,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         sb.and("isSourceNat", sb.entity().isSourceNat(), SearchCriteria.Op.EQ);
         sb.and("isStaticNat", sb.entity().isOneToOneNat(), SearchCriteria.Op.EQ);
         sb.and("vpcId", sb.entity().getVpcId(), SearchCriteria.Op.EQ);
-        sb.and("state", sb.entity().getState(), SearchCriteria.Op.EQ);
 
         if (forLoadBalancing != null && forLoadBalancing) {
             SearchBuilder<LoadBalancerVO> lbSearch = _loadbalancerDao.createSearchBuilder();
@@ -2015,20 +2008,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             tagSearch.and("resourceType", tagSearch.entity().getResourceType(), SearchCriteria.Op.EQ);
             sb.groupBy(sb.entity().getId());
             sb.join("tagSearch", tagSearch, sb.entity().getId(), tagSearch.entity().getResourceId(), JoinBuilder.JoinType.INNER);
-        }
-        
-        if(networkName != null && !networkName.isEmpty()){
-            SearchBuilder<NetworkVO> networkSearch = _networkDao.createSearchBuilder();
-            networkSearch.and("networkName", networkSearch.entity().getName(), SearchCriteria.Op.LIKE);
-            sb.join("networkSearch", networkSearch, sb.entity().getAssociatedWithNetworkId(),networkSearch.entity().getId(), JoinBuilder.JoinType.INNER);
-        }
-        
-        if(vmName != null && !vmName.isEmpty()){
-            SearchBuilder<VMInstanceVO> vmSearch = vmInstanceDao.createSearchBuilder();
-            vmSearch.and().op("vmName", vmSearch.entity().getHostName(), SearchCriteria.Op.LIKE);
-            vmSearch.or("vmName", vmSearch.entity().getPrivateIpAddress(), SearchCriteria.Op.LIKE);
-            vmSearch.cp();
-            sb.join("vmSearch", vmSearch, sb.entity().getAssociatedWithVmId(), vmSearch.entity().getId(), JoinBuilder.JoinType.INNER);
         }
 
         SearchBuilder<VlanVO> vlanSearch = _vlanDao.createSearchBuilder();
@@ -2103,18 +2082,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
         if (associatedNetworkId != null) {
             sc.setParameters("associatedNetworkIdEq", associatedNetworkId);
-        }
-        
-        if(networkName != null && !networkName.isEmpty()){
-            sc.setJoinParameters("networkSearch", "networkName", "%" + networkName + "%");
-        }
-        
-        if(vmName != null && !vmName.isEmpty()){
-            sc.setJoinParameters("vmSearch", "vmName", "%" + vmName + "%");
-        }
-        
-        if(state != null && !state.isEmpty()){
-            sc.setParameters("state", state);
         }
 
         Pair<List<IPAddressVO>, Integer> result = _publicIpAddressDao.searchAndCount(sc, searchFilter);

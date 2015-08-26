@@ -754,7 +754,6 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         c.addCriteria(Criteria.AFFINITY_GROUP_ID, cmd.getAffinityGroupId());
         c.addCriteria(Criteria.NAME_OR_IP, cmd.getNameOrIp());
         c.addCriteria(Criteria.GUEST_OS_ID, cmd.getGuestOsId());
-        c.addCriteria(Criteria.CURRENT_HOST_ID, cmd.getCurrentHostId());
 
         if (domainId != null) {
             c.addCriteria(Criteria.DOMAINID, domainId);
@@ -817,7 +816,6 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         Object affinityGroupId = c.getCriteria(Criteria.AFFINITY_GROUP_ID);
         Object guestOsId = c.getCriteria(Criteria.GUEST_OS_ID);
         Object nameOrIP = c.getCriteria(Criteria.NAME_OR_IP);
-        Object currentHostId = c.getCriteria(Criteria.CURRENT_HOST_ID);
 
         sb.and("displayName", sb.entity().getDisplayName(), SearchCriteria.Op.LIKE);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
@@ -981,22 +979,6 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
             ssc.addOr("instanceName", SearchCriteria.Op.LIKE, "%" + nameOrIP + "%");
 
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
-        }
-        
-        if(currentHostId != null){
-            SearchCriteria<UserVmJoinVO> currHostIdsc = _userVmJoinDao.createSearchCriteria();
-            
-            SearchCriteria<UserVmJoinVO> matchHostIdsc = _userVmJoinDao.createSearchCriteria();
-            matchHostIdsc.addAnd("hostId", SearchCriteria.Op.EQ, null);
-            matchHostIdsc.addAnd("lastHostId", SearchCriteria.Op.EQ, currentHostId);
-            
-            SearchCriteria<UserVmJoinVO> matchLastHostIdsc = _userVmJoinDao.createSearchCriteria();
-            matchLastHostIdsc.addAnd("hostId", SearchCriteria.Op.NEQ, null);
-            matchLastHostIdsc.addAnd("hostId", SearchCriteria.Op.EQ, currentHostId);
-            
-            currHostIdsc.addOr("hostId", SearchCriteria.Op.SC, matchHostIdsc);
-            currHostIdsc.addOr("hostId", SearchCriteria.Op.SC, matchLastHostIdsc);
-            sc.addAnd("hostId", SearchCriteria.Op.SC, currHostIdsc);
         }
         
         // search vm details by ids

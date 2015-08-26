@@ -37,7 +37,6 @@ import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.PermissionDeniedException;
-import com.cloud.host.dao.HostDao;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
@@ -148,8 +147,6 @@ public class TaggedResourceManagerImpl extends ManagerBase implements TaggedReso
     Site2SiteCustomerGatewayDao _customerGatewayDao;
     @Inject
     Site2SiteVpnConnectionDao _vpnConnectionDao;
-    @Inject
-    HostDao _hostDao;
 
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -179,7 +176,6 @@ public class TaggedResourceManagerImpl extends ManagerBase implements TaggedReso
         _daoMap.put(ResourceObjectType.VpnGateway, _vpnGatewayDao);
         _daoMap.put(ResourceObjectType.CustomerGateway, _customerGatewayDao);
         _daoMap.put(ResourceObjectType.VpnConnection, _vpnConnectionDao);
-        _daoMap.put(ResourceObjectType.Host, _hostDao);
 
         return true;
     }
