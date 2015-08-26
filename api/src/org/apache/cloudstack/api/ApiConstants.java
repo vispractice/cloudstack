@@ -104,6 +104,7 @@ public class ApiConstants {
     public static final String HA_ENABLE = "haenable";
     public static final String HOST_ID = "hostid";
     public static final String HOST_NAME = "hostname";
+    public static final String CURRENT_HOST_ID = "currenthostid";
     public static final String HYPERVISOR = "hypervisor";
     public static final String INLINE = "inline";
     public static final String INSTANCE = "instance";
@@ -245,6 +246,7 @@ public class ApiConstants {
     public static final String USE_VIRTUAL_NETWORK = "usevirtualnetwork";
     public static final String VALUE = "value";
     public static final String VIRTUAL_MACHINE_ID = "virtualmachineid";
+    public static final String VIRTUAL_MACHINE_NAME = "virtualmachinename";
     public static final String VIRTUAL_MACHINE_IDS = "virtualmachineids";
     public static final String VLAN = "vlan";
     public static final String VLAN_RANGE = "vlanrange";

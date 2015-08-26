@@ -60,6 +60,10 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd {
     @Parameter(name=ApiConstants.HOST_ID, type=CommandType.UUID, entityType=HostResponse.class,
             description="the host ID")
     private Long hostId;
+    
+    @Parameter(name=ApiConstants.CURRENT_HOST_ID, type=CommandType.UUID, entityType=HostResponse.class,
+            description="the host ID or last host ID")
+    private Long currentHostId;
 
     @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType=UserVmResponse.class,
             description="the ID of the virtual machine")
@@ -194,6 +198,10 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd {
 
     public String getGuestOsId() {
         return guestOsId;
+    }
+    
+    public Long getCurrentHostId(){
+        return currentHostId;
     }
 
     public EnumSet<VMDetails> getDetails() throws InvalidParameterValueException {

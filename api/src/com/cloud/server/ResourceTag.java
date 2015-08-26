@@ -50,7 +50,8 @@ public interface ResourceTag extends ControlledEntity, Identity, InternalIdentit
         NetworkACLList(false, true),
         VpnGateway(false, true),
         CustomerGateway(false, true),
-        VpnConnection(false, true);
+        VpnConnection(false, true),
+        Host(true, false);
 
         ResourceObjectType(boolean resourceTagsSupport, boolean resourceMetadataSupport) {
             this.resourceTagsSupport = resourceTagsSupport;

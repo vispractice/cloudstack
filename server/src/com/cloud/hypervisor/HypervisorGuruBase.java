@@ -92,11 +92,14 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
 
         ServiceOffering offering = vmProfile.getServiceOffering();
         VirtualMachine vm = vmProfile.getVirtualMachine();
-        Long minMemory = (long) (offering.getRamSize() / vmProfile.getMemoryOvercommitRatio());
-        int minspeed = (int) (offering.getSpeed() / vmProfile.getCpuOvercommitRatio());
-        int  maxspeed = (offering.getSpeed());
-        VirtualMachineTO to = new VirtualMachineTO(vm.getId(), vm.getInstanceName(), vm.getType(), offering.getCpu(), minspeed, maxspeed,
-                minMemory * 1024l * 1024l, offering.getRamSize() * 1024l * 1024l, null, null, vm.isHaEnabled(), vm.limitCpuUse(), vm.getVncPassword());
+        int ramSize = offering.getRamSize() == null ? 0 : offering.getRamSize();
+        int speed = offering.getSpeed() == null ? 0 : offering.getSpeed();
+        Long minMemory = (long) (ramSize / vmProfile.getMemoryOvercommitRatio());
+        int minspeed = (int) (speed / vmProfile.getCpuOvercommitRatio());
+        int  maxspeed = speed;
+        int cpu = offering.getCpu() == null ? 0 : offering.getCpu();
+        VirtualMachineTO to = new VirtualMachineTO(vm.getId(), vm.getInstanceName(), vm.getType(), cpu, minspeed, maxspeed,
+                minMemory * 1024l * 1024l, ramSize * 1024l * 1024l, null, null, vm.isHaEnabled(), vm.limitCpuUse(), vm.getVncPassword());
         to.setBootArgs(vmProfile.getBootArgs());
 
         List<NicProfile> nicProfiles = vmProfile.getNics();

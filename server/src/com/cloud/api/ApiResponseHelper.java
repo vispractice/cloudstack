@@ -664,6 +664,9 @@ public class ApiResponseHelper implements ResponseGenerator {
                 ipResponse.setAssociatedNetworkId(ntwk.getUuid());
                 ipResponse.setAssociatedNetworkName(ntwk.getName());
             }
+            NetworkOffering offering = ApiDBUtils.findNetworkOfferingById(ntwk.getNetworkOfferingId());
+            List<ServiceResponse> serviceResponses = createServiceResponse(offering);
+            ipResponse.setService(serviceResponses);
         }
 
         if (ipAddr.getVpcId() != null) {
@@ -2045,6 +2048,22 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setState(offering.getState().name());
 
+        List<ServiceResponse> serviceResponses = createServiceResponse(offering);
+        response.setForVpc(_configMgr.isOfferingForVpc(offering));
+
+        response.setServices(serviceResponses);
+
+        //set network offering details
+        Map<Detail, String> details = _ntwkModel.getNtwkOffDetails(offering.getId());
+        if (details != null && !details.isEmpty()) {
+            response.setDetails(details);
+        }
+
+        response.setObjectName("networkoffering");
+        return response;
+    }
+    
+    private List<ServiceResponse> createServiceResponse(NetworkOffering offering){
         Map<Service, Set<Provider>> serviceProviderMap = ApiDBUtils.listNetworkOfferingServices(offering.getId());
         List<ServiceResponse> serviceResponses = new ArrayList<ServiceResponse>();
         for (Service service : serviceProviderMap.keySet()) {
@@ -2114,18 +2133,8 @@ public class ApiResponseHelper implements ResponseGenerator {
 
             serviceResponses.add(svcRsp);
         }
-        response.setForVpc(_configMgr.isOfferingForVpc(offering));
-
-        response.setServices(serviceResponses);
-
-        //set network offering details
-        Map<Detail, String> details = _ntwkModel.getNtwkOffDetails(offering.getId());
-        if (details != null && !details.isEmpty()) {
-            response.setDetails(details);
-        }
-
-        response.setObjectName("networkoffering");
-        return response;
+        
+        return serviceResponses;
     }
 
     @Override

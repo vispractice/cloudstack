@@ -117,6 +117,9 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
 
     @SerializedName(ApiConstants.IS_PORTABLE) @Param(description = "is public IP portable across the zones")
     private Boolean isPortable;
+    
+    @SerializedName(ApiConstants.SERVICE) @Param(description="the list of supported services", responseObject = ServiceResponse.class)
+    private List<ServiceResponse> service;
 
 /*
     @SerializedName(ApiConstants.JOB_ID) @Param(description="shows the current pending asynchronous job ID. This tag is not returned if no current pending jobs are acting on the volume")
@@ -253,5 +256,9 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
 
     public void setPortable(Boolean portable) {
         this.isPortable = portable;
+    }
+
+    public void setService(List<ServiceResponse> service) {
+        this.service = service;
     }
 }

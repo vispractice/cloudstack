@@ -47,6 +47,8 @@ import com.cloud.host.Status.Event;
 import com.cloud.info.RunningHostCountInfo;
 import com.cloud.org.Managed;
 import com.cloud.resource.ResourceState;
+import com.cloud.server.ResourceTag.ResourceObjectType;
+import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.db.Attribute;
 import com.cloud.utils.db.DB;
@@ -131,6 +133,8 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     protected HostTransferMapDao _hostTransferDao;
     @Inject
     protected ClusterDao _clusterDao;
+    @Inject 
+    protected ResourceTagDao _tagsDao;
 
     public HostDaoImpl() {
         super();
@@ -1053,5 +1057,15 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         SearchCriteria<Long> sc = HostIdSearch.create();
         sc.addAnd("dataCenterId", SearchCriteria.Op.EQ, zoneId);
         return customSearch(sc, null);
+    }
+    
+    @Override
+    public boolean remove(Long id) {
+        TransactionLegacy txn = TransactionLegacy.currentTxn();
+        txn.start();
+        _tagsDao.removeByIdAndType(id, ResourceObjectType.Host);
+        boolean result = super.remove(id);
+        txn.commit();
+        return result;
     }
 }

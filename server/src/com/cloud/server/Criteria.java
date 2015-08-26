@@ -86,6 +86,7 @@ public class Criteria {
     public static final String AFFINITY_GROUP_ID = "affinitygroupid";
     public static final String NAME_OR_IP = "nameorip";
     public static final String GUEST_OS_ID = "guestosid";
+    public static final String CURRENT_HOST_ID = "currenthostid";
     
 
 	public Criteria(String orderBy, Boolean ascending, Long offset, Long limit) {
