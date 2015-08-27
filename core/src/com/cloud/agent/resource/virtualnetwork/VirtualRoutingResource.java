@@ -1018,7 +1018,7 @@ public class VirtualRoutingResource implements Manager {
     	if(routeRules == "" || routeRules == null){
     		throw new InvalidParameterValueException("You must input the route rules in the VR when using the multiline feature.");
     	}
-    	routeRules = "\"" + routeRules + "\"";
+//    	routeRules = "\"" + routeRules + "\"";
     	String result = routerProxy(script, routerIp, routeRules);
     	if (result != null){
     		return new Answer( cmd, false, "SetMultilineRouteCommand failed.");
