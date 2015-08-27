@@ -990,7 +990,7 @@ public class VirtualRoutingResource implements Manager {
     }
     //Andrew ling add
     private Answer execute(SetMultilineRouteCommand cmd){
-    	String script = "none";
+    	String script = "route_rules.sh";
     	String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
     	//In the routeRules HashMap,gateway is key, net and netmask is value. The store format like : <10.204.120.1; 10.204.104.0-255.255.255.0,10.204.105.0-255.255.255.0>
     	//one route rule like :route add -net 10.204.104.0 netmask 255.255.255.0 gw 10.201.120.1, there will be many rules in the map.
@@ -1002,7 +1002,8 @@ public class VirtualRoutingResource implements Manager {
     		String netAndNetmaskStrings = entry.getValue();
     		//Delete the old default route rule, and add the new one which is been appointed.
     		if(netAndNetmaskStrings.equals("0.0.0.0")){
-    			routeRules = "route del default gw $(route -n|grep 0.0.0.0|grep UG|awk -F' ' '{print $2}') ; route add default gw " + gateway + ";";
+//    			routeRules = "route del default gw $(route -n|grep 0.0.0.0|grep UG|awk -F' ' '{print $2}') ; route add default gw " + gateway + ";";
+    			routeRules = " route add default gw " + gateway + ";";
     			continue;
     		}
     		String[] netAndNetmaskCouples = netAndNetmaskStrings.split(",");
