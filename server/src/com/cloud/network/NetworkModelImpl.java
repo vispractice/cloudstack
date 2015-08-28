@@ -33,7 +33,6 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.lb.dao.ApplicationLoadBalancerRuleDao;
@@ -284,6 +283,124 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
                         services = new HashSet<Service>();
                     }
                     if (ip.isSourceNat()) {
+                    	
+                        if (!networkSNAT.contains(ip.getAssociatedWithNetworkId()) ) {
+                            services.add(Service.SourceNat);
+                            networkSNAT.add(ip.getAssociatedWithNetworkId());
+                        } else {
+                        	//update by hai.li 2015.08.19
+                        	Set<String> networkGW = new HashSet<String>();
+                            boolean checkGW = Boolean.FALSE;
+                    		String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+                        	if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
+                        		if(!networkGW.contains(ip.getGateway())){
+                            		networkGW.add(ip.getGateway());
+                            	} else {
+                            		checkGW = Boolean.TRUE;
+                            	}
+                        	} else {
+                        		checkGW = Boolean.TRUE;
+                        	}
+                        	
+                        	if(checkGW){
+                        		CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
+                                // see the IPAddressVO.java class.
+                                IPAddressVO ipAddr = ApiDBUtils.findIpAddressById(ip.getAssociatedWithNetworkId());
+                                String ipAddrUuid = ip.getAssociatedWithNetworkId().toString();
+                                if ( ipAddr != null){
+                                    ipAddrUuid = ipAddr.getUuid();
+                                }
+                                ex.addProxyObject(ipAddrUuid, "networkId");
+                                throw ex;
+                        	}
+                        }
+                    }
+                    ipToServices.put(ip, services);
+    
+                    // if IP in allocating state then it will not have any rules attached so skip IPAssoc to network service
+                    // provider
+                    if (ip.getState() == State.Allocating) {
+                        continue;
+                    }
+    
+                    // check if any active rules are applied on the public IP
+                    Set<Purpose> purposes = getPublicIpPurposeInRules(ip, false, includingFirewall);
+                    // Firewall rules didn't cover static NAT
+                    if (ip.isOneToOneNat() && ip.getAssociatedWithVmId() != null) {
+                        if (purposes == null) {
+                            purposes = new HashSet<Purpose>();
+                        }
+                        purposes.add(Purpose.StaticNat);
+                    }
+                    if (purposes == null || purposes.isEmpty()) {
+                        // since no active rules are there check if any rules are applied on the public IP but are in
+    // revoking state
+                        
+                        purposes = getPublicIpPurposeInRules(ip, true, includingFirewall);
+                        if (ip.isOneToOneNat()) {
+                            if (purposes == null) {
+                                purposes = new HashSet<Purpose>();
+                            }
+                            purposes.add(Purpose.StaticNat);
+                        }
+                        if (purposes == null || purposes.isEmpty()) {
+                            // IP is not being used for any purpose so skip IPAssoc to network service provider
+                            continue;
+                        } else {
+                            if (postApplyRules) {
+                                // no active rules/revoked rules are associated with this public IP, so remove the
+                                // association with the provider
+                                if (ip.isSourceNat()) {
+                                    s_logger.debug("Not releasing ip " + ip.getAddress().addr() + " as it is in use for SourceNat");
+                                } else {
+                                    ip.setState(State.Releasing);
+                                }
+                            } else {
+                                if (ip.getState() == State.Releasing) {
+                                    // rules are not revoked yet, so don't let the network service provider revoke the IP
+    // association
+                                    // mark IP is allocated so that IP association will not be removed from the provider
+                                    ip.setState(State.Allocated);
+                                }
+                            }
+                        }
+                    }
+                    if (purposes.contains(Purpose.StaticNat)) {
+                        services.add(Service.StaticNat);
+                    }
+                    if (purposes.contains(Purpose.LoadBalancing)) {
+                        services.add(Service.Lb);
+                    }
+                    if (purposes.contains(Purpose.PortForwarding)) {
+                        services.add(Service.PortForwarding);
+                    }
+                    if (purposes.contains(Purpose.Vpn)) {
+                        services.add(Service.Vpn);
+                    }
+                    if (purposes.contains(Purpose.Firewall)) {
+                        services.add(Service.Firewall);
+                    }
+                    if (services.isEmpty()) {
+                        continue;
+                    }
+                    ipToServices.put(ip, services);
+                }
+            }
+            return ipToServices;
+        }
+    
+    /*@Override
+    public Map<PublicIpAddress, Set<Service>> getIpToServices(List<? extends PublicIpAddress> publicIps, boolean postApplyRules, boolean includingFirewall) {
+            Map<PublicIpAddress, Set<Service>> ipToServices = new HashMap<PublicIpAddress, Set<Service>>();
+    
+            if (publicIps != null && !publicIps.isEmpty()) {
+                Set<Long> networkSNAT = new HashSet<Long>();
+                for (PublicIpAddress ip : publicIps) {
+                    Set<Service> services = ipToServices.get(ip);
+                    if (services == null) {
+                        services = new HashSet<Service>();
+                    }
+                    if (ip.isSourceNat()) {
                         if (!networkSNAT.contains(ip.getAssociatedWithNetworkId())) {
                             services.add(Service.SourceNat);
                             networkSNAT.add(ip.getAssociatedWithNetworkId());
@@ -371,7 +488,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
                 }
             }
             return ipToServices;
-        }
+        }*/
 
     public boolean canIpUsedForNonConserveService(PublicIp ip, Service service) {
         // If it's non-conserve mode, then the new ip should not be used by any other services
@@ -1945,6 +2062,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
         IpAddressSearch = _ipAddressDao.createSearchBuilder();
         IpAddressSearch.and("accountId", IpAddressSearch.entity().getAllocatedToAccountId(), Op.EQ);
         IpAddressSearch.and("dataCenterId", IpAddressSearch.entity().getDataCenterId(), Op.EQ);
+        IpAddressSearch.and("multilineLabel", IpAddressSearch.entity().getMultilineLabel(), Op.EQ);
         IpAddressSearch.and("vpcId", IpAddressSearch.entity().getVpcId(), Op.EQ);
         IpAddressSearch.and("associatedWithNetworkId", IpAddressSearch.entity().getAssociatedWithNetworkId(), Op.EQ);
         SearchBuilder<VlanVO> virtualNetworkVlanSB = _vlanDao.createSearchBuilder();
@@ -2213,4 +2331,29 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
             throw ex;
         }
     }
+    
+  	@Override
+	public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long associatedNetworkId, Boolean sourceNat, String multilineLabel) {
+		SearchCriteria<IPAddressVO> sc = IpAddressSearch.create();
+        sc.setParameters("associatedWithNetworkId", associatedNetworkId);
+        sc.setParameters("multilineLabel", multilineLabel);
+        if (sourceNat != null) {
+            sc.addAnd("sourceNat", SearchCriteria.Op.EQ, sourceNat);
+        }
+        sc.setJoinParameters("virtualNetworkVlanSB", "vlanType", VlanType.VirtualNetwork);
+        return _ipAddressDao.search(sc, null);
+	}
+  	
+  	@Override
+  	public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long accountId, long associatedNetworkId, Boolean sourceNat,String multilineLabel) {
+          SearchCriteria<IPAddressVO> sc = IpAddressSearch.create();
+          sc.setParameters("accountId", accountId);
+          sc.setParameters("associatedWithNetworkId", associatedNetworkId);
+          sc.setParameters("multilineLabel", multilineLabel);
+          if (sourceNat != null) {
+              sc.addAnd("sourceNat", SearchCriteria.Op.EQ, sourceNat);
+          }
+          sc.setJoinParameters("virtualNetworkVlanSB", "vlanType", VlanType.VirtualNetwork);
+          return _ipAddressDao.search(sc, null);
+  	}
 }

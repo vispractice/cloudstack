@@ -113,6 +113,9 @@ public class IPAddressVO implements IpAddress {
 
     @Column(name="is_portable")
     private boolean portable = false;
+    
+    @Column(name="multiline_label")
+    private String multilineLabel;
 
 	protected IPAddressVO() {
 		this.uuid = UUID.randomUUID().toString();
@@ -333,4 +336,14 @@ public class IPAddressVO implements IpAddress {
     public Long getNetworkId() {
         return sourceNetworkId;
     }
+
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
+    
+    
 }

@@ -17,6 +17,19 @@
 package com.cloud.agent.manager;
 
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.ejb.Local;
+import javax.inject.Inject;
+import javax.naming.ConfigurationException;
+
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.BumpUpPriorityCommand;
 import com.cloud.agent.api.CheckRouterAnswer;
@@ -61,6 +74,7 @@ import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.agent.api.to.NicTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.network.Networks.TrafficType;
+import com.cloud.network.VirtualNetworkApplianceService;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.simulator.MockHost;
 import com.cloud.simulator.MockSecurityRulesVO;
@@ -75,16 +89,6 @@ import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine.State;
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
-import javax.ejb.Local;
-import javax.inject.Inject;
-import javax.naming.ConfigurationException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Local(value = { MockVmManager.class })
@@ -567,7 +571,9 @@ public class MockVmManagerImpl extends ManagerBase implements MockVmManager {
 
     @Override
     public GetDomRVersionAnswer getDomRVersion(GetDomRVersionCmd cmd) {
-        return new GetDomRVersionAnswer(cmd, null, null, null);
+        //return new GetDomRVersionAnswer(cmd, null, null, null);
+    	String template_version = "CloudStack Release "+ VirtualNetworkApplianceService._minVRVersion.toString();
+    	return new GetDomRVersionAnswer(cmd, null, template_version, UUID.randomUUID().toString());
     }
 
     @Override

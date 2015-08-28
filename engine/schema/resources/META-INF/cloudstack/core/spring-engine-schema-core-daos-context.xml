@@ -332,5 +332,5 @@
   <bean id="Site2SiteCustomerGatewayDetailsDaoImpl" class="org.apache.cloudstack.resourcedetail.dao.Site2SiteCustomerGatewayDetailsDaoImpl" />
   <bean id="Site2SiteVpnConnectionDetailsDaoImpl" class="org.apache.cloudstack.resourcedetail.dao.Site2SiteVpnConnectionDetailsDaoImpl" />
   <bean id="databaseIntegrityChecker" class="com.cloud.upgrade.DatabaseIntegrityChecker" />
-
+  <bean id="multilineDaoImpl" class="com.cloud.network.dao.MultilineDaoImpl" />
 </beans>

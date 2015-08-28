@@ -119,7 +119,7 @@ public interface IpAddressManager {
      * @throws InsufficientAddressCapacityException
      */
     PublicIp assignSourceNatIpAddressToGuestNetwork(Account owner, Network guestNetwork) throws InsufficientAddressCapacityException, ConcurrentOperationException;
-
+    
     /**
      * @param ipAddrId
      * @param networkId
@@ -135,6 +135,11 @@ public interface IpAddressManager {
         InsufficientAddressCapacityException;
 
     boolean releasePortableIpAddress(long addrId);
+    
+    IPAddressVO associateIPToGuestNetwork(long ipAddrId, long networkId, boolean releaseOnFailure,String multilineLabel) throws ResourceAllocationException,
+    ResourceUnavailableException,
+    InsufficientAddressCapacityException,
+    ConcurrentOperationException;
 
     IPAddressVO associatePortableIPToGuestNetwork(long ipAddrId, long networkId, boolean releaseOnFailure) throws ResourceAllocationException,
         ResourceUnavailableException,
@@ -184,4 +189,8 @@ public interface IpAddressManager {
 
     String allocatePublicIpForGuestNic(Long networkId, DataCenter dc, Pod pod, Account caller, String requestedIp) throws InsufficientAddressCapacityException;
 
+    IpAddress allocateIp(Account ipOwner, boolean isSystem, Account caller, long callerId, DataCenter zone, String multilineLabel) throws ConcurrentOperationException,
+    ResourceAllocationException, InsufficientAddressCapacityException;
+    
+    PublicIp assignSourceNatIpAddressToGuestNetwork(Account owner, Network guestNetwork,String multilineLabel) throws InsufficientAddressCapacityException, ConcurrentOperationException;
 }

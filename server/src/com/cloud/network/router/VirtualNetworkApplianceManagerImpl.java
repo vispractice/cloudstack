@@ -90,6 +90,7 @@ import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SavePasswordCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
 import com.cloud.agent.api.routing.SetMonitorServiceCommand;
+import com.cloud.agent.api.routing.SetMultilineRouteCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesVpcCommand;
 import com.cloud.agent.api.routing.SetStaticNatRulesCommand;
@@ -180,6 +181,8 @@ import com.cloud.network.dao.LoadBalancerVMMapDao;
 import com.cloud.network.dao.LoadBalancerVO;
 import com.cloud.network.dao.MonitoringServiceDao;
 import com.cloud.network.dao.MonitoringServiceVO;
+import com.cloud.network.dao.MultilineDao;
+import com.cloud.network.dao.MultilineVO;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkVO;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderDao;
@@ -394,6 +397,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     AsyncJobManager _asyncMgr;
     @Inject
     protected ApiAsyncJobDispatcher _asyncDispatcher;
+    
+    @Inject
+    MultilineDao _multilineLabelDao;
 
     int _routerRamSize;
     int _routerCpuMHz;
@@ -1564,17 +1570,59 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 offeringId = _offering.getId();
             }
 
+            //update by hai.li
+            //get nic public ip
+            
+            /*if (publicNetwork) {
+                  PublicIp sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
+            }*/
+            
+            //validation isEnable multiline
             PublicIp sourceNatIp = null;
+            boolean isMultiline = false;
             if (publicNetwork) {
-                    sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
+                String isMultilines = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+                if(isMultilines !=null && isMultilines.equalsIgnoreCase("true")){
+                	isMultiline = Boolean.TRUE;
+                } else {
+                	sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
+                }
             }
+            
+            //get multiline sourceNatIps
+            List<PublicIp> sourceNatIps = new ArrayList<PublicIp>();
+            if(isMultiline){
+            	List<MultilineVO> multilines = _multilineLabelDao.getAllMultiline();
+            	if(multilines !=null && multilines.size()>0){
+            		for (MultilineVO multiline : multilines) {
+                		sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork,multiline.getLabel());
+                		if(sourceNatIp == null){
+                			s_logger.info("Don't use the multiline network :" + multiline.getLabel());
+                			continue;
+                		}
+                		if(multiline.getIsDefault()){
+                			sourceNatIp.setDefault(Boolean.TRUE);
+            			}
+                		sourceNatIps.add(sourceNatIp);
+					}
+            	} else {
+            		sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
+            	}
+             }
 
                 // 3) deploy virtual router(s)
                 int count = routerCount - routers.size();
                 DeploymentPlan plan = planAndRouters.first();
                 for (int i = 0; i < count; i++) {
-                    LinkedHashMap<Network, List<? extends NicProfile>> networks = createRouterNetworks(owner, isRedundant, plan, guestNetwork, new Pair<Boolean, PublicIp>(
-                            publicNetwork, sourceNatIp));
+                   /* LinkedHashMap<Network, List<? extends NicProfile>> networks = createRouterNetworks(owner, isRedundant, plan, guestNetwork, new Pair<Boolean, PublicIp>(
+                            publicNetwork, sourceNatIp));*/
+                    
+                    LinkedHashMap<Network, List<? extends NicProfile>> networks = null;
+                    if(sourceNatIps != null && sourceNatIps.size() >0 ){
+                		networks = createMutlilineRouterNetworks(owner, isRedundant, plan, guestNetwork, new Pair<Boolean, List<PublicIp>>(publicNetwork, sourceNatIps));
+                	} else {
+                		networks = createRouterNetworks(owner, isRedundant, plan, guestNetwork, new Pair<Boolean, PublicIp>(publicNetwork, sourceNatIp));
+                	}
                     //don't start the router as we are holding the network lock that needs to be released at the end of router allocation
                     DomainRouterVO router = deployRouter(owner, destination, plan, params, isRedundant, vrProvider, offeringId, null, networks, false, null);
 
@@ -1771,6 +1819,130 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         return hypervisors;
     }
 
+    protected LinkedHashMap<Network, List<? extends NicProfile>> createMutlilineRouterNetworks(Account owner, boolean isRedundant, DeploymentPlan plan, Network guestNetwork, Pair<Boolean, List<PublicIp>> publicNetworks) throws ConcurrentOperationException,InsufficientAddressCapacityException {
+        boolean setupPublicNetwork = false;
+        if (publicNetworks != null) {
+            setupPublicNetwork = publicNetworks.first();
+        }
+        //Form networks
+        LinkedHashMap<Network, List<? extends NicProfile>> networks = new LinkedHashMap<Network, List<? extends NicProfile>>(3);
+        
+        //1) Guest network
+        boolean hasGuestNetwork = false;
+        if (guestNetwork != null) {
+            s_logger.debug("Adding nic for Virtual Router in Guest network " + guestNetwork);
+            String defaultNetworkStartIp = null, defaultNetworkStartIpv6 = null;
+            if (!setupPublicNetwork) {
+            	    Nic placeholder = _networkModel.getPlaceholderNicForRouter(guestNetwork, plan.getPodId());
+            	if (guestNetwork.getCidr() != null) {
+            		if (placeholder != null && placeholder.getIp4Address() != null) {
+            			s_logger.debug("Requesting ipv4 address " + placeholder.getIp4Address() + " stored in placeholder nic for the network " + guestNetwork);
+            	        defaultNetworkStartIp = placeholder.getIp4Address();
+            	    } else {
+            	        String startIp = _networkModel.getStartIpAddress(guestNetwork.getId());
+                        if (startIp != null && _ipAddressDao.findByIpAndSourceNetworkId(guestNetwork.getId(), startIp).getAllocatedTime() == null) {
+                            defaultNetworkStartIp = startIp;
+                        } else if (s_logger.isDebugEnabled()){
+            				s_logger.debug("First ipv4 " + startIp + " in network id=" + guestNetwork.getId() +
+                                    " is already allocated, can't use it for domain router; will get random ip address from the range");
+                        }
+            	    }
+            	}
+            	
+            	if (guestNetwork.getIp6Cidr() != null) {
+            		if (placeholder != null && placeholder.getIp6Address() != null) {
+            			s_logger.debug("Requesting ipv6 address " + placeholder.getIp6Address() + " stored in placeholder nic for the network " + guestNetwork);
+            			defaultNetworkStartIpv6 = placeholder.getIp6Address();
+            		} else {
+            		String startIpv6 = _networkModel.getStartIpv6Address(guestNetwork.getId());
+            		if (startIpv6 != null && _ipv6Dao.findByNetworkIdAndIp(guestNetwork.getId(), startIpv6) == null) {
+            			defaultNetworkStartIpv6 = startIpv6;
+            		} else if (s_logger.isDebugEnabled()){
+            			s_logger.debug("First ipv6 " + startIpv6 + " in network id=" + guestNetwork.getId() +
+            					" is already allocated, can't use it for domain router; will get random ipv6 address from the range");
+            		}
+            	}
+            }
+            }
+
+            NicProfile gatewayNic = new NicProfile(defaultNetworkStartIp, defaultNetworkStartIpv6);
+            if (setupPublicNetwork) {
+                if (isRedundant) {
+                    gatewayNic.setIp4Address(_ipAddrMgr.acquireGuestIpAddress(guestNetwork, null));
+                } else {
+                    gatewayNic.setIp4Address(guestNetwork.getGateway());
+                }
+                gatewayNic.setBroadcastUri(guestNetwork.getBroadcastUri());
+                gatewayNic.setBroadcastType(guestNetwork.getBroadcastDomainType());
+                gatewayNic.setIsolationUri(guestNetwork.getBroadcastUri());
+                gatewayNic.setMode(guestNetwork.getMode());
+                String gatewayCidr = guestNetwork.getCidr();
+                gatewayNic.setNetmask(NetUtils.getCidrNetmask(gatewayCidr));
+            } else {
+                gatewayNic.setDefaultNic(true);
+            }
+            
+            networks.put(guestNetwork, new ArrayList<NicProfile>(Arrays.asList(gatewayNic)));
+            hasGuestNetwork = true;
+        }
+
+        //2) Control network
+        s_logger.debug("Adding nic for Virtual Router in Control network ");
+        List<? extends NetworkOffering> offerings = _networkModel.getSystemAccountNetworkOfferings(NetworkOffering.SystemControlNetwork);
+        NetworkOffering controlOffering = offerings.get(0);
+        Network controlConfig = _networkMgr.setupNetwork(_systemAcct, controlOffering, plan, null, null, false).get(0);
+        networks.put(controlConfig, new ArrayList<NicProfile>());
+        
+        
+        //3) Public network
+        if (setupPublicNetwork) {
+            List<PublicIp> sourceNatIps = publicNetworks.second();
+            NicProfile[] defaultNics = new NicProfile[sourceNatIps.size()];
+            NetworkOffering publicOffering = _networkModel.getSystemAccountNetworkOfferings(NetworkOffering.SystemPublicNetwork).get(0);
+            List<? extends Network> publicNetwork = _networkMgr.setupNetwork(_systemAcct, publicOffering, plan, null, null, false);
+            int i= 0;
+            for (PublicIp sourceNatIp : sourceNatIps) {
+            	 s_logger.debug("Adding nic for Virtual Router in Public network ");
+                 //if source nat service is supported by the network, get the source nat ip address
+                 NicProfile defaultNic = new NicProfile();
+                 if(sourceNatIp.isDefault()){
+                	 defaultNic.setDefaultNic(true);
+                 } else {
+                	 defaultNic.setDefaultNic(false);
+                 }
+                 defaultNic.setIp4Address(sourceNatIp.getAddress().addr());
+                 defaultNic.setGateway(sourceNatIp.getGateway());
+                 defaultNic.setNetmask(sourceNatIp.getNetmask());
+                 defaultNic.setMacAddress(sourceNatIp.getMacAddress());
+                 // get broadcast from public network
+                 Network pubNet = _networkDao.findById(sourceNatIp.getNetworkId());
+                 if (pubNet.getBroadcastDomainType() == BroadcastDomainType.Vxlan) {
+                     defaultNic.setBroadcastType(BroadcastDomainType.Vxlan);
+                     defaultNic.setBroadcastUri(BroadcastDomainType.Vxlan.toUri(sourceNatIp.getVlanTag()));
+                     defaultNic.setIsolationUri(BroadcastDomainType.Vxlan.toUri(sourceNatIp.getVlanTag()));
+                 } else {
+                     defaultNic.setBroadcastType(BroadcastDomainType.Vlan);
+                     defaultNic.setBroadcastUri(BroadcastDomainType.Vlan.toUri(sourceNatIp.getVlanTag()));
+                     defaultNic.setIsolationUri(IsolationType.Vlan.toUri(sourceNatIp.getVlanTag()));
+                 }
+                 if (hasGuestNetwork) {
+                     defaultNic.setDeviceId(2+i);
+                 }
+                 
+                 // We want to use the identical MAC address for RvR on public interface if possible
+                 NicVO peerNic = _nicDao.findByIp4AddressAndNetworkId(defaultNic.getIp4Address(), publicNetwork.get(0).getId());
+                 if (peerNic != null) {
+                     s_logger.info("Use same MAC as previous RvR, the MAC is " + peerNic.getMacAddress());
+                     defaultNic.setMacAddress(peerNic.getMacAddress());
+                 }
+                 defaultNics[i]= defaultNic;
+                 i++;
+			}
+            networks.put(publicNetwork.get(0), new ArrayList<NicProfile>(Arrays.asList(defaultNics)));
+        }
+        return networks;
+    }
+    
     protected LinkedHashMap<Network, List<? extends NicProfile>> createRouterNetworks(Account owner,
         boolean isRedundant,
             DeploymentPlan plan, Network guestNetwork, Pair<Boolean, PublicIp> publicNetwork) throws ConcurrentOperationException,
@@ -2377,10 +2549,50 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             finalizeMonitorServiceOnStrat(cmds, profile, router, provider, routerGuestNtwkIds.get(0), false);
         }
 
-
+        finalizeMultilineOnStrat(cmds, profile);
+        
         return true;
     }
-
+    
+    /**
+     * 获取多线路的pubic ip路由规则（封装到cmds发送到agent端）
+     * @author hai.li
+     * @date 2015.08.25
+     * @param cmds
+     * @param profile
+     */
+    private void finalizeMultilineOnStrat(Commands cmds, VirtualMachineProfile profile){
+    	String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+    	if(isMultiline == null || !isMultiline.equalsIgnoreCase("true")){
+    		s_logger.info("This network doesn't multiline. " );
+        	return;
+    	}
+    	
+    	HashMap<String, String> routeRules = new HashMap<String, String>();
+    	SetMultilineRouteCommand setMultilineRouteCommand = new SetMultilineRouteCommand();
+        for (NicProfile nic : profile.getNics()) {
+            if (nic.getTrafficType() == TrafficType.Public) {
+                 IPAddressVO ipAddressVO = _ipAddressDao.findByIp(nic.getIp4Address());
+    			 if(ipAddressVO == null || ipAddressVO.getMultilineLabel() == null){
+    				 throw new CloudRuntimeException("Cannot find public ip : "+ nic.getIp4Address()+" in userIpAddress.");
+    			 }
+    			 if(nic.isDefaultNic()){
+     				 routeRules.put(nic.getGateway(),"0.0.0.0");
+     			 } else {
+     				 MultilineVO multilines = _multilineLabelDao.getMultilineByLabel(ipAddressVO.getMultilineLabel());
+    	     		 routeRules.put(nic.getGateway(),multilines.getRouteRule());
+     			 }
+            } else if (nic.getTrafficType() == TrafficType.Control) {
+                 setMultilineRouteCommand.setAccessDetail(NetworkElementCommand.ROUTER_IP, nic.getIp4Address());
+            } else {
+            	s_logger.info("Cannot find nic traffic type : " + nic.getTrafficType());
+            }
+        }
+        
+        setMultilineRouteCommand.setRouteRules(routeRules);
+        cmds.addCommand(setMultilineRouteCommand);
+    }
+    
     private void finalizeMonitorServiceOnStrat(Commands cmds, VirtualMachineProfile profile, DomainRouterVO router, Provider provider, long networkId, Boolean add) {
 
         NetworkVO network = _networkDao.findById(networkId);

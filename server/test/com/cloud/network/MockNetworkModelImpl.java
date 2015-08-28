@@ -888,4 +888,19 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
     public boolean getNetworkEgressDefaultPolicy(Long networkId) {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+	@Override
+	public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(
+			long accountId, long associatedNetworkId, Boolean sourceNat,
+			String multilineLabel) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(
+			long associatedNetworkId, Boolean sourceNat, String multilineLabel) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

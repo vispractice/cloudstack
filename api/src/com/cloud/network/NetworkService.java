@@ -153,6 +153,9 @@ public interface NetworkService {
     IpAddress associateIPToNetwork(long ipId, long networkId) throws InsufficientAddressCapacityException,
         ResourceAllocationException, ResourceUnavailableException, ConcurrentOperationException;
 
+    IpAddress associateIPToNetwork(long ipId, long networkId, String multilineLabel) throws InsufficientAddressCapacityException,
+    ResourceAllocationException, ResourceUnavailableException, ConcurrentOperationException;
+    
     /**
      *
      * @param networkName
@@ -185,4 +188,7 @@ public interface NetworkService {
     List<? extends Nic> listNics(ListNicsCmd listNicsCmd);
 
     Map<Network.Capability, String> getNetworkOfferingServiceCapabilities(NetworkOffering offering, Service service);
+    
+    IpAddress allocateIP(Account ipOwner, long zoneId, Long networkId, String multilineLabel) throws ResourceAllocationException,
+    InsufficientAddressCapacityException, ConcurrentOperationException;
 }

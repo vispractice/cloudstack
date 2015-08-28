@@ -645,7 +645,8 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
         }
 
         //check wether the vm ip is alreday associated with any public ip address
-        IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp);
+        //IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp);
+        IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp,ipAddress.getVlanId());
 
         if (oldIP != null) {
             // If elasticIP functionality is supported in the network, we always have to disable static nat on the old

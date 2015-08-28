@@ -410,9 +410,25 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     }
 
     @Override
+    public IPAddressVO findByAssociatedVmIdAndVmIp(long vmId, String vmIp,long vlanId) {
+        SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+        sc.setParameters("associatedWithVmId", vmId);
+        sc.setParameters("associatedVmIp", vmIp);
+        sc.setParameters("vlan", vlanId);
+        return findOneBy(sc);
+    }
+    
+    @Override
     public void lockRange(long vlandbId) {
         SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
         sc.setParameters("vlan", vlandbId);
         lockRows(sc,null,true);
     }
+    
+    @Override
+	public IPAddressVO findByIp(String ipAddress) {
+		SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+        sc.setParameters("ipAddress", ipAddress);
+        return findOneBy(sc);
+	}
 }
