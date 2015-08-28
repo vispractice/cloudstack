@@ -8,7 +8,7 @@ public class SetMultilineRouteCommand extends NetworkElementCommand{
 	//In the routeRules HashMap,gateway is key, net and netmask is value. The store format like : <10.204.120.1; 10.204.104.0-255.255.255.0,10.204.105.0-255.255.255.0>
 	HashMap<String, String> routeRules;
 
-	protected SetMultilineRouteCommand(){
+	public SetMultilineRouteCommand(){
 		
 	}
 	public SetMultilineRouteCommand(HashMap<String, String> routeRules){
