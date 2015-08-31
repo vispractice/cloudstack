@@ -2428,4 +2428,84 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
             }
         }
     }
+    
+    @Override
+    @DB
+    public IpAddress allocatePortableIp(final Account ipOwner, Account caller, final long dcId, final Long networkId, final Long vpcID,final String multilineLabel) throws ConcurrentOperationException, ResourceAllocationException,
+        InsufficientAddressCapacityException {
+
+        GlobalLock portableIpLock = GlobalLock.getInternLock("PortablePublicIpRange");
+        IPAddressVO ipaddr;
+
+        try {
+            portableIpLock.lock(5);
+
+            ipaddr = Transaction.execute(new TransactionCallbackWithException<IPAddressVO,InsufficientAddressCapacityException>() {
+                @Override
+                public IPAddressVO doInTransaction(TransactionStatus status) throws InsufficientAddressCapacityException {
+                    PortableIpVO allocatedPortableIp;
+
+                    List<PortableIpVO> portableIpVOs = _portableIpDao.listByRegionIdAndState(1, PortableIp.State.Free,multilineLabel);
+                    if (portableIpVOs == null || portableIpVOs.isEmpty()) {
+                        InsufficientAddressCapacityException ex = new InsufficientAddressCapacityException("Unable to find available portable IP addresses", Region.class, new Long(1));
+                        throw ex;
+                    }
+        
+                    // allocate first portable IP to the user
+                    allocatedPortableIp = portableIpVOs.get(0);
+                    allocatedPortableIp.setAllocatedTime(new Date());
+                    allocatedPortableIp.setAllocatedToAccountId(ipOwner.getAccountId());
+                    allocatedPortableIp.setAllocatedInDomainId(ipOwner.getDomainId());
+                    allocatedPortableIp.setState(PortableIp.State.Allocated);
+                    _portableIpDao.update(allocatedPortableIp.getId(), allocatedPortableIp);
+        
+                    // To make portable IP available as a zone level resource we need to emulate portable IP's (which are
+                    // provisioned at region level) as public IP provisioned in a zone. user_ip_address and vlan combo give the
+                    // identity of a public IP in zone. Create entry for portable ip in these tables.
+        
+                    // provision portable IP range VLAN into the zone
+                    long physicalNetworkId = _networkModel.getDefaultPhysicalNetworkByZoneAndTrafficType(dcId, TrafficType.Public).getId();
+                    Network network = _networkModel.getSystemNetworkByZoneAndTrafficType(dcId, TrafficType.Public);
+                    String range = allocatedPortableIp.getAddress() + "-" + allocatedPortableIp.getAddress();
+                    VlanVO vlan = new VlanVO(VlanType.VirtualNetwork,
+                        allocatedPortableIp.getVlan(),
+                        allocatedPortableIp.getGateway(),
+                        allocatedPortableIp.getNetmask(),
+                        dcId,
+                        range,
+                        network.getId(),
+                        physicalNetworkId,
+                        null,
+                        null,
+                        null);
+                    vlan = _vlanDao.persist(vlan);
+
+                    // provision the portable IP in to user_ip_address table
+                    IPAddressVO ipaddr = new IPAddressVO(new Ip(allocatedPortableIp.getAddress()), dcId, networkId, vpcID, physicalNetworkId, network.getId(), vlan.getId(), true,multilineLabel);
+                    ipaddr.setState(State.Allocated);
+                    ipaddr.setAllocatedTime(new Date());
+                    ipaddr.setAllocatedInDomainId(ipOwner.getDomainId());
+                    ipaddr.setAllocatedToAccountId(ipOwner.getId());
+                    ipaddr = _ipAddressDao.persist(ipaddr);
+
+                    UsageEventUtils.publishUsageEvent(EventTypes.EVENT_PORTABLE_IP_ASSIGN,
+                        ipaddr.getId(),
+                        ipaddr.getDataCenterId(),
+                        ipaddr.getId(),
+                        ipaddr.getAddress().toString(),
+                        ipaddr.isSourceNat(),
+                        null,
+                        ipaddr.getSystem(),
+                        ipaddr.getClass().getName(),
+                        ipaddr.getUuid());
+
+                    return ipaddr;
+                }
+            });
+        } finally {
+            portableIpLock.unlock();
+        }
+
+        return ipaddr;
+    }
 }

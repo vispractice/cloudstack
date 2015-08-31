@@ -151,6 +151,20 @@ public class IPAddressVO implements IpAddress {
         this.portable = portable;
         this.uuid = UUID.randomUUID().toString();
     }
+    
+    public  IPAddressVO(Ip address, long dataCenterId, Long networkId, Long vpcId, long physicalNetworkId, long sourceNetworkId,
+	            long vlanDbId, boolean portable, String multilineLabel) {
+		this.address = address;
+		this.dataCenterId = dataCenterId;
+		this.associatedWithNetworkId = networkId;
+		this.vpcId = vpcId;
+		this.physicalNetworkId = physicalNetworkId;
+		this.sourceNetworkId = sourceNetworkId;
+		this.vlanId = vlanDbId;
+		this.portable = portable;
+		this.uuid = UUID.randomUUID().toString();
+		this.multilineLabel = multilineLabel;
+	}
 
     public long getMacAddress() {
 	    return macAddress;

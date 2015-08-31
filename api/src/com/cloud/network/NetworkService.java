@@ -191,4 +191,7 @@ public interface NetworkService {
     
     IpAddress allocateIP(Account ipOwner, long zoneId, Long networkId, String multilineLabel) throws ResourceAllocationException,
     InsufficientAddressCapacityException, ConcurrentOperationException;
+    
+    IpAddress allocatePortableIP(Account ipOwner, int regionId, Long zoneId, Long networkId, Long vpcId, String multilineLabel) throws ResourceAllocationException,
+    InsufficientAddressCapacityException, ConcurrentOperationException;
 }

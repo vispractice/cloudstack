@@ -3741,7 +3741,8 @@ public class ApiResponseHelper implements ResponseGenerator {
     public PortableIpResponse createPortableIPResponse(PortableIp portableIp) {
         PortableIpResponse response = new PortableIpResponse();
         response.setAddress(portableIp.getAddress());
-        Long accountId =  portableIp.getAllocatedInDomainId();
+        //Long accountId =  portableIp.getAllocatedInDomainId();
+        Long accountId =  portableIp.getAllocatedToAccountId();
         if (accountId != null) {
             Account account = ApiDBUtils.findAccountById(accountId);
             response.setAllocatedToAccountId(account.getAccountName());

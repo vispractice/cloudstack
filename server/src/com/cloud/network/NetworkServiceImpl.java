@@ -556,6 +556,12 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
     @ActionEvent(eventType = EventTypes.EVENT_PORTABLE_IP_ASSIGN, eventDescription = "allocating portable public Ip", create = true)
     public IpAddress allocatePortableIP(Account ipOwner, int regionId, Long zoneId, Long networkId, Long vpcId) throws ResourceAllocationException,
             InsufficientAddressCapacityException, ConcurrentOperationException {
+    	return this.allocateIP(ipOwner, zoneId, networkId, null);
+    }
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_PORTABLE_IP_ASSIGN, eventDescription = "allocating portable public Ip", create = true)
+    public IpAddress allocatePortableIP(Account ipOwner, int regionId, Long zoneId, Long networkId, Long vpcId ,String multilineLabel) throws ResourceAllocationException,
+            InsufficientAddressCapacityException, ConcurrentOperationException {
         Account caller = CallContext.current().getCallingAccount();
         long callerUserId = CallContext.current().getCallingUserId();
         DataCenter zone = _entityMgr.findById(DataCenter.class, zoneId);
@@ -564,6 +570,16 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
             throw new InvalidParameterValueException("One of Network id or VPC is should be passed");
         }
 
+        //设置默认标签
+        if (multilineLabel == null || multilineLabel.equals("")) {
+        	MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
+        	if(multiline != null && multiline.getLabel() != null){
+        		multilineLabel = multiline.getLabel();
+        	} else {
+        		throw new InvalidParameterValueException("Can't assign ip to the multiline, Not exist one multiline label.");
+        	}
+        }
+        
         if (networkId != null) {
             Network network = _networksDao.findById(networkId);
             if (network == null) {
@@ -581,7 +597,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
                         if (s_logger.isDebugEnabled()) {
                             s_logger.debug("Associate IP address called by the user " + callerUserId + " account " + ipOwner.getId());
                         }
-                        return _ipAddrMgr.allocatePortableIp(ipOwner, caller, zoneId, networkId, null);
+                        return _ipAddrMgr.allocatePortableIp(ipOwner, caller, zoneId, networkId, null,multilineLabel);
                     } else {
                         throw new InvalidParameterValueException("Associate IP address can only be called on the shared networks in the advanced zone"
                                 + " with Firewall/Source Nat/Static Nat/Port Forwarding/Load balancing services enabled");
@@ -599,7 +615,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
 
         _accountMgr.checkAccess(caller, null, false, ipOwner);
 
-        return _ipAddrMgr.allocatePortableIp(ipOwner, caller, zoneId, null, null);
+        return _ipAddrMgr.allocatePortableIp(ipOwner, caller, zoneId, null, null,multilineLabel);
     }
 
     @Override
@@ -4044,6 +4060,16 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
         long callerUserId = CallContext.current().getCallingUserId();
         DataCenter zone = _entityMgr.findById(DataCenter.class, zoneId);
 
+        //设置默认标签
+        if (multilineLabel == null || multilineLabel.equals("")) {
+        	MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
+        	if(multiline != null && multiline.getLabel() != null){
+        		multilineLabel = multiline.getLabel();
+        	} else {
+        		throw new InvalidParameterValueException("Can't assign ip to the multiline, Not exist one multiline label.");
+        	}
+        }
+        
         if (networkId != null) {
             Network network = _networksDao.findById(networkId);
             if (network == null) {
@@ -4085,10 +4111,6 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
             throw new InvalidParameterValueException("Invalid network id is given");
         }
 
-        if (network.getVpcId() != null) {
-            throw new InvalidParameterValueException("Can't assign ip to the network directly when network belongs" + " to VPC.Specify vpcId to associate ip address to VPC");
-        }
-        //设置默认标签
         if (multilineLabel == null || multilineLabel.equals("")) {
         	MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
         	if(multiline != null && multiline.getLabel() != null){
@@ -4096,6 +4118,10 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
         	} else {
         		throw new InvalidParameterValueException("Can't assign ip to the multiline, Not exist one multiline label.");
         	}
+        }
+
+        if (multilineLabel == null || multilineLabel.equals("")) {
+        	throw new InvalidParameterValueException("Can't assign ip to the multiline, Not exist one multiline label.");
         }
         return _ipAddrMgr.associateIPToGuestNetwork(ipId, networkId, true, multilineLabel);
     }

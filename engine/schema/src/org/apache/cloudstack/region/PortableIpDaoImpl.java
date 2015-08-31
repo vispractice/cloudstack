@@ -16,33 +16,15 @@
 // under the License.
 package org.apache.cloudstack.region;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.ejb.Local;
-import javax.inject.Inject;
-import javax.naming.ConfigurationException;
 
 import org.springframework.stereotype.Component;
 
-import com.cloud.dc.AccountVlanMapVO;
-import com.cloud.dc.PodVlanMapVO;
-import com.cloud.dc.Vlan;
-import com.cloud.dc.Vlan.VlanType;
-import com.cloud.dc.VlanVO;
-import com.cloud.network.dao.IPAddressDao;
-import com.cloud.utils.Pair;
-import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
-import com.cloud.utils.db.JoinBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.db.Transaction;
-import com.cloud.utils.exception.CloudRuntimeException;
 
 @Component
 @Local(value={PortableIpDao.class})
@@ -71,6 +53,7 @@ public class PortableIpDaoImpl extends GenericDaoBase<PortableIpVO, Long> implem
         listByRegionIDAndStateSearch = createSearchBuilder();
         listByRegionIDAndStateSearch.and("regionId", listByRegionIDAndStateSearch.entity().getRegionId(), SearchCriteria.Op.EQ);
         listByRegionIDAndStateSearch.and("state", listByRegionIDAndStateSearch.entity().getState(), SearchCriteria.Op.EQ);
+        listByRegionIDAndStateSearch.and("multilineLabel", listByRegionIDAndStateSearch.entity().getMultilineLabel(), SearchCriteria.Op.EQ);
         listByRegionIDAndStateSearch.done();
 
         findByIpAddressSearch = createSearchBuilder();
@@ -127,5 +110,16 @@ public class PortableIpDaoImpl extends GenericDaoBase<PortableIpVO, Long> implem
         address.setAssociatedWithVpcId(null);
         address.setPhysicalNetworkId(null);
         update(ipAddressId, address);
+    }
+    
+    @Override
+    public List<PortableIpVO> listByRegionIdAndState(int regionId, PortableIp.State state, String multilineLabel) {
+        SearchCriteria<PortableIpVO> sc = listByRegionIDAndStateSearch.create();
+        sc.setParameters("regionId", regionId);
+        sc.setParameters("state", state);
+        if(multilineLabel !=null && !multilineLabel.equals("")){
+        	sc.setParameters("multilineLabel", multilineLabel);
+        }
+        return listBy(sc);
     }
 }

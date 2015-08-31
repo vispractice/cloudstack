@@ -193,4 +193,9 @@ public interface IpAddressManager {
     ResourceAllocationException, InsufficientAddressCapacityException;
     
     PublicIp assignSourceNatIpAddressToGuestNetwork(Account owner, Network guestNetwork,String multilineLabel) throws InsufficientAddressCapacityException, ConcurrentOperationException;
+
+    IpAddress allocatePortableIp(Account ipOwner, Account caller, long dcId, Long networkId, Long vpcID, String multilineLabel) throws ConcurrentOperationException,
+    ResourceAllocationException,
+    InsufficientAddressCapacityException;
+    
 }
