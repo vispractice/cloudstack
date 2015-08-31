@@ -290,17 +290,15 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
                         } else {
                         	//update by hai.li 2015.08.19
                         	Set<String> networkGW = new HashSet<String>();
-                            boolean checkGW = Boolean.FALSE;
+                            boolean checkGW = Boolean.TRUE;
                     		String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
                         	if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
                         		if(!networkGW.contains(ip.getGateway())){
+                        			services.add(Service.SourceNat);
                             		networkGW.add(ip.getGateway());
-                            	} else {
-                            		checkGW = Boolean.TRUE;
-                            	}
-                        	} else {
-                        		checkGW = Boolean.TRUE;
-                        	}
+                            		checkGW = Boolean.FALSE;
+                            	} 
+                        	} 
                         	
                         	if(checkGW){
                         		CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");

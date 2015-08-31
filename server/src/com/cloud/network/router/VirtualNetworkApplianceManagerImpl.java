@@ -1897,9 +1897,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         //3) Public network
         if (setupPublicNetwork) {
             List<PublicIp> sourceNatIps = publicNetworks.second();
-            NicProfile[] defaultNics = new NicProfile[sourceNatIps.size()];
             NetworkOffering publicOffering = _networkModel.getSystemAccountNetworkOfferings(NetworkOffering.SystemPublicNetwork).get(0);
             List<? extends Network> publicNetwork = _networkMgr.setupNetwork(_systemAcct, publicOffering, plan, null, null, false);
+            NicProfile[] defaultNics = new NicProfile[sourceNatIps.size()];
             int i= 0;
             for (PublicIp sourceNatIp : sourceNatIps) {
             	 s_logger.debug("Adding nic for Virtual Router in Public network ");
@@ -1935,7 +1935,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                      s_logger.info("Use same MAC as previous RvR, the MAC is " + peerNic.getMacAddress());
                      defaultNic.setMacAddress(peerNic.getMacAddress());
                  }
-                 defaultNics[i]= defaultNic;
+                 defaultNics[i] = defaultNic;
                  i++;
 			}
             networks.put(publicNetwork.get(0), new ArrayList<NicProfile>(Arrays.asList(defaultNics)));
@@ -2580,7 +2580,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
      				 routeRules.put(nic.getGateway(),"0.0.0.0");
      			 } else {
      				 MultilineVO multilines = _multilineLabelDao.getMultilineByLabel(ipAddressVO.getMultilineLabel());
-    	     		 routeRules.put(nic.getGateway(),multilines.getRouteRule());
+    	     		 routeRules.put(nic.getGateway(), multilines.getRouteRule().replaceAll(" ", "").replaceAll("\n", ""));
      			 }
             } else if (nic.getTrafficType() == TrafficType.Control) {
                  setMultilineRouteCommand.setAccessDetail(NetworkElementCommand.ROUTER_IP, nic.getIp4Address());

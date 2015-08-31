@@ -4910,6 +4910,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         final String gateway = cmd.getGateway();
         final String netmask = cmd.getNetmask();
         String vlanId = cmd.getVlan();
+        String multilineLabel = cmd.getMultilineLabel();
 
         final RegionVO region = _regionDao.findById(regionId);
         if (region == null) {
@@ -4955,6 +4956,24 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
             }
 
         }
+        
+        String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+        final MultilineVO multiline ;
+        
+        if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
+    	     if (multilineLabel != null && !multilineLabel.equals("")) {
+         	     multiline = multilineLabelDao.getMultilineByLabel(multilineLabel);
+             } else {
+	             multiline = multilineLabelDao.getDefaultMultiline();
+             }
+        } else {
+        	 multiline = multilineLabelDao.getDefaultMultiline();
+        }
+        
+        if(multiline == null || multiline.getLabel().equals("")){
+        	 throw new InvalidParameterValueException("multiline labe is not exist : " + multilineLabel);
+        }
+        
         GlobalLock portableIpLock = GlobalLock.getInternLock("PortablePublicIpRange");
         portableIpLock.lock(5);
         try {
@@ -4969,7 +4988,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
                     long endIpLong = NetUtils.ip2Long(endIP);
                     while (startIpLong <= endIpLong) {
                         PortableIpVO portableIP = new PortableIpVO(regionId, portableIpRange.getId(), vlanIdFinal, gateway, netmask,
-                                NetUtils.long2Ip(startIpLong));
+                                NetUtils.long2Ip(startIpLong),multiline.getLabel());
                         _portableIpDao.persist(portableIP);
                         startIpLong++;
                     }
