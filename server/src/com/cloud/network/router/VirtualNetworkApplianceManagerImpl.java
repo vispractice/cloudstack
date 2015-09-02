@@ -2711,6 +2711,21 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         if (!firewallRulesEgress.isEmpty()) {
             createFirewallRulesCommands(firewallRulesEgress, router, cmds, guestNetworkId);
         }
+        //Andrew Ling,if the firewall egress rules did not get some one from the DB,it means that the VR not have the egress rules which 
+        //set by the user,but it must want to be set the default firewall egress rule in the VR,which be determined by the VR network offering. 
+        else {
+        	NetworkVO network = _networkDao.findById(guestNetworkId);
+        	NetworkOfferingVO offering =  _networkOfferingDao.findById(network.getNetworkOfferingId());
+            Boolean defaultEgressPolicy = offering.getEgressDefaultPolicy();
+            if(defaultEgressPolicy){
+            	List<String> sourceCidr = new ArrayList<String>();
+            	sourceCidr.add(NetUtils.ALL_CIDRS);
+            	FirewallRule ruleVO = new FirewallRuleVO(null, null, null, null, "all", guestNetworkId, network.getAccountId(), network.getDomainId(), Purpose.Firewall, sourceCidr,
+                        null, null, null, FirewallRule.TrafficType.Egress, FirewallRule.FirewallRuleType.System);
+            	firewallRulesEgress.add(ruleVO);
+            	createFirewallRulesCommands(firewallRulesEgress, router, cmds, guestNetworkId);
+            }
+        }
 
         if (publicIps != null && !publicIps.isEmpty()) {
             List<RemoteAccessVpn> vpns = new ArrayList<RemoteAccessVpn>();
