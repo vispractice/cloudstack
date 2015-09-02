@@ -652,16 +652,11 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
         //IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp);
         //update portableIp and publicIP static nat
         IPAddressVO oldIP = null;
-        VlanVO newVlanVO = _vlanDao.findById(ipAddress.getVlanId());
         if(ipAddress.isPortable()){
-        	List<IPAddressVO> oldIPs = _ipAddressDao.findByAssociatedVmIdAndPortableVmIp(vmId, vmIp,Boolean.TRUE);
-        	for (IPAddressVO ipAddressVo : oldIPs) {
-        		VlanVO vlanVO = _vlanDao.findById(ipAddressVo.getVlanId());
-        		if(newVlanVO != null && newVlanVO.getVlanTag().equals(vlanVO.getVlanTag())){
-        			oldIP = ipAddressVo;
-        			break;
-        		}
-			}
+        	VlanVO newVlanVO = _vlanDao.findById(ipAddress.getVlanId());
+        	if(newVlanVO != null){
+        		oldIP = _ipAddressDao.findByAssociatedVmIdAndPortableVmIp(vmId, vmIp,Boolean.TRUE,newVlanVO.getVlanTag());
+        	}
         } else {
         	oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp,ipAddress.getVlanId());
         }

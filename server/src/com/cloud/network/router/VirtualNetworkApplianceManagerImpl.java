@@ -2581,7 +2581,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
      				 routeRules.put(nic.getGateway(),"0.0.0.0");
      			 } else {
      				 MultilineVO multilines = _multilineLabelDao.getMultilineByLabel(ipAddressVO.getMultilineLabel());
-    	     		 routeRules.put(nic.getGateway(), multilines.getRouteRule().replaceAll(" ", "").replaceAll("\n", ""));
+     				 if(multilines != null){
+     					 routeRules.put(nic.getGateway(), multilines.getRouteRule().replaceAll(" ", "").replaceAll("\n", ""));
+     				 }
      			 }
             } else if (nic.getTrafficType() == TrafficType.Control) {
                  setMultilineRouteCommand.setAccessDetail(NetworkElementCommand.ROUTER_IP, nic.getIp4Address());

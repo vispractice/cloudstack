@@ -16,7 +16,18 @@
 // under the License.
 package com.cloud.network.dao;
 
-import com.cloud.dc.DataCenterVnetVO;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Local;
+import javax.inject.Inject;
+
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+
 import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.VlanVO;
 import com.cloud.dc.dao.VlanDao;
@@ -34,19 +45,6 @@ import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.net.Ip;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import javax.ejb.Local;
-import javax.inject.Inject;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
-
 @Component
 @Local(value = { IPAddressDao.class })
 @DB
@@ -59,7 +57,9 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     protected GenericSearchBuilder<IPAddressVO, Integer> AllocatedIpCount;
     protected GenericSearchBuilder<IPAddressVO, Integer> AllIpCountForDashboard;
     protected SearchBuilder<IPAddressVO> DeleteAllExceptGivenIp;
-    protected GenericSearchBuilder<IPAddressVO, Long> AllocatedIpCountForAccount;    
+    protected GenericSearchBuilder<IPAddressVO, Long> AllocatedIpCountForAccount;  
+    protected SearchBuilder<IPAddressVO> portableSearchAllocated;
+    
     @Inject protected VlanDao _vlanDao;
     protected GenericSearchBuilder<IPAddressVO, Long> CountFreePublicIps;
     @Inject ResourceTagDao _tagsDao;
@@ -134,6 +134,17 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         CountFreePublicIps.join("vlans", join, CountFreePublicIps.entity().getVlanId(), join.entity().getId(), JoinBuilder.JoinType.INNER);
         CountFreePublicIps.done();
 
+        //find all portable used vmId
+        portableSearchAllocated = createSearchBuilder();
+        portableSearchAllocated.and("portable", portableSearchAllocated.entity().isPortable(), Op.EQ);
+        portableSearchAllocated.and("associatedWithVmId", portableSearchAllocated.entity().getAssociatedWithVmId(), Op.EQ);
+        portableSearchAllocated.and("associatedVmIp", portableSearchAllocated.entity().getVmIp(), Op.EQ);
+        SearchBuilder<VlanVO> joinVlan = _vlanDao.createSearchBuilder();
+        joinVlan.and("vlanTag", joinVlan.entity().getVlanTag(), Op.EQ);
+        portableSearchAllocated.join("vlan", joinVlan, portableSearchAllocated.entity().getVlanId(), joinVlan.entity().getId(), JoinBuilder.JoinType.INNER);
+        portableSearchAllocated.done();
+        joinVlan.done();
+        
         DeleteAllExceptGivenIp = createSearchBuilder();
         DeleteAllExceptGivenIp.and("vlanDbId", DeleteAllExceptGivenIp.entity().getVlanId(), Op.EQ);
         DeleteAllExceptGivenIp.and("ip", DeleteAllExceptGivenIp.entity().getAddress(), Op.NEQ);
@@ -422,12 +433,18 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     }
     
     @Override
-    public List<IPAddressVO> findByAssociatedVmIdAndPortableVmIp(long vmId, String vmIp,boolean isPortable) {
-    	SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+    public IPAddressVO findByAssociatedVmIdAndPortableVmIp(long vmId, String vmIp,boolean isPortable,String vlanTag) {
+    	SearchCriteria<IPAddressVO> sc = portableSearchAllocated.create();
     	sc.setParameters("associatedWithVmId", vmId);
         sc.setParameters("associatedVmIp", vmIp);
         sc.setParameters("portable", isPortable);
-        return listBy(sc);
+        sc.setJoinParameters("vlan", "vlanTag", vlanTag);
+
+        List<IPAddressVO> ips = listBy(sc) ;
+        if(ips != null && ips.size()>0){
+        	return ips.get(0);
+        }
+        return null;
     }
     
     @Override
