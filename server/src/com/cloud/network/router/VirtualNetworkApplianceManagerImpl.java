@@ -1578,39 +1578,34 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             }*/
             
             //validation isEnable multiline
+            
+            List<PublicIp> sourceNatIps = new ArrayList<PublicIp>();
             PublicIp sourceNatIp = null;
-            boolean isMultiline = false;
             if (publicNetwork) {
+            	//get multiline sourceNatIps
                 String isMultilines = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
                 if(isMultilines !=null && isMultilines.equalsIgnoreCase("true")){
-                	isMultiline = Boolean.TRUE;
-                } else {
-                	sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
-                }
+                	List<MultilineVO> multilines = _multilineLabelDao.getAllMultiline();
+                	if(multilines ==null || multilines.size()<=0){
+                		//sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
+               		 	throw new CloudRuntimeException("Cannot find one multiline label.");
+                	}
+                	for (MultilineVO multiline : multilines) {
+                    		sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork,multiline.getLabel());
+                    		if(sourceNatIp == null){
+                    			s_logger.info("Don't use the multiline network :" + multiline.getLabel());
+                    			continue;
+                    		}
+                    		if(multiline.getIsDefault()){
+                    			sourceNatIp.setDefault(Boolean.TRUE);
+                			}
+                    		sourceNatIps.add(sourceNatIp);
+    				}
+                 } else {
+                	 //sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
+                	 sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork,_multilineLabelDao.getDefaultMultiline().getLabel());
+                 }
             }
-            
-            //get multiline sourceNatIps
-            List<PublicIp> sourceNatIps = new ArrayList<PublicIp>();
-            if(isMultiline){
-            	List<MultilineVO> multilines = _multilineLabelDao.getAllMultiline();
-            	if(multilines !=null && multilines.size()>0){
-            		for (MultilineVO multiline : multilines) {
-            			
-                		sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork,multiline.getLabel());
-                		if(sourceNatIp == null){
-                			s_logger.info("Don't use the multiline network :" + multiline.getLabel());
-                			continue;
-                		}
-                		if(multiline.getIsDefault()){
-                			sourceNatIp.setDefault(Boolean.TRUE);
-            			}
-                		sourceNatIps.add(sourceNatIp);
-					}
-            	} else {
-            		sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
-            	}
-             }
-
                 // 3) deploy virtual router(s)
                 int count = routerCount - routers.size();
                 DeploymentPlan plan = planAndRouters.first();

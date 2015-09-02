@@ -2711,18 +2711,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
             checkOverlapPrivateIpRange(zoneId, startIP, endIP);
         }
         
-        String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-        MultilineVO multiline = null;
-        
-        if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
-    	     if (multilineLabel != null && !multilineLabel.equals("")) {
-         	     multiline = multilineLabelDao.getMultilineByLabel(multilineLabel);
-             } else {
-	             multiline = multilineLabelDao.getDefaultMultiline();
-             }
-        } else {
-        	 multiline = multilineLabelDao.getDefaultMultiline();
-        }
+        MultilineVO multiline = getMultilineLabl(multilineLabel);
         
         if(multiline == null || multiline.getLabel().equals("")){
         	 throw new InvalidParameterValueException("multiline labe is not exist : " + multilineLabel);
@@ -4957,19 +4946,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
 
         }
         
-        String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-        final MultilineVO multiline ;
-        
-        if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
-    	     if (multilineLabel != null && !multilineLabel.equals("")) {
-         	     multiline = multilineLabelDao.getMultilineByLabel(multilineLabel);
-             } else {
-	             multiline = multilineLabelDao.getDefaultMultiline();
-             }
-        } else {
-        	 multiline = multilineLabelDao.getDefaultMultiline();
-        }
-        
+        final MultilineVO multiline = getMultilineLabl(multilineLabel);
         if(multiline == null || multiline.getLabel().equals("")){
         	 throw new InvalidParameterValueException("multiline labe is not exist : " + multilineLabel);
         }
@@ -5439,6 +5416,23 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         });
 
         return problemIps != null && problemIps.size() == 0;
+    }
+    
+    /**
+     * get default multiline label
+     * @param multilineLabel
+     * @return
+     * @throws InvalidParameterValueException
+     */
+    private MultilineVO getMultilineLabl(String multilineLabel) throws InvalidParameterValueException{
+    	
+        String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+        if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
+    	     if (multilineLabel != null && !multilineLabel.equals("")) {
+         	     return multilineLabelDao.getMultilineByLabel(multilineLabel);
+             } 
+        } 
+        return multilineLabelDao.getDefaultMultiline();        
     }
     
 }
