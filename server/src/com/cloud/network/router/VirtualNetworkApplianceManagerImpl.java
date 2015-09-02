@@ -1595,6 +1595,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             	List<MultilineVO> multilines = _multilineLabelDao.getAllMultiline();
             	if(multilines !=null && multilines.size()>0){
             		for (MultilineVO multiline : multilines) {
+            			
                 		sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork,multiline.getLabel());
                 		if(sourceNatIp == null){
                 			s_logger.info("Don't use the multiline network :" + multiline.getLabel());

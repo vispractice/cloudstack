@@ -83,5 +83,7 @@ public interface IPAddressDao extends GenericDao<IPAddressVO, Long> {
     
     IPAddressVO findByIp(String ipAddress);
     
-    IPAddressVO findByAssociatedVmIdAndVmIp(long vmId, String vmIp, long vlanId);
+    IPAddressVO findByAssociatedVmIdAndVmIp(long vmId, String vmIp, Long vlanId);
+    
+    List<IPAddressVO> findByAssociatedVmIdAndPortableVmIp(long vmId, String vmIp, boolean isPortable);
 }

@@ -31,6 +31,8 @@ import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationSe
 import org.apache.log4j.Logger;
 
 import com.cloud.configuration.ConfigurationManager;
+import com.cloud.dc.VlanVO;
+import com.cloud.dc.dao.VlanDao;
 import com.cloud.domain.dao.DomainDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
@@ -146,6 +148,8 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
     LoadBalancerVMMapDao _loadBalancerVMMapDao;
     @Inject
     VpcService _vpcSvc;
+    @Inject
+    VlanDao _vlanDao;
 
     
     protected void checkIpAndUserVm(IpAddress ipAddress, UserVm userVm, Account caller, Boolean ignoreVmState) {
@@ -646,11 +650,25 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
 
         //check wether the vm ip is alreday associated with any public ip address
         //IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp);
-        IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp,ipAddress.getVlanId());
-
+        //update portableIp and publicIP static nat
+        IPAddressVO oldIP = null;
+        VlanVO newVlanVO = _vlanDao.findById(ipAddress.getVlanId());
+        if(ipAddress.isPortable()){
+        	List<IPAddressVO> oldIPs = _ipAddressDao.findByAssociatedVmIdAndPortableVmIp(vmId, vmIp,Boolean.TRUE);
+        	for (IPAddressVO ipAddressVo : oldIPs) {
+        		VlanVO vlanVO = _vlanDao.findById(ipAddressVo.getVlanId());
+        		if(newVlanVO != null && newVlanVO.getVlanTag().equals(vlanVO.getVlanTag())){
+        			oldIP = ipAddressVo;
+        			break;
+        		}
+			}
+        } else {
+        	oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp,ipAddress.getVlanId());
+        }
+         
         if (oldIP != null) {
             // If elasticIP functionality is supported in the network, we always have to disable static nat on the old
-// ip in order to re-enable it on the new one
+        	// ip in order to re-enable it on the new one
             Long networkId = oldIP.getAssociatedWithNetworkId();
             boolean reassignStaticNat = false;
             if (networkId != null) {
@@ -1389,9 +1407,11 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
 
         // create new static nat rule
         // Get nic IP4 address
-        Nic guestNic = _networkModel.getNicInNetworkIncludingRemoved(vm.getId(), networkId);
-        if (guestNic == null) {
-            throw new InvalidParameterValueException("Vm doesn't belong to the network with specified id");
+        if(vm != null){
+        	Nic guestNic = _networkModel.getNicInNetworkIncludingRemoved(vm.getId(), networkId);
+            if (guestNic == null) {
+                throw new InvalidParameterValueException("Vm doesn't belong to the network with specified id");
+            }
         }
 
         String dstIp;

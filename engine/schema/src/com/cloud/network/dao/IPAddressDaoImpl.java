@@ -33,12 +33,14 @@ import com.cloud.utils.db.SearchCriteria.Func;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.net.Ip;
+
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Local;
 import javax.inject.Inject;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -82,6 +84,7 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         AllFieldsSearch.and("physicalNetworkId", AllFieldsSearch.entity().getPhysicalNetworkId(), Op.EQ);
         AllFieldsSearch.and("vpcId", AllFieldsSearch.entity().getVpcId(), Op.EQ);
         AllFieldsSearch.and("associatedVmIp", AllFieldsSearch.entity().getVmIp(), Op.EQ);
+        AllFieldsSearch.and("portable", AllFieldsSearch.entity().isPortable(), Op.EQ);
         AllFieldsSearch.done();
 
         VlanDbIdSearchUnallocated = createSearchBuilder();
@@ -410,12 +413,21 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     }
 
     @Override
-    public IPAddressVO findByAssociatedVmIdAndVmIp(long vmId, String vmIp,long vlanId) {
+    public IPAddressVO findByAssociatedVmIdAndVmIp(long vmId, String vmIp,Long vlanId) {
         SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
         sc.setParameters("associatedWithVmId", vmId);
         sc.setParameters("associatedVmIp", vmIp);
         sc.setParameters("vlan", vlanId);
         return findOneBy(sc);
+    }
+    
+    @Override
+    public List<IPAddressVO> findByAssociatedVmIdAndPortableVmIp(long vmId, String vmIp,boolean isPortable) {
+    	SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+    	sc.setParameters("associatedWithVmId", vmId);
+        sc.setParameters("associatedVmIp", vmIp);
+        sc.setParameters("portable", isPortable);
+        return listBy(sc);
     }
     
     @Override

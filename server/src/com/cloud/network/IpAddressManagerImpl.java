@@ -2240,21 +2240,26 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
     }
     
     @Override
-    public PublicIp assignSourceNatIpAddressToGuestNetwork(Account owner, Network guestNetwork, String multilineLabel) throws InsufficientAddressCapacityException, ConcurrentOperationException {
-        assert (guestNetwork.getTrafficType() != null) : "You're asking for a source nat but your network "
-                                                         + "can't participate in source nat.  What do you have to say for yourself?";
-        long dcId = guestNetwork.getDataCenterId();
-
-        IPAddressVO sourceNatIp = getExistMmultilineSourceNatInNetwork(owner.getId(), guestNetwork.getId(), multilineLabel);
-
-        PublicIp ipToReturn = null;
-        if (sourceNatIp != null) {
-            ipToReturn = PublicIp.createFromAddrAndVlan(sourceNatIp, _vlanDao.findById(sourceNatIp.getVlanId()));
-        } else {
-            ipToReturn = assignDedicateIpAddress(owner, guestNetwork.getId(), null, dcId, true,multilineLabel);
-        }
-
-        return ipToReturn;
+    public PublicIp assignSourceNatIpAddressToGuestNetwork(Account owner, Network guestNetwork, String multilineLabel) {
+    	PublicIp ipToReturn = null;
+    	try {
+    		    assert (guestNetwork.getTrafficType() != null) : "You're asking for a source nat but your network can't participate in source nat.  What do you have to say for yourself?";
+    		  
+				long dcId = guestNetwork.getDataCenterId();
+				IPAddressVO sourceNatIp = getExistMmultilineSourceNatInNetwork(owner.getId(), guestNetwork.getId(), multilineLabel);
+				if (sourceNatIp != null) {
+				ipToReturn = PublicIp.createFromAddrAndVlan(sourceNatIp, _vlanDao.findById(sourceNatIp.getVlanId()));
+				} else {
+				ipToReturn = assignDedicateIpAddress(owner, guestNetwork.getId(), null, dcId, true,multilineLabel);
+			}
+       } catch (InsufficientAddressCapacityException e) {
+              s_logger.error("Unable to get source nat ip address ", e);
+       } catch (ConcurrentOperationException e) {
+             s_logger.error("Unable to get source nat ip address ", e);
+       }catch (Exception e) {
+             s_logger.error("Unable to get source nat ip address ", e);
+       }
+       return ipToReturn;
     }
     
     /**
@@ -2375,20 +2380,17 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
         boolean sharedSourceNat = offering.getSharedSourceNat();
         
         boolean isSourceNat = false;
+        
         //update by hai.li 2015.08.19
-       
         if (!sharedSourceNat) {
-        	 if(multilineLabel !=null && !multilineLabel.equals("")){
-        		 if (getExistMmultilineSourceNatInNetwork(owner.getId(), networkId, multilineLabel) == null) {
-                     if (network.getGuestType() == GuestType.Isolated && network.getVpcId() == null && !ipToAssoc.isPortable()) {
-                         isSourceNat = true;
-                     }
-                 }
-             } else {
-                 if (getExistingSourceNatInNetwork(owner.getId(), networkId) == null) {
-                     if (network.getGuestType() == GuestType.Isolated && network.getVpcId() == null && !ipToAssoc.isPortable()) {
-                         isSourceNat = true;
-                     }
+        	  /*if (getExistingSourceNatInNetwork(owner.getId(), networkId) == null) {
+	             if (network.getGuestType() == GuestType.Isolated && network.getVpcId() == null && !ipToAssoc.isPortable()) {
+	                isSourceNat = true;
+	            }
+        	  }*/
+    		 if (getExistMmultilineSourceNatInNetwork(owner.getId(), networkId, multilineLabel) == null) {
+                 if (network.getGuestType() == GuestType.Isolated && network.getVpcId() == null && !ipToAssoc.isPortable()) {
+                     isSourceNat = true;
                  }
              }
         }
