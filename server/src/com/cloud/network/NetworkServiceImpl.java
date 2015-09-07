@@ -328,15 +328,29 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
                         services.add(Service.SourceNat);
                         networkSNAT.add(ip.getAssociatedWithNetworkId());
                     } else {
-                        CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
-                        // see the IPAddressVO.java class.
-                        IPAddressVO ipAddr = ApiDBUtils.findIpAddressById(ip.getAssociatedWithNetworkId());
-                        String ipAddrUuid = ip.getAssociatedWithNetworkId().toString();
-                        if (ipAddr != null) {
-                            ipAddrUuid = ipAddr.getUuid();
-                        }
-                        ex.addProxyObject(ipAddrUuid, "networkId");
-                        throw ex;
+                    	//update by hai.li 2015.08.19
+                    	Set<String> networkGW = new HashSet<String>();
+                        boolean checkGW = Boolean.TRUE;
+                		String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+                    	if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
+                    		if(!networkGW.contains(ip.getGateway())){
+                    			services.add(Service.SourceNat);
+                        		networkGW.add(ip.getGateway());
+                        		checkGW = Boolean.FALSE;
+                        	} 
+                    	} 
+                    	
+                    	if(checkGW){
+                    		CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
+                            // see the IPAddressVO.java class.
+                            IPAddressVO ipAddr = ApiDBUtils.findIpAddressById(ip.getAssociatedWithNetworkId());
+                            String ipAddrUuid = ip.getAssociatedWithNetworkId().toString();
+                            if (ipAddr != null) {
+                                ipAddrUuid = ipAddr.getUuid();
+                            }
+                            ex.addProxyObject(ipAddrUuid, "networkId");
+                            throw ex;
+                    	}
                     }
                 }
                 ipToServices.put(ip, services);
@@ -891,12 +905,34 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
         }
 
         if (ipVO.isSourceNat()) {
-            throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
+            //throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
+        	//update by hai.li 2015.09.07
+        	//In the multiline ,support delete the source IP
+        	String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+        	if(isMultiline == null || !isMultiline.equalsIgnoreCase("true")){
+        		throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
+        	}
+        	
+        	MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
+        	if(multiline != null && multiline.getLabel().equals(ipVO.getMultilineLabel())){
+        		throw new IllegalArgumentException("source nat ip address is the default multiline can't be disassociated.");
+        	}
+        	
+        	List<IPAddressVO> networkIpVOs = _ipAddressDao.listByAssociatedNetwork(ipVO.getAssociatedWithNetworkId(), Boolean.TRUE);
+        	if(networkIpVOs == null || networkIpVOs.size() < 2){
+        		throw new IllegalArgumentException("One source nat ip address at least can't be disassociated.");
+        	}
+        	
+        	List<IPAddressVO> sourceIpVOs = _ipAddressDao.listSourceNatPublicIps(ipVO.getAssociatedWithNetworkId(), ipVO.getVlanId(), Boolean.FALSE, State.Allocated);
+        	if(sourceIpVOs == null || sourceIpVOs.size() > 0){
+        		throw new IllegalArgumentException("Before disassociated source nat ip address must disassociated vlan public IP.");
+        	}
         }
 
         VlanVO vlan = _vlanDao.findById(ipVO.getVlanId());
         if (!vlan.getVlanType().equals(VlanType.VirtualNetwork)) {
             throw new IllegalArgumentException("only ip addresses that belong to a virtual network may be disassociated.");
+            
         }
 
         // don't allow releasing system ip address

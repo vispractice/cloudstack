@@ -75,6 +75,9 @@ public class VlanVO implements Vlan {
 
     @Column(name="uuid")
     String uuid;
+    
+    @Column(name="multiline_label")
+    String multilineLabel;
 
 	public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId, String ip6Gateway, String ip6Cidr, String ip6Range) {
 		this.vlanType = vlanType;
@@ -89,6 +92,22 @@ public class VlanVO implements Vlan {
 		this.networkId = networkId;
 		this.uuid = UUID.randomUUID().toString();
 		this.physicalNetworkId = physicalNetworkId;
+	}
+	
+	public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId, String ip6Gateway, String ip6Cidr, String ip6Range, String multilineLabel) {
+		this.vlanType = vlanType;
+		this.vlanTag = vlanTag;
+		this.vlanGateway = vlanGateway;
+		this.vlanNetmask = vlanNetmask;
+		this.ip6Gateway = ip6Gateway;
+		this.ip6Cidr = ip6Cidr;
+		this.dataCenterId = dataCenterId;
+		this.ipRange = ipRange;
+		this.ip6Range = ip6Range;
+		this.networkId = networkId;
+		this.uuid = UUID.randomUUID().toString();
+		this.physicalNetworkId = physicalNetworkId;
+		this.multilineLabel = multilineLabel;
 	}
 
 	public VlanVO() {
@@ -201,4 +220,13 @@ public class VlanVO implements Vlan {
     public void setIpRange(String ipRange) {
         this.ip6Range = ipRange;
     }
+    @Override
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
+    
 }

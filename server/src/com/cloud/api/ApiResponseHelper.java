@@ -610,6 +610,8 @@ public class ApiResponseHelper implements ResponseGenerator {
                 vlanResponse.setPhysicalNetworkId(pnw.getUuid());
             }
         }
+        vlanResponse.setMultilineLabel(vlan.getMultilineLabel());
+        
         vlanResponse.setObjectName("vlan");
         return vlanResponse;
     }
@@ -3734,6 +3736,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setNetmask(ipRange.getNetmask());
         response.setRegionId(ipRange.getRegionId());
         response.setObjectName("portableiprange");
+        response.setMultilineLabel(ipRange.getMultilineLabel());
         return response;
     }
 

@@ -153,7 +153,7 @@
             if (ipObj.issourcenat) { //sourceNAT IP doesn't support staticNAT
                 disallowedActions.push('enableStaticNAT');
                 disallowedActions.push('disableStaticNAT');
-                disallowedActions.push('remove');
+                //disallowedActions.push('remove');
             } else { //non-sourceNAT IP supports staticNAT
             	 if (ipObj.isstaticnat) {
                      disallowedActions.push('enableStaticNAT');

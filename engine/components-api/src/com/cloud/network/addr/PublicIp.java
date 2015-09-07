@@ -241,4 +241,9 @@ public class PublicIp implements PublicIpAddress {
 	public void setDefault(boolean isDefault) {
 		this.isDefault = isDefault;
 	}
+
+	@Override
+	public String getMultilineLabel() {
+		return null;
+	}
 }

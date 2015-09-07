@@ -4958,7 +4958,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
             return Transaction.execute(new TransactionCallback<PortableIpRangeVO>() {
                 @Override
                 public PortableIpRangeVO doInTransaction(TransactionStatus status) {
-                    PortableIpRangeVO portableIpRange = new PortableIpRangeVO(regionId, vlanIdFinal, gateway, netmask, startIP, endIP);
+                    PortableIpRangeVO portableIpRange = new PortableIpRangeVO(regionId, vlanIdFinal, gateway, netmask, startIP, endIP, multiline.getLabel());
                     portableIpRange = _portableIpRangeDao.persist(portableIpRange);
 
                     long startIpLong = NetUtils.ip2Long(startIP);
@@ -5362,7 +5362,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
             @Override
             public VlanVO doInTransaction(TransactionStatus status) {
                 VlanVO vlan = new VlanVO(vlanType, vlanId, vlanGateway, vlanNetmask, zone.getId(), ipRange, networkId,
-                        physicalNetworkId, vlanIp6Gateway, vlanIp6Cidr, ipv6Range);
+                        physicalNetworkId, vlanIp6Gateway, vlanIp6Cidr, ipv6Range, multilineLabel);
                 s_logger.debug("Saving vlan range " + vlan);
                 vlan = _vlanDao.persist(vlan);
 
