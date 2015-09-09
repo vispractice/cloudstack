@@ -1586,7 +1586,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 String isMultilines = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
                 if(isMultilines !=null && isMultilines.equalsIgnoreCase("true")){
                 	List<MultilineVO> multilines = _multilineLabelDao.getAllMultiline();
-                	if(multilines ==null || multilines.size()<=0){
+                	if(multilines == null || multilines.size() <= 0){
                 		//sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
                		 	throw new CloudRuntimeException("Cannot find one multiline label.");
                 	}
@@ -2843,10 +2843,11 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             _nicIpAliasDao.expunge(ipalias.getId());
         }
     }
-
+    
     protected void finalizeIpAssocForNetwork(Commands cmds, VirtualRouter router, Provider provider,
             Long guestNetworkId, Map<String, String> vlanMacAddress) {
         
+    	//update by hai.li 2015.09.08
         ArrayList<? extends PublicIpAddress> publicIps = getPublicIpsToApply(router, provider, guestNetworkId);
         
         if (publicIps != null && !publicIps.isEmpty()) {
@@ -2868,6 +2869,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             // ignore the account id for the shared network
             userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(guestNetworkId, null);
         } else {
+        	if(router.getState() == State.Starting){
+        		this.getAllMultilineSourceNatIp(ownerId,guestNetwork);
+        	}
             userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null);
         }
 
@@ -2903,6 +2907,31 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         return publicIps;
     }
 
+    /**
+     * When restart the VR for sourceNatIp
+     * @param ownerId
+     * @param guestNetwork
+     */
+    private void getAllMultilineSourceNatIp(long ownerId,Network guestNetwork){
+    	String isMultilines = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+        if(isMultilines !=null && isMultilines.equalsIgnoreCase("true")){
+        	List<MultilineVO> multilines = _multilineLabelDao.getAllMultiline();
+        	if(multilines == null || multilines.size() <= 0){
+       		 	throw new CloudRuntimeException("Cannot find one multiline label.");
+        	}
+    		for (MultilineVO multiline : multilines) {
+    			try {
+					_ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(_accountMgr.getAccount(ownerId), guestNetwork,multiline.getLabel());
+				} catch (InsufficientAddressCapacityException e) {
+					s_logger.error("Failed to get sourceNatIp when using the multiline feature," + e);
+				} catch (ConcurrentOperationException e) {
+					s_logger.error("Failed to get sourceNatIp when using the multiline feature," + e);
+				}
+
+        	}
+        }
+    }
+    
     @Override
     public boolean finalizeStart(VirtualMachineProfile profile, long hostId, Commands cmds,
             ReservationContext context) {
