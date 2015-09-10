@@ -246,4 +246,10 @@ public class PublicIp implements PublicIpAddress {
 	public String getMultilineLabel() {
 		return null;
 	}
+
+	@Override
+	public int getStaticNatSeq() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

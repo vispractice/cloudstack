@@ -2479,7 +2479,8 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                         physicalNetworkId,
                         null,
                         null,
-                        null);
+                        null,
+                        multilineLabel);
                     vlan = _vlanDao.persist(vlan);
 
                     // provision the portable IP in to user_ip_address table

@@ -2564,7 +2564,8 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         	return;
     	}
     	
-    	HashMap<String, String> routeRules = new HashMap<String, String>();
+    	HashMap<String, HashMap<String, String>> routeRules = new HashMap<String, HashMap<String, String>>();
+    	
     	SetMultilineRouteCommand setMultilineRouteCommand = new SetMultilineRouteCommand();
         for (NicProfile nic : profile.getNics()) {
             if (nic.getTrafficType() == TrafficType.Public) {
@@ -2572,14 +2573,21 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     			 if(ipAddressVO == null || ipAddressVO.getMultilineLabel() == null){
     				 throw new CloudRuntimeException("Cannot find public ip : "+ nic.getIp4Address()+" in userIpAddress.");
     			 }
+    			 
+    			 MultilineVO multiline = _multilineLabelDao.getMultilineByLabel(ipAddressVO.getMultilineLabel());
+    			 if(multiline == null || multiline.getLabel() == null ){
+    				 throw new CloudRuntimeException("Cannot find multiline label : "+ multiline.getLabel()+" for userIpAddress.");
+    			 }
+    			 
     			 if(nic.isDefaultNic()){
-     				 routeRules.put(nic.getGateway(),"0.0.0.0");
-     			 } else {
-     				 MultilineVO multilines = _multilineLabelDao.getMultilineByLabel(ipAddressVO.getMultilineLabel());
-     				 if(multilines != null){
-     					 routeRules.put(nic.getGateway(), multilines.getRouteRule().replaceAll(" ", "").replaceAll("\n", ""));
-     				 }
+     				setMultilineRouteCommand.setVRLabelToDefaultGateway(multiline.getLabel()+"-"+nic.getGateway());
      			 }
+    			 
+    			 HashMap<String, String> netmasks = new HashMap<String, String>();
+    			 String rules = multiline.getRouteRule().replaceAll(" ", "").replaceAll("\n", "");
+    			 netmasks.put(nic.getGateway(),rules);
+     			 routeRules.put(multiline.getLabel(),netmasks);
+     			 
             } else if (nic.getTrafficType() == TrafficType.Control) {
                  setMultilineRouteCommand.setAccessDetail(NetworkElementCommand.ROUTER_IP, nic.getIp4Address());
             } else {
@@ -4236,8 +4244,22 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             rulesTO = new ArrayList<StaticNatRuleTO>();
             for (StaticNat rule : rules) {
                 IpAddress sourceIp = _networkModel.getIp(rule.getSourceIpAddressId());
+                /*StaticNatRuleTO ruleTO = new StaticNatRuleTO(0, sourceIp.getAddress().addr(), null,
+                        null, rule.getDestIpAddress(), null, null, null, rule.isForRevoke(), false);*/
+                //add static nat multiline label sequence(such as: cucc-ctcc-cmcc)
+                //update by hai.li add static nat multiline label sequence(such as: cucc-ctcc-cmcc)
+                List<IPAddressVO> staticNatIps = _ipAddressDao.listStaticNatIps(guestNetworkId,sourceIp.getAssociatedWithVmId(), Boolean.TRUE);
+                StringBuffer multilineLabelSeq = new StringBuffer();
+                int i = 1;
+                for (IPAddressVO staticNatIp : staticNatIps) {
+                	multilineLabelSeq.append(staticNatIp.getMultilineLabel());
+                	if(i < staticNatIps.size()){
+                		multilineLabelSeq.append("-");
+                	}
+                	i++;
+    			}
                 StaticNatRuleTO ruleTO = new StaticNatRuleTO(0, sourceIp.getAddress().addr(), null,
-                        null, rule.getDestIpAddress(), null, null, null, rule.isForRevoke(), false);
+                        null, rule.getDestIpAddress(), null, null, null, rule.isForRevoke(), false, multilineLabelSeq.toString());
                 rulesTO.add(ruleTO);
             }
         }

@@ -595,10 +595,11 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
                 // checking vm id is not sufficient, check for the vm ip
                 isIpReadyForStaticNat(vmId, ipAddress, dstIp, caller, ctx.getCallingUserId());
             }
-
+            //update by hai.li 2015.09.09
+            int staticNatSeq = _ipAddressDao.maxStaticNatSeq();
+        	ipAddress.setStaticNatSeq(staticNatSeq+1);
             ipAddress.setOneToOneNat(true);
             ipAddress.setAssociatedWithVmId(vmId);
-
             ipAddress.setVmIp(dstIp);
             if (_ipAddressDao.update(ipAddress.getId(), ipAddress)) {
                 // enable static nat on the backend
@@ -611,6 +612,7 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
                     ipAddress.setOneToOneNat(isOneToOneNat);
                     ipAddress.setAssociatedWithVmId(associatedWithVmId);
                     ipAddress.setVmIp(null);
+                    ipAddress.setStaticNatSeq(0);
                     _ipAddressDao.update(ipAddress.getId(), ipAddress);
                 }
             } else {
@@ -651,16 +653,8 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
         //check wether the vm ip is alreday associated with any public ip address
         //IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp);
         //update portableIp and publicIP static nat
-        IPAddressVO oldIP = null;
-        if(ipAddress.isPortable()){
-        	VlanVO newVlanVO = _vlanDao.findById(ipAddress.getVlanId());
-        	if(newVlanVO != null){
-        		oldIP = _ipAddressDao.findByAssociatedVmIdAndPortableVmIp(vmId, vmIp,Boolean.TRUE,newVlanVO.getVlanTag());
-        	}
-        } else {
-        	oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp,ipAddress.getVlanId());
-        }
-         
+        IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp,ipAddress.getMultilineLabel());
+                
         if (oldIP != null) {
             // If elasticIP functionality is supported in the network, we always have to disable static nat on the old
         	// ip in order to re-enable it on the new one
@@ -1288,6 +1282,7 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
             ipAddress.setOneToOneNat(false);
             ipAddress.setAssociatedWithVmId(null);
             ipAddress.setVmIp(null);
+            ipAddress.setStaticNatSeq(0);
             if (isIpSystem && !releaseIpIfElastic) {
                 ipAddress.setSystem(false);
             }

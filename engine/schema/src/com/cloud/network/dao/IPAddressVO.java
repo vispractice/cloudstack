@@ -116,6 +116,9 @@ public class IPAddressVO implements IpAddress {
     
     @Column(name="multiline_label")
     private String multilineLabel;
+    
+    @Column(name="static_nat_seq")
+    private int staticNatSeq;
 
 	protected IPAddressVO() {
 		this.uuid = UUID.randomUUID().toString();
@@ -350,7 +353,7 @@ public class IPAddressVO implements IpAddress {
     public Long getNetworkId() {
         return sourceNetworkId;
     }
-
+    @Override
 	public String getMultilineLabel() {
 		return multilineLabel;
 	}
@@ -358,6 +361,12 @@ public class IPAddressVO implements IpAddress {
 	public void setMultilineLabel(String multilineLabel) {
 		this.multilineLabel = multilineLabel;
 	}
-    
-    
+	
+	public int getStaticNatSeq() {
+		return staticNatSeq;
+	}
+
+	public void setStaticNatSeq(int staticNatSeq) {
+		this.staticNatSeq = staticNatSeq;
+	}
 }

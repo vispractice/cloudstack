@@ -28,6 +28,7 @@ import com.cloud.network.rules.StaticNatRule;
 
 public class StaticNatRuleTO extends FirewallRuleTO{
     String dstIp;
+    String multilineLabelSeq;
 
     protected StaticNatRuleTO() {
     }
@@ -57,4 +58,11 @@ public class StaticNatRuleTO extends FirewallRuleTO{
         return dstIp;
     }
 
+    //update by hai.li 10.205.09.09 add static nat label and sequence
+    public StaticNatRuleTO(long id, String srcIp, Integer srcPortStart, Integer srcPortEnd, String dstIp, Integer dstPortStart, Integer dstPortEnd, String protocol, boolean revoked, boolean alreadyAdded,String multilineLabelSeq ) {
+        super(id, srcIp, protocol, srcPortStart, srcPortEnd, revoked, alreadyAdded, FirewallRule.Purpose.StaticNat, null,0,0);
+        this.dstIp = dstIp;
+        this.multilineLabelSeq = multilineLabelSeq;
+    }
+    
 }
