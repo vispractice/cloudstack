@@ -5,6 +5,7 @@ import java.util.HashMap;
 public class SetMultilineRouteCommand extends NetworkElementCommand{
 	//In the routeRules HashMap,The store format <multiline label,<gateway;net1,net2,...,nets>> 
 	//The store format like :<ctcc,<10.204.120.1; 10.204.104.0/24,10.204.105.0/24>>
+	//VRLabelToDefaultGateway format like : ctcc-10.204.104.1
 	HashMap<String, HashMap<String, String>> routeRules;
 	String VRLabelToDefaultGateway;
 	
