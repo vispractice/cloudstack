@@ -30,7 +30,11 @@ public class StaticNatRuleTO extends FirewallRuleTO{
     String dstIp;
     String multilineLabelSeq;
 
-    protected StaticNatRuleTO() {
+    public String getMultilineLabelSeq() {
+		return multilineLabelSeq;
+	}
+
+	protected StaticNatRuleTO() {
     }
 
     public StaticNatRuleTO(StaticNatRule rule, String srcVlanTag, String srcIp, String dstIp) {
