@@ -1,15 +1,19 @@
 package com.cloud.agent.api.routing;
 
 import java.util.HashMap;
-
-import com.cloud.agent.api.to.NicTO;
 //Andrew ling add, add the multiline route command for the VR
 public class SetMultilineRouteCommand extends NetworkElementCommand{
-	//In the routeRules HashMap,The store format <multiline label,<gateway,net-netmask>> 
-	//The store format like :<ctcc,<10.204.120.1; 10.204.104.0-255.255.255.0,10.204.105.0-255.255.255.0>>
-	//The default multiline store format like :<ctcc;<10.204.120.1; 0.0.0.0,10.204.104.0-255.255.255.0,10.204.105.0-255.255.255.0>>
+	//In the routeRules HashMap,The store format <multiline label,<gateway;net1,net2,...,nets>> 
+	//The store format like :<ctcc,<10.204.120.1; 10.204.104.0/24,10.204.105.0/24>>
 	HashMap<String, HashMap<String, String>> routeRules;
-
+	String VRLabelToDefaultGateway;
+	
+	public String getVRLabelToDefaultGateway() {
+		return VRLabelToDefaultGateway;
+	}
+	public void setVRLabelToDefaultGateway(String vRLabelToDefaultGateway) {
+		VRLabelToDefaultGateway = vRLabelToDefaultGateway;
+	}
 	public SetMultilineRouteCommand(){
 		
 	}
