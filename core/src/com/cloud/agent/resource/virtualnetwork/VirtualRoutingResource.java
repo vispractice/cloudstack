@@ -1029,6 +1029,7 @@ public class VirtualRoutingResource implements Manager {
     			String newGatewayNetsString = gateway + "_" + netsStrings;
     			virtualRoutingMutilineSetup.addTableLabelTORouteRules(label, newGatewayNetsString);
     		}
+    		labelNumber++;
     	}
     	virtualRoutingMutilineSetup.setAllMultilineTableLables(mutilineNumbers, multilineLabels);
     	//创建main表规则,删除原来的默认路由规则，创建指定默认路由设定其他非默认路由规则
