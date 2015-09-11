@@ -45,11 +45,14 @@ shift
 
 check_gw "$domRIp"
 
-if [ $script == "route_rules.sh" ]
+if [ $script == "none.sh" ]
 then 
-    ssh -p 3922 -q -o StrictHostKeyChecking=no -i $cert root@$domRIp  "/opt/cloud/bin/$script; $*" 
+   ssh -p 3922 -q -o StrictHostKeyChecking=no -i $cert root@$domRIp "$*"
+elif [ $script == "route_rules.sh" ]
+then
+   ssh -p 3922 -q -o StrictHostKeyChecking=no -i $cert root@$domRIp  "/opt/cloud/bin/$script; $*"
 else 
-    ssh -p 3922 -q -o StrictHostKeyChecking=no -i $cert root@$domRIp "/opt/cloud/bin/$script $*"
+   ssh -p 3922 -q -o StrictHostKeyChecking=no -i $cert root@$domRIp "/opt/cloud/bin/$script $*"
 fi
 exit $?
 
