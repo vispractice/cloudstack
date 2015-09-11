@@ -359,7 +359,7 @@ public class VirtualRoutingResource implements Manager {
             command.add(" -G ");
             
             //TODO Andrew ling add, Mutiline static nat feature.
-            command.add(" L ", rule.getMultilineLabelSeq());
+            command.add(" -L ", rule.getMultilineLabelSeq());
 
             result = command.execute();
             if (result == null) {
