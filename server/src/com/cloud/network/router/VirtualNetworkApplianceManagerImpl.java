@@ -4254,7 +4254,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 for (IPAddressVO staticNatIp : staticNatIps) {
                 	multilineLabelSeq.append(staticNatIp.getMultilineLabel());
                 	if(i < staticNatIps.size()){
-                		multilineLabelSeq.append("-");
+                		multilineLabelSeq.append("_");
                 	}
                 	i++;
     			}
