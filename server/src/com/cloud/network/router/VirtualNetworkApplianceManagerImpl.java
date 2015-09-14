@@ -2880,7 +2880,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         	if(router.getState() == State.Starting){
         		this.getAllMultilineSourceNatIp(ownerId,guestNetwork);
         	}
-            userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null);
+            userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null ,_multilineLabelDao.getDefaultMultiline().getLabel());
         }
 
         List<PublicIp> allPublicIps = new ArrayList<PublicIp>();
@@ -4252,10 +4252,13 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 StringBuffer multilineLabelSeq = new StringBuffer();
                 int i = 1;
                 for (IPAddressVO staticNatIp : staticNatIps) {
-                	multilineLabelSeq.append(staticNatIp.getMultilineLabel());
-                	if(i < staticNatIps.size()){
-                		multilineLabelSeq.append("-");
+                	if(rule.isForRevoke() && staticNatIp.getAddress().equals(sourceIp.getAddress().addr())){
+                		continue;
                 	}
+                	if(i!=1){
+                		multilineLabelSeq.append("_");
+                	}
+                	multilineLabelSeq.append(staticNatIp.getMultilineLabel());
                 	i++;
     			}
                 StaticNatRuleTO ruleTO = new StaticNatRuleTO(0, sourceIp.getAddress().addr(), null,

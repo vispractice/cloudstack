@@ -263,10 +263,10 @@ setMutiline_vm_route_rule() {
   if [ -n "$oldRouteTableName" ]
   then
         sudo ip rule del from $vmInstanceIp table $oldRouteTableName
-        if [ "$op" == "-A" ]
-    then
+        if [ "$routeTableName" != "none" ]
+        then
           sudo ip rule add from $vmInstanceIp table $routeTableName
-    fi
+        fi
   else
    sudo ip rule add from $vmInstanceIp table $routeTableName
   fi 

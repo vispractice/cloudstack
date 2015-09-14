@@ -308,6 +308,7 @@ public class EventTypes {
     // OneToOnenat
     public static final String EVENT_ENABLE_STATIC_NAT = "STATICNAT.ENABLE";
     public static final String EVENT_DISABLE_STATIC_NAT = "STATICNAT.DISABLE";
+    public static final String EVENT_UPDATE_STATIC_NAT = "STATICNAT.UPDATE";
 
     public static final String EVENT_ZONE_VLAN_ASSIGN = "ZONE.VLAN.ASSIGN";
     public static final String EVENT_ZONE_VLAN_RELEASE = "ZONE.VLAN.RELEASE";

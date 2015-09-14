@@ -35,7 +35,9 @@ import org.springframework.stereotype.Component;
 import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.VlanVO;
 import com.cloud.dc.dao.VlanDao;
+import com.cloud.network.Network;
 import com.cloud.network.IpAddress.State;
+import com.cloud.network.Network.Event;
 import com.cloud.server.ResourceTag.ResourceObjectType;
 import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.utils.db.DB;
@@ -65,7 +67,6 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     protected SearchBuilder<IPAddressVO> DeleteAllExceptGivenIp;
     protected GenericSearchBuilder<IPAddressVO, Long> AllocatedIpCountForAccount;  
     protected SearchBuilder<IPAddressVO> portableSearchAllocated;
-    protected GenericSearchBuilder<IPAddressVO, Integer> maxStaticNatSeq;
     
     @Inject protected VlanDao _vlanDao;
     protected GenericSearchBuilder<IPAddressVO, Long> CountFreePublicIps;
@@ -94,6 +95,7 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         AllFieldsSearch.and("portable", AllFieldsSearch.entity().isPortable(), Op.EQ);
         AllFieldsSearch.and("state", AllFieldsSearch.entity().getState(), Op.EQ);
         AllFieldsSearch.and("multilineLabel", AllFieldsSearch.entity().getMultilineLabel(), Op.EQ);
+        AllFieldsSearch.and("isDefaultStaticNat", AllFieldsSearch.entity().getIsDefaultStaticNat(), Op.EQ);
         AllFieldsSearch.done();
 
         VlanDbIdSearchUnallocated = createSearchBuilder();
@@ -158,9 +160,9 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         DeleteAllExceptGivenIp.and("vlanDbId", DeleteAllExceptGivenIp.entity().getVlanId(), Op.EQ);
         DeleteAllExceptGivenIp.and("ip", DeleteAllExceptGivenIp.entity().getAddress(), Op.NEQ);
         
-        maxStaticNatSeq = createSearchBuilder(Integer.class);
+        /*maxStaticNatSeq = createSearchBuilder(Integer.class);
         maxStaticNatSeq.select(null, Func.MAX, maxStaticNatSeq.entity().getStaticNatSeq());
-        maxStaticNatSeq.done();
+        maxStaticNatSeq.done();*/
     }
 
     @Override
@@ -190,7 +192,7 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         address.setVpcId(null);
         address.setSystem(false);
         address.setVmIp(null);
-        address.setStaticNatSeq(0);
+        address.setIsDefaultStaticNat(false);
         update(ipAddressId, address);
     }
 
@@ -486,20 +488,28 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
 	}
 
 	@Override
-	public int maxStaticNatSeq() {
-		SearchCriteria<Integer> sc = maxStaticNatSeq.create();
-		Integer max = customSearch(sc, null).get(0);
-	    return (max == null) ? 0 : max;
-	}
-
-	@Override
 	public List<IPAddressVO> listStaticNatIps(long networkId, long vmId, Boolean isStaticNat) {
 		 SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
 		 sc.setParameters("network", networkId);
 	     sc.setParameters("associatedWithVmId", vmId);
 	     sc.setParameters("oneToOneNat", isStaticNat);
-	     Filter filter = new Filter(IPAddressVO.class, "staticNatSeq", Boolean.TRUE, null, null);
+	     Filter filter = new Filter(IPAddressVO.class, "isDefaultStaticNat", Boolean.FALSE, null, null);
 	     return search(sc, filter);
+	}
+	
+	@Override
+	public IPAddressVO findDefaultStaticNat(long networkId, long vmId, Boolean isDefaultStaticNat) {
+		 SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+		 sc.setParameters("network", networkId);
+	     sc.setParameters("associatedWithVmId", vmId);
+	     sc.setParameters("oneToOneNat", Boolean.TRUE);
+	     sc.setParameters("isDefaultStaticNat", isDefaultStaticNat);
+	     List<IPAddressVO> ips = listBy(sc) ;
+	     
+         if(ips != null && ips.size()>0){
+        	return ips.get(0);
+         }
+         return null;
 	}
 	
 	/*@Override

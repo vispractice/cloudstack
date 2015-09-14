@@ -545,6 +545,7 @@ public class ApiConstants {
     public static final String NAME_OR_IP = "nameorip";
     public static final String GUEST_OS_ID = "guestosid";
     public static final String MULTILINE_LABEL = "multilinelabel";
+    public static final String IS_DEFAULT_STATIC = "isdefaultstaticnat";
 
     public enum HostDetails {
         all, capacity, events, stats, min;
