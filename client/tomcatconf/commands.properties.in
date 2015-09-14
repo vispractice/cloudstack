@@ -149,6 +149,7 @@ createIpForwardingRule=15
 deleteIpForwardingRule=15
 listIpForwardingRules=15
 disableStaticNat=15
+updateStaticNat=15
 
 #### load balancer commands
 createLoadBalancerRule=15

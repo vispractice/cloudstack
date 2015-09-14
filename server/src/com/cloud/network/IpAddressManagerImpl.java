@@ -2484,7 +2484,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                     vlan = _vlanDao.persist(vlan);
 
                     // provision the portable IP in to user_ip_address table
-                    IPAddressVO ipaddr = new IPAddressVO(new Ip(allocatedPortableIp.getAddress()), dcId, networkId, vpcID, physicalNetworkId, network.getId(), vlan.getId(), true,multilineLabel);
+                    IPAddressVO ipaddr = new IPAddressVO(new Ip(allocatedPortableIp.getAddress()), dcId, networkId, vpcID, physicalNetworkId, network.getId(), vlan.getId(), true,multilineLabel,false);
                     ipaddr.setState(State.Allocated);
                     ipaddr.setAllocatedTime(new Date());
                     ipaddr.setAllocatedInDomainId(ipOwner.getDomainId());

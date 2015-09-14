@@ -247,9 +247,4 @@ public class PublicIp implements PublicIpAddress {
 		return null;
 	}
 
-	@Override
-	public int getStaticNatSeq() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 }

@@ -84,13 +84,10 @@ public interface IPAddressDao extends GenericDao<IPAddressVO, Long> {
     
     IPAddressVO findByAssociatedVmIdAndVmIp(long vmId, String vmIp, String multilineLabel);
     
-    //IPAddressVO findByAssociatedVmIdAndPortableVmIp(long vmId, String vmIp, boolean isPortable,String vlanTag);
-    
     List<IPAddressVO> listSourceNatPublicIps(long networkId,long vlanDbId, Boolean isSourceNat,State state);
-    
-    int maxStaticNatSeq();
     
     List<IPAddressVO> listStaticNatIps(long networkId,long vmId, Boolean isStaticNat);
     
-    //boolean  updatePublicIPRange(long networkId,long vmId,int staticNatSeq);
-}
+    IPAddressVO findDefaultStaticNat(long networkId, long vmId, Boolean isDefaultStaticNat);
+    
+ }
