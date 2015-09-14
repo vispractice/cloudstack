@@ -2877,10 +2877,15 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             // ignore the account id for the shared network
             userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(guestNetworkId, null);
         } else {
-        	if(router.getState() == State.Starting){
-        		this.getAllMultilineSourceNatIp(ownerId,guestNetwork);
-        	}
-            userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null ,_multilineLabelDao.getDefaultMultiline().getLabel());
+        	String isMultilines = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+            if(!isMultilines.isEmpty() && isMultilines.equalsIgnoreCase("true")){
+            	if(router.getState() == State.Starting){
+            		this.getAllMultilineSourceNatIp(ownerId,guestNetwork);
+            	}
+            	userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null);
+            } else {
+            	userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null ,_multilineLabelDao.getDefaultMultiline().getLabel());
+            }
         }
 
         List<PublicIp> allPublicIps = new ArrayList<PublicIp>();
