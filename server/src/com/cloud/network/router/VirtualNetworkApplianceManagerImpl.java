@@ -2571,7 +2571,8 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             if (nic.getTrafficType() == TrafficType.Public) {
                  IPAddressVO ipAddressVO = _ipAddressDao.findByIp(nic.getIp4Address());
     			 if(ipAddressVO == null || ipAddressVO.getMultilineLabel() == null){
-    				 throw new CloudRuntimeException("Cannot find public ip : "+ nic.getIp4Address()+" in userIpAddress.");
+    				 s_logger.error("Cannot find public ip : "+ nic.getIp4Address()+" in userIpAddress.");
+    				 continue;
     			 }
     			 
     			 MultilineVO multiline = _multilineLabelDao.getMultilineByLabel(ipAddressVO.getMultilineLabel());
