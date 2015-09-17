@@ -24,6 +24,7 @@ import org.apache.cloudstack.api.ApiCommandJobType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseListTaggedResourcesCmd;
 import org.apache.cloudstack.api.Parameter;
+import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.response.IPAddressResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
@@ -87,6 +88,9 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
     @Parameter(name=ApiConstants.VPC_ID, type=CommandType.UUID, entityType = VpcResponse.class,
             description="List ips belonging to the VPC")
     private Long vpcId;
+    
+    @Parameter(name=ApiConstants.MULTILINE_LABEL, type=CommandType.STRING, description="The multiline label.")
+    private String multilineLabel;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////

@@ -1953,6 +1953,9 @@
                                 'Allocated': 'on',
                                 'Released': 'off'
                             }
+                        }, 
+						multilinelabel: {
+                            label: 'label.multiline'
                         }
                     },
                     actions: {
