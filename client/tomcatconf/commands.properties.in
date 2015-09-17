@@ -711,3 +711,6 @@ importLdapUsers=3
 
 #### juniper-contrail commands
 createServiceInstance=1
+
+#### multiline commands
+listMultiline=1

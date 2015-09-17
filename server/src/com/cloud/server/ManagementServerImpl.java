@@ -42,8 +42,6 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.affinity.AffinityGroupProcessor;
@@ -90,6 +88,8 @@ import org.apache.cloudstack.api.command.admin.internallb.ListInternalLBVMsCmd;
 import org.apache.cloudstack.api.command.admin.internallb.ListInternalLoadBalancerElementsCmd;
 import org.apache.cloudstack.api.command.admin.internallb.StartInternalLBVMCmd;
 import org.apache.cloudstack.api.command.admin.internallb.StopInternalLBVMCmd;
+import org.apache.cloudstack.api.command.admin.multiline.ListMultilineCmd;
+import org.apache.cloudstack.api.command.admin.multiline.Multiline;
 import org.apache.cloudstack.api.command.admin.network.AddNetworkDeviceCmd;
 import org.apache.cloudstack.api.command.admin.network.AddNetworkServiceProviderCmd;
 import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
@@ -449,6 +449,8 @@ import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.GetVncPortAnswer;
@@ -521,6 +523,8 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.IPAddressVO;
 import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.LoadBalancerVO;
+import com.cloud.network.dao.MultilineDao;
+import com.cloud.network.dao.MultilineVO;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkVO;
 import com.cloud.org.Cluster;
@@ -728,6 +732,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     @Inject
     DeploymentPlanningManager _dpMgr;
+    
+    @Inject
+    MultilineDao _multilineDao;
 
     LockMasterListener _lockMasterListener;
 
@@ -2916,6 +2923,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(RemoveCertFromLoadBalancerCmd.class);
         cmdList.add(GenerateAlertCmd.class);
         cmdList.add(updateStaticNatCmd.class);
+        cmdList.add(ListMultilineCmd.class);
         return cmdList;
     }
 
@@ -3953,4 +3961,34 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     public void setLockMasterListener(LockMasterListener lockMasterListener) {
         _lockMasterListener = lockMasterListener;
     }
+    
+    @Override
+    public Pair<List<? extends Multiline>, Integer> searchForMultiline(ListMultilineCmd cmd) {
+    	
+         Account caller = CallContext.current().getCallingAccount();
+         String label = cmd.getMultilineLabel();
+         Object keyword = cmd.getKeyword();
+         boolean listAll = cmd.listAll();
+         Long id = cmd.getId();
+
+         Filter searchFilter = new Filter(MultilineVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+        
+         SearchBuilder<MultilineVO> sb = _multilineDao.createSearchBuilder();
+         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
+         sb.and("label", sb.entity().getLabel(), SearchCriteria.Op.EQ);
+         sb.and("isDefault", sb.entity().getIsDefault(), SearchCriteria.Op.EQ);
+         
+         SearchCriteria<MultilineVO> sc = sb.create();
+         if(label != null && !label.isEmpty()){
+        	 sc.setParameters("label",label);
+         }
+         if(!listAll){
+        	 sc.setParameters("isDefault", Boolean.TRUE);
+         }
+         
+         Pair<List<MultilineVO>, Integer> result = _multilineDao.searchAndCount(sc, searchFilter);
+         return new Pair<List<? extends Multiline>, Integer>(result.first(), result.second());
+    }
+
 }

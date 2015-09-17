@@ -103,7 +103,53 @@
             };
         }
     };
-
+	//add by hai.li
+	//add multiline label list
+	cloudStack.multilineLabel = {
+        dialog: function(args) {
+            return function(args) {
+                var data = args.data ? args.data : {};
+                var fields = {
+                    multilinelabelid: {
+                        label: 'Multilines',
+                        defaultValue: data.multilinelabel,
+                        select: function(args) {
+                            $.ajax({
+								url: createURL('listMultiline'),
+                                success: function(json) {
+                                    args.response.success({
+										data: $.map(json.listmultilineresponse.multilines, function(result) {
+                                            return {
+                                                id: result.multilinelabel,
+                                                description: result.name
+                                            };
+                                        })
+                                    });
+                                }
+                            });
+                        }
+                    }
+                };
+                var success = args.response.success;
+                if (!args.$item) { //multiline data is read-only after creation
+                    cloudStack.dialog.createForm({
+                        form: {
+                            title: 'label.add.multiline',
+                            desc: '(required) Please specify an operators in line to be associated with this IP range.',
+                            fields: fields
+                        },
+                        after: function(args) {
+                            var data = cloudStack.serializeForm(args.$form);
+                            success({
+                                data: data
+                            });
+                        }
+                    });
+                }
+            };
+        }
+    };
+	
     var getTrafficType = function(physicalNetwork, typeID) {
         var trafficType = {};
 
@@ -653,6 +699,13 @@
                                                 edit: true,
                                                 label: 'label.end.IP'
                                             },
+											'multiline': {
+												label: 'label.multiline',
+												custom: {
+													buttonLabel: 'label.add.multiline',
+													action: cloudStack.multilineLabel.dialog()
+												}
+											},
                                             'account': {
                                                 label: 'label.account',
                                                 custom: {
@@ -687,6 +740,10 @@
                                                     array1.push("&domainid=" + args.data.account.domainid);
                                                 }
 
+												if (args.data.multiline) {
+                                                    array1.push("&multilineLabel=" + args.data.multiline.multilinelabelid);
+                                                }
+												
                                                 array1.push("&forVirtualNetwork=true"); //indicates this new IP range is for public network, not guest network
 
                                                 $.ajax({
@@ -842,6 +899,9 @@
                                                                     _buttonLabel: item.account,
                                                                     account: item.account,
                                                                     domainid: item.domainid
+                                                                },
+                                                                multiline: {
+                                                                    _buttonMultiline: item.multilinelabel
                                                                 }
                                                             });
                                                         })
