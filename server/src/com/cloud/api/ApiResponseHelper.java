@@ -3788,6 +3788,10 @@ public class ApiResponseHelper implements ResponseGenerator {
                 response.setAssociatedWithVpcId(vpc.getUuid());
             }
         }
+        
+        if (portableIp.getMultilineLabel() != null) {
+            response.setMultilineLabel(portableIp.getMultilineLabel());
+        }
 
         response.setState(portableIp.getState().name());
         response.setObjectName("portableip");

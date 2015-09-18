@@ -617,6 +617,9 @@
                         },
                         vlan: {
                             label: 'label.vlan'
+                        },
+						multilinelabel: {
+                            label: 'label.multilineLabel'
                         }
                     },
                     dataProvider: function(args) {
@@ -674,8 +677,26 @@
                                     vlan: {
                                         label: 'label.vlan',
                                         validation: {
-                                            required: false
+                                            required: true
                                         }
+                                    },
+									multilineLabel: {
+                                        label: 'label.multilineLabel',                                        
+										select: function(args) {                                                    
+											$.ajax({
+												url: createURL('listMultiline'),
+												success: function(json) {
+													args.response.success({
+														data: $.map(json.listmultilineresponse.multilines, function(result) {
+															return {
+																id: result.multilinelabel,
+																description: result.name
+															};
+														})
+													});
+												}
+											});
+										}		
                                     }
                                 }
                             },
@@ -685,7 +706,8 @@
                                     startip: args.data.startip,
                                     endip: args.data.endip,
                                     gateway: args.data.gateway,
-                                    netmask: args.data.netmask
+                                    netmask: args.data.netmask,
+									multilinelabel : args.data.multilineLabel
                                 };
                                 if (args.data.vlan != null && args.data.vlan.length > 0) {
                                     $.extend(data, {
