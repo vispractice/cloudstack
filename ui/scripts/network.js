@@ -150,7 +150,7 @@
                 return [];
             }
 			
-            if (ipObj.isdefaultstaticnat) {
+            if (ipObj.isdefaultstaticnat || !ipObj.isstaticnat) {
 				disallowedActions.push('setDefaultStaticNAT');
 			}
 			
@@ -1965,19 +1965,7 @@
                     actions: {
                         add: {
                             label: 'label.acquire.new.ip',
-                            //addRow: 'true',
-							//defaultValue: 'a',
-							//select: function(args) {
-								//var items = [];
-								//items.push({
-									//id: "b",
-									//description: _l('label.no')
-								//});
-								//items.push({
-									//id: "c",
-									//description: _l('label.yes')
-								//});
-							//},		
+                            addRow: 'true',	
                             preFilter: function(args) {
                                 var zoneObj;
                                 var dataObj = {};
@@ -2070,6 +2058,7 @@
                                 		success: function(json) {
                                 		    var items = json.listregionsresponse.region;	
                                 		    if(items != null) {
+												args.$form.find('.form-item[rel=ismultiline]').css('display', 'inline-block');
                                 		    	for(var i = 0; i < items.length; i++) {
                                 		    		var region = items[0];  
                                 		    		if(region.name == 'Local') {
@@ -2103,6 +2092,25 @@
                                             });
                                         },
                                         isHidden: true
+                                    },
+									ismultiline: {
+                                        label: 'label.multiline',
+                                        select: function(args) {                                                    
+											$.ajax({
+												url: createURL('listMultiline'),
+												success: function(json) {
+													args.response.success({
+														data: $.map(json.listmultilineresponse.multilines, function(result) {
+															return {
+																id: result.multilinelabel,
+																description: result.name
+															};
+														})
+													});
+												}
+											});
+										},
+										isHidden: true
                                     }
                                 }
                             },
@@ -2113,7 +2121,12 @@
                             			isportable: args.data.isportable
                             		});                            	
                             	}
-                            	                            	
+                            	if (args.$form.find('.form-item[rel=ismultiline]').css("display") != "none") {
+                            		$.extend(dataObj, {
+										multilineLabel : args.data.ismultiline
+                            		});                            	
+                            	}
+								
                                 if ('vpc' in args.context) { //from VPC section
                                     $.extend(dataObj, {
                                         vpcid: args.context.vpc[0].id
