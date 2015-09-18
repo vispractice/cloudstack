@@ -91,6 +91,10 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
     
     @Parameter(name=ApiConstants.MULTILINE_LABEL, type=CommandType.STRING, description="The multiline label.")
     private String multilineLabel;
+    
+    @Parameter(name=ApiConstants.IS_DEFAULT_STATIC, type=CommandType.STRING, description="is default static nat.")
+    private String isDefaultStaticNat;
+    
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -183,4 +187,20 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
     public Boolean getForLoadBalancing() {
         return forLoadBalancing;
     }
+
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
+
+	public String getIsDefaultStaticNat() {
+		return isDefaultStaticNat;
+	}
+
+	public void setIsDefaultStaticNat(String isDefaultStaticNat) {
+		this.isDefaultStaticNat = isDefaultStaticNat;
+	}
 }

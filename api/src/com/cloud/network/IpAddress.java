@@ -87,5 +87,7 @@ public interface IpAddress extends ControlledEntity, Identity, InternalIdentity 
     Long getNetworkId();
     
     String getMultilineLabel();
+    
+    Boolean getIsDefaultStaticNat();
 
 }

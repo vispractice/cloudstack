@@ -149,11 +149,15 @@
                 ipObj.issystem == true) {
                 return [];
             }
-            
+			
+            if (ipObj.isdefaultstaticnat) {
+				disallowedActions.push('setDefaultStaticNAT');
+			}
+			
             if (ipObj.issourcenat) { //sourceNAT IP doesn't support staticNAT
                 disallowedActions.push('enableStaticNAT');
                 disallowedActions.push('disableStaticNAT');
-				//support deleted soureNAT ip
+				//update by hai.li support deleted soureNAT ip
                 //disallowedActions.push('remove');
             } else { //non-sourceNAT IP supports staticNAT
             	 if (ipObj.isstaticnat) {
@@ -1961,7 +1965,19 @@
                     actions: {
                         add: {
                             label: 'label.acquire.new.ip',
-                            addRow: 'true',
+                            //addRow: 'true',
+							//defaultValue: 'a',
+							//select: function(args) {
+								//var items = [];
+								//items.push({
+									//id: "b",
+									//description: _l('label.no')
+								//});
+								//items.push({
+									//id: "c",
+									//description: _l('label.yes')
+								//});
+							//},		
                             preFilter: function(args) {
                                 var zoneObj;
                                 var dataObj = {};
@@ -2616,6 +2632,58 @@
                                     },
                                     notification: function(args) {
                                         return 'label.action.release.ip';
+                                    }
+                                },
+                                notification: {
+                                    poll: pollAsyncJobResult
+                                }
+                            },
+							setDefaultStaticNAT: {
+                                label: 'label.action.setDefault.static.NAT',
+                                action: function(args) {
+                                    $.ajax({
+                                        url: createURL('updateStaticNat'),
+                                        data: {
+                                            ipaddressid: args.context.ipAddresses[0].id,
+											isdefaultstaticnat : true
+                                        },
+                                        dataType: 'json',
+                                        async: true,
+                                        success: function(data) {
+                                            args.response.success({
+                                                _custom: {
+                                                    jobId: data.updateStaticNatresponse.jobid,
+                                                    getUpdatedItem: function() {
+                                                        return {
+                                                            //isstaticnat: false,
+                                                            //virtualmachinedisplayname: ""
+															isdefaultstaticnat: false
+                                                        };
+                                                    },
+                                                    getActionFilter: function() {
+                                                        return function(args) {
+                                                            return ['setDefaultStaticNAT'];
+                                                        };
+                                                    },
+                                                    onComplete: function(args, _custom) {
+                                                        //if (_custom.$detailView.is(':visible')) {
+                                                            //ipChangeNotice();
+                                                        //}
+                                                    }
+                                                }
+                                            });
+                                        },
+                                        error: function(data) {
+                                            args.response.error(parseXMLHttpResponse(data));
+                                        }
+                                    });
+                                },
+                                messages: {
+                                    confirm: function(args) {
+                                        return 'message.action.setDefault.static.NAT';
+                                    },
+                                    notification: function(args) {
+                                        return 'label.action.setDefault.static.NAT';
                                     }
                                 },
                                 notification: {

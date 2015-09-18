@@ -1562,12 +1562,12 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
 	            @Override
 	            public void doInTransactionWithoutResult(TransactionStatus status) throws NetworkRuleConflictException {
 	            	IPAddressVO staticNatIp = _ipAddressDao.findDefaultStaticNat(ipAddress.getAssociatedWithNetworkId(), vmId, Boolean.TRUE);
-	            	if(staticNatIp.getId() != ipAddress.getId()){
+	            	if(staticNatIp != null  && staticNatIp.getId() != ipAddress.getId()){
 	            		staticNatIp.setIsDefaultStaticNat(false);
 		            	_ipAddressDao.update(staticNatIp.getId(), staticNatIp);
-		            	ipAddress.setIsDefaultStaticNat(true);
-			            _ipAddressDao.update(ipAddress.getId(),ipAddress);
-	            	}
+	            	} 
+	            	ipAddress.setIsDefaultStaticNat(true);
+			        _ipAddressDao.update(ipAddress.getId(),ipAddress);
 	            }
 	        });
 	        
