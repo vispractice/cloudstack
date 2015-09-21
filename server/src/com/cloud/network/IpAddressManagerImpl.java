@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.swing.text.StyledEditorKit.BoldAction;
 
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
@@ -44,6 +45,7 @@ import org.apache.log4j.Logger;
 import com.cloud.agent.AgentManager;
 import com.cloud.alert.AlertManager;
 import com.cloud.api.ApiDBUtils;
+import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.configuration.Resource.ResourceType;
 import com.cloud.dc.AccountVlanMapVO;
@@ -91,6 +93,7 @@ import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.IPAddressVO;
 import com.cloud.network.dao.LoadBalancerDao;
+import com.cloud.network.dao.MultilineDao;
 import com.cloud.network.dao.NetworkAccountDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkDomainDao;
@@ -270,6 +273,8 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
     Ipv6AddressManager _ipv6Mgr;
     @Inject
     PortableIpDao _portableIpDao;
+    @Inject
+    MultilineDao _multilineLabelDao;
     SearchBuilder<IPAddressVO> AssignIpAddressSearch;
     SearchBuilder<IPAddressVO> AssignIpAddressFromPodVlanSearch;
 
@@ -2189,7 +2194,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                         ex.addProxyObject(ApiDBUtils.findPodById(podId).getUuid());
                         throw ex;
                     }
-                    s_logger.warn(errorMessage.toString());
+            		s_logger.warn(errorMessage.toString());
                     InsufficientAddressCapacityException ex = new InsufficientAddressCapacityException("Insufficient address capacity", DataCenter.class, dcId);
                     ex.addProxyObject(ApiDBUtils.findZoneById(dcId).getUuid());
                     throw ex;

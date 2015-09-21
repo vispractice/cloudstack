@@ -1959,7 +1959,8 @@
                             }
                         }, 
 						multilinelabel: {
-                            label: 'label.multiline'
+                            label: 'multiline'
+							//label: 'label.multiline'
                         }
                     },
                     actions: {
@@ -2094,7 +2095,8 @@
                                         isHidden: true
                                     },
 									ismultiline: {
-                                        label: 'label.multiline',
+                                        //label: 'label.multiline',
+										label: 'multiline',
                                         select: function(args) {                                                    
 											$.ajax({
 												url: createURL('listMultiline'),
@@ -2652,7 +2654,8 @@
                                 }
                             },
 							setDefaultStaticNAT: {
-                                label: 'label.action.setDefault.static.NAT',
+                                label: 'setDefault.staticNAT',
+								//label: 'label.action.setDefault.static.NAT',
                                 action: function(args) {
                                     $.ajax({
                                         url: createURL('updateStaticNat'),
@@ -2693,10 +2696,11 @@
                                 },
                                 messages: {
                                     confirm: function(args) {
-                                        return 'message.action.setDefault.static.NAT';
+                                        return 'Please make sure you really set the static NAT.';
                                     },
                                     notification: function(args) {
-                                        return 'label.action.setDefault.static.NAT';
+                                        //return 'label.action.setDefault.static.NAT';
+										return 'setDefault.staticNAT'; 
                                     }
                                 },
                                 notification: {
@@ -2783,7 +2787,11 @@
                                     },
                                     vlanname: {
                                         label: 'label.vlan'
-                                    }
+                                    },
+									isdefaultstaticnat: {
+                                        label: 'isDefault.StaticNat',
+										converter: cloudStack.converters.toBooleanText
+                                    } 
                                 }],
 
                                 tags: cloudStack.api.tags({

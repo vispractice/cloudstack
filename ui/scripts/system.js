@@ -134,7 +134,8 @@
                 if (!args.$item) { //multiline data is read-only after creation
                     cloudStack.dialog.createForm({
                         form: {
-                            title: 'label.add.multiline',
+                            //title: 'label.add.multiline',
+							title: 'add.multiline',
                             desc: '(required) Please specify an operators in line to be associated with this IP range.',
                             fields: fields
                         },
@@ -700,9 +701,11 @@
                                                 label: 'label.end.IP'
                                             },
 											'multiline': {
-												label: 'label.multiline',
+												label: 'multiline',
+												//label: 'label.multiline',
 												custom: {
-													buttonLabel: 'label.add.multiline',
+													//buttonLabel: 'label.add.multiline',
+													buttonLabel: 'add.multiline',
 													action: cloudStack.multilineLabel.dialog()
 												}
 											},

@@ -3971,7 +3971,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
          boolean listAll = cmd.listAll();
          Long id = cmd.getId();
 
-         Filter searchFilter = new Filter(MultilineVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+         Filter searchFilter = new Filter(MultilineVO.class, "isDefault", false, cmd.getStartIndex(), cmd.getPageSizeVal());
         
          SearchBuilder<MultilineVO> sb = _multilineDao.createSearchBuilder();
          sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);

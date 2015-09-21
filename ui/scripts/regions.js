@@ -619,7 +619,8 @@
                             label: 'label.vlan'
                         },
 						multilinelabel: {
-                            label: 'label.multilineLabel'
+                            //label: 'label.multiline'
+							label: 'multiline'
                         }
                     },
                     dataProvider: function(args) {
@@ -681,7 +682,8 @@
                                         }
                                     },
 									multilineLabel: {
-                                        label: 'label.multilineLabel',                                        
+                                        label: 'multiline', 
+										//label: 'label.multiline', 										
 										select: function(args) {                                                    
 											$.ajax({
 												url: createURL('listMultiline'),

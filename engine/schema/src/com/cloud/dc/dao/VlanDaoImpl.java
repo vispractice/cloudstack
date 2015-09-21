@@ -30,11 +30,13 @@ import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
+
 import org.springframework.stereotype.Component;
 
 import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -59,6 +61,7 @@ public class VlanDaoImpl extends GenericDaoBase<VlanVO, Long> implements VlanDao
     protected SearchBuilder<VlanVO> ZoneWideNonDedicatedVlanSearch;
     protected SearchBuilder<VlanVO> VlanGatewaysearch;
     protected SearchBuilder<VlanVO> DedicatedVlanSearch;
+    protected SearchBuilder<VlanVO> labelVlanSearch;
 
     protected SearchBuilder<AccountVlanMapVO> AccountVlanMapSearch;
 
@@ -108,6 +111,11 @@ public class VlanDaoImpl extends GenericDaoBase<VlanVO, Long> implements VlanDao
         VlanGatewaysearch.and("gateway", VlanGatewaysearch.entity().getVlanGateway(), SearchCriteria.Op.EQ);
         VlanGatewaysearch.and("networkid", VlanGatewaysearch.entity().getNetworkId(), SearchCriteria.Op.EQ);
         VlanGatewaysearch.done();
+        
+        labelVlanSearch = createSearchBuilder();
+        labelVlanSearch.and("multilineLabel", labelVlanSearch.entity().getMultilineLabel(), SearchCriteria.Op.EQ);
+        labelVlanSearch.done();
+        
     }
 
     @Override
@@ -357,5 +365,12 @@ public class VlanDaoImpl extends GenericDaoBase<VlanVO, Long> implements VlanDao
         sc.setJoinParameters("AccountVlanMapSearch", "accountId", accountId);
         return listBy(sc);
     }
+
+	@Override
+	public List<VlanVO> listByMultilineLabel(String multiline) {
+		 SearchCriteria<VlanVO> sc = labelVlanSearch.create();
+	     sc.setParameters("multilineLabel", multiline);
+	     return listBy(sc);
+	}
 
 }
