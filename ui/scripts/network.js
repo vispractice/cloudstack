@@ -2696,7 +2696,7 @@
                                 },
                                 messages: {
                                     confirm: function(args) {
-                                        return 'Please make sure you really set the static NAT.';
+                                        return 'Please make sure you really set the default static NAT.';
                                     },
                                     notification: function(args) {
                                         //return 'label.action.setDefault.static.NAT';

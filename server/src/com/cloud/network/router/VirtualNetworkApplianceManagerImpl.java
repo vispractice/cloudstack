@@ -2900,7 +2900,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         ArrayList<PublicIpAddress> publicIps = providerToIpList.get(provider);
         return publicIps;
     }
-
+    
     /**
      * When restart the VR for sourceNatIp
      * @param ownerId
@@ -2917,10 +2917,20 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     	if(multilines == null || multilines.size() <= 0){
    		 	throw new CloudRuntimeException("Cannot find one multiline label.");
     	}
+    	
+    	List<VlanVO> vlanVOs = _vlanDao.listAll();
+	    if(vlanVOs == null || vlanVOs.isEmpty()){
+	    	throw new CloudRuntimeException("Cannot find one vlan.");
+	    }
+	    String labels = "";
+	    for (VlanVO vlanVO : vlanVOs) {
+			labels += vlanVO.getMultilineLabel()+",";
+		}
+	    
 		for (MultilineVO multiline : multilines) {
 			try {
-				List<VlanVO> labels = _vlanDao.listByMultilineLabel(multiline.getLabel());
-    		    if(labels == null || labels.isEmpty()){
+				//List<VlanVO> labels = _vlanDao.listByMultilineLabel(multiline.getLabel());
+    		    if(!labels.contains(multiline.getLabel())){
         			continue;
     		    }
     		    PublicIp sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork,multiline.getLabel());

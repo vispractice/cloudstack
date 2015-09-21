@@ -904,6 +904,10 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
             _accountMgr.checkAccess(caller, null, true, ipVO);
         }
 
+        if (ipVO.isOneToOneNat() && ipVO.getIsDefaultStaticNat()) {
+        	throw new IllegalArgumentException("the default static nat ip address can't be disassociated.");
+        }
+        
         if (ipVO.isSourceNat()) {
             //throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
         	//update by hai.li 2015.09.07
