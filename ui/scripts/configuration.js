@@ -199,8 +199,8 @@
                                     isVolatile: {
                                         label: 'label.volatile',
                                         isBoolean: true,
-                                        isChecked: false
-
+                                        isChecked: false,
+                                        docID: 'helpComputeOfferingIsVolatile'
                                     },
 
                                     deploymentPlanner: {
@@ -2544,6 +2544,7 @@
 
                                     if (inputData['specifyVlan'] == 'on') { //specifyVlan checkbox is checked
                                         inputData['specifyVlan'] = true;
+                                        inputData['specifyIpRanges'] = true;
                                     } else { //specifyVlan checkbox is unchecked
                                         inputData['specifyVlan'] = false;
 

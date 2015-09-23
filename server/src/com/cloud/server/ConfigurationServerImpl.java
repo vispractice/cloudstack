@@ -193,6 +193,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     value = ("Hidden".equals(category) || "Secure".equals(category)) ? DBEncryptionUtil.encrypt(value) : value;
                     String description = c.getDescription();
                     ConfigurationVO configVO = new ConfigurationVO(category, instance, component, name, value, description);
+                    configVO.setDefaultValue(value);
                     _configDao.persist(configVO);
                 }
             }
@@ -200,8 +201,8 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             _configDao.update(Config.UseSecondaryStorageVm.key(), Config.UseSecondaryStorageVm.getCategory(), "true");
             s_logger.debug("ConfigurationServer made secondary storage vm required.");
 
-            _configDao.update(Config.SecStorageEncryptCopy.key(), Config.SecStorageEncryptCopy.getCategory(), "true");
-            s_logger.debug("ConfigurationServer made secondary storage copy encrypted.");
+            _configDao.update(Config.SecStorageEncryptCopy.key(), Config.SecStorageEncryptCopy.getCategory(), "false");
+            s_logger.debug("ConfigurationServer made secondary storage copy encrypt set to false.");
 
             _configDao.update("secstorage.secure.copy.cert", "realhostip");
             s_logger.debug("ConfigurationServer made secondary storage copy use realhostip.");

@@ -543,6 +543,15 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
                     pool = _storagePoolDao.findPoolByHostPath(host.getDataCenterId(), host.getPodId(), pInfo.getHost(), "", pInfo.getUuid());
                 }
             }
+            if (pool == null) {
+                //the path can be different, but if they have the same uuid, assume they are the same storage
+                pool = _storagePoolDao.findPoolByHostPath(host.getDataCenterId(), host.getPodId(), pInfo.getHost(), null,
+                        pInfo.getUuid());
+                if (pool != null) {
+                    s_logger.debug("Found a storage pool: " + pInfo.getUuid() + ", but with different hostpath " + pInfo.getHostPath() + ", still treat it as the same pool");
+                }
+            }
+
             DataStoreProvider provider = dataStoreProviderMgr.getDefaultPrimaryDataStoreProvider();
             DataStoreLifeCycle lifeCycle = provider.getDataStoreLifeCycle();
             if (pool == null) {
@@ -1143,6 +1152,10 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
                         }
 
                         _snapshotDao.remove(destroyedSnapshotStoreVO.getSnapshotId());
+                        SnapshotDataStoreVO snapshotOnPrimary = _snapshotStoreDao.findBySnapshot(destroyedSnapshotStoreVO.getSnapshotId(), DataStoreRole.Primary);
+                        if (snapshotOnPrimary != null) {
+                            _snapshotStoreDao.remove(snapshotOnPrimary.getId());
+                        }
                         _snapshotStoreDao.remove(destroyedSnapshotStoreVO.getId());
                     }
 
@@ -1557,8 +1570,8 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
         long totalAskingSize = 0;
         for (Volume volume : volumes) {
             if (volume.getTemplateId() != null) {
-                VMTemplateVO tmpl = _templateDao.findById(volume.getTemplateId());
-                if (tmpl.getFormat() != ImageFormat.ISO) {
+                VMTemplateVO tmpl = _templateDao.findByIdIncludingRemoved(volume.getTemplateId());
+                if (tmpl != null && tmpl.getFormat() != ImageFormat.ISO) {
                     allocatedSizeWithtemplate = _capacityMgr.getAllocatedPoolCapacity(poolVO, tmpl);
                 }
             }

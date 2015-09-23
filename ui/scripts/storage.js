@@ -968,7 +968,7 @@
                                                     getUpdatedItem: function(json) {
                                                         return {
                                                             virtualmachineid: null,
-                                                            vmname: null
+                                                            vmdisplayname: null
                                                         };
                                                     },
                                                     getActionFilter: function() {
@@ -1871,9 +1871,7 @@
                                     });
                                 },
                                 notification: {
-                                    poll: function(args) {
-                                        args.complete();
-                                    }
+                                    poll: pollAsyncJobResult
                                 }
                             }
                         },

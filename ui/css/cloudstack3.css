@@ -6015,6 +6015,17 @@ label.error {
   margin-left: 26px;
 }
 
+.instance-wizard .step.service-offering .custom-size .field label.error {
+  position: relative;
+  top: 0;
+  left: 0;
+}
+
+.instance-wizard .step.service-offering .custom-iops .field input {
+  width: 88%;
+  margin-left: 26px;
+}
+
 /*** Network*/
 .multi-wizard.instance-wizard .no-network {
   background: #FFFFFF;
@@ -7817,7 +7828,7 @@ div.container div.panel div#details-tab-addloadBalancer.detail-group div.loadBal
 
 .multi-edit .data .data-body .data-item > table tbody tr td span {
   overflow: hidden;
-  max-width: 78px;
+  max-width: 90%;
   display: block;
   float: left;
   text-overflow: ellipsis;
@@ -7974,6 +7985,17 @@ div.container div.panel div#details-tab-addloadBalancer.detail-group div.loadBal
   max-width: 87px !important;
   font-size: 10px;
 }
+
+/* special case for 'Source CIDR' column - make it wide enough to fit a CIDR without ellipsizing*/
+.detail-view .multi-edit table tr th.cidrlist,
+.detail-view .multi-edit table tr td.cidrlist {
+  min-width: 112px !important;
+  max-width: 112px !important;
+}
+.detail-view .multi-edit td.cidrlist input {
+  width: 85%;
+}
+
 
 /** Header fields*/
 .multi-edit .header-fields {
@@ -12179,11 +12201,12 @@ div.ui-dialog div.autoscaler div.field-group div.form-container form div.form-it
 }
 
 .restoreVM .icon,
-.restore .icon {
+.restore .icon,
+.recover .icon {
   background-position: -168px -31px;
 }
 
-.reset .icon {
+.reset .icon, .reinstall .icon {
   background-position: -168px -31px;
 }
 

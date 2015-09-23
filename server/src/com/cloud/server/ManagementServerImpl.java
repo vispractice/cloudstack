@@ -201,6 +201,7 @@ import org.apache.cloudstack.api.command.admin.vlan.ListVlanIpRangesCmd;
 import org.apache.cloudstack.api.command.admin.vlan.ReleasePublicIpRangeCmd;
 import org.apache.cloudstack.api.command.admin.vm.AssignVMCmd;
 import org.apache.cloudstack.api.command.admin.vm.ExpungeVMCmd;
+import org.apache.cloudstack.api.command.admin.vm.GetVMUserDataCmd;
 import org.apache.cloudstack.api.command.admin.vm.MigrateVMCmd;
 import org.apache.cloudstack.api.command.admin.vm.MigrateVirtualMachineWithVolumeCmd;
 import org.apache.cloudstack.api.command.admin.vm.RecoverVMCmd;
@@ -1081,9 +1082,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             throw ex;
         }
 
-        if (!vm.getHypervisorType().equals(HypervisorType.XenServer) && !vm.getHypervisorType().equals(HypervisorType.VMware)
-                && !vm.getHypervisorType().equals(HypervisorType.KVM) && !vm.getHypervisorType().equals(HypervisorType.Ovm)
-                && !vm.getHypervisorType().equals(HypervisorType.Hyperv)) {
+        if (!vm.getHypervisorType().equals(HypervisorType.XenServer) && !vm.getHypervisorType().equals(HypervisorType.VMware) && !vm.getHypervisorType().equals(HypervisorType.KVM)
+                && !vm.getHypervisorType().equals(HypervisorType.Ovm) && !vm.getHypervisorType().equals(HypervisorType.Hyperv) && !vm.getHypervisorType().equals(HypervisorType.LXC)
+                && !vm.getHypervisorType().equals(HypervisorType.Simulator)) {
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug(vm + " is not XenServer/VMware/KVM/OVM/Hyperv, cannot migrate this VM.");
             }
@@ -2915,6 +2916,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(AssignCertToLoadBalancerCmd.class);
         cmdList.add(RemoveCertFromLoadBalancerCmd.class);
         cmdList.add(GenerateAlertCmd.class);
+        cmdList.add(GetVMUserDataCmd.class);
         return cmdList;
     }
 
@@ -3318,6 +3320,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             }
         }
 
+        long diskOffMinSize = _volumeMgr.CustomDiskOfferingMinSize.value();
         long diskOffMaxSize = _volumeMgr.CustomDiskOfferingMaxSize.value();
         KVMSnapshotEnabled = Boolean.parseBoolean(_configDao.getValue("KVM.snapshot.enabled"));
 
@@ -3341,6 +3344,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("supportELB", supportELB);
         capabilities.put("projectInviteRequired", _projectMgr.projectInviteRequired());
         capabilities.put("allowusercreateprojects", _projectMgr.allowUserToCreateProject());
+        capabilities.put("customDiskOffMinSize", diskOffMinSize);
         capabilities.put("customDiskOffMaxSize", diskOffMaxSize);
         capabilities.put("regionSecondaryEnabled", regionSecondaryEnabled);
         capabilities.put("KVMSnapshotEnabled", KVMSnapshotEnabled);

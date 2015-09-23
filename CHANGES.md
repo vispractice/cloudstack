@@ -1,20 +1,194 @@
-
 Apache CloudStack CHANGES
-======================================
+=========================
 
 Full release notes for each release are located in the project's documentation website:  
-http://cloudstack.apache.org/docs
+http://docs.cloudstack.apache.org
+
+Version 4.3.2
+-------------
+
+This is a bug fix release. The following issues were fixed:
+
+    CLOUDSTACK-6738: Add configs in developer prefill to avoid restart mgmt server
+    CLOUDSTACK-7517: loading ftp modules in VR
+    CLOUDSTACK-7633: fix "Provides" in most LSB headers
+    CLOUDSTACK-7658: Upgrading debian packages as part of system vm template build
+    CLOUDSTACK-7674 throw an exception when encountered
+    CLOUDSTACK-7679: bump up the RabbitMQ AMQP java client version from 2.8.7 to 3.3.5
+    CLOUDSTACK-2625, CLOUDSTACK-3401: Usage records are ordered by start_date which is not unique. While listing large datasets or when page size is small this will result in duplicates
+    CLOUDSTACK-7855: NIC3 should set MTU and not NIC1 for storage network nic
+    CLOUDSTACK-7871: allow VM and template details update using update APIs
+    CLOUDSTACK-6438, CLOUDSTACK-6442: XAPI plugins must be copied to XS master first
+    CLOUDSTACK-6805: UI > create account > fix a bug that account creation failed when password contains # character.
+    CLOUDSTACK-6892: use lowercase noredist, as package.sh lowercases build type
+    CLOUDSTACK-6371: Set snapshot size in copycommand answer during snapshot backup
+    CLOUDSTACK-6432: Blocking DHCP server to service DNS outside network
+    CLOUDSTACK-6761: Fixed removing proxy arp rule on deleting static nat or PF rule on ip
+    CLOUDSTACK-7250: [vCenter 5.5] SourceNAT,StaticNAT and Portfowrding is not working with Vmware DVS in vCenter 5.5
+    CLOUDSTACK-6652: CLONE - [Automation] Vmware-  System's StartCommand failed with "NumberFormatException" while using VMware DVS
+    CLOUDSTACK-5785: VM display name cell not updated upon detaching volume from VM
+    CLOUDSTACK-6011: When detach is called on a deleted volume, avoid the NPE and throw an appropriate exception instead
+    CLOUDSTACK-7752: Fixed deployment planner stuck in infinite loop. If we create VM with shared service offering and attach disk with local disk offering, and one of storage pool is full
+    CLOUDSTACK-7937: CloudStack accepts unauthenticated LDAP binds
+    CLOUDSTACK-7822: Fixed SSL Cert Tests and relaxed chain validation
+    CLOUDSTACK-7952: Remove private key from SslCertResponse (listSslCerts)
+    CLOUDSTACK-3383: Fetch CPU utilization more reliable.
+    CLOUDSTACK-7415. Host remains in Alert after vCenter restart.
+    CLOUDSTACK-6261: remove the forceful timeout setting when login to NetScaler.
+    CLOUDSTACK-7954: ListTags API is ignoring the resourceID and displaying
+    CLOUDSTACK-6647: appending instance name with custom supplied info that contains - character can break vmsync.
+    CLOUDSTACK-6463: password is not set for VMs created from password enabled template
+    CLOUDSTACK-5992: default values of configuraiton parameters in configuration table are set NULL on fresh setup Some configuration parameters have Component names different from fresh
+    CLOUDSTACK-6859:Management Server PermGen run out of memory after some time due to class leak
+    CLOUDSTACK-6970: Protect event interpretion from causing NPE exception
+    CLOUDSTACK-6466: cpu and ram is not getting updated correctly in usage_vm_instance table for usage type 2
+    CLOUDSTACK-6669: Support volume resize in usage server
+    CLOUDSTACK-6669: Fix support resize in usage server
+    CLOUDSTACK-6743: Use edge-triggering in MessageDetector to handle bogus wakeup gracefully. Level triggering plus bogus wakeup can cause a tight loop to spin
+    CLOUDSTACK-6075: Increase the ram size for router service offering
+    CLOUDSTACK-7966: remove snapshot_store_ref entry, in which role is Primary, during storage GC
+    CLOUDSTACK-7917: Validating Load Balancer Rule when updating LB + unit test
+    CLOUDSTACK-7951: Limit amount of memory used by cloudstack-agent jsvc
+    CLOUDSTACK-7886: cloudstackoperations like deployvm,deleteNW are failing if CS fail to contact rabbit mq server. This is happening in case of Async API calls.
+    CLOUDSTACK-7884: Cloudstack MS is not responding (happening randomly) after some restart.
+    CLOUDSTACK-7877: The NET.IPRELEASE events are not added to usage_event on IP range deletion from Physical Networks.
+    CLOUDSTACK-7872: network getting shutdown inspite of running VM's in the network
+    CLOUDSTACK-7869: Add simulator support for findHostsForMigration API
+    CLOUDSTACK-7849: Sorting projects alphabetically in drop down menu
+    CLOUDSTACK-7837: [UI] Make the Source CIDR column wide enough to fit the CIDR value without ellipsizing
+    CLOUDSTACK-7700: Volume Snapshot Async Job returns Success for a failed operation
+    CLOUDSTACK-7679: Bump rabbitmq client library to latest 3.4.1
+    CLOUDSTACK-7589: VM not Starting and always stuck in Stopped state after management server restarts.
+    CLOUDSTACK-7581: Empty 'ID' parameters allowed in API calls
+    CLOUDSTACK-7463: UI: Domain Admin UI shows 'Add LDAP Users' button (should not be shown)
+    CLOUDSTACK-7319: dd with direct io is less impacting on Dom0 kernel resources
+    CLOUDSTACK-7302: UI: Remove Hover Interaction from breadcrumbs at top page
+    CLOUDSTACK-7293: UI: Fixed localization issues on the login page
+    CLOUDSTACK-7191: On restartNetwork destroy the VR immediatley, instead of cleanup the rules then destroy
+    CLOUDSTACK-7144: No GSLB provider is available during assigning load balancing rule
+    CLOUDSTACK-7129: Non-admin user can use deleteNetwork with shared networks
+    CLOUDSTACK-6996: Adding cluster to legacy zone failed
+    CLOUDSTACK-6989: Add 3 strikes rule for RvR freezing detection
+    CLOUDSTACK-6908: Enable IPv6 in sysctl when only necessary
+    CLOUDSTACK-6869: SSH Public key content is overridden by template's meta data when you create a instance
+    CLOUDSTACK-6783: Return a proper LibvirtStoragePool object after creating the pool
+    CLOUDSTACK-6714: monitor script echo service command is added with quotes
+    CLOUDSTACK-6578: Fixed issue in delete remote access vpn command
+    CLOUDSTACK-6577: Disable service monitoring in RVR
+    CLOUDSTACK-6516: In 4.3, SSL was turned off by default.
+    CLOUDSTACK-6467: Add pre/post-state transition status to messages published on
+    CLOUDSTACK-5907, CLOUDSTACK-6396: KVM/RBD & KVM/CLVM volumes mistakenly shown as OVM, disables snapshotting
+    CLOUDSTACK-6376: Return empty list when network tier has no ACL list associated.
+    CLOUDSTACK-6374: Remove entries from lb vm map when lb rule apply fails
+    CLOUDSTACK-6365: support virtual host and ssl in rabbitMQ event bus
+    CLOUDSTACK-6328: run.sh check if an existing java process is running, before spawining new ones
+    CLOUDSTACK-6322: Don't allow service instance creation with empty or null service-instance "name".
+    CLOUDSTACK-6269: [Simulator] Exception "Unable to send command"
+    CLOUDSTACK-6236: Negative ref_cnt of template(snapshot/volume)_store_ref results in out-of-range error in Mysql
+    CLOUDSTACK-6210: LDAP:listLdapUsers api throws exception when we click on "Add LDAP Account"
+    CLOUDSTACK-6192: Return failure on StartCommand and PrepareForMigrationCommand when connectPhysicalDisk fails
+    CLOUDSTACK-6172: Volume is not retaining same uuid when migrating from one storage to another.
+    CLOUDSTACK-6020: ipv4 address can be a larger number then Interger.MAX_VALUE
+    CLOUDSTACK-5962: Value of Global parameter "custom.diskoffering.size.min" is not reflected in UI during new instance creation.
+    CLOUDSTACK-5870: API support for retrieving user data
+    CLOUDSTACK-5865: Unable to use login API if domainId parameter is id and not uuid
+    CLOUDSTACK-5839: return canEnableIndividualService in listNetworkServiceProvidersResponse
+    CLOUDSTACK-5821: systemvmiso is locked by systevmvm in hyperv
+    CLOUDSTACK-5762: VM wizard, custom compute offering: Fix error label
+    CLOUDSTACK-5719: UI > Network > Add Guest Network > when Physical Network dropdown is changed, refresh Network Offering dropdown
+    CLOUDSTACK-5576: UI > IP Address > EnableVPN, DisableVPN: change label.
+    CLOUDSTACK-5501: Allow one vpn customer gateway with multiple connections
+    CLOUDSTACK-5446: delete all the leftover snapshots on primary storage in case of snapshot errors
+    CLOUDSTACK-2823: Loop through cmdline when patching routers
+    CLOUDSTACK-7412: Can't create proper template from VM on S3 secondary storage environment
+    CLOUDSTACK-7903: Decreased minimal usage aggregation range value
+    CLOUDSTACK-5834: got VBD statistics from RRD
+    CLOUDSTACK-7595: Remove unnecessary multiply factor for job expiry
+    CLOUDSTACK-7360: [vmware] Add host to existing cluster fails if the cluster is using Nexus 1000v as backend for atleast one traffic type
+    CLOUDSTACK-5812: pass podId information when request for secondary ip address in Basic zone guest network
+    CLOUDSTACK-5997: Template state changes side affects
+    CLOUDSTACK-5685: reboot VR if a out-of-band power-on event is detected
+    CLOUDSTACK-7994: Network rules are not configured in VR after out-of-band movement due to host crash
+    CLOUDSTACK-5923: CS doesn't do master switch for XS any more, CS will depend on XS HA to do master switch, XS HA needs to be enabled.
+    CLOUDSTACK-7688, CLOUDSTACK-7747: restricted various operations for VM with VM snapshots which breaks VM snapshots.
+    CLOUDSTACK-7950: AttachIsoCmd shoud give correct messge when trying to attach vmwaretools installer iso on non supported guestvm deployed by ISO
+    CLOUDSTACK-7986: [F5 LB] Failed to execute IPAssocCommand due to com.cloud.utils.exception.ExecutionException
+    CLOUDSTACK-7572: Fix regression from 156bd9b
+    CLOUDSTACK-7974: remove old hostname entry for a VM when adding a VM
+    CLOUDSTACK-8014: Fix NPE searching including removed templates
+    CLOUDSTACK-8070: during 4.3.1 to 4.3.2 upgrade encrypt config that are hidden
+
+Version 4.3.1
+-------------
+
+This is a bug fix release. The following issues were fixed:
+
+    CLOUDSTACK-6099: live migration is failing for vm deployed using dynaic compute offerings with NPE
+    CLOUDSTACK-7528: More verbose logging when sending alert fails
+    CLOUDSTACK-6624: set specifyIpRanges to true if specifyVlan is set to true
+    CLOUDSTACK-7404: Failed to start an instance when originating template has been deleted 
+    CLOUDSTACK-6531: Stopping the router in case of command failures
+    CLOUDSTACK-6115: TravisCI configuration
+    CLOUDSTACK-7405: allowing VR meta-data to be accessed without trailing slash
+    CLOUDSTACK-7260: Management server not responding after some time for Vmware due to Oom (cannot create native thread).
+    CLOUDSTACK-7038: Add mysql client dependency for mgmt server pkg for debian
+    CLOUDSTACK-6892: Create separate package for the mysql HA component
+    CLOUDSTACK-7038: Add mysql client dependency for mgmt server/rpms
+    CLOUDSTACK-7193: handle domain ID being an int
+    CLOUDSTACK-7309: using findProjectByProjectAccountIdIncludingRemoved
+    CLOUDSTACK-6886: Fixed the issue created by the SSL feature with the SDX:
+    CLOUDSTACK-6508: impossible to list projects from API with domainid set
+    CLOUDSTACK-4725: if storage pool has different path, but the uuid is the same, then treat them as the same storage pool
+    CLOUDSTACK-7087: Latest OS X VPN client not working Downgrading openswan version to 1:2.6.37-3
+    CLOUDSTACK-6926: removed hard coded jdk dirs and setting java home using readlink and dirname
+    CLOUDSTACK-6665: A fix for vpc routers not releasing dhcp leases.
+    CLOUDSTACK-6665: A fix for vpc routers not releasing dhcp leases.
+    CLOUDSTACK-7006: Restore template ID in ROOT volume usages
+    CLOUDSTACK-6747: call a more forgiving test on the supplied peer cidr-list
+    CLOUDSTACK-6747: test for test to allow all cidrs on other end of a vpc
+    CLOUDSTACK-6747: test to allow all cidrs on other end of vpc, public or
+    CLOUDSTACK-6272: Fix icons for recover/restore VM
+    CLOUDSTACK-6272: UI > Instance > actions > replace internal action name "restore" with "recover", "reset" with "reinstall".
+    CLOUDSTACK-6272: Fix recover/restore VM actions
+    CLOUDSTACK-6927: store virsh list in list instead of querying libvirt for each chain to speedup the function
+    CLOUDSTACK-6317: [VMware] Tagged VLAN support broken for Management/Control/Storage traffic
+    CLOUDSTACK-5891: [VMware] If a template has been registered and "cpu.corespersocket=X" template details have been added for it,
+    CLOUDSTACK-6478: Failed to download Template when having 3 SSVM's in one
+    CLOUDSTACK-6464: if guest network type is vlan://untagged, and traffic label is used, kvm agent needs to honor traffic label
+    CLOUDSTACK-6816: bugfix: cloudstack-setup-management make /root directory's permission 0777 improperly
+    CLOUDSTACK-6204: applying missed patch
+    CLOUDSTACK-6472: (4.3 specific) listUsageRecords: Pull information from removed items as well, fixing NPEs/Null UUIDs with usage API calls.
+    CLOUDSTACK-5976: Typo in "ssh_keypairs" table's foreign key constraints on the Upgraded Setup
+    CLOUDSTACK-6240: Fixed updating advanced SG rules for vm nic secondary ip
+    CLOUDSTACK-6509: Cannot import multiple LDAP/AD users into a cloudstack account
+    CLOUDSTACK-6485: private gateway network should not be associated with vpc
+    CLOUDSTACK-6156: removing rampart maven dependencies from awsapi
+    CLOUDSTACK-6433: Don't return success if only one of RvR successfully created
+    CLOUDSTACK-6285: Fix savepassword.sh script for clear out old entries
+    CLOUDSTACK-4665: Check if a snapshot is protected before trying to unprotect
+    CLOUDSTACK-4665: Depend on rados-java 0.1.4
+    CLOUDSTACK-6375: suppress the prompt while installing libssl
+    CLOUDSTACK-6375: suppress the prompt while installing openssl
+    CLOUDSTACK-4665: Check if a snapshot is protected before trying to unprotect
+    CLOUDSTACK-4665: Depend on rados-java 0.1.4
+    CLOUDSTACK-6375: suppress the prompt while installing libssl
+    CLOUDSTACK-6360: adding mysql-connector to class path and it will be loaded while starting cloudstack-usage
+    CLOUDSTACK-6326: Fixed password visible in plain text in some of commands in Hyper-v Agent logs.
+    CLOUDSTACK-6325: [hyper-v] fixed cleaning of bin and obj directories when building with mono, they were not cleaning up and resulting in use of stale dlls in some cases
+    CLOUDSTACK-6285: Fix savepassword.sh script for clear out old entries
+    CLOUDSTACK-6299: Fixed apidoc info with base64 encoded
+    CLOUDSTACK-5743: The link generated for downlading a volume or a template was giving a permission error on hyper-v.
 
 Version 4.3.0
-------------------------
+-------------
 Please refer to release notes for list of changes 
 
 Version 4.2.0
------------------------
+-------------
 Released on October 1 2013. Please refer to Release Notes for list of changes
 
 Version 4.1.0
-------------------------
+-------------
 
 This is the second major release of CloudStack from within the Apache Software Foundation, and the
 first major release as a Top-Level Project (TLP). 

@@ -22,6 +22,12 @@
     var step6ContainerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group', 'select-advanced-sg'(advanced sg-enabled zone)
 
     cloudStack.instanceWizard = {
+        //min disk offering  size when custom disk size is used
+        minDiskOfferingSize: function() {
+            return g_capabilities.customdiskofferingminsize;
+        },
+
+        //max disk offering size when custom disk size is used
         maxDiskOfferingSize: function() {
             return g_capabilities.customdiskofferingmaxsize;
         },
@@ -811,6 +817,12 @@
             	$.extend(deployVmData, {
             		group : group
             	});
+            }
+
+            if (g_hostid != null) {
+                $.extend(deployVmData, {
+                    hostid: g_hostid
+                });
             }
 
             $.ajax({

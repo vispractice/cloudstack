@@ -195,8 +195,16 @@ public class NetUtils {
                 return null;
             }
 
-            String[] info = NetUtils.getNetworkParams(nic);
-            return info[0];
+            String[] info = null;
+            try {
+                info = NetUtils.getNetworkParams(nic);
+            } catch (NullPointerException ignored) {
+                s_logger.debug("Caught NullPointerException when trying to getDefaultHostIp");
+            }
+            if (info != null) {
+                return info[0];
+            }
+            return null;
         }
     }
 
@@ -1180,6 +1188,15 @@ public class NetUtils {
                 pfsGroup = policy.split(";")[1];
             }
             if (pfsGroup != null && !pfsGroup.matches("modp1024|modp1536")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean isValidCidrList(String cidrList) {
+        for (String guestCidr : cidrList.split(",")) {
+            if (!isValidCIDR(guestCidr)) {
                 return false;
             }
         }

@@ -19,7 +19,7 @@ set -x
 
 ROOTPW=password
 HOSTNAME=systemvm
-CLOUDSTACK_RELEASE=4.3.0
+CLOUDSTACK_RELEASE=4.3.1
 ARCH=64-bit
 
 add_backports () {
@@ -33,9 +33,11 @@ install_packages() {
   DEBIAN_FRONTEND=noninteractive
   DEBIAN_PRIORITY=critical
 
+  DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends -qq -y --force-yes upgrade
+
   # Basic packages
   apt-get --no-install-recommends -q -y --force-yes install rsyslog logrotate cron chkconfig insserv net-tools ifupdown vim-tiny netbase iptables
-  apt-get --no-install-recommends -q -y --force-yes install openssh-server openssl e2fsprogs dhcp3-client tcpdump socat wget
+  apt-get --no-install-recommends -qq -y --force-yes install openssh-server openssl e2fsprogs dhcp3-client tcpdump socat wget
   # apt-get --no-install-recommends -q -y --force-yes install grub-legacy
   apt-get --no-install-recommends -q -y --force-yes install python bzip2 sed gawk diffutils grep gzip less tar telnet ftp rsync traceroute psmisc lsof procps monit inetutils-ping iputils-arping httping
   apt-get --no-install-recommends -q -y --force-yes install dnsutils zip unzip ethtool uuid file iproute acpid virt-what sudo
@@ -61,7 +63,7 @@ install_packages() {
   apt-get --no-install-recommends -q -y --force-yes install xl2tpd bcrelay ppp ipsec-tools tdb-tools
   echo "openswan openswan/install_x509_certificate boolean false" | debconf-set-selections
   echo "openswan openswan/install_x509_certificate seen true" | debconf-set-selections
-  apt-get --no-install-recommends -q -y --force-yes install openswan
+  apt-get --no-install-recommends -q -y --force-yes install openswan=1:2.6.37-3
 
   # xenstore utils
   apt-get --no-install-recommends -q -y --force-yes install xenstore-utils libxenstore3.0
@@ -81,7 +83,7 @@ install_packages() {
   wget http://people.apache.org/~rajeshbattala/hv-kvp-daemon_3.1_amd64.deb
   dpkg -i hv-kvp-daemon_3.1_amd64.deb
   #libraries required for rdp client (Hyper-V) 
-   apt-get --no-install-recommends -q -y --force-yes install libtcnative-1 libssl-dev libapr1-dev
+  DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends -qq -y --force-yes install libtcnative-1 libssl-dev libapr1-dev
 
   # vmware tools
   apt-get --no-install-recommends -q -y --force-yes install open-vm-tools
@@ -204,6 +206,7 @@ configure_apache2() {
    # Backup stock apache configuration since we may modify it in Secondary Storage VM
    cp /etc/apache2/sites-available/default /etc/apache2/sites-available/default.orig
    cp /etc/apache2/sites-available/default-ssl /etc/apache2/sites-available/default-ssl.orig
+   sed -i 's/SSLProtocol all -SSLv2$/SSLProtocol all -SSLv2 -SSLv3/g' /etc/apache2/mods-available/ssl.conf
 }
 
 configure_services() {
@@ -217,7 +220,7 @@ configure_services() {
   mkdir -p /var/lib/haproxy
 
   # Get config files from master
-  snapshot_url="https://git-wip-us.apache.org/repos/asf?p=cloudstack.git;a=snapshot;h=HEAD;sf=tgz"
+  snapshot_url="https://git-wip-us.apache.org/repos/asf?p=cloudstack.git;a=snapshot;h=refs/heads/4.3;sf=tgz"
   snapshot_dir="/opt/cloudstack*"
   cd /opt
   wget --no-check-certificate $snapshot_url -O cloudstack.tar.gz

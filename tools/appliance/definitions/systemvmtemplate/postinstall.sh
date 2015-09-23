@@ -19,7 +19,7 @@ set -x
 
 ROOTPW=password
 HOSTNAME=systemvm
-CLOUDSTACK_RELEASE=4.3.0
+CLOUDSTACK_RELEASE=4.3.1
 ARCH=32-bit
 
 add_backports () {
@@ -31,6 +31,8 @@ add_backports () {
 install_packages() {
   DEBIAN_FRONTEND=noninteractive
   DEBIAN_PRIORITY=critical
+
+  DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends -qq -y --force-yes upgrade
 
   # Basic packages
   apt-get --no-install-recommends -q -y --force-yes install rsyslog logrotate cron chkconfig insserv net-tools ifupdown vim-tiny netbase iptables
@@ -57,7 +59,7 @@ install_packages() {
   apt-get --no-install-recommends -q -y --force-yes install xl2tpd bcrelay ppp ipsec-tools tdb-tools
   echo "openswan openswan/install_x509_certificate boolean false" | debconf-set-selections
   echo "openswan openswan/install_x509_certificate seen true" | debconf-set-selections
-  apt-get --no-install-recommends -q -y --force-yes install openswan
+  apt-get --no-install-recommends -q -y --force-yes install openswan=1:2.6.37-3
 
   # xenstore utils
   apt-get --no-install-recommends -q -y --force-yes install xenstore-utils libxenstore3.0
@@ -186,6 +188,7 @@ configure_apache2() {
    # Backup stock apache configuration since we may modify it in Secondary Storage VM
    cp /etc/apache2/sites-available/default /etc/apache2/sites-available/default.orig
    cp /etc/apache2/sites-available/default-ssl /etc/apache2/sites-available/default-ssl.orig
+   sed -i 's/SSLProtocol all -SSLv2$/SSLProtocol all -SSLv2 -SSLv3/g' /etc/apache2/mods-available/ssl.conf
 }
 
 configure_services() {
@@ -199,7 +202,7 @@ configure_services() {
   mkdir -p /var/lib/haproxy
 
   # Get config files from master
-  snapshot_url="https://git-wip-us.apache.org/repos/asf?p=cloudstack.git;a=snapshot;h=HEAD;sf=tgz"
+  snapshot_url="https://git-wip-us.apache.org/repos/asf?p=cloudstack.git;a=snapshot;h=refs/heads/4.3;sf=tgz"
   snapshot_dir="/opt/cloudstack*"
   cd /opt
   wget --no-check-certificate $snapshot_url -O cloudstack.tar.gz

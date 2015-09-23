@@ -41,6 +41,7 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContext;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.usage.UsageTypes;
+import org.apache.cloudstack.utils.usage.UsageUtils;
 import org.springframework.stereotype.Component;
 
 import com.cloud.alert.AlertManager;
@@ -101,7 +102,6 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
     private static final int HOURLY_TIME = 60;
     private static final int DAILY_TIME = 60 * 24;
     private static final int THREE_DAYS_IN_MINUTES = 60 * 24 * 3;
-    private static final int USAGE_AGGREGATION_RANGE_MIN = 10;
 
     @Inject private AccountDao m_accountDao;
     @Inject private UserStatisticsDao m_userStatsDao;
@@ -223,9 +223,9 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
             s_logger.debug("Current Time: "+currentDate.toString());
 
             m_aggregationDuration = Integer.parseInt(aggregationRange);
-            if (m_aggregationDuration < USAGE_AGGREGATION_RANGE_MIN) {
-                s_logger.warn("Usage stats job aggregation range is to small, using the minimum value of " + USAGE_AGGREGATION_RANGE_MIN);
-                m_aggregationDuration = USAGE_AGGREGATION_RANGE_MIN;
+            if (m_aggregationDuration < UsageUtils.USAGE_AGGREGATION_RANGE_MIN) {
+                s_logger.warn("Usage stats job aggregation range is to small, using the minimum value of " + UsageUtils.USAGE_AGGREGATION_RANGE_MIN);
+                m_aggregationDuration = UsageUtils.USAGE_AGGREGATION_RANGE_MIN;
             }
             m_hostname = InetAddress.getLocalHost().getHostName() + "/" + InetAddress.getLocalHost().getHostAddress();
         } catch (NumberFormatException ex) {
@@ -924,9 +924,8 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
     }
     
     private boolean isVolumeEvent(String eventType) {
-        if (eventType == null) return false;
-        return (eventType.equals(EventTypes.EVENT_VOLUME_CREATE) ||
-                eventType.equals(EventTypes.EVENT_VOLUME_DELETE));
+        return eventType != null &&
+            (eventType.equals(EventTypes.EVENT_VOLUME_CREATE) || eventType.equals(EventTypes.EVENT_VOLUME_DELETE) || eventType.equals(EventTypes.EVENT_VOLUME_RESIZE));
     }
 
     private boolean isTemplateEvent(String eventType) {
@@ -1166,16 +1165,22 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
         UsageEventDetailsVO cpuNumber = _usageEventDetailsDao.findDetail(eventId, UsageEventVO.DynamicParameters.cpuNumber.name());
         if (cpuNumber != null) {
             usageInstance.setCpuCores(Long.parseLong(cpuNumber.getValue()));
+        } else {
+            usageInstance.setCpuCores(null);
         }
 
         UsageEventDetailsVO cpuSpeed = _usageEventDetailsDao.findDetail(eventId, UsageEventVO.DynamicParameters.cpuSpeed.name());
         if (cpuSpeed != null) {
             usageInstance.setCpuSpeed(Long.parseLong(cpuSpeed.getValue()));
+        } else {
+            usageInstance.setCpuSpeed(null);
         }
 
         UsageEventDetailsVO memory = _usageEventDetailsDao.findDetail(eventId, UsageEventVO.DynamicParameters.memory.name());
         if (memory != null) {
             usageInstance.setMemory(Long.parseLong(memory.getValue()));
+        } else {
+            usageInstance.setMemory(null);
         }
         m_usageInstanceDao.persist(usageInstance);
     }
@@ -1307,21 +1312,9 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
     }
 
     private void createVolumeHelperEvent(UsageEventVO event) {
-        
-        Long doId = -1L;
-        long zoneId = -1L;
-        Long templateId = -1L;
-        long size = -1L;
-        
         long volId = event.getResourceId();
-        if (EventTypes.EVENT_VOLUME_CREATE.equals(event.getType())) {
-            doId = event.getOfferingId();
-            zoneId = event.getZoneId();
-            templateId = event.getTemplateId();
-            size = event.getSize();
-        }
 
-        if (EventTypes.EVENT_VOLUME_CREATE.equals(event.getType())) {
+        if (EventTypes.EVENT_VOLUME_CREATE.equals(event.getType()) || EventTypes.EVENT_VOLUME_RESIZE.equals(event.getType())) {
             SearchCriteria<UsageVolumeVO> sc = m_usageVolumeDao.createSearchCriteria();
             sc.addAnd("accountId", SearchCriteria.Op.EQ, event.getAccountId());
             sc.addAnd("id", SearchCriteria.Op.EQ, volId);
@@ -1331,6 +1324,7 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
                 //This is a safeguard to avoid double counting of volumes.
                 s_logger.error("Found duplicate usage entry for volume: " + volId + " assigned to account: " + event.getAccountId() + "; marking as deleted...");
             }
+            //an entry exists if it is a resize volume event. marking the existing deleted and creating a new one in the case of resize.
             for (UsageVolumeVO volumesVO : volumesVOs) {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("deleting volume: " + volumesVO.getId() + " from account: " + volumesVO.getAccountId());
@@ -1342,7 +1336,7 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
                 s_logger.debug("create volume with id : " + volId + " for account: " + event.getAccountId());
             }
             Account acct = m_accountDao.findByIdIncludingRemoved(event.getAccountId());
-            UsageVolumeVO volumeVO = new UsageVolumeVO(volId, zoneId, event.getAccountId(), acct.getDomainId(), doId, templateId, size, event.getCreateDate(), null);
+            UsageVolumeVO volumeVO = new UsageVolumeVO(volId, event.getZoneId(), event.getAccountId(), acct.getDomainId(), event.getOfferingId(), event.getTemplateId(), event.getSize(), event.getCreateDate(), null);
             m_usageVolumeDao.persist(volumeVO);
         } else if (EventTypes.EVENT_VOLUME_DELETE.equals(event.getType())) {
             SearchCriteria<UsageVolumeVO> sc = m_usageVolumeDao.createSearchCriteria();

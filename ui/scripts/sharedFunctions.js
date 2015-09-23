@@ -20,6 +20,7 @@ var g_role = null; // roles - root, domain-admin, ro-admin, user
 var g_username = null;
 var g_account = null;
 var g_domainid = null;
+var g_hostid = null;
 var g_loginCmdText = null;
 var g_enableLogging = false;
 var g_timezoneoffset = null;
@@ -475,7 +476,7 @@ var addGuestNetworkDialog = {
                 networkOfferingId: {
                     label: 'label.network.offering',
                     docID: 'helpGuestNetworkZoneNetworkOffering',
-                    dependsOn: ['zoneId', 'scope'],
+                    dependsOn: ['zoneId', 'physicalNetworkId', 'scope'],
                     select: function(args) {                    	
                     	if(args.$form.find('.form-item[rel=zoneId]').find('select').val() == null || args.$form.find('.form-item[rel=zoneId]').find('select').val().length == 0) {
                     		args.response.success({

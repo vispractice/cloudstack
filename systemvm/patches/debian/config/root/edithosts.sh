@@ -99,7 +99,7 @@ if [ $dnsmasq_managed_lease -eq 1 ]
 then
   #release previous dhcp lease if present
   logger -t cloud "edithosts: releasing $ipv4"
-  dhcp_release eth0 $ipv4 $(grep "$ipv4 " $DHCP_LEASES | awk '{print $2}') > /dev/null 2>&1
+  dhcp_release $(ip route get "$ipv4/32" | grep " dev " | sed -e "s/^.* dev \([^ ]*\) .*$/\1/g") $ipv4 $(grep "$ipv4 " $DHCP_LEASES | awk '{print $2}') > /dev/null 2>&1
   logger -t cloud "edithosts: released $ipv4"
 fi
 
@@ -121,8 +121,7 @@ then
   sed -i  /$ipv6],/d $DHCP_HOSTS
 fi
 # don't want to do this in the future, we can have same VM with multiple nics/entries
-#sed -i  /$host,/d $DHCP_HOSTS
-
+sed -i  /$host,/d $DHCP_HOSTS
 
 #put in the new entry
 if [ $ipv4 ]

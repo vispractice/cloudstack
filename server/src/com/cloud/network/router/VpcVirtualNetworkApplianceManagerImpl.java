@@ -805,7 +805,7 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
                 PlugNicCommand plugNicCmd = new PlugNicCommand(getNicTO(router, guestNic.getNetworkId(), null), router.getInstanceName(), router.getType());
                 cmds.addCommand(plugNicCmd);
                 
-                if (!_networkModel.isPrivateGateway(guestNic)) {
+                if (!_networkModel.isPrivateGateway(guestNic.getNetworkId())) {
                     //set guest network
                     VirtualMachine vm = _vmDao.findById(router.getId());
                     NicProfile nicProfile = _networkModel.getNicProfile(vm, guestNic.getNetworkId(), null);
@@ -1237,6 +1237,9 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
         //3) allocate nic for guest gateway if needed
         List<? extends Network> guestNetworks = _vpcMgr.getVpcNetworks(vpcId);
         for (Network guestNetwork : guestNetworks) {
+            if (_networkModel.isPrivateGateway(guestNetwork.getId())) {
+                continue;
+            }
             if (guestNetwork.getState() == Network.State.Implemented || guestNetwork.getState() == Network.State.Setup) {
                 NicProfile guestNic = createGuestNicProfileForVpcRouter(guestNetwork);
                 networks.put(guestNetwork, new ArrayList<NicProfile>(Arrays.asList(guestNic)));
@@ -1516,6 +1519,13 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
         			router.getState(), DataCenter.class, router.getDataCenterId());
         }
 
+        return true;
+    }
+
+    @Override
+    public boolean postStateTransitionEvent(State oldState, VirtualMachine.Event event, State newState, VirtualMachine vo, boolean status, Object opaque) {
+        // Without this VirtualNetworkApplianceManagerImpl.postStateTransitionEvent() gets called twice as part of listeners -
+        // once from VpcVirtualNetworkApplianceManagerImpl and once from VirtualNetworkApplianceManagerImpl itself
         return true;
     }
 }

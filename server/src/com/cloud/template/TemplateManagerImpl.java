@@ -83,6 +83,7 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
+import org.apache.cloudstack.storage.to.TemplateObjectTO;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -159,6 +160,7 @@ import com.cloud.storage.download.DownloadMonitor;
 import com.cloud.storage.secondary.SecondaryStorageVmManager;
 import com.cloud.storage.upload.UploadMonitor;
 import com.cloud.template.TemplateAdapter.TemplateAdapterType;
+import com.cloud.template.VirtualMachineTemplate.BootloaderType;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountService;
@@ -184,6 +186,7 @@ import com.cloud.vm.UserVmManager;
 import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine.State;
+import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
@@ -490,6 +493,38 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         TemplateInfo templateObject = _tmplFactory.getTemplate(templateId, tmpltStore);
 
         return tmpltStore.createEntityExtractUrl(templateObject.getInstallPath(), template.getFormat(), templateObject);
+    }
+
+    @Override
+    public void prepareIsoForVmProfile(VirtualMachineProfile profile) {
+        UserVmVO vm = _userVmDao.findById(profile.getId());
+        if (vm.getIsoId() != null) {
+            TemplateInfo template = prepareIso(vm.getIsoId(), vm.getDataCenterId());
+            if (template == null){
+                s_logger.error("Failed to prepare ISO on secondary or cache storage");
+                throw new CloudRuntimeException("Failed to prepare ISO on secondary or cache storage");
+            }
+            if (template.isBootable()) {
+                profile.setBootLoaderType(BootloaderType.CD);
+            }
+
+            GuestOSVO guestOS = _guestOSDao.findById(template.getGuestOSId());
+            String displayName = null;
+            if (guestOS != null) {
+                displayName = guestOS.getDisplayName();
+            }
+
+            TemplateObjectTO iso = (TemplateObjectTO)template.getTO();
+            iso.setGuestOsType(displayName);
+            DiskTO disk = new DiskTO(iso, 3L, null, Volume.Type.ISO);
+            profile.addDisk(disk);
+        } else {
+            TemplateObjectTO iso = new TemplateObjectTO();
+            iso.setFormat(ImageFormat.ISO);
+            DiskTO disk = new DiskTO(iso, 3L, null, Volume.Type.ISO);
+            profile.addDisk(disk);
+        }
+        
     }
 
     public void prepareTemplateInAllStoragePools(final VMTemplateVO template, long zoneId) {
@@ -1092,9 +1127,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             throw new InvalidParameterValueException("Please specify a valid template.");
         }
 
-        template.setState(VirtualMachineTemplate.State.Inactive);
-        _tmpltDao.update(template.getId(), template);
-
         TemplateAdapter adapter = getAdapter(template.getHypervisorType());
         TemplateProfile profile = adapter.prepareDelete(cmd);
         return adapter.delete(profile);
@@ -1127,9 +1159,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         if (zoneId != null && (_dataStoreMgr.getImageStore(zoneId) == null)) {
             throw new InvalidParameterValueException("Failed to find a secondary storage store in the specified zone.");
         }
-
-        template.setState(VirtualMachineTemplate.State.Inactive);
-        _tmpltDao.update(template.getId(), template);
 
         TemplateAdapter adapter = getAdapter(template.getHypervisorType());
         TemplateProfile profile = adapter.prepareDelete(cmd);
@@ -1665,7 +1694,8 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                     }
                 }
             }
-            if(cmd.getDetails() != null) {
+            if (cmd.getDetails() != null) {
+                details.remove("Encrypted.Password"); // new password will be generated during vm deployment from password enabled template
                 details.putAll(cmd.getDetails());
             }
             if( !details.isEmpty()) {
@@ -1790,6 +1820,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         Boolean isRoutingTemplate = cmd.isRoutingType();
         Boolean bootable = cmd.isBootable();
         Integer sortKey = cmd.getSortKey();
+        Map details = cmd.getDetails();
         Account account = CallContext.current().getCallingAccount();
 
         // verify that template exists
@@ -1816,7 +1847,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         }
 
         boolean updateNeeded = !(name == null && displayText == null && format == null && guestOSId == null && passwordEnabled == null
-                && bootable == null && sortKey == null && isDynamicallyScalable == null && isRoutingTemplate == null);
+                && bootable == null && sortKey == null && isDynamicallyScalable == null && isRoutingTemplate == null && details == null);
         if (!updateNeeded) {
             return template;
         }
@@ -1875,6 +1906,11 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             } else {
                 template.setTemplateType(TemplateType.USER);
             }
+        }
+
+        if (details != null && !details.isEmpty()) {
+            template.setDetails(details);
+            _tmpltDao.saveDetails(template);
         }
 
         _tmpltDao.update(id, template);

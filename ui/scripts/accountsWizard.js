@@ -191,6 +191,8 @@
                 password = args.data.password;
                 if (md5Hashed) {
                     password = $.md5(password);
+                } else {
+                	password = todb(password);
                 }
                 array1.push("&password=" + password);
             }
@@ -198,10 +200,10 @@
             array1.push("&domainid=" + args.data.domainid);
 
             var account = args.data.account;
-            if (account === null || account.length === 0) {
-                account = args.username;
+
+            if (account !== null && account.length > 0) {
+                array1.push("&account=" + account);
             }
-            array1.push("&account=" + account);
 
             var accountType = args.data.accounttype;
             if (args.data.accounttype == "1" && args.data.domainid != rootDomainId) { //if account type is admin, but domain is not Root domain
@@ -225,6 +227,7 @@
                     $.ajax({
                         url: createURL('importLdapUsers' + array1.join("")),
                         dataType: "json",
+                        type: "POST",
                         async: false,
                         success: function(json) {
                             var count = json.ldapuserresponse.count;
@@ -240,6 +243,7 @@
                     $.ajax({
                         url: createURL('ldapCreateAccount' + array1.join("")),
                         dataType: "json",
+                        type: "POST",
                         async: false,
                         success: function(json) {
                             var item = json.createaccountresponse.account;
@@ -256,6 +260,7 @@
                 $.ajax({
                     url: createURL('createAccount' + array1.join("")),
                     dataType: "json",
+                    type: "POST",
                     async: false,
                     success: function(json) {
                         var item = json.createaccountresponse.account;

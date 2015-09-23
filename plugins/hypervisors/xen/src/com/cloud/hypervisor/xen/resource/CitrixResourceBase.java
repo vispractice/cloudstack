@@ -16,46 +16,6 @@
 // under the License.
 package com.cloud.hypervisor.xen.resource;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Queue;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.ejb.Local;
-import javax.naming.ConfigurationException;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
-import org.apache.cloudstack.storage.to.TemplateObjectTO;
-import org.apache.cloudstack.storage.to.VolumeObjectTO;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
-import org.apache.xmlrpc.XmlRpcException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
 import com.cloud.agent.IAgentControl;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.AttachIsoCommand;
@@ -273,13 +233,50 @@ import com.xensource.xenapi.Types.VmBadPowerState;
 import com.xensource.xenapi.Types.VmPowerState;
 import com.xensource.xenapi.Types.XenAPIException;
 import com.xensource.xenapi.VBD;
-import com.xensource.xenapi.VBDMetrics;
 import com.xensource.xenapi.VDI;
 import com.xensource.xenapi.VIF;
 import com.xensource.xenapi.VLAN;
 import com.xensource.xenapi.VM;
 import com.xensource.xenapi.VMGuestMetrics;
 import com.xensource.xenapi.XenAPIObject;
+import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
+import org.apache.cloudstack.storage.to.TemplateObjectTO;
+import org.apache.cloudstack.storage.to.VolumeObjectTO;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
+import org.apache.xmlrpc.XmlRpcException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import javax.ejb.Local;
+import javax.naming.ConfigurationException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * CitrixResourceBase encapsulates the calls to the XenServer Xapi process
@@ -430,23 +427,12 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     }
 
     protected boolean pingXenServer() {
-        Session slaveSession = null;
-        Connection slaveConn = null;
+        Connection conn = getConnection();
         try {
-            URL slaveUrl = null;
-            slaveUrl = _connPool.getURL(_host.ip);
-            slaveConn = new Connection(slaveUrl, 10);
-            slaveSession = _connPool.slaveLocalLoginWithPassword(slaveConn, _username, _password);
+            callHostPlugin(conn, "echo", "main");
             return true;
         } catch (Exception e) {
-        } finally {
-            if( slaveSession != null ){
-                try{
-                    Session.localLogout(slaveConn);
-                } catch (Exception e) {
-                }
-                slaveConn.dispose();
-            }
+            s_logger.debug("cannot ping host " + _host.ip + " due to " + e.toString(),  e);
         }
         return false;
     }
@@ -2703,23 +2689,15 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
             if (type.equalsIgnoreCase("host")) {
 
-                if (param.contains("pif_eth0_rx")) {
-                    hostStats.setNetworkReadKBs(getDataAverage(dataNode, col, numRows));
-                }
-
-                if (param.contains("pif_eth0_tx")) {
-                    hostStats.setNetworkWriteKBs(getDataAverage(dataNode, col, numRows));
-                }
-
-                if (param.contains("memory_total_kib")) {
+                if (param.matches("pif_eth0_rx")) {
+                    hostStats.setNetworkReadKBs(getDataAverage(dataNode, col, numRows)/1000);
+                } else if (param.matches("pif_eth0_tx")) {
+                    hostStats.setNetworkWriteKBs(getDataAverage(dataNode, col, numRows)/1000);
+                } else if (param.contains("memory_total_kib")) {
                     hostStats.setTotalMemoryKBs(getDataAverage(dataNode, col, numRows));
-                }
-
-                if (param.contains("memory_free_kib")) {
+                } else if (param.contains("memory_free_kib")) {
                     hostStats.setFreeMemoryKBs(getDataAverage(dataNode, col, numRows));
-                }
-
-                if (param.contains("cpu")) {
+                } else if (param.matches("cpu_avg")) {
                     // hostStats.setNumCpus(hostStats.getNumCpus() + 1);
                     hostStats.setCpuUtilization(hostStats.getCpuUtilization() + getDataAverage(dataNode, col, numRows));
                 }
@@ -2830,13 +2808,16 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                 if (param.contains("cpu")) {
                     vmStatsAnswer.setNumCPUs(vmStatsAnswer.getNumCPUs() + 1);
                     vmStatsAnswer.setCPUUtilization(((vmStatsAnswer.getCPUUtilization() + getDataAverage(dataNode, col, numRows))));
-                } else if (param.matches("vif_\\d_rx")) {
-                    vmStatsAnswer.setNetworkReadKBs(vmStatsAnswer.getNetworkReadKBs() + (getDataAverage(dataNode, col, numRows)/(8*2)));
-                } else if (param.matches("vif_\\d_tx")) {
-                    vmStatsAnswer.setNetworkWriteKBs(vmStatsAnswer.getNetworkWriteKBs() + (getDataAverage(dataNode, col, numRows)/(8*2)));
+                } else if (param.matches("vif_\\d*_rx")) {
+                    vmStatsAnswer.setNetworkReadKBs(vmStatsAnswer.getNetworkReadKBs() + (getDataAverage(dataNode, col, numRows)/1000));
+                } else if (param.matches("vif_\\d*_tx")) {
+                    vmStatsAnswer.setNetworkWriteKBs(vmStatsAnswer.getNetworkWriteKBs() + (getDataAverage(dataNode, col, numRows)/1000));
+                } else if (param.matches("vbd_.*_read")) {
+                    vmStatsAnswer.setDiskReadKBs(vmStatsAnswer.getDiskReadKBs() + (getDataAverage(dataNode, col, numRows)/1000));
+                } else if (param.matches("vbd_.*_write")) {
+                    vmStatsAnswer.setDiskWriteKBs(vmStatsAnswer.getDiskWriteKBs() + (getDataAverage(dataNode, col, numRows)/1000));
                 }
             }
-
         }
 
         for (String vmUUID : vmResponseMap.keySet()) {
@@ -2851,30 +2832,6 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                 s_logger.debug("Vm cpu utilization " + vmStatsAnswer.getCPUUtilization());
             }
         }
-
-        try {
-            for (String vmUUID : vmUUIDs) {
-                VM vm = VM.getByUuid(conn, vmUUID);
-                VmStatsEntry stats = vmResponseMap.get(vmUUID);
-                double diskReadKBs = 0;
-                double diskWriteKBs = 0;
-                for (VBD vbd : vm.getVBDs(conn)) {
-                    VBDMetrics record = vbd.getMetrics(conn);
-                    diskReadKBs += record.getIoReadKbs(conn);
-                    diskWriteKBs += record.getIoWriteKbs(conn);
-                }
-                if (stats == null) {
-                    stats = new VmStatsEntry();
-                }
-                stats.setDiskReadKBs(diskReadKBs);
-                stats.setDiskWriteKBs(diskWriteKBs);
-                vmResponseMap.put(vmUUID, stats);
-            }
-        } catch (Exception e) {
-            s_logger.warn("Error while collecting disk stats from : ", e);
-            return null;
-        }
-
         return vmResponseMap;
     }
 
@@ -5053,8 +5010,16 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
     protected SetupAnswer execute(SetupCommand cmd) {
         Connection conn = getConnection();
-        setupServer(conn);
         try {
+            Map<Pool, Pool.Record> poolRecs = Pool.getAllRecords(conn);
+            if (poolRecs.size() != 1) {
+                throw new CloudRuntimeException("There are " + poolRecs.size() + " pool for host :" + _host.uuid);
+            }
+            Host master = poolRecs.values().iterator().next().master;
+            setupServer(conn, master);
+            Host host = Host.getByUuid(conn, _host.uuid);
+            setupServer(conn, host);
+
             if (!setIptables(conn)) {
                 s_logger.warn("set xenserver Iptable failed");
                 return null;
@@ -5070,7 +5035,6 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             }
 
             cleanupTemplateSR(conn);
-            Host host = Host.getByUuid(conn, _host.uuid);
             try {
                 if (cmd.useMultipath()) {
                     // the config value is set to true
@@ -5177,14 +5141,11 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     }
 
     /* return : if setup is needed */
-    protected boolean setupServer(Connection conn) {
+    protected boolean setupServer(Connection conn, Host host) {
         String packageVersion = CitrixResourceBase.class.getPackage().getImplementationVersion();
         String version = this.getClass().getName() + "-" + ( packageVersion == null ? Long.toString(System.currentTimeMillis()) : packageVersion );
 
         try {
-            Host host = Host.getByUuid(conn, _host.uuid);
-            /* enable host in case it is disabled somehow */
-            host.enable(conn);
             /* push patches to XenServer */
             Host.Record hr = host.getRecord(conn);
 
@@ -6095,9 +6056,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     }
 
     private void CheckXenHostInfo() throws ConfigurationException {
-        Connection conn = _connPool.slaveConnect(_host.ip, _username, _password);
+        Connection conn = _connPool.getConnect(_host.ip, _username, _password);
         if( conn == null ) {
-            throw new ConfigurationException("Can not create slave connection to " + _host.ip);
+            throw new ConfigurationException("Can not create connection to " + _host.ip);
         }
         try {
             Host.Record hostRec = null;
@@ -6117,7 +6078,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             }
         } finally {
             try {
-                Session.localLogout(conn);
+                Session.logout(conn);
             } catch (Exception e) {
             }
         }
@@ -7413,35 +7374,11 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
             Host.Record hostr = poolr.master.getRecord(conn);
             if (_host.uuid.equals(hostr.uuid)) {
-            	boolean mastermigrated = false;
                 Map<Host, Host.Record> hostMap = Host.getAllRecords(conn);
-                if (hostMap.size() != 1) {
-                	Host newMaster = null;
-                	Host.Record newMasterRecord = null;
-                	for (Map.Entry<Host, Host.Record> entry : hostMap.entrySet()) {
-                		if (_host.uuid.equals(entry.getValue().uuid)) {
-                			continue;
-                		}
-                		newMaster = entry.getKey();
-                		newMasterRecord = entry.getValue();
-                		s_logger.debug("New master for the XenPool is " + newMasterRecord.uuid + " : " + newMasterRecord.address);
-                		try {
-                			_connPool.switchMaster(_host.ip, _host.pool, conn, newMaster, _username, _password, _wait);
-                			mastermigrated = true;
-                			break;
-	                    } catch (Exception e) {
-	                        s_logger.warn("Unable to switch the new master to " + newMasterRecord.uuid + ": " + newMasterRecord.address + " due to " + e.toString());
-                		}
-                    }
-                } else {
-                    s_logger.debug("This is last host to eject, so don't need to eject: " + hostuuid);
-                    return new Answer(cmd);
-                }
-                if ( !mastermigrated ) {
-                	String msg = "this host is master, and cannot designate a new master";
-                	s_logger.debug(msg);
+                if (hostMap.size() > 1) {
+                    String msg = "This host is XS master, please designate a new XS master throught XenCenter before you delete this host from CS";
+                    s_logger.debug(msg);
                     return new Answer(cmd, false, msg);
-
                 }
             }
 

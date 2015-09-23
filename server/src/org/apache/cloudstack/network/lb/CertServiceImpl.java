@@ -278,7 +278,6 @@ public class CertServiceImpl implements  CertService {
         response.setObjectName("sslcert");
         response.setId(cert.getUuid());
         response.setCertificate(cert.getCertificate());
-        response.setPrivatekey(cert.getKey());
         response.setFingerprint(cert.getFingerPrint());
         response.setAccountName(account.getAccountName());
 
@@ -306,15 +305,6 @@ public class CertServiceImpl implements  CertService {
             ((X509Certificate)cert).checkValidity();
         } catch (Exception e) {
             throw new IllegalArgumentException("Certificate expired or not valid", e);
-        }
-
-        if( !chain_present ) {
-            PublicKey pubKey = cert.getPublicKey();
-            try {
-                cert.verify(pubKey);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("No chain given and certificate not self signed", e);
-            }
         }
     }
 
@@ -357,8 +347,6 @@ public class CertServiceImpl implements  CertService {
     private void validateChain(List<Certificate> chain, Certificate cert) {
 
         List<Certificate> certs = new ArrayList<Certificate>();
-        List<Certificate> root = new ArrayList<Certificate>();
-
         Set<TrustAnchor> anchors = new HashSet<TrustAnchor>();
 
 
@@ -374,15 +362,8 @@ public class CertServiceImpl implements  CertService {
             Principal subject = xCert.getSubjectDN();
             Principal issuer = xCert.getIssuerDN();
 
-            if( issuer != null &&  subject.equals(issuer) ) {
-                root.add(c);
-                anchors.add(new TrustAnchor(xCert,null));
-            }
+           anchors.add(new TrustAnchor(xCert, null));
         }
-
-        if ( root.size() == 0 )
-            throw new IllegalArgumentException("No root certificates found for certificate chain",null);
-
 
         X509CertSelector target = new X509CertSelector();
         target.setCertificate((X509Certificate)cert);

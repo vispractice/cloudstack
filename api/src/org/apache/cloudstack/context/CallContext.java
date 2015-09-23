@@ -113,7 +113,20 @@ public class CallContext {
     }
 
     public static CallContext current() {
-        return s_currentContext.get();
+        CallContext context = s_currentContext.get();
+
+        // TODO other than async job and api dispatches, there are many system background running threads
+        // that do not setup CallContext at all, however, many places in code that are touched by these background tasks
+        // assume not-null CallContext. Following is a fix to address therefore caused NPE problems
+        //
+        // There are security implications with this. It assumes that all system background running threads are
+        // indeed have no problem in running under system context.
+        //
+        if (context == null) {
+            context = registerSystemCallContextOnceOnly();
+        }
+
+        return context;
     }
 
     /**
@@ -229,7 +242,7 @@ public class CallContext {
         String sessionIdOnStack = null;
         String sessionIdPushedToNDC = "ctx-" + UuidUtils.first(contextId);
         while ((sessionIdOnStack = NDC.pop()) != null) {
-            if (sessionIdPushedToNDC.equals(sessionIdOnStack)) {
+            if (sessionIdOnStack.isEmpty() || sessionIdPushedToNDC.equals(sessionIdOnStack)) {
                 break;
             }
             if (s_logger.isTraceEnabled()) {

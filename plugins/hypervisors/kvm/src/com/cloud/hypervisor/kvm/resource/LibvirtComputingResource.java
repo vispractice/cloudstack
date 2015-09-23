@@ -2987,6 +2987,7 @@ ServerResource {
         }
 
         List<InterfaceDef> ifaces = null;
+        List<DiskDef> disks = null;
 
         Domain dm = null;
         Connect dconn = null;
@@ -2996,6 +2997,7 @@ ServerResource {
         try {
             conn = LibvirtConnection.getConnectionByVmName(cmd.getVmName());
             ifaces = getInterfaces(conn, vmName);
+            disks = getDisks(conn, vmName);
             dm = conn.domainLookupByName(vmName);
             /*
                 We replace the private IP address with the address of the destination host.
@@ -3021,7 +3023,9 @@ ServerResource {
             destDomain = dm.migrate(dconn, (1 << 0) | (1 << 3), xmlDesc, vmName, "tcp:"
                     + cmd.getDestinationIp(), _migrateSpeed);
 
-            _storagePoolMgr.disconnectPhysicalDisksViaVmSpec(cmd.getVirtualMachine());
+            for (DiskDef disk : disks) {
+                cleanupDisk(disk);
+            }
         } catch (LibvirtException e) {
             s_logger.debug("Can't migrate domain: " + e.getMessage());
             result = e.getMessage();
@@ -3071,7 +3075,7 @@ ServerResource {
 
         NicTO[] nics = vm.getNics();
 
-        boolean success = false;
+        boolean skipDisconnect = false;
 
         try {
             Connect conn = LibvirtConnection.getConnectionByVmName(vm.getName());
@@ -3087,13 +3091,16 @@ ServerResource {
                 }
             }
 
-            _storagePoolMgr.connectPhysicalDisksViaVmSpec(vm);
+            if (!_storagePoolMgr.connectPhysicalDisksViaVmSpec(vm)) {
+                skipDisconnect = true;
+                return new PrepareForMigrationAnswer(cmd, "failed to connect physical disks to host");
+            }
 
             synchronized (_vms) {
                 _vms.put(vm.getName(), State.Migrating);
             }
 
-            success = true;
+            skipDisconnect = true;
 
             return new PrepareForMigrationAnswer(cmd);
         } catch (LibvirtException e) {
@@ -3103,7 +3110,7 @@ ServerResource {
         } catch (URISyntaxException e) {
             return new PrepareForMigrationAnswer(cmd, e.toString());
         } finally {
-            if (!success) {
+            if (!skipDisconnect) {
                 _storagePoolMgr.disconnectPhysicalDisksViaVmSpec(vm);
             }
         }
@@ -3116,8 +3123,7 @@ ServerResource {
     private Answer execute(GetHostStatsCommand cmd) {
         final Script cpuScript = new Script("/bin/bash", s_logger);
         cpuScript.add("-c");
-        cpuScript
-        .add("idle=$(top -b -n 1|grep Cpu\\(s\\):|cut -d% -f4|cut -d, -f2);echo $idle");
+        cpuScript.add("idle=$(top -b -n 1| awk -F, '/^[%]*[Cc]pu/{$0=$4; gsub(/[^0-9.,]+/,\"\"); print }'); echo $idle");
 
         final OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
         String result = cpuScript.execute(parser);
@@ -3651,7 +3657,9 @@ ServerResource {
 
             createVbd(conn, vmSpec, vmName, vm);
 
-            _storagePoolMgr.connectPhysicalDisksViaVmSpec(vmSpec);
+            if (!_storagePoolMgr.connectPhysicalDisksViaVmSpec(vmSpec)) {
+                return new StartAnswer(cmd, "Failed to connect physical disks to host");
+            }
 
             createVifs(vmSpec, vm);
 
@@ -3684,24 +3692,21 @@ ServerResource {
 
             // pass cmdline info to system vms
             if (vmSpec.getType() != VirtualMachine.Type.User) {
-                if ((conn.getVersion() < 1001000)) { // CLOUDSTACK-2823: try passCmdLine some times if kernel < 2.6.34 and qemu < 1.1.0 on hypervisor (for instance, CentOS 6.4)
-                    //wait for 5 minutes at most
-                    String controlIp = null;
-                    for (NicTO nic : nics) {
-                        if (nic.getType() == TrafficType.Control) {
-                            controlIp = nic.getIp();
-                        }
+                //wait and try passCmdLine for 5 minutes at most for CLOUDSTACK-2823
+                String controlIp = null;
+                for (NicTO nic : nics) {
+                    if (nic.getType() == TrafficType.Control) {
+                        controlIp = nic.getIp();
+                        break;
                     }
-                    for (int count = 0; count < 30; count ++) {
-                        passCmdLine(vmName, vmSpec.getBootArgs());
-                        //check router is up?
-                        boolean result = _virtRouterResource.connect(controlIp, 1, 5000);
-                        if (result) {
-                            break;
-                        }
+                }
+                for (int count = 0; count < 30; count++) {
+                    passCmdLine(vmName, vmSpec.getBootArgs());
+                    //check router is up?
+                    boolean result = _virtRouterResource.connect(controlIp, 1, 5000);
+                    if (result) {
+                        break;
                     }
-                } else {
-                    passCmdLine(vmName, vmSpec.getBootArgs() );
                 }
             }
 

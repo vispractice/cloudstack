@@ -948,9 +948,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         }
 
         // Check if the IP range is valid
-        if (startIp != null || endIp != null) {
-            checkIpRange(startIp, endIp, cidrAddress, cidrSize);
-        }
+        checkIpRange(startIp, endIp, cidrAddress, cidrSize);
 
         // Check if the IP range overlaps with the public ip
         checkOverlapPublicIpRange(zoneId, startIp, endIp);
@@ -1011,8 +1009,8 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
             @Override
             public void doInTransactionWithoutResult(TransactionStatus status) {
                 // Delete private ip addresses for the pod if there are any
-                List<DataCenterIpAddressVO> privateIps = _privateIpAddressDao.listByPodIdDcId(Long.valueOf(podId),
-                        pod.getDataCenterId());
+                List<DataCenterIpAddressVO> privateIps = _privateIpAddressDao.listByPodIdDcId(podId, pod.getDataCenterId());
+                        
                 if (!privateIps.isEmpty()) {
                     if (!(_privateIpAddressDao.deleteIpAddressByPod(podId))) {
                         throw new CloudRuntimeException("Failed to cleanup private ip addresses for pod " + podId);
@@ -1534,12 +1532,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
     @ActionEvent(eventType = EventTypes.EVENT_ZONE_DELETE, eventDescription = "deleting zone", async = false)
     public boolean deleteZone(DeleteZoneCmd cmd) {
 
-        Long userId = CallContext.current().getCallingUserId();
         final Long zoneId = cmd.getId();
-
-        if (userId == null) {
-            userId = Long.valueOf(User.UID_SYSTEM);
-        }
 
         // Make sure the zone exists
         if (!validZone(zoneId)) {
@@ -2083,7 +2076,6 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
             }
         } else {
             allowNetworkRate = true;
-            ;
         }
 
         if (cmd.getNetworkRate() != null && !allowNetworkRate) {
@@ -3145,83 +3137,66 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         }
 
         // Check if the VLAN has any allocated public IPs
-        long allocIpCount = _publicIpAddressDao.countIPs(vlanRange.getDataCenterId(), vlanDbId, true);
         List<IPAddressVO> ips = _publicIpAddressDao.listByVlanId(vlanDbId);
-        boolean success = true;
-        if (allocIpCount > 0) {
-            if (isAccountSpecific) {
-                try {
-                    vlanRange = _vlanDao.acquireInLockTable(vlanDbId, 30);
-                    if (vlanRange == null) {
-                        throw new CloudRuntimeException("Unable to acquire vlan configuration: " + vlanDbId);
-                    }
-
-                    if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("lock vlan " + vlanDbId + " is acquired");
-                    }
-                    for (IPAddressVO ip : ips) {
-                        if (ip.isOneToOneNat()) {
-                            throw new InvalidParameterValueException(
-                                    "Can't delete account specific vlan "
-                                            + vlanDbId
-                                            + " as ip "
-                                            + ip
-                                            + " belonging to the range is used for static nat purposes. Cleanup the rules first");
-                        }
-
-                        if (ip.isSourceNat()) {
-                            throw new InvalidParameterValueException(
-                                    "Can't delete account specific vlan "
-                                            + vlanDbId
-                                            + " as ip "
-                                            + ip
-                                            + " belonging to the range is a source nat ip for the network id="
-                                            + ip.getSourceNetworkId()
-                                            + ". IP range with the source nat ip address can be removed either as a part of Network, or account removal");
-                        }
-
-                        if (_firewallDao.countRulesByIpId(ip.getId()) > 0) {
-                            throw new InvalidParameterValueException("Can't delete account specific vlan " + vlanDbId
-                                    + " as ip " + ip
-                                    + " belonging to the range has firewall rules applied. Cleanup the rules first");
-                        }
-                        // release public ip address here
-                        success = success && _ipAddrMgr.disassociatePublicIpAddress(ip.getId(), userId, caller);
-                    }
-                    if (!success) {
-                        s_logger.warn("Some ip addresses failed to be released as a part of vlan " + vlanDbId
-                                + " removal");
-                    }
-                    else {
-                        for (IPAddressVO ip : ips) {
-                            UsageEventUtils.publishUsageEvent(EventTypes.EVENT_NET_IP_RELEASE, acctVln.get(0).getId(), ip
-                                    .getDataCenterId(), ip.getId(), ip.getAddress().toString(), ip.isSourceNat(), vlanRange
-                                    .getVlanType().toString(), ip.getSystem(), ip.getClass().getName(), ip.getUuid());
-                        }
-                    }
-                } finally {
-                    _vlanDao.releaseFromLockTable(vlanDbId);
-                }
+        if (isAccountSpecific) {
+          try {
+            vlanRange = _vlanDao.acquireInLockTable(vlanDbId, 30);
+            if (vlanRange == null) {
+              throw new CloudRuntimeException("Unable to acquire vlan configuration: " + vlanDbId);
             }
-            else {   // !isAccountSpecific
-                NicIpAliasVO ipAlias = _nicIpAliasDao.findByGatewayAndNetworkIdAndState(vlanRange.getVlanGateway(), vlanRange.getNetworkId(), NicIpAlias.state.active);
-                //check if the ipalias belongs to the vlan range being deleted.
-                if (ipAlias != null && vlanDbId == _publicIpAddressDao.findByIpAndSourceNetworkId(vlanRange.getNetworkId(), ipAlias.getIp4Address()).getVlanId()) {
-                    throw new InvalidParameterValueException("Cannot delete vlan range "+vlanDbId+" as "+ipAlias.getIp4Address() +
-                            "is being used for providing dhcp service in this subnet. Delete all VMs in this subnet and try again");
-                }
-                allocIpCount = _publicIpAddressDao.countIPs(vlanRange.getDataCenterId(), vlanDbId, true);
-                if (allocIpCount > 0) {
-                    throw new InvalidParameterValueException(allocIpCount + "  Ips are in use. Cannot delete this vlan");
-                }
+
+            if (s_logger.isDebugEnabled()) {
+              s_logger.debug("lock vlan " + vlanDbId + " is acquired");
             }
+            for (IPAddressVO ip : ips) {
+              boolean success = true;
+              if (ip.isOneToOneNat()) {
+                throw new InvalidParameterValueException("Can't delete account specific vlan " + vlanDbId + " as ip " + ip
+                        + " belonging to the range is used for static nat purposes. Cleanup the rules first");
+              }
+
+              if (ip.isSourceNat()) {
+                throw new InvalidParameterValueException("Can't delete account specific vlan " + vlanDbId + " as ip " + ip
+                        + " belonging to the range is a source nat ip for the network id=" + ip.getSourceNetworkId()
+                        + ". IP range with the source nat ip address can be removed either as a part of Network, or account removal");
+              }
+
+              if (_firewallDao.countRulesByIpId(ip.getId()) > 0) {
+                throw new InvalidParameterValueException("Can't delete account specific vlan " + vlanDbId + " as ip " + ip
+                        + " belonging to the range has firewall rules applied. Cleanup the rules first");
+              }
+              if(ip.getAllocatedTime() != null) {// This means IP is allocated
+                // release public ip address here
+                success = _ipAddrMgr.disassociatePublicIpAddress(ip.getId(), userId, caller);
+              }
+              if (!success) {
+                s_logger.warn("Some ip addresses failed to be released as a part of vlan " + vlanDbId + " removal");
+              } else {
+                  UsageEventUtils.publishUsageEvent(EventTypes.EVENT_NET_IP_RELEASE, acctVln.get(0).getAccountId(), ip.getDataCenterId(), ip.getId(),
+                          ip.getAddress().toString(), ip.isSourceNat(), vlanRange.getVlanType().toString(), ip.getSystem(), ip.getClass().getName(), ip.getUuid());
+              }
+            }
+          } finally {
+            _vlanDao.releaseFromLockTable(vlanDbId);
+          }
+        } else {   // !isAccountSpecific
+          NicIpAliasVO ipAlias = _nicIpAliasDao.findByGatewayAndNetworkIdAndState(vlanRange.getVlanGateway(), vlanRange.getNetworkId(), NicIpAlias.state.active);
+          //check if the ipalias belongs to the vlan range being deleted.
+          if (ipAlias != null && vlanDbId == _publicIpAddressDao.findByIpAndSourceNetworkId(vlanRange.getNetworkId(), ipAlias.getIp4Address()).getVlanId()) {
+            throw new InvalidParameterValueException("Cannot delete vlan range " + vlanDbId + " as " + ipAlias.getIp4Address()
+                    + "is being used for providing dhcp service in this subnet. Delete all VMs in this subnet and try again");
+          }
+          long allocIpCount = _publicIpAddressDao.countIPs(vlanRange.getDataCenterId(), vlanDbId, true);
+          if (allocIpCount > 0) {
+            throw new InvalidParameterValueException(allocIpCount + "  Ips are in use. Cannot delete this vlan");
+          }
         }
 
         Transaction.execute(new TransactionCallbackNoReturn() {
             @Override
             public void doInTransactionWithoutResult(TransactionStatus status) {
-                _publicIpAddressDao.deletePublicIPRange(vlanDbId);
-                _vlanDao.expunge(vlanDbId);
+              _publicIpAddressDao.deletePublicIPRange(vlanDbId);
+              _vlanDao.remove(vlanDbId);
             }
         });
 
