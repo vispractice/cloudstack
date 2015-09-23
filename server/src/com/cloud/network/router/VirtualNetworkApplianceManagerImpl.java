@@ -1578,9 +1578,10 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             }*/
             
             //validation isEnable multiline get multiline sourceNatIps
-            List<PublicIp> sourceNatIps = this.getAllMultilineSourceNatIp(owner, guestNetwork);
+            List<PublicIp> sourceNatIps = null;;
             PublicIp sourceNatIp = null;
             if (publicNetwork) {
+            	sourceNatIps = this.getAllMultilineSourceNatIp(owner, guestNetwork);
                 if(sourceNatIps == null || sourceNatIps.isEmpty()){
                 	 //sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
                 	 sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork,_multilineLabelDao.getDefaultMultiline().getLabel());

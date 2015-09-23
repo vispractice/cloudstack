@@ -297,7 +297,7 @@ import org.apache.cloudstack.api.command.user.nat.DeleteIpForwardingRuleCmd;
 import org.apache.cloudstack.api.command.user.nat.DisableStaticNatCmd;
 import org.apache.cloudstack.api.command.user.nat.EnableStaticNatCmd;
 import org.apache.cloudstack.api.command.user.nat.ListIpForwardingRulesCmd;
-import org.apache.cloudstack.api.command.user.nat.updateStaticNatCmd;
+import org.apache.cloudstack.api.command.user.nat.UpdateStaticNatCmd;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkACLCmd;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkACLListCmd;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkCmd;
@@ -2922,7 +2922,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(AssignCertToLoadBalancerCmd.class);
         cmdList.add(RemoveCertFromLoadBalancerCmd.class);
         cmdList.add(GenerateAlertCmd.class);
-        cmdList.add(updateStaticNatCmd.class);
+        cmdList.add(UpdateStaticNatCmd.class);
         cmdList.add(ListMultilineCmd.class);
         return cmdList;
     }

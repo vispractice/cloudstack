@@ -40,8 +40,8 @@ import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
 
 @APICommand(name = "updateStaticNat", description="update static nat for given ip address", responseObject=SuccessResponse.class)
-public class updateStaticNatCmd extends BaseAsyncCmd{
-    public static final Logger s_logger = Logger.getLogger(updateStaticNatCmd.class.getName());
+public class UpdateStaticNatCmd extends BaseAsyncCmd{
+    public static final Logger s_logger = Logger.getLogger(UpdateStaticNatCmd.class.getName());
 
     private static final String s_name = "updateStaticNatresponse";
 

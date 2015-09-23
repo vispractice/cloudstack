@@ -620,7 +620,7 @@
                         },
 						multilinelabel: {
                             //label: 'label.multiline'
-							label: 'multiline'
+							label: 'line'
                         }
                     },
                     dataProvider: function(args) {
@@ -682,7 +682,7 @@
                                         }
                                     },
 									multilineLabel: {
-                                        label: 'multiline', 
+                                        label: 'line', 
 										//label: 'label.multiline', 										
 										select: function(args) {                                                    
 											$.ajax({
