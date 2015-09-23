@@ -16,13 +16,12 @@
 // under the License.
 package com.cloud.network.dao;
 
+import java.util.List;
+
 import com.cloud.dc.Vlan.VlanType;
-import com.cloud.utils.db.DB;
+import com.cloud.network.IpAddress.State;
 import com.cloud.utils.db.GenericDao;
 import com.cloud.utils.net.Ip;
-
-import java.sql.SQLException;
-import java.util.List;
 
 public interface IPAddressDao extends GenericDao<IPAddressVO, Long> {
 	
@@ -80,4 +79,15 @@ public interface IPAddressDao extends GenericDao<IPAddressVO, Long> {
     boolean deletePublicIPRange(long vlanDbId) ;
 
     void lockRange(long vlandbId);
-}
+    
+    IPAddressVO findByIp(String ipAddress);
+    
+    IPAddressVO findByAssociatedVmIdAndVmIp(long vmId, String vmIp, String multilineLabel);
+    
+    List<IPAddressVO> listSourceNatPublicIps(long networkId,long vlanDbId, Boolean isSourceNat,State state);
+    
+    List<IPAddressVO> listStaticNatIps(long networkId,long vmId, Boolean isStaticNat);
+    
+    IPAddressVO findDefaultStaticNat(long networkId, long vmId, Boolean isDefaultStaticNat);
+    
+ }

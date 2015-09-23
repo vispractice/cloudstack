@@ -18,8 +18,6 @@ package org.apache.cloudstack.api.command.user.address;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandJobType;
 import org.apache.cloudstack.api.ApiConstants;
@@ -37,6 +35,7 @@ import org.apache.cloudstack.api.response.RegionResponse;
 import org.apache.cloudstack.api.response.VpcResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
+import org.apache.log4j.Logger;
 
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
@@ -97,6 +96,9 @@ public class AssociateIPAddrCmd extends BaseAsyncCreateCmd {
             required=false, description="region ID from where portable ip is to be associated.")
     private Integer regionId;
 
+    @Parameter(name=ApiConstants.MULTILINE_LABEL, type=CommandType.STRING,required=false, description="The net of multiline label.")
+    private String multilineLabel;
+    
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -272,9 +274,11 @@ public class AssociateIPAddrCmd extends BaseAsyncCreateCmd {
             IpAddress ip = null;
 
             if (!isPortable()) {
-                ip = _networkService.allocateIP(_accountService.getAccount(getEntityOwnerId()),  getZoneId(), getNetworkId());
+                //ip = _networkService.allocateIP(_accountService.getAccount(getEntityOwnerId()),  getZoneId(), getNetworkId());
+            	ip = _networkService.allocateIP(_accountService.getAccount(getEntityOwnerId()),  getZoneId(), getNetworkId(),getMultilineLabel());
             } else {
-                ip = _networkService.allocatePortableIP(_accountService.getAccount(getEntityOwnerId()), 1, getZoneId(), getNetworkId(), getVpcId());
+                //ip = _networkService.allocatePortableIP(_accountService.getAccount(getEntityOwnerId()), 1, getZoneId(), getNetworkId(), getVpcId());
+            	ip = _networkService.allocatePortableIP(_accountService.getAccount(getEntityOwnerId()), 1, getZoneId(), getNetworkId(), getVpcId(), getMultilineLabel());
             }
 
             if (ip != null) {
@@ -303,7 +307,8 @@ public class AssociateIPAddrCmd extends BaseAsyncCreateCmd {
         if (getVpcId() != null) {
             result = _vpcService.associateIPToVpc(getEntityId(), getVpcId());
         } else if (getNetworkId() != null) {
-            result = _networkService.associateIPToNetwork(getEntityId(), getNetworkId());
+             //result = _networkService.associateIPToNetwork(getEntityId(), getNetworkId());
+        	 result = _networkService.associateIPToNetwork(getEntityId(), getNetworkId(),getMultilineLabel());
         }
 
         if (result != null) {
@@ -330,5 +335,13 @@ public class AssociateIPAddrCmd extends BaseAsyncCreateCmd {
     public ApiCommandJobType getInstanceType() {
         return ApiCommandJobType.IpAddress;
     }
+
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
 
 }

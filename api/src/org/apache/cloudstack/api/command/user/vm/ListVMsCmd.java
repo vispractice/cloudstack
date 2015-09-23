@@ -113,6 +113,12 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd {
 
     @Parameter(name = ApiConstants.AFFINITY_GROUP_ID, type = CommandType.UUID, entityType = AffinityGroupResponse.class, description = "list vms by affinity group")
     private Long affinityGroupId;
+    
+    @Parameter(name=ApiConstants.NAME_OR_IP, type=CommandType.STRING, description="name or private ip of the virtual machine")
+    private String nameOrIp;
+    
+    @Parameter(name=ApiConstants.GUEST_OS_ID, type=CommandType.STRING, description="operation system of the virtual machine")
+    private String guestOsId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -180,6 +186,14 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd {
 
     public Long getAffinityGroupId() {
         return affinityGroupId;
+    }
+
+    public String getNameOrIp() {
+        return nameOrIp;
+    }
+
+    public String getGuestOsId() {
+        return guestOsId;
     }
 
     public EnumSet<VMDetails> getDetails() throws InvalidParameterValueException {

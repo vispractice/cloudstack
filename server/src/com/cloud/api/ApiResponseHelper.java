@@ -610,6 +610,8 @@ public class ApiResponseHelper implements ResponseGenerator {
                 vlanResponse.setPhysicalNetworkId(pnw.getUuid());
             }
         }
+        vlanResponse.setMultilineLabel(vlan.getMultilineLabel());
+        
         vlanResponse.setObjectName("vlan");
         return vlanResponse;
     }
@@ -3740,6 +3742,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setNetmask(ipRange.getNetmask());
         response.setRegionId(ipRange.getRegionId());
         response.setObjectName("portableiprange");
+        response.setMultilineLabel(ipRange.getMultilineLabel());
         return response;
     }
 
@@ -3747,7 +3750,8 @@ public class ApiResponseHelper implements ResponseGenerator {
     public PortableIpResponse createPortableIPResponse(PortableIp portableIp) {
         PortableIpResponse response = new PortableIpResponse();
         response.setAddress(portableIp.getAddress());
-        Long accountId =  portableIp.getAllocatedInDomainId();
+        //Long accountId =  portableIp.getAllocatedInDomainId();
+        Long accountId =  portableIp.getAllocatedToAccountId();
         if (accountId != null) {
             Account account = ApiDBUtils.findAccountById(accountId);
             response.setAllocatedToAccountId(account.getAccountName());

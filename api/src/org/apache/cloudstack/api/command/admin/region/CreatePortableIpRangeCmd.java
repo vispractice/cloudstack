@@ -24,6 +24,7 @@ import com.cloud.event.EventTypes;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ResourceAllocationException;
+
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandJobType;
 import org.apache.cloudstack.api.ApiConstants;
@@ -31,6 +32,7 @@ import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCreateCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.response.PortableIpRangeResponse;
 import org.apache.cloudstack.api.response.RegionResponse;
 import org.apache.cloudstack.api.response.VlanIpRangeResponse;
@@ -69,6 +71,9 @@ public class CreatePortableIpRangeCmd extends BaseAsyncCreateCmd {
 
     @Parameter(name=ApiConstants.VLAN, type=CommandType.STRING, description="VLAN id, if not specified defaulted to untagged")
     private String vlan;
+    
+    @Parameter(name=ApiConstants.MULTILINE_LABEL, type=CommandType.STRING,required=false, description="The net of multiline label.")
+    private String multilineLabel;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -97,12 +102,21 @@ public class CreatePortableIpRangeCmd extends BaseAsyncCreateCmd {
     public String getNetmask() {
         return netmask;
     }
+    
+    public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
 
-    @Override
+   
+	@Override
     public String getCommandName() {
         return s_name;
     }

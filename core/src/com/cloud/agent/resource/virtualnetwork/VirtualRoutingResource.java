@@ -29,18 +29,20 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
 import com.cloud.agent.api.routing.SetMonitorServiceCommand;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
-
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.BumpUpPriorityCommand;
 import com.cloud.agent.api.CheckRouterAnswer;
@@ -66,6 +68,7 @@ import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SavePasswordCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesAnswer;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
+import com.cloud.agent.api.routing.SetMultilineRouteCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesAnswer;
 import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesVpcCommand;
@@ -82,6 +85,7 @@ import com.cloud.agent.api.to.IpAddressTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.StaticNatRuleTO;
 import com.cloud.exception.InternalErrorException;
+import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.network.HAProxyConfigurator;
 import com.cloud.network.LoadBalancerConfigurator;
 import com.cloud.network.rules.FirewallRule;
@@ -123,6 +127,7 @@ public class VirtualRoutingResource implements Manager {
     private int _sleep;
     private int _retry;
     private int _port;
+
 
     public Answer executeRequest(final Command cmd) {
         try {
@@ -172,6 +177,9 @@ public class VirtualRoutingResource implements Manager {
                 return execute((CheckS2SVpnConnectionsCommand)cmd);
             } else if (cmd instanceof SetMonitorServiceCommand) {
                 return execute((SetMonitorServiceCommand) cmd);
+              //Andrew ling add, accept the multiline route command from the manger
+        	} else if (cmd instanceof SetMultilineRouteCommand) {
+        		return execute((SetMultilineRouteCommand) cmd);
             }
             else {
                 return Answer.createUnsupportedCommandAnswer(cmd);
@@ -349,6 +357,13 @@ public class VirtualRoutingResource implements Manager {
 
             command.add(" -d ", rule.getStringSrcPortRange());
             command.add(" -G ");
+            
+            //TODO Andrew ling add, Mutiline static nat feature.
+            if(rule.getMultilineLabelSeq() != null && !rule.getMultilineLabelSeq().isEmpty()){
+            	command.add(" -L ", rule.getMultilineLabelSeq());
+            } else {
+            	command.add(" -L ", "none");
+            }
 
             result = command.execute();
             if (result == null) {
@@ -982,6 +997,66 @@ public class VirtualRoutingResource implements Manager {
         }
         return new Answer(cmd);
 
+    }
+    
+    //Andrew ling add
+    private Answer execute(SetMultilineRouteCommand cmd){
+    	String script = "route_rules.sh";
+    	String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+    	//The store format like :<ctcc,<10.204.120.1; 10.204.104.0/24,10.204.105.0/24>>
+    	//VRLabelToDefaultGateway format like : ctcc-10.204.104.1
+    	//one route rule like :ip route add default via 10.204.120.1 table ctcc; ip route add 10.204.104.0/24 via 10.204.119.1 table ctcc; there will be many rules in the map.
+    	//In this execute operation , if need delete first and then add rule or not? Not delete by now, but it must be remarked.
+    	String VRLabelToDefaultGateway = cmd.getVRLabelToDefaultGateway();
+    	if(VRLabelToDefaultGateway == "" || VRLabelToDefaultGateway == null){
+    		throw new InvalidParameterValueException("You must input the default gateway in the VR when using the multiline feature.");
+    	}
+    	String VRLableDefault = VRLabelToDefaultGateway.split("-")[0];
+//    	String VRDefaultGateway = VRLabelToDefaultGateway.split("-")[1];
+    	VirtualRoutingMutilineSetup virtualRoutingMutilineSetup =new VirtualRoutingMutilineSetup();
+    	HashMap<String, HashMap<String, String>> routeRulesMap = cmd.getRouteRules();
+    	int mutilineNumbers = routeRulesMap.size();
+    	if(mutilineNumbers == 0){
+    		throw new InvalidParameterValueException("You must input all the mutiline networks in the VR when using the multiline feature.");
+    	}
+    	String[] multilineLabels = new String[mutilineNumbers];
+    	int labelNumber = 0;
+    	for(Map.Entry<String,  HashMap<String, String>> entry : routeRulesMap.entrySet()){
+    		String label = entry.getKey();
+    		if(label !="" && label != null){
+    			multilineLabels[labelNumber] = "_" + label;
+    		}
+    		HashMap<String, String> gatewayNetsStrings = entry.getValue();
+    		for(Map.Entry<String, String> gatewayNetsString : gatewayNetsStrings.entrySet()){
+    			String gateway = gatewayNetsString.getKey();
+    			String netsStrings = gatewayNetsString.getValue();
+    			String newGatewayNetsString = gateway + "_" + netsStrings;
+    			virtualRoutingMutilineSetup.addTableLabelTORouteRules(label, newGatewayNetsString);
+    		}
+    		labelNumber++;
+    	}
+    	virtualRoutingMutilineSetup.setAllMultilineTableLables(mutilineNumbers, multilineLabels);
+    	//创建main表规则,删除原来的默认路由规则，创建指定默认路由设定其他非默认路由规则
+    	String mainTableToRouteRulesCmd = virtualRoutingMutilineSetup.getMainTableToRouteRulesCmd(VRLableDefault);
+    	//创建多线路配置方案路由表
+    	String createRouteTableLableRulesCmd = virtualRoutingMutilineSetup.getCreateRouteTableLableRulesCmd();
+    	//创建路由表的规则
+    	String tableLabelGroupToRouteRulesCmd = virtualRoutingMutilineSetup.getTableLabelGroupToRouteRulesCmd();
+    	
+    	String result = routerProxy(script, routerIp, mainTableToRouteRulesCmd);
+    	if (result != null){
+    		return new Answer( cmd, false, "SetMultilineRouteCommand failed besause can not create main route table rules.");
+    	}
+    	script = "none.sh";
+    	result = routerProxy(script, routerIp, createRouteTableLableRulesCmd);
+    	if (result != null){
+    		return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables.");
+    	}
+    	result = routerProxy(script, routerIp, tableLabelGroupToRouteRulesCmd);
+    	if (result != null){
+    		return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables rules.");
+    	}
+    	return new Answer(cmd);
     }
 
     public String assignPublicIpAddress(final String vmName,

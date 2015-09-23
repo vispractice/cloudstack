@@ -113,6 +113,12 @@ public class IPAddressVO implements IpAddress {
 
     @Column(name="is_portable")
     private boolean portable = false;
+    
+    @Column(name="multiline_label")
+    private String multilineLabel;
+    
+    @Column(name="is_default_static_nat")
+    private Boolean isDefaultStaticNat;
 
 	protected IPAddressVO() {
 		this.uuid = UUID.randomUUID().toString();
@@ -148,6 +154,21 @@ public class IPAddressVO implements IpAddress {
         this.portable = portable;
         this.uuid = UUID.randomUUID().toString();
     }
+    
+    public  IPAddressVO(Ip address, long dataCenterId, Long networkId, Long vpcId, long physicalNetworkId, long sourceNetworkId,
+	            long vlanDbId, boolean portable, String multilineLabel, Boolean isDefaultStaticNat) {
+		this.address = address;
+		this.dataCenterId = dataCenterId;
+		this.associatedWithNetworkId = networkId;
+		this.vpcId = vpcId;
+		this.physicalNetworkId = physicalNetworkId;
+		this.sourceNetworkId = sourceNetworkId;
+		this.vlanId = vlanDbId;
+		this.portable = portable;
+		this.uuid = UUID.randomUUID().toString();
+		this.multilineLabel = multilineLabel;
+		this.isDefaultStaticNat = isDefaultStaticNat;
+	}
 
     public long getMacAddress() {
 	    return macAddress;
@@ -333,4 +354,20 @@ public class IPAddressVO implements IpAddress {
     public Long getNetworkId() {
         return sourceNetworkId;
     }
+    @Override
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
+
+	public Boolean getIsDefaultStaticNat() {
+		return isDefaultStaticNat;
+	}
+
+	public void setIsDefaultStaticNat(Boolean isDefaultStaticNat) {
+		this.isDefaultStaticNat = isDefaultStaticNat;
+	}
 }

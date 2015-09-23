@@ -85,5 +85,7 @@ public interface IpAddress extends ControlledEntity, Identity, InternalIdentity 
     boolean isPortable();
 
     Long getNetworkId();
+    
+    String getMultilineLabel();
 
 }

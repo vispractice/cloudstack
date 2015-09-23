@@ -446,7 +446,7 @@ public class IPRangeConfig {
 
         return problemIPs;
     }
-
+    
     public Vector<String> savePublicIPRange(TransactionLegacy txn, long startIP, long endIP, long zoneId, long vlanDbId, Long sourceNetworkId, long physicalNetworkId) {
         String insertSql = "INSERT INTO `cloud`.`user_ip_address` (public_ip_address, data_center_id, vlan_db_id, mac_address, source_network_id, physical_network_id, uuid) VALUES (?, ?, ?, (select mac_address from `cloud`.`data_center` where id=?), ?, ?, ?)";
         String updateSql = "UPDATE `cloud`.`data_center` set mac_address = mac_address+1 where id=?";
@@ -694,6 +694,45 @@ public class IPRangeConfig {
 
     private static void printError(String message) {
         DatabaseConfig.printError(message);
+    }
+    
+    public Vector<String> savePublicIPRange(TransactionLegacy txn, long startIP, long endIP, long zoneId, long vlanDbId, Long sourceNetworkId, long physicalNetworkId,String multilineLabel) {
+        String insertSql = "INSERT INTO `cloud`.`user_ip_address` (public_ip_address, data_center_id, vlan_db_id, mac_address, source_network_id, physical_network_id, uuid , multiline_label) VALUES (?, ?, ?, (select mac_address from `cloud`.`data_center` where id=?), ?, ?, ?,?)";
+        String updateSql = "UPDATE `cloud`.`data_center` set mac_address = mac_address+1 where id=?";
+        Vector<String> problemIPs = new Vector<String>();
+        PreparedStatement stmt = null;
+
+        Connection conn = null;
+        try {
+            conn = txn.getConnection();
+        } catch (SQLException e) {
+            return null;
+        }
+
+        while (startIP <= endIP) {
+            try {
+                stmt = conn.prepareStatement(insertSql);
+                stmt.setString(1, NetUtils.long2Ip(startIP));
+                stmt.setLong(2, zoneId);
+                stmt.setLong(3, vlanDbId);
+                stmt.setLong(4, zoneId);
+                stmt.setLong(5, sourceNetworkId);
+                stmt.setLong(6, physicalNetworkId);
+                stmt.setString(7, UUID.randomUUID().toString());
+                stmt.setString(8, multilineLabel);
+                stmt.executeUpdate();
+                stmt.close();
+                stmt = conn.prepareStatement(updateSql);
+                stmt.setLong(1, zoneId);
+                stmt.executeUpdate();
+                stmt.close();
+            } catch (Exception ex) {
+                problemIPs.add(NetUtils.long2Ip(startIP));
+            }
+            startIP++;
+        }
+
+        return problemIPs;
     }
 
 }

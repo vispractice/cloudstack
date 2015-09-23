@@ -84,6 +84,9 @@ public class Criteria {
     public static final String ISO_ID = "isoid";
     public static final String VPC_ID = "vpcId";
     public static final String AFFINITY_GROUP_ID = "affinitygroupid";
+    public static final String NAME_OR_IP = "nameorip";
+    public static final String GUEST_OS_ID = "guestosid";
+    
 
 	public Criteria(String orderBy, Boolean ascending, Long offset, Long limit) {
 		this.offset = offset;

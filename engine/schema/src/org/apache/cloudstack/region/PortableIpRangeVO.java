@@ -59,6 +59,9 @@ public class PortableIpRangeVO implements PortableIpRange  {
 
     @Column(name="end_ip")
     String endIp;
+    
+    @Column(name="multiline_label")
+    private String multilineLabel;
 
     public PortableIpRangeVO() {
         this.uuid = UUID.randomUUID().toString();
@@ -74,6 +77,17 @@ public class PortableIpRangeVO implements PortableIpRange  {
         this.endIp = endIp;
     }
 
+    public PortableIpRangeVO(int regionId, String vlan, String gateway, String netmask, String startIp, String endIp, String multilineLabel) {
+        this.uuid = UUID.randomUUID().toString();
+        this.regionId =regionId;
+        this.vlan = vlan;
+        this.gateway = gateway;
+        this.netmask = netmask;
+        this.startIp = startIp;
+        this.endIp = endIp;
+        this.multilineLabel = multilineLabel;
+    }
+    
     @Override
     public long getId() {
         return id;
@@ -116,4 +130,14 @@ public class PortableIpRangeVO implements PortableIpRange  {
     public  String getIpRange() {
         return startIp + "-" + endIp;
     }
+    
+    @Override
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
+    
 }

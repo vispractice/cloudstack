@@ -213,7 +213,7 @@ public interface ConfigurationManager {
             boolean specifyIpRanges, boolean isPersistent, Map<NetworkOffering.Detail,String> details, boolean egressDefaultPolicy, Integer maxconn, boolean enableKeepAlive);
 
     Vlan createVlanAndPublicIpRange(long zoneId, long networkId, long physicalNetworkId, boolean forVirtualNetwork, Long podId, String startIP, String endIP, String vlanGateway, String vlanNetmask, String vlanId, Account vlanOwner, String startIPv6, String endIPv6, String vlanIp6Gateway, String vlanIp6Cidr) throws InsufficientCapacityException, ConcurrentOperationException, InvalidParameterValueException;
-
+    
     void createDefaultSystemNetworks(long zoneId) throws ConcurrentOperationException;
 
     boolean releaseAccountSpecificVirtualRanges(long accountId);
@@ -239,4 +239,7 @@ public interface ConfigurationManager {
 	AllocationState findPodAllocationState(HostPodVO pod);
 
 	AllocationState findClusterAllocationState(ClusterVO cluster);
+	
+	Vlan createVlanAndPublicIpRange(long zoneId, long networkId, long physicalNetworkId, boolean forVirtualNetwork, Long podId, String startIP, String endIP, String vlanGateway, String vlanNetmask, String vlanId, Account vlanOwner, String startIPv6, String endIPv6, String vlanIp6Gateway, String vlanIp6Cidr,String multilineLabel) 
+			 throws InsufficientCapacityException, ConcurrentOperationException, InvalidParameterValueException;
 }

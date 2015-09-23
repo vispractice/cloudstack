@@ -44,7 +44,6 @@ import javax.naming.ConfigurationException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.affinity.AffinityGroupProcessor;
@@ -299,6 +298,7 @@ import org.apache.cloudstack.api.command.user.nat.DeleteIpForwardingRuleCmd;
 import org.apache.cloudstack.api.command.user.nat.DisableStaticNatCmd;
 import org.apache.cloudstack.api.command.user.nat.EnableStaticNatCmd;
 import org.apache.cloudstack.api.command.user.nat.ListIpForwardingRulesCmd;
+import org.apache.cloudstack.api.command.user.nat.updateStaticNatCmd;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkACLCmd;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkACLListCmd;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkCmd;
@@ -2917,6 +2917,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(RemoveCertFromLoadBalancerCmd.class);
         cmdList.add(GenerateAlertCmd.class);
         cmdList.add(GetVMUserDataCmd.class);
+        cmdList.add(updateStaticNatCmd.class);
+
         return cmdList;
     }
 

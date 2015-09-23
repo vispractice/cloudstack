@@ -40,8 +40,6 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.command.admin.network.DedicateGuestVlanRangeCmd;
@@ -55,6 +53,7 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.network.element.InternalLoadBalancerElementService;
+import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.configuration.Config;
@@ -104,6 +103,8 @@ import com.cloud.network.dao.AccountGuestVlanMapVO;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.IPAddressVO;
+import com.cloud.network.dao.MultilineDao;
+import com.cloud.network.dao.MultilineVO;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkDomainDao;
 import com.cloud.network.dao.NetworkDomainVO;
@@ -302,6 +303,9 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
     IpAddressManager _ipAddrMgr;
     @Inject
     EntityManager _entityMgr;
+    
+    @Inject
+    MultilineDao multilineLabelDao;
 
     int _cidrLimit;
     boolean _allowSubdomainNetworkAccess;
@@ -324,15 +328,29 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
                         services.add(Service.SourceNat);
                         networkSNAT.add(ip.getAssociatedWithNetworkId());
                     } else {
-                        CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
-                        // see the IPAddressVO.java class.
-                        IPAddressVO ipAddr = ApiDBUtils.findIpAddressById(ip.getAssociatedWithNetworkId());
-                        String ipAddrUuid = ip.getAssociatedWithNetworkId().toString();
-                        if (ipAddr != null) {
-                            ipAddrUuid = ipAddr.getUuid();
-                        }
-                        ex.addProxyObject(ipAddrUuid, "networkId");
-                        throw ex;
+                    	//update by hai.li 2015.08.19
+                    	Set<String> networkGW = new HashSet<String>();
+                        boolean checkGW = Boolean.TRUE;
+                		String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+                    	if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
+                    		if(!networkGW.contains(ip.getGateway())){
+                    			services.add(Service.SourceNat);
+                        		networkGW.add(ip.getGateway());
+                        		checkGW = Boolean.FALSE;
+                        	} 
+                    	} 
+                    	
+                    	if(checkGW){
+                    		CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
+                            // see the IPAddressVO.java class.
+                            IPAddressVO ipAddr = ApiDBUtils.findIpAddressById(ip.getAssociatedWithNetworkId());
+                            String ipAddrUuid = ip.getAssociatedWithNetworkId().toString();
+                            if (ipAddr != null) {
+                                ipAddrUuid = ipAddr.getUuid();
+                            }
+                            ex.addProxyObject(ipAddrUuid, "networkId");
+                            throw ex;
+                    	}
                     }
                 }
                 ipToServices.put(ip, services);
@@ -552,6 +570,12 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
     @ActionEvent(eventType = EventTypes.EVENT_PORTABLE_IP_ASSIGN, eventDescription = "allocating portable public Ip", create = true)
     public IpAddress allocatePortableIP(Account ipOwner, int regionId, Long zoneId, Long networkId, Long vpcId) throws ResourceAllocationException,
             InsufficientAddressCapacityException, ConcurrentOperationException {
+    	return this.allocateIP(ipOwner, zoneId, networkId, null);
+    }
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_PORTABLE_IP_ASSIGN, eventDescription = "allocating portable public Ip", create = true)
+    public IpAddress allocatePortableIP(Account ipOwner, int regionId, Long zoneId, Long networkId, Long vpcId ,String multilineLabel) throws ResourceAllocationException,
+            InsufficientAddressCapacityException, ConcurrentOperationException {
         Account caller = CallContext.current().getCallingAccount();
         long callerUserId = CallContext.current().getCallingUserId();
         DataCenter zone = _entityMgr.findById(DataCenter.class, zoneId);
@@ -559,7 +583,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
         if ((networkId == null && vpcId == null) || (networkId != null && vpcId != null)) {
             throw new InvalidParameterValueException("One of Network id or VPC is should be passed");
         }
-
+        
         if (networkId != null) {
             Network network = _networksDao.findById(networkId);
             if (network == null) {
@@ -577,7 +601,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
                         if (s_logger.isDebugEnabled()) {
                             s_logger.debug("Associate IP address called by the user " + callerUserId + " account " + ipOwner.getId());
                         }
-                        return _ipAddrMgr.allocatePortableIp(ipOwner, caller, zoneId, networkId, null);
+                        return _ipAddrMgr.allocatePortableIp(ipOwner, caller, zoneId, networkId, null,getMultilineLabl(multilineLabel));
                     } else {
                         throw new InvalidParameterValueException("Associate IP address can only be called on the shared networks in the advanced zone"
                                 + " with Firewall/Source Nat/Static Nat/Port Forwarding/Load balancing services enabled");
@@ -595,7 +619,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
 
         _accountMgr.checkAccess(caller, null, false, ipOwner);
 
-        return _ipAddrMgr.allocatePortableIp(ipOwner, caller, zoneId, null, null);
+        return _ipAddrMgr.allocatePortableIp(ipOwner, caller, zoneId, null, null,getMultilineLabl(multilineLabel));
     }
 
     @Override
@@ -881,12 +905,34 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
         }
 
         if (ipVO.isSourceNat()) {
-            throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
+            //throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
+        	//update by hai.li 2015.09.07
+        	//In the multiline ,support delete the source IP
+        	String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+        	if(isMultiline == null || !isMultiline.equalsIgnoreCase("true")){
+        		throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
+        	}
+        	
+        	MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
+        	if(multiline != null && multiline.getLabel().equals(ipVO.getMultilineLabel())){
+        		throw new IllegalArgumentException("source nat ip address is the default multiline can't be disassociated.");
+        	}
+        	
+        	List<IPAddressVO> networkIpVOs = _ipAddressDao.listByAssociatedNetwork(ipVO.getAssociatedWithNetworkId(), Boolean.TRUE);
+        	if(networkIpVOs == null || networkIpVOs.size() < 2){
+        		throw new IllegalArgumentException("One source nat ip address at least can't be disassociated.");
+        	}
+        	
+        	List<IPAddressVO> sourceIpVOs = _ipAddressDao.listSourceNatPublicIps(ipVO.getAssociatedWithNetworkId(), ipVO.getVlanId(), Boolean.FALSE, State.Allocated);
+        	if(sourceIpVOs == null || sourceIpVOs.size() > 0){
+        		throw new IllegalArgumentException("Before disassociated source nat ip address must disassociated vlan public IP.");
+        	}
         }
 
         VlanVO vlan = _vlanDao.findById(ipVO.getVlanId());
         if (!vlan.getVlanType().equals(VlanType.VirtualNetwork)) {
             throw new IllegalArgumentException("only ip addresses that belong to a virtual network may be disassociated.");
+            
         }
 
         // don't allow releasing system ip address
@@ -1391,6 +1437,9 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
         Boolean canUseForDeploy = cmd.canUseForDeploy();
         Map<String, String> tags = cmd.getTags();
         Boolean forVpc = cmd.getForVpc();
+        String name = cmd.getName();
+        String cidr = cmd.getCidr();
+        Integer vlanId = cmd.getVlanId();
 
         // 1) default is system to false if not specified
         // 2) reset parameter to false if it's specified by the regular user
@@ -1515,7 +1564,9 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
         accountSearch.and("typeEQ", accountSearch.entity().getType(), SearchCriteria.Op.EQ);
 
         sb.join("accountSearch", accountSearch, sb.entity().getAccountId(), accountSearch.entity().getId(), JoinBuilder.JoinType.INNER);
-
+        
+        sb.and("broadcastUri", sb.entity().getBroadcastUri(), Op.EQ);
+        
         List<NetworkVO> networksToReturn = new ArrayList<NetworkVO>();
 
         if (isSystem == null || !isSystem) {
@@ -1523,33 +1574,33 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
                 //get account level networks
                 networksToReturn.addAll(listAccountSpecificNetworks(
                         buildNetworkSearchCriteria(sb, keyword, id, isSystem, zoneId, guestIpType, trafficType, physicalNetworkId, aclType, skipProjectNetworks, restartRequired,
-                                specifyIpRanges, vpcId, tags), searchFilter, permittedAccounts));
+                                specifyIpRanges, vpcId, name, cidr, vlanId, tags), searchFilter, permittedAccounts));
                 //get domain level networks
                 if (domainId != null) {
                     networksToReturn.addAll(listDomainLevelNetworks(
                             buildNetworkSearchCriteria(sb, keyword, id, isSystem, zoneId, guestIpType, trafficType, physicalNetworkId, aclType, true, restartRequired,
-                                    specifyIpRanges, vpcId, tags), searchFilter, domainId, false));
+                                    specifyIpRanges, vpcId, name, cidr, vlanId, tags), searchFilter, domainId, false));
                 }
             } else {
                 //add account specific networks
                 networksToReturn.addAll(listAccountSpecificNetworksByDomainPath(
                         buildNetworkSearchCriteria(sb, keyword, id, isSystem, zoneId, guestIpType, trafficType, physicalNetworkId, aclType, skipProjectNetworks, restartRequired,
-                                specifyIpRanges, vpcId, tags), searchFilter, path, isRecursive));
+                                specifyIpRanges, vpcId, name, cidr, vlanId, tags), searchFilter, path, isRecursive));
                 //add domain specific networks of domain + parent domains
                 networksToReturn.addAll(listDomainSpecificNetworksByDomainPath(
                         buildNetworkSearchCriteria(sb, keyword, id, isSystem, zoneId, guestIpType, trafficType, physicalNetworkId, aclType, skipProjectNetworks, restartRequired,
-                                specifyIpRanges, vpcId, tags), searchFilter, path, isRecursive));
+                                specifyIpRanges, vpcId, name, cidr, vlanId, tags), searchFilter, path, isRecursive));
                 //add networks of subdomains
                 if (domainId == null) {
                     networksToReturn.addAll(listDomainLevelNetworks(
                             buildNetworkSearchCriteria(sb, keyword, id, isSystem, zoneId, guestIpType, trafficType, physicalNetworkId, aclType, true, restartRequired,
-                                    specifyIpRanges, vpcId, tags), searchFilter, caller.getDomainId(), true));
+                                    specifyIpRanges, vpcId, name, cidr, vlanId, tags), searchFilter, caller.getDomainId(), true));
                 }
             }
         } else {
             networksToReturn = _networksDao.search(
                     buildNetworkSearchCriteria(sb, keyword, id, isSystem, zoneId, guestIpType, trafficType, physicalNetworkId, null, skipProjectNetworks, restartRequired,
-                            specifyIpRanges, vpcId, tags), searchFilter);
+                            specifyIpRanges, vpcId, name, cidr, vlanId, tags), searchFilter);
         }
 
         if (supportedServicesStr != null && !supportedServicesStr.isEmpty() && !networksToReturn.isEmpty()) {
@@ -1616,7 +1667,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
 
     private SearchCriteria<NetworkVO> buildNetworkSearchCriteria(SearchBuilder<NetworkVO> sb, String keyword, Long id, Boolean isSystem, Long zoneId, String guestIpType,
             String trafficType, Long physicalNetworkId, String aclType, boolean skipProjectNetworks, Boolean restartRequired, Boolean specifyIpRanges, Long vpcId,
-            Map<String, String> tags) {
+            String name, String cidr, Integer vlanId, Map<String, String> tags) {
 
         SearchCriteria<NetworkVO> sc = sb.create();
 
@@ -1670,6 +1721,21 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
 
         if (vpcId != null) {
             sc.addAnd("vpcId", SearchCriteria.Op.EQ, vpcId);
+        }
+        
+        if(name != null){
+            sc.addAnd("name", SearchCriteria.Op.LIKE, "%" + name + "%");
+        }
+        
+        if(cidr != null){
+            sc.addAnd("cidr", SearchCriteria.Op.LIKE, "%" + cidr + "%");
+        }
+        
+        if (vlanId != null) {
+            SearchCriteria<NetworkVO> ssc = _networksDao.createSearchCriteria();
+            ssc.addOr("broadcastUri", SearchCriteria.Op.EQ, Networks.BroadcastDomainType.Vlan.toUri(vlanId));
+            ssc.addOr("broadcastUri", SearchCriteria.Op.EQ, Networks.BroadcastDomainType.Vxlan.toUri(vlanId));
+            sc.addAnd("broadcastUri", SearchCriteria.Op.SC, ssc);
         }
 
         if (tags != null && !tags.isEmpty()) {
@@ -3868,7 +3934,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
         return _ipAddrMgr.associateIPToGuestNetwork(ipId, networkId, true);
 
     }
-
+    
     @Override
     @DB
     public Network createPrivateNetwork(final String networkName, final String displayText, long physicalNetworkId, String broadcastUriString, final String startIp, String endIp,
@@ -4016,6 +4082,76 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService {
     public void setNetworkGurus(List<NetworkGuru> networkGurus) {
         _networkGurus = networkGurus;
 
+    }
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_NET_IP_ASSIGN, eventDescription = "allocating Ip", create = true)
+    public IpAddress allocateIP(Account ipOwner, long zoneId, Long networkId,String multilineLabel) throws ResourceAllocationException, InsufficientAddressCapacityException,
+            ConcurrentOperationException {
+
+        Account caller = CallContext.current().getCallingAccount();
+        long callerUserId = CallContext.current().getCallingUserId();
+        DataCenter zone = _entityMgr.findById(DataCenter.class, zoneId);
+
+        if (networkId != null) {
+            Network network = _networksDao.findById(networkId);
+            if (network == null) {
+                throw new InvalidParameterValueException("Invalid network id is given");
+            }
+
+            if (network.getGuestType() == Network.GuestType.Shared) {
+                if (zone == null) {
+                    throw new InvalidParameterValueException("Invalid zone Id is given");
+                }
+                // if shared network in the advanced zone, then check the caller against the network for 'AccessType.UseNetwork'
+                if (zone.getNetworkType() == NetworkType.Advanced) {
+                    if (isSharedNetworkOfferingWithServices(network.getNetworkOfferingId())) {
+                        _accountMgr.checkAccess(caller, AccessType.UseNetwork, false, network);
+                        if (s_logger.isDebugEnabled()) {
+                            s_logger.debug("Associate IP address called by the user " + callerUserId + " account " + ipOwner.getId());
+                        }
+                        return _ipAddrMgr.allocateIp(ipOwner, false, caller, callerUserId, zone, getMultilineLabl(multilineLabel));
+                    } else {
+                        throw new InvalidParameterValueException("Associate IP address can only be called on the shared networks in the advanced zone"
+                                + " with Firewall/Source Nat/Static Nat/Port Forwarding/Load balancing services enabled");
+                    }
+                }
+            }
+        } else {
+            _accountMgr.checkAccess(caller, null, false, ipOwner);
+        }
+
+        return _ipAddrMgr.allocateIp(ipOwner, false, caller, callerUserId, zone, getMultilineLabl(multilineLabel));
+    }
+    
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_NET_IP_ASSIGN, eventDescription = "associating Ip", async = true)
+    public IpAddress associateIPToNetwork(long ipId, long networkId,String multilineLabel) throws InsufficientAddressCapacityException, ResourceAllocationException, ResourceUnavailableException,
+            ConcurrentOperationException {
+
+        Network network = _networksDao.findById(networkId);
+        if (network == null) {
+            throw new InvalidParameterValueException("Invalid network id is given");
+        }
+        return _ipAddrMgr.associateIPToGuestNetwork(ipId, networkId, true, getMultilineLabl(multilineLabel));
+    }
+    
+    /**
+     * get default multiline label
+     * @param multilineLabel
+     * @return
+     * @throws InvalidParameterValueException
+     */
+    private String getMultilineLabl(String multilineLabel) throws InvalidParameterValueException{
+    	 if (multilineLabel != null && !multilineLabel.equals("")) {
+    		 return multilineLabel;
+         }
+    	 MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
+      	 if(multiline != null && multiline.getLabel() != null){
+      		return multiline.getLabel();
+      	 } else {
+      		throw new InvalidParameterValueException("Can't assign ip to the default multiline, Not exist one default multiline label.");
+      	 }
     }
 
 }

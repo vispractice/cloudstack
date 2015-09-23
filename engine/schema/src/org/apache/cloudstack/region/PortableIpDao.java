@@ -36,4 +36,6 @@ public interface PortableIpDao  extends GenericDao<PortableIpVO, Long> {
     PortableIpVO findByIpAddress(String ipAddress);
 
     void unassignIpAddress(long ipAddressId);
+    
+    List<PortableIpVO> listByRegionIdAndState(int regionId, PortableIp.State state, String multilineLabel);
 }

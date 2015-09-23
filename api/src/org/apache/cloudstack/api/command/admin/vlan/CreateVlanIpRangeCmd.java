@@ -106,6 +106,9 @@ public class CreateVlanIpRangeCmd extends BaseCmd {
 
     @Parameter(name=ApiConstants.IP6_CIDR, type=CommandType.STRING, description="the CIDR of IPv6 network, must be at least /64")
     private String ip6Cidr;
+    
+    @Parameter(name=ApiConstants.MULTILINE_LABEL, type=CommandType.STRING,required=false, description="The net of multiline label.")
+    private String multilineLabel;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -227,4 +230,12 @@ public class CreateVlanIpRangeCmd extends BaseCmd {
             throw new ServerApiException(ApiErrorCode.INSUFFICIENT_CAPACITY_ERROR, ex.getMessage());
         }
     }
+
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
 }

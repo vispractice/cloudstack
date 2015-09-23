@@ -1127,4 +1127,42 @@ public class MockNetworkManagerImpl extends ManagerBase implements NetworkOrches
 	}
 
 
+
+
+
+	@Override
+	public IpAddress allocateIP(Account ipOwner, long zoneId, Long networkId,
+			String multilineLabel) throws ResourceAllocationException,
+			InsufficientAddressCapacityException, ConcurrentOperationException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+
+
+	@Override
+	public IpAddress associateIPToNetwork(long ipId, long networkId,
+			String multilineLabel) throws InsufficientAddressCapacityException,
+			ResourceAllocationException, ResourceUnavailableException,
+			ConcurrentOperationException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+
+
+	@Override
+	public IpAddress allocatePortableIP(Account ipOwner, int regionId,
+			Long zoneId, Long networkId, Long vpcId, String multilineLabel)
+			throws ResourceAllocationException,
+			InsufficientAddressCapacityException, ConcurrentOperationException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
 }

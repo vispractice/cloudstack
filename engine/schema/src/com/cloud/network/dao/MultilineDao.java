@@ -14,27 +14,25 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+package com.cloud.network.dao;
 
-package org.apache.cloudstack.region;
+import java.util.List;
 
-import org.apache.cloudstack.acl.InfrastructureEntity;
-import org.apache.cloudstack.api.Identity;
-import org.apache.cloudstack.api.InternalIdentity;
+import com.cloud.utils.db.GenericDao;
+/**
+ * 
+ * @author add by hai.li
+ * @date 2015.08.17
+ * @descrption 
+ */
+public interface MultilineDao extends GenericDao<MultilineVO, Long> {
 
-public interface PortableIpRange extends InfrastructureEntity, InternalIdentity, Identity {
+	List<MultilineVO>  getAllMultiline();
 
-    public final static String UNTAGGED = "untagged";
+	MultilineVO  getMultilineByLabel(String label);
 
-    public String getVlanTag();
+	MultilineVO  getDefaultMultiline();
 
-    public String getGateway();
-
-    public String getNetmask();
-
-    public int getRegionId();
-
-    public String getIpRange();
-    
-    public String getMultilineLabel();
-
+	List<MultilineVO>  getNoDefaultMultiline();
+	
 }

@@ -30,6 +30,7 @@ public class PublicIp implements PublicIpAddress {
     IPAddressVO _addr;
     VlanVO _vlan;
     String macAddress;
+    boolean isDefault;
 
     public PublicIp(IPAddressVO addr, VlanVO vlan, long macAddress) {
         _addr = addr;
@@ -232,4 +233,18 @@ public class PublicIp implements PublicIpAddress {
     public Long getIpMacAddress() {
         return  _addr.getMacAddress();
     }
+
+	public boolean isDefault() {
+		return isDefault;
+	}
+
+	public void setDefault(boolean isDefault) {
+		this.isDefault = isDefault;
+	}
+
+	@Override
+	public String getMultilineLabel() {
+		return null;
+	}
+
 }

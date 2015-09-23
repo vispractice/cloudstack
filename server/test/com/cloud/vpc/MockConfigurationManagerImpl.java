@@ -26,7 +26,6 @@ import javax.naming.ConfigurationException;
 import javax.naming.NamingException;
 
 import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.api.command.admin.config.UpdateCfgCmd;
 import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
 import org.apache.cloudstack.api.command.admin.network.DeleteNetworkOfferingCmd;
@@ -522,6 +521,19 @@ public class MockConfigurationManagerImpl extends ManagerBase implements Configu
 	public boolean releasePublicIpRange(ReleasePublicIpRangeCmd cmd) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public Vlan createVlanAndPublicIpRange(long zoneId, long networkId,
+			long physicalNetworkId, boolean forVirtualNetwork, Long podId,
+			String startIP, String endIP, String vlanGateway,
+			String vlanNetmask, String vlanId, Account vlanOwner,
+			String startIPv6, String endIPv6, String vlanIp6Gateway,
+			String vlanIp6Cidr, String multilineLabel)
+			throws InsufficientCapacityException, ConcurrentOperationException,
+			InvalidParameterValueException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

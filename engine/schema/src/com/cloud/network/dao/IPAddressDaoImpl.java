@@ -16,14 +16,32 @@
 // under the License.
 package com.cloud.network.dao;
 
-import com.cloud.dc.DataCenterVnetVO;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.Vector;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Local;
+import javax.inject.Inject;
+
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+
 import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.VlanVO;
 import com.cloud.dc.dao.VlanDao;
+import com.cloud.network.Network;
 import com.cloud.network.IpAddress.State;
+import com.cloud.network.Network.Event;
 import com.cloud.server.ResourceTag.ResourceObjectType;
 import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.utils.db.DB;
+import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.GenericSearchBuilder;
 import com.cloud.utils.db.JoinBuilder;
@@ -33,17 +51,7 @@ import com.cloud.utils.db.SearchCriteria.Func;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.net.Ip;
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import javax.ejb.Local;
-import javax.inject.Inject;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
+import com.cloud.utils.net.NetUtils;
 
 @Component
 @Local(value = { IPAddressDao.class })
@@ -57,7 +65,9 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     protected GenericSearchBuilder<IPAddressVO, Integer> AllocatedIpCount;
     protected GenericSearchBuilder<IPAddressVO, Integer> AllIpCountForDashboard;
     protected SearchBuilder<IPAddressVO> DeleteAllExceptGivenIp;
-    protected GenericSearchBuilder<IPAddressVO, Long> AllocatedIpCountForAccount;    
+    protected GenericSearchBuilder<IPAddressVO, Long> AllocatedIpCountForAccount;  
+    protected SearchBuilder<IPAddressVO> portableSearchAllocated;
+    
     @Inject protected VlanDao _vlanDao;
     protected GenericSearchBuilder<IPAddressVO, Long> CountFreePublicIps;
     @Inject ResourceTagDao _tagsDao;
@@ -82,6 +92,10 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         AllFieldsSearch.and("physicalNetworkId", AllFieldsSearch.entity().getPhysicalNetworkId(), Op.EQ);
         AllFieldsSearch.and("vpcId", AllFieldsSearch.entity().getVpcId(), Op.EQ);
         AllFieldsSearch.and("associatedVmIp", AllFieldsSearch.entity().getVmIp(), Op.EQ);
+        AllFieldsSearch.and("portable", AllFieldsSearch.entity().isPortable(), Op.EQ);
+        AllFieldsSearch.and("state", AllFieldsSearch.entity().getState(), Op.EQ);
+        AllFieldsSearch.and("multilineLabel", AllFieldsSearch.entity().getMultilineLabel(), Op.EQ);
+        AllFieldsSearch.and("isDefaultStaticNat", AllFieldsSearch.entity().getIsDefaultStaticNat(), Op.EQ);
         AllFieldsSearch.done();
 
         VlanDbIdSearchUnallocated = createSearchBuilder();
@@ -131,9 +145,24 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         CountFreePublicIps.join("vlans", join, CountFreePublicIps.entity().getVlanId(), join.entity().getId(), JoinBuilder.JoinType.INNER);
         CountFreePublicIps.done();
 
+        //find all portable used vmId
+        portableSearchAllocated = createSearchBuilder();
+        portableSearchAllocated.and("portable", portableSearchAllocated.entity().isPortable(), Op.EQ);
+        portableSearchAllocated.and("associatedWithVmId", portableSearchAllocated.entity().getAssociatedWithVmId(), Op.EQ);
+        portableSearchAllocated.and("associatedVmIp", portableSearchAllocated.entity().getVmIp(), Op.EQ);
+        SearchBuilder<VlanVO> joinVlan = _vlanDao.createSearchBuilder();
+        joinVlan.and("vlanTag", joinVlan.entity().getVlanTag(), Op.EQ);
+        portableSearchAllocated.join("vlan", joinVlan, portableSearchAllocated.entity().getVlanId(), joinVlan.entity().getId(), JoinBuilder.JoinType.INNER);
+        portableSearchAllocated.done();
+        joinVlan.done();
+        
         DeleteAllExceptGivenIp = createSearchBuilder();
         DeleteAllExceptGivenIp.and("vlanDbId", DeleteAllExceptGivenIp.entity().getVlanId(), Op.EQ);
         DeleteAllExceptGivenIp.and("ip", DeleteAllExceptGivenIp.entity().getAddress(), Op.NEQ);
+        
+        /*maxStaticNatSeq = createSearchBuilder(Integer.class);
+        maxStaticNatSeq.select(null, Func.MAX, maxStaticNatSeq.entity().getStaticNatSeq());
+        maxStaticNatSeq.done();*/
     }
 
     @Override
@@ -163,6 +192,7 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         address.setVpcId(null);
         address.setSystem(false);
         address.setVmIp(null);
+        address.setIsDefaultStaticNat(false);
         update(ipAddressId, address);
     }
 
@@ -410,9 +440,94 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     }
 
     @Override
+    public IPAddressVO findByAssociatedVmIdAndVmIp(long vmId, String vmIp,String multilineLabel) {
+        SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+        sc.setParameters("associatedWithVmId", vmId);
+        sc.setParameters("associatedVmIp", vmIp);
+        sc.setParameters("multilineLabel", multilineLabel);
+        return findOneBy(sc);
+    }
+    
+   /* @Override
+    public IPAddressVO findByAssociatedVmIdAndPortableVmIp(long vmId, String vmIp,boolean isPortable,String vlanTag) {
+    	SearchCriteria<IPAddressVO> sc = portableSearchAllocated.create();
+    	sc.setParameters("associatedWithVmId", vmId);
+        sc.setParameters("associatedVmIp", vmIp);
+        sc.setParameters("portable", isPortable);
+        sc.setJoinParameters("vlan", "vlanTag", vlanTag);
+
+        List<IPAddressVO> ips = listBy(sc) ;
+        if(ips != null && ips.size()>0){
+        	return ips.get(0);
+        }
+        return null;
+    }*/
+    
+    @Override
     public void lockRange(long vlandbId) {
         SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
         sc.setParameters("vlan", vlandbId);
         lockRows(sc,null,true);
     }
+    
+    @Override
+	public IPAddressVO findByIp(String ipAddress) {
+		SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+        sc.setParameters("ipAddress", ipAddress);
+        return findOneBy(sc);
+	}
+
+	@Override
+	public List<IPAddressVO> listSourceNatPublicIps(long networkId,long vlanDbId, Boolean isSourceNat,State state) {
+		 SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+	     sc.setParameters("network", networkId);
+	     sc.setParameters("vlan", vlanDbId);
+	     sc.setParameters("sourceNat", isSourceNat);
+	     sc.setParameters("state", state);
+	     return listBy(sc);
+	}
+
+	@Override
+	public List<IPAddressVO> listStaticNatIps(long networkId, long vmId, Boolean isStaticNat) {
+		 SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+		 sc.setParameters("network", networkId);
+	     sc.setParameters("associatedWithVmId", vmId);
+	     sc.setParameters("oneToOneNat", isStaticNat);
+	     Filter filter = new Filter(IPAddressVO.class, "isDefaultStaticNat", Boolean.FALSE, null, null);
+	     return search(sc, filter);
+	}
+	
+	@Override
+	public IPAddressVO findDefaultStaticNat(long networkId, long vmId, Boolean isDefaultStaticNat) {
+		 SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+		 sc.setParameters("network", networkId);
+	     sc.setParameters("associatedWithVmId", vmId);
+	     sc.setParameters("oneToOneNat", Boolean.TRUE);
+	     sc.setParameters("isDefaultStaticNat", isDefaultStaticNat);
+	     List<IPAddressVO> ips = listBy(sc) ;
+	     
+         if(ips != null && ips.size()>0){
+        	return ips.get(0);
+         }
+         return null;
+	}
+	
+	/*@Override
+	public boolean updatePublicIPRange(long networkId,long vmId,int staticNatSeq) {
+        String updateSql = "UPDATE `cloud`.`user_ip_address` set static_nat_seq=static_nat_seq-1 where one_to_one_nat=1 and network_id=? and vm_id=? and  static_nat_seq>? ";
+        try {
+        	TransactionLegacy txn = TransactionLegacy.currentTxn();
+        	Connection conn = txn.getConnection();
+        	PreparedStatement stmt = conn.prepareStatement(updateSql);
+        	stmt.setLong(1, networkId);
+            stmt.setLong(2, vmId);
+            stmt.setInt(3, staticNatSeq);
+            stmt.executeUpdate();
+            stmt.close();
+        } catch (SQLException e) {
+        	s_logger.error("Failed to execute update ip address sql.",e);
+        	return false;
+        }
+        return true;
+    }*/
 }

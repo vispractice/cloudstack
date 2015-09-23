@@ -420,8 +420,11 @@ public enum Config {
 
 	UCSSyncBladeInterval("Advanced", ManagementServer.class, Integer.class, "ucs.sync.blade.interval", "3600", "the interval cloudstack sync with UCS manager for available blades in case user remove blades from chassis without notifying CloudStack", null),
 
-    ManagementServerVendor("Advanced", ManagementServer.class, String.class, "mgt.server.vendor", "ACS", "the vendor of management server", null);
+    ManagementServerVendor("Advanced", ManagementServer.class, String.class, "mgt.server.vendor", "ACS", "the vendor of management server", null),
 
+	//Add multilines to initialize switch label (if true is multiline,false is the one line)
+	NetworkAllowMmultiLine("Network", ManagementServer.class, Boolean.class, "allow.networks.multiline", "true", "Allow networks to use multiline", null);
+	
     private final String _category;
 	private final Class<?> _componentClass;
 	private final Class<?> _type;

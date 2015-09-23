@@ -55,6 +55,9 @@ public class PortableIpRangeResponse extends BaseResponse {
     @SerializedName(ApiConstants.END_IP) @Param(description="the end ip of the portable IP range")
     private String endIp;
 
+    @SerializedName(ApiConstants.MULTILINE_LABEL) @Param(description="the multiline label")
+    private String multilineLabel;
+    
     @SerializedName(ApiConstants.PORTABLE_IP_ADDRESS)
     @Param(description="List of portable IP and association with zone/network/vpc details that are part of GSLB rule", responseObject = PortableIpResponse.class)
     private List<PortableIpResponse> portableIpResponses;
@@ -90,4 +93,12 @@ public class PortableIpRangeResponse extends BaseResponse {
     public void setPortableIpResponses(List<PortableIpResponse> portableIpResponses) {
         this.portableIpResponses = portableIpResponses;
     }
+
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
 }

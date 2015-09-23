@@ -235,10 +235,11 @@ static_nat() {
            -j MARK -m state --state NEW --set-mark $tableNo &>>  $OUTFILE || [ "$op" == "-D" ]) &&
   (sudo iptables -t mangle $op PREROUTING -i $dev -d $publicIp \
            -m state --state NEW -j CONNMARK --save-mark &>>  $OUTFILE || [ "$op" == "-D" ]) &&
-  (sudo iptables -t mangle $op  PREROUTING -s $instIp -i eth0  \
-           -j MARK -m state --state NEW --set-mark $tableNo &>>  $OUTFILE || [ "$op" == "-D" ]) &&
-  (sudo iptables -t mangle $op PREROUTING -s $instIp -i eth0  \
-           -m state --state NEW -j CONNMARK --save-mark &>>  $OUTFILE || [ "$op" == "-D" ]) &&
+#Andrew ling add,To fix the mutiline feature, It can't mark the "-i eth0" in the packet, because the packet from the VM want to choose the route rules.
+#  (sudo iptables -t mangle $op  PREROUTING -s $instIp -i eth0  \
+#           -j MARK -m state --state NEW --set-mark $tableNo &>>  $OUTFILE || [ "$op" == "-D" ]) &&
+#  (sudo iptables -t mangle $op PREROUTING -s $instIp -i eth0  \
+#           -m state --state NEW -j CONNMARK --save-mark &>>  $OUTFILE || [ "$op" == "-D" ]) &&
   (sudo iptables -t nat $op  PREROUTING -i $dev -d $publicIp -j DNAT \
            --to-destination $instIp &>>  $OUTFILE || [ "$op" == "-D" ]) &&
   (sudo iptables $op FORWARD -i $dev -o eth0 -d $instIp  -m state \
@@ -252,6 +253,28 @@ static_nat() {
   return $result
 }
 
+#Andrew ling add the mutiline label route table 
+setMutiline_vm_route_rule() {
+  local vmInstanceIp=$1
+  local routeTableName=$2
+  local op=$3
+  logger -t cloud "$(basename $0): start setMutiline_vm_route_rule: route table name=$routeTableName instance ip=$vmInstanceIp  op=$op"
+  local oldRouteTableName=$(sudo ip rule show |grep "from $vmInstanceIp lookup"|awk -F' ' '{print $5}')
+  if [ -n "$oldRouteTableName" ]
+  then
+        sudo ip rule del from $vmInstanceIp table $oldRouteTableName
+        if [ "$routeTableName" != "none" ]
+        then
+          sudo ip rule add from $vmInstanceIp table $routeTableName
+        fi
+  else
+   sudo ip rule add from $vmInstanceIp table $routeTableName
+  fi 
+  result=$?
+  logger -t cloud "$(basename $0): done setMutiline_vm_route_rule: route table name=$routeTableName instance ip=$vmInstanceIp  op=$op result=$result"
+}
+
+
 
 
 rflag=
@@ -262,9 +285,10 @@ lflag=
 dflag=
 sflag=
 Gflag=
+Lflag=
 op=""
 
-while getopts 'ADr:P:p:t:l:d:s:G' OPTION
+while getopts 'ADr:P:p:t:l:d:s:GL:' OPTION
 do
   case $OPTION in
   A)    op="-A"
@@ -294,6 +318,9 @@ do
         ;;
   G)    Gflag=1
         ;;
+  L)    Lflag=1
+        routeTable="$OPTARG"
+        ;; 
   ?)    usage
         unlock_exit 2 $lock $locked
         ;;
@@ -308,6 +335,8 @@ if [ "$Gflag" == "1" ]
 then
   if [ "$protocol" == "" ] 
   then
+#Andrew ling add
+    setMutiline_vm_route_rule $instanceIp  $routeTable $op  
     static_nat $publicIp $instanceIp  $op
   else
     one_to_one_fw_entry $publicIp $instanceIp  $protocol $dport $op
