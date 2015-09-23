@@ -111,7 +111,7 @@
                 var data = args.data ? args.data : {};
                 var fields = {
                     multilinelabelid: {
-                        label: 'Multilines',
+                        label: 'line',
                         defaultValue: data.multilinelabel,
                         select: function(args) {
                             $.ajax({
@@ -135,7 +135,7 @@
                     cloudStack.dialog.createForm({
                         form: {
                             //title: 'label.add.multiline',
-							title: 'add.multiline',
+							title: 'add.line',
                             desc: '(required) Please specify an operators in line to be associated with this IP range.',
                             fields: fields
                         },
@@ -701,11 +701,11 @@
                                                 label: 'label.end.IP'
                                             },
 											'multiline': {
-												label: 'multiline',
+												label: 'line',
 												//label: 'label.multiline',
 												custom: {
 													//buttonLabel: 'label.add.multiline',
-													buttonLabel: 'add.multiline',
+													buttonLabel: 'add.line',
 													action: cloudStack.multilineLabel.dialog()
 												}
 											},

@@ -1959,7 +1959,7 @@
                             }
                         }, 
 						multilinelabel: {
-                            label: 'multiline'
+                            label: 'line'
 							//label: 'label.multiline'
                         }
                     },
@@ -2096,7 +2096,7 @@
                                     },
 									ismultiline: {
                                         //label: 'label.multiline',
-										label: 'multiline',
+										label: 'line',
                                         select: function(args) {                                                    
 											$.ajax({
 												url: createURL('listMultiline'),

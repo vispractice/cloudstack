@@ -2252,23 +2252,22 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
     		  
 				long dcId = guestNetwork.getDataCenterId();
 				IPAddressVO sourceNatIp = getExistMmultilineSourceNatInNetwork(owner.getId(), guestNetwork.getId(), multilineLabel);
+				
 				if (sourceNatIp != null) {
-				ipToReturn = PublicIp.createFromAddrAndVlan(sourceNatIp, _vlanDao.findById(sourceNatIp.getVlanId()));
+					ipToReturn = PublicIp.createFromAddrAndVlan(sourceNatIp, _vlanDao.findById(sourceNatIp.getVlanId()));
 				} else {
-				ipToReturn = assignDedicateIpAddress(owner, guestNetwork.getId(), null, dcId, true,multilineLabel);
-			}
-       } catch (InsufficientAddressCapacityException e) {
-              s_logger.error("Unable to get source nat ip address ", e);
+					ipToReturn = assignDedicateIpAddress(owner, guestNetwork.getId(), null, dcId, true,multilineLabel);
+				}
        } catch (ConcurrentOperationException e) {
              s_logger.error("Unable to get source nat ip address ", e);
        }catch (Exception e) {
-             s_logger.error("Unable to get source nat ip address ", e);
+             s_logger.error("Failed to get source nat ip address ", e);
        }
        return ipToReturn;
     }
     
     /**
-     * 判断当前网络是否在多线路已经q全部获取source nat ip
+     * 判断当前网络是否在多线路已经全部获取source nat ip
      * @add by hai.li 2015.08.19
      * @param ownerId
      * @param networkId
