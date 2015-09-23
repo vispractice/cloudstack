@@ -314,9 +314,9 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
     AffinityGroupDao _affinityGroupDao;
     @Inject
     AffinityGroupService _affinityGroupService;
-    
+
     @Inject
-    MultilineDao multilineLabelDao;
+    MultilineDao _multilineDao;
 
     // FIXME - why don't we have interface for DataCenterLinkLocalIpAddressDao?
     @Inject
@@ -5404,10 +5404,10 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
         if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
     	     if (multilineLabel != null && !multilineLabel.equals("")) {
-         	     return multilineLabelDao.getMultilineByLabel(multilineLabel);
+         	     return _multilineDao.getMultilineByLabel(multilineLabel);
              } 
         } 
-        return multilineLabelDao.getDefaultMultiline();        
+        return _multilineDao.getDefaultMultiline();        
     }
     
 }

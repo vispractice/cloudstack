@@ -22,7 +22,6 @@ import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
-import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
@@ -34,7 +33,7 @@ import com.cloud.utils.db.SearchCriteria.Op;
  * @descrption 
  */
 @Component
-@Local(value = MultilineVO.class)
+@Local(value = MultilineDao.class)
 public class MultilineDaoImpl extends GenericDaoBase<MultilineVO, Long> implements MultilineDao {
     final SearchBuilder<MultilineVO> labelSearch;
     final SearchBuilder<MultilineVO> isDefaultSearch;
