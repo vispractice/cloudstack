@@ -26,9 +26,9 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import com.cloud.agent.api.routing.SetMonitorServiceCommand;
+
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.storage.command.DeleteCommand;
 import org.apache.cloudstack.storage.command.DownloadCommand;
 import org.apache.cloudstack.storage.command.DownloadProgressCommand;
@@ -91,6 +91,7 @@ import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SavePasswordCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
+import com.cloud.agent.api.routing.SetMultilineRouteCommand;
 import com.cloud.agent.api.routing.SetNetworkACLCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesVpcCommand;
@@ -122,6 +123,7 @@ import com.cloud.utils.db.DB;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine.State;
+
 import org.apache.cloudstack.storage.command.DeleteCommand;
 import org.apache.cloudstack.storage.command.DownloadCommand;
 import org.apache.cloudstack.storage.command.DownloadProgressCommand;
@@ -132,6 +134,7 @@ import org.springframework.stereotype.Component;
 import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -385,6 +388,8 @@ public class SimulatorManagerImpl extends ManagerBase implements SimulatorManage
                 return this.storageHandler.handleStorageCommands((StorageSubSystemCommand)cmd);
             } else if (cmd instanceof VpnUsersCfgCommand || cmd instanceof RemoteAccessVpnCfgCommand || cmd instanceof SetMonitorServiceCommand) {
                 return new Answer(cmd);
+            }  else if (cmd instanceof SetMultilineRouteCommand) {
+        		return _mockNetworkMgr.setMultilineRoute((SetMultilineRouteCommand) cmd);
             } else {
                 s_logger.error("Simulator does not implement command of type "+cmd.toString());
                 return Answer.createUnsupportedCommandAnswer(cmd);

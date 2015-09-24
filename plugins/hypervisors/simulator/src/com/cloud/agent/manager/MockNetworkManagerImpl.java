@@ -38,6 +38,7 @@ import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesAnswer;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
+import com.cloud.agent.api.routing.SetMultilineRouteCommand;
 import com.cloud.agent.api.routing.SetNetworkACLAnswer;
 import com.cloud.agent.api.routing.SetNetworkACLCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesAnswer;
@@ -55,6 +56,7 @@ import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.simulator.MockVMVO;
 import com.cloud.simulator.dao.MockVMDao;
 import com.cloud.utils.component.ManagerBase;
+
 import org.apache.log4j.Logger;
 
 import javax.inject.Inject;
@@ -231,6 +233,12 @@ public class MockNetworkManagerImpl extends ManagerBase implements MockNetworkMa
 
     @Override
     public Answer checkSiteToSiteVpnConnection(CheckS2SVpnConnectionsCommand cmd) {
+        return new Answer(cmd);
+    }
+    
+    
+    @Override
+    public  Answer setMultilineRoute(SetMultilineRouteCommand cmd){
         return new Answer(cmd);
     }
 }
