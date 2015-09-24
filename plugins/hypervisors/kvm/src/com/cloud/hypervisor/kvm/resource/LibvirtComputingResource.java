@@ -2109,6 +2109,7 @@ ServerResource {
             List<InterfaceDef> nics = getInterfaces(conn, routerName);
             Map<String, Integer> broadcastUriAllocatedToVM = new HashMap<String, Integer>();
             Integer nicPos = 0;
+            Integer untaggedNum = 0;
             for (InterfaceDef nic : nics) {
                 if (nic.getBrName().equalsIgnoreCase(_linkLocalBridgeName)) {
                     broadcastUriAllocatedToVM.put("LinkLocal", nicPos);
@@ -2116,7 +2117,8 @@ ServerResource {
                     if (nic.getBrName().equalsIgnoreCase(_publicBridgeName)
                             || nic.getBrName().equalsIgnoreCase(_privBridgeName)
                             || nic.getBrName().equalsIgnoreCase(_guestBridgeName)) {
-                        broadcastUriAllocatedToVM.put(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString(), nicPos);
+                        broadcastUriAllocatedToVM.put(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString()+untaggedNum, nicPos);
+                        untaggedNum++;
                     } else {
                         String broadcastUri = getBroadcastUriFromBridge(nic.getBrName());
                         broadcastUriAllocatedToVM.put(broadcastUri, nicPos);
@@ -2135,6 +2137,7 @@ ServerResource {
                 numOfIps = ips.length;
             }
 
+            Integer untaggedNum2 = 0;
             for (IpAddressTO ip : ips) {
                 if (!broadcastUriAllocatedToVM.containsKey(ip.getBroadcastUri())) {
                     /* plug a vif into router */
@@ -2143,7 +2146,12 @@ ServerResource {
                     broadcastUriAllocatedToVM.put(ip.getBroadcastUri(), nicPos++);
                     newNic = true;
                 }
-                nicNum = broadcastUriAllocatedToVM.get(ip.getBroadcastUri());
+                if(ip.getBroadcastUri().equalsIgnoreCase(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString())){
+                	nicNum = broadcastUriAllocatedToVM.get(ip.getBroadcastUri()+untaggedNum2);
+            		untaggedNum2++;
+            	} else {
+            		nicNum = broadcastUriAllocatedToVM.get(ip.getBroadcastUri());
+            	}
                 networkUsage(routerIp, "addVif", "eth" + nicNum);
                 result = _virtRouterResource.assignPublicIpAddress(routerName,
                         routerIp, ip.getPublicIp(), ip.isAdd(), ip.isFirstIP(),
