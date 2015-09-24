@@ -2049,6 +2049,7 @@ ServerResource {
             conn = LibvirtConnection.getConnectionByVmName(routerName);
             IpAddressTO[] ips = cmd.getIpAddresses();
             Integer devNum = 0;
+            Integer untaggedNum = 0;
             Map<String, Integer> broadcastUriToNicNum = new HashMap<String, Integer>();
             List<InterfaceDef> pluggedNics = getInterfaces(conn, routerName);
 
@@ -2059,15 +2060,23 @@ ServerResource {
                 } else if (pluggedVlan.equalsIgnoreCase(_publicBridgeName)
                         || pluggedVlan.equalsIgnoreCase(_privBridgeName)
                         || pluggedVlan.equalsIgnoreCase(_guestBridgeName)) {
-                    broadcastUriToNicNum.put(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString(), devNum);
+                    broadcastUriToNicNum.put(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString()+untaggedNum, devNum);
+                    untaggedNum++;
                 } else {
                     broadcastUriToNicNum.put(getBroadcastUriFromBridge(pluggedVlan), devNum);
                 }
                 devNum++;
             }
-
+            
+            Integer untaggedNum2 = 0;
             for (IpAddressTO ip : ips) {
-                String nicName = "eth" + broadcastUriToNicNum.get(ip.getBroadcastUri());
+            	String nicName = "";
+            	if(ip.getBroadcastUri().equalsIgnoreCase(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString())){
+            		nicName = "eth" + broadcastUriToNicNum.get(ip.getBroadcastUri()+untaggedNum2);
+            		untaggedNum2++;
+            	} else {
+            		nicName = "eth" + broadcastUriToNicNum.get(ip.getBroadcastUri());
+            	}
                 String netmask = Long.toString(NetUtils.getCidrSize(ip.getVlanNetmask()));
                 String subnet = NetUtils.getSubNet(ip.getPublicIp(), ip.getVlanNetmask());
                 _virtRouterResource.assignVpcIpToRouter(routerIP, ip.isAdd(), ip.getPublicIp(),
