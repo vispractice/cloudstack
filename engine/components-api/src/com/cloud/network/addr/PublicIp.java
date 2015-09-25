@@ -244,7 +244,7 @@ public class PublicIp implements PublicIpAddress {
 
 	@Override
 	public String getMultilineLabel() {
-		return null;
+		return _addr.getMultilineLabel();
 	}
 
 }

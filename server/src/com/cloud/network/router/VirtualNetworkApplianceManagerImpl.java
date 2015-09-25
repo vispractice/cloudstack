@@ -3595,8 +3595,8 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 	if(sourceNat){
                 		nic = _nicDao.findByIp4AddressAndVmId(ipAddr.getAddress().addr(),router.getId());
                 	}
-                	if(ipAddr.isOneToOneNat() && nic == null){
-                		IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(ipAddr.getNetworkId(),Boolean.TRUE,ipAddr.getMultilineLabel());
+                	if(ipAddr.isOneToOneNat()){
+                		IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(ipAddr.getAssociatedWithNetworkId(),Boolean.TRUE,ipAddr.getMultilineLabel());
                 		if(ip != null){
                 			nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(),router.getId());
                 		}
@@ -3604,6 +3604,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 	if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
                 		deviceId = nic.getDeviceId();
                     }
+                	if(deviceId == 0){
+                		throw new InvalidParameterValueException("Unable to find device id " + deviceId + ".");
+                	}
                 }
                 IpAddressTO ip = new IpAddressTO(ipAddr.getAccountId(), ipAddr.getAddress().addr(), add, firstIP,
                         sourceNat, vlanId, vlanGateway, vlanNetmask, vifMacAddress, networkRate, ipAddr.isOneToOneNat(),deviceId);
