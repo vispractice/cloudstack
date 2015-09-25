@@ -33,6 +33,7 @@ public class IpAddressTO {
     private Integer networkRate;
     private TrafficType trafficType;
     private String networkName;
+    private int deviceId;
 
     public IpAddressTO(long accountId, String ipAddress, boolean add, boolean firstIP, boolean sourceNat, String broadcastUri,
             String vlanGateway, String vlanNetmask, String vifMacAddress, Integer networkRate, boolean isOneToOneNat) {
@@ -49,6 +50,22 @@ public class IpAddressTO {
         this.oneToOneNat = isOneToOneNat;
     }
 
+    public IpAddressTO(long accountId, String ipAddress, boolean add, boolean firstIP, boolean sourceNat, String broadcastUri,
+            String vlanGateway, String vlanNetmask, String vifMacAddress, Integer networkRate, boolean isOneToOneNat, int deviceId) {
+        this.accountId = accountId;
+        this.publicIp = ipAddress;
+        this.add = add;
+        this.firstIP = firstIP;
+        this.sourceNat = sourceNat;
+        this.broadcastUri = broadcastUri;
+        this.vlanGateway = vlanGateway;
+        this.vlanNetmask = vlanNetmask;
+        this.vifMacAddress = vifMacAddress;
+        this.networkRate = networkRate;
+        this.oneToOneNat = isOneToOneNat;
+        this.deviceId = deviceId;
+    }
+    
     protected IpAddressTO() {
     }
 
@@ -116,5 +133,13 @@ public class IpAddressTO {
     public Integer getNetworkRate() {
         return networkRate;
     }
+
+	public int getDeviceId() {
+		return deviceId;
+	}
+
+	public void setDeviceId(int deviceId) {
+		this.deviceId = deviceId;
+	}
 
 }
