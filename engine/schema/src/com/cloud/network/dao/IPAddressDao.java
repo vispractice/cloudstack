@@ -90,4 +90,6 @@ public interface IPAddressDao extends GenericDao<IPAddressVO, Long> {
     
     IPAddressVO findDefaultStaticNat(long networkId, long vmId, Boolean isDefaultStaticNat);
     
+    IPAddressVO findByNetworkAndLine(long networkId,Boolean isSourceNat, String multilineLabel);
+    
  }

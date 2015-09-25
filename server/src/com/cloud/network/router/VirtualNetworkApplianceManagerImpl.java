@@ -3526,6 +3526,24 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         Map<String, ArrayList<PublicIpAddress>> vlanIpMap = new HashMap<String, ArrayList<PublicIpAddress>>();
         for (final PublicIpAddress ipAddress : ips) {
             String vlanTag = ipAddress.getVlanTag();
+            //update by hai.li support UNTAGGED vlan
+            if(vlanTag.contains(Vlan.UNTAGGED)){
+            	NicVO nic = null;
+            	if(ipAddress.isSourceNat()){
+            		nic = _nicDao.findByIp4AddressAndVmId(ipAddress.getAddress().addr(),router.getId());
+            	}
+            	if(ipAddress.isOneToOneNat() && nic == null){
+            		IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(ipAddress.getNetworkId(),Boolean.TRUE,ipAddress.getMultilineLabel());
+            		if(ip != null){
+            			nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(),router.getId());
+            		}
+                }
+            	if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
+                	vlanTag += "-"+nic.getDeviceId();
+            		ipAddress.setVlanTag(vlanTag);
+                }
+            }
+            
             ArrayList<PublicIpAddress> ipList = vlanIpMap.get(vlanTag);
             if (ipList == null) {
                 ipList = new ArrayList<PublicIpAddress>();

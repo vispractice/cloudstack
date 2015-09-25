@@ -228,5 +228,10 @@ public class VlanVO implements Vlan {
 	public void setMultilineLabel(String multilineLabel) {
 		this.multilineLabel = multilineLabel;
 	}
+
+	@Override
+	public void setVlanTag(String vlanTag) {
+		this.vlanTag = vlanTag;
+	}
     
 }

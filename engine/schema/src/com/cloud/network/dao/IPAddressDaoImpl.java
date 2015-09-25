@@ -511,6 +511,15 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
          }
          return null;
 	}
+
+	@Override
+	public IPAddressVO findByNetworkAndLine(long networkId, Boolean isSourceNat,String multilineLabel) {
+		SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+        sc.setParameters("network", networkId);
+        sc.setParameters("sourceNat", isSourceNat);
+        sc.setParameters("multilineLabel", multilineLabel);
+        return findOneBy(sc);
+	}
 	
 	/*@Override
 	public boolean updatePublicIPRange(long networkId,long vmId,int staticNatSeq) {
