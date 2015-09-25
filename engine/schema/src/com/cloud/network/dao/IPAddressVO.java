@@ -119,7 +119,7 @@ public class IPAddressVO implements IpAddress {
     
     @Column(name="is_default_static_nat")
     private Boolean isDefaultStaticNat;
-
+    
 	protected IPAddressVO() {
 		this.uuid = UUID.randomUUID().toString();
 	}

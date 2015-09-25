@@ -247,9 +247,4 @@ public class PublicIp implements PublicIpAddress {
 		return null;
 	}
 
-	@Override
-	public void setVlanTag(String vlanTag) {
-		_vlan.setVlanTag(vlanTag);
-	}
-
 }

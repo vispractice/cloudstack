@@ -78,7 +78,7 @@ public class VlanVO implements Vlan {
     
     @Column(name="multiline_label")
     String multilineLabel;
-
+    
 	public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId, String ip6Gateway, String ip6Cidr, String ip6Range) {
 		this.vlanType = vlanType;
 		this.vlanTag = vlanTag;
@@ -229,7 +229,6 @@ public class VlanVO implements Vlan {
 		this.multilineLabel = multilineLabel;
 	}
 
-	@Override
 	public void setVlanTag(String vlanTag) {
 		this.vlanTag = vlanTag;
 	}
