@@ -2107,7 +2107,7 @@ ServerResource {
                     if (nic.getBrName().equalsIgnoreCase(_publicBridgeName)
                             || nic.getBrName().equalsIgnoreCase(_privBridgeName)
                             || nic.getBrName().equalsIgnoreCase(_guestBridgeName)) {
-                        broadcastUriAllocatedToVM.put(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString()+"-"+nicPos, nicPos);
+                        broadcastUriAllocatedToVM.put(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString(), nicPos);
                     } else {
                         String broadcastUri = getBroadcastUriFromBridge(nic.getBrName());
                         broadcastUriAllocatedToVM.put(broadcastUri, nicPos);
@@ -2129,15 +2129,15 @@ ServerResource {
             for (IpAddressTO ip : ips) {
                 if (!broadcastUriAllocatedToVM.containsKey(ip.getBroadcastUri())) {
                     /* plug a vif into router */
-                	String broadcastUri = ip.getBroadcastUri();
-                	if(ip.getBroadcastUri().contains(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString())){
-                		broadcastUri = broadcastUri.split("-")[0];
-                	}
-                    VifHotPlug(conn, routerName, broadcastUri, ip.getVifMacAddress());
+                    VifHotPlug(conn, routerName, ip.getBroadcastUri(), ip.getVifMacAddress());
                     broadcastUriAllocatedToVM.put(ip.getBroadcastUri(), nicPos++);
                     newNic = true;
                 }
-            	nicNum = broadcastUriAllocatedToVM.get(ip.getBroadcastUri());
+                if(ip.getBroadcastUri().equalsIgnoreCase(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString())){
+                	nicNum = ip.getDeviceId();
+                } else {
+                	nicNum = broadcastUriAllocatedToVM.get(ip.getBroadcastUri());
+                }
                 networkUsage(routerIp, "addVif", "eth" + nicNum);
                 result = _virtRouterResource.assignPublicIpAddress(routerName,
                         routerIp, ip.getPublicIp(), ip.isAdd(), ip.isFirstIP(),
