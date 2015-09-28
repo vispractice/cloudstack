@@ -3519,13 +3519,43 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         }
         return virtualRouter;
     }
-
+    //add by hai.li get device id for nics
+    private int getDeviceId(PublicIpAddress ipAddress,long routerId){
+    	int deviceId = 0;
+     	NicVO nic = null;
+     	if(ipAddress.isSourceNat()){
+     		nic = _nicDao.findByIp4AddressAndVmId(ipAddress.getAddress().addr(),routerId);
+     		if(nic == null){
+     			return 3;
+     		} else {
+     			return nic.getDeviceId();
+     		}
+     	}
+     	
+     	if(ipAddress.isOneToOneNat()){
+     		IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(ipAddress.getAssociatedWithNetworkId(),Boolean.TRUE,ipAddress.getMultilineLabel());
+     		if(ip != null){
+     			nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(),routerId);
+     		}
+     		if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
+         		return nic.getDeviceId();
+            } else {
+     			return 3;
+     		}
+        }
+     	
+     	throw new InvalidParameterValueException("Unable to find device id " + deviceId + ".");
+    }
+    
     private void createAssociateIPCommands(final VirtualRouter router, final List<? extends PublicIpAddress> ips, Commands cmds, long vmId) {
 
         // Ensure that in multiple vlans case we first send all ip addresses of vlan1, then all ip addresses of vlan2, etc..
         Map<String, ArrayList<PublicIpAddress>> vlanIpMap = new HashMap<String, ArrayList<PublicIpAddress>>();
         for (final PublicIpAddress ipAddress : ips) {
             String vlanTag = ipAddress.getVlanTag();
+            if(vlanTag.contains(Vlan.UNTAGGED)){
+            	vlanTag +="-"+ getDeviceId(ipAddress, router.getId());
+            }
             ArrayList<PublicIpAddress> ipList = vlanIpMap.get(vlanTag);
             if (ipList == null) {
                 ipList = new ArrayList<PublicIpAddress>();
@@ -3587,27 +3617,12 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 } else {
                 	vifMacAddress = ipAddr.getMacAddress();
                 }
-                
-                //update by hai.li support UNTAGGED vlan
                 int deviceId = 0;
+                //update by hai.li support UNTAGGED vlan
                 if(vlanId.contains(Vlan.UNTAGGED)){
-                	NicVO nic = null;
-                	if(sourceNat){
-                		nic = _nicDao.findByIp4AddressAndVmId(ipAddr.getAddress().addr(),router.getId());
-                	}
-                	if(ipAddr.isOneToOneNat()){
-                		IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(ipAddr.getAssociatedWithNetworkId(),Boolean.TRUE,ipAddr.getMultilineLabel());
-                		if(ip != null){
-                			nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(),router.getId());
-                		}
-                    }
-                	if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
-                		deviceId = nic.getDeviceId();
-                    }
-                	if(deviceId == 0){
-                		throw new InvalidParameterValueException("Unable to find device id " + deviceId + ".");
-                	}
+                	 deviceId = getDeviceId(ipAddr, router.getId());
                 }
+               
                 IpAddressTO ip = new IpAddressTO(ipAddr.getAccountId(), ipAddr.getAddress().addr(), add, firstIP,
                         sourceNat, vlanId, vlanGateway, vlanNetmask, vifMacAddress, networkRate, ipAddr.isOneToOneNat(),deviceId);
 
