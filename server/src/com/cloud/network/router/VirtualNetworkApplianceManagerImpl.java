@@ -2539,8 +2539,8 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         List<Long> routerGuestNtwkIds = _routerDao.getRouterNetworks(router.getId());
         for (Long guestNetworkId : routerGuestNtwkIds) {
             if (reprogramGuestNtwks) {
-            	finalizeMultilineOnStrat(cmds, profile);
                 finalizeIpAssocForNetwork(cmds, router, provider, guestNetworkId, null);
+                finalizeMultilineOnStrat(cmds, profile);
                 finalizeNetworkRulesForNetwork(cmds, router, provider, guestNetworkId);
 
                 NetworkOffering offering = _networkOfferingDao.findById((_networkDao.findById(guestNetworkId)).getNetworkOfferingId());
