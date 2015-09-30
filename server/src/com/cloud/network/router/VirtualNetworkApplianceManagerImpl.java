@@ -2539,6 +2539,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         List<Long> routerGuestNtwkIds = _routerDao.getRouterNetworks(router.getId());
         for (Long guestNetworkId : routerGuestNtwkIds) {
             if (reprogramGuestNtwks) {
+            	finalizeMultilineOnStrat(cmds, profile);
                 finalizeIpAssocForNetwork(cmds, router, provider, guestNetworkId, null);
                 finalizeNetworkRulesForNetwork(cmds, router, provider, guestNetworkId);
 
@@ -2558,9 +2559,6 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
 
             finalizeUserDataAndDhcpOnStart(cmds, router, provider, guestNetworkId);
         }
-
-        finalizeMultilineOnStrat(cmds, profile);
-
         return true;
     }
     
