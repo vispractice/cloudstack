@@ -2892,9 +2892,6 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         } else {
         	String isMultilines = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
             if(!isMultilines.isEmpty() && isMultilines.equalsIgnoreCase("true")){
-            	if(router.getState() == State.Starting){
-            		this.getAllMultilineSourceNatIp(ownerId,guestNetwork);
-            	}
             	userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null);
             } else {
             	userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null ,_multilineLabelDao.getDefaultMultiline().getLabel());
@@ -2933,31 +2930,6 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         return publicIps;
     }
 
-    /**
-     * When restart the VR for sourceNatIp
-     * @param ownerId
-     * @param guestNetwork
-     */
-    private void getAllMultilineSourceNatIp(long ownerId,Network guestNetwork){
-    	String isMultilines = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-        if(isMultilines !=null && isMultilines.equalsIgnoreCase("true")){
-        	List<MultilineVO> multilines = _multilineLabelDao.getAllMultiline();
-        	if(multilines == null || multilines.size() <= 0){
-       		 	throw new CloudRuntimeException("Cannot find one multiline label.");
-        	}
-    		for (MultilineVO multiline : multilines) {
-    			try {
-					_ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(_accountMgr.getAccount(ownerId), guestNetwork,multiline.getLabel());
-				} catch (InsufficientAddressCapacityException e) {
-					s_logger.error("Failed to get sourceNatIp when using the multiline feature," + e);
-				} catch (ConcurrentOperationException e) {
-					s_logger.error("Failed to get sourceNatIp when using the multiline feature," + e);
-				}
-
-        	}
-        }
-    }
-    
     @Override
     public boolean finalizeStart(VirtualMachineProfile profile, long hostId, Commands cmds,
             ReservationContext context) {
@@ -3519,13 +3491,10 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     }
     //add by hai.li get device id for nics
     private int getDeviceId(PublicIpAddress ipAddress,long routerId){
-    	int deviceId = 0;
      	NicVO nic = null;
      	if(ipAddress.isSourceNat()){
      		nic = _nicDao.findByIp4AddressAndVmId(ipAddress.getAddress().addr(),routerId);
-     		if(nic == null){
-     			return 3;
-     		} else {
+     		if(nic != null){
      			return nic.getDeviceId();
      		}
      	}
@@ -3537,12 +3506,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
      		}
      		if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
          		return nic.getDeviceId();
-            } else {
-     			return 3;
-     		}
+            } 
         }
-     	
-     	throw new InvalidParameterValueException("Unable to find device id " + deviceId + ".");
+     	return 0;
     }
     
     private void createAssociateIPCommands(final VirtualRouter router, final List<? extends PublicIpAddress> ips, Commands cmds, long vmId) {
@@ -3619,6 +3585,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 //update by hai.li support UNTAGGED vlan
                 if(vlanId.contains(Vlan.UNTAGGED)){
                 	 deviceId = getDeviceId(ipAddr, router.getId());
+                	 if(deviceId == 0){
+                		 throw new InvalidParameterValueException("When you try to one line change for multiline,you must recreate the routing.");
+                	 }
                 }
                
                 IpAddressTO ip = new IpAddressTO(ipAddr.getAccountId(), ipAddr.getAddress().addr(), add, firstIP,
@@ -4288,21 +4257,26 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                         null, rule.getDestIpAddress(), null, null, null, rule.isForRevoke(), false);*/
                 //add static nat multiline label sequence(such as: cucc-ctcc-cmcc)
                 //update by hai.li add static nat multiline label sequence(such as: cucc-ctcc-cmcc)
-                List<IPAddressVO> staticNatIps = _ipAddressDao.listStaticNatIps(guestNetworkId,sourceIp.getAssociatedWithVmId(), Boolean.TRUE);
                 StringBuffer multilineLabelSeq = new StringBuffer();
-                int i = 1;
-                for (IPAddressVO staticNatIp : staticNatIps) {
-                	if(rule.isForRevoke() && staticNatIp.getAddress().equals(sourceIp.getAddress().addr())){
-                		continue;
-                	}
-                	if(i!=1){
-                		multilineLabelSeq.append("_");
-                	}
-                	multilineLabelSeq.append(staticNatIp.getMultilineLabel());
-                	i++;
-    			}
+                String multiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+                boolean isMultiline = Boolean.FALSE;
+            	if(!multiline.isEmpty() && multiline.equalsIgnoreCase("true")){
+            		isMultiline = Boolean.TRUE;
+            		List<IPAddressVO> staticNatIps = _ipAddressDao.listStaticNatIps(guestNetworkId,sourceIp.getAssociatedWithVmId(), Boolean.TRUE);
+            		int i = 1;
+                    for (IPAddressVO staticNatIp : staticNatIps) {
+                    	if(rule.isForRevoke() && staticNatIp.getAddress().equals(sourceIp.getAddress().addr())){
+                    		continue;
+                    	}
+                    	if(i!=1){
+                    		multilineLabelSeq.append("_");
+                    	}
+                    	multilineLabelSeq.append(staticNatIp.getMultilineLabel());
+                    	i++;
+        			}
+            	}
                 StaticNatRuleTO ruleTO = new StaticNatRuleTO(0, sourceIp.getAddress().addr(), null,
-                        null, rule.getDestIpAddress(), null, null, null, rule.isForRevoke(), false, multilineLabelSeq.toString());
+                        null, rule.getDestIpAddress(), null, null, null, rule.isForRevoke(), false, multilineLabelSeq.toString(),isMultiline);
                 rulesTO.add(ruleTO);
             }
         }
