@@ -336,7 +336,10 @@ then
   if [ "$protocol" == "" ] 
   then
 #Andrew ling add
-    setMutiline_vm_route_rule $instanceIp  $routeTable $op  
+    if [ "$Lflag" == "1" ]
+    then
+      setMutiline_vm_route_rule $instanceIp  $routeTable $op  
+    fi
     static_nat $publicIp $instanceIp  $op
   else
     one_to_one_fw_entry $publicIp $instanceIp  $protocol $dport $op
