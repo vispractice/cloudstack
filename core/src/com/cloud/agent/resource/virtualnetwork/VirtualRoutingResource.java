@@ -127,6 +127,7 @@ public class VirtualRoutingResource implements Manager {
     private int _sleep;
     private int _retry;
     private int _port;
+    private int _maxParamterNum = 1000;
 
 
     public Answer executeRequest(final Command cmd) {
@@ -1039,25 +1040,65 @@ public class VirtualRoutingResource implements Manager {
     	virtualRoutingMutilineSetup.setAllMultilineTableLables(mutilineNumbers, multilineLabels);
     	//创建main表规则,删除原来的默认路由规则，创建指定默认路由设定其他非默认路由规则
     	String mainTableToRouteRulesCmd = virtualRoutingMutilineSetup.getMainTableToRouteRulesCmd(VRLableDefault);
+    	String[] mainTableToRouteRulesCmdToArray = splitScripteParameter(mainTableToRouteRulesCmd, ";", _maxParamterNum);
     	//创建多线路配置方案路由表
     	String createRouteTableLableRulesCmd = virtualRoutingMutilineSetup.getCreateRouteTableLableRulesCmd();
     	//创建路由表的规则
     	String tableLabelGroupToRouteRulesCmd = virtualRoutingMutilineSetup.getTableLabelGroupToRouteRulesCmd();
+    	String[] tableLabelGroupToRouteRulesCmdToArray = splitScripteParameter(tableLabelGroupToRouteRulesCmd, ";", _maxParamterNum);
     	
-    	String result = routerProxy(script, routerIp, mainTableToRouteRulesCmd);
-    	if (result != null){
-    		return new Answer( cmd, false, "SetMultilineRouteCommand failed besause can not create main route table rules.");
+    	for(String mainTableToRouteRules : mainTableToRouteRulesCmdToArray){
+    		String result = routerProxy(script, routerIp, mainTableToRouteRules);
+        	if (result != null){
+        		return new Answer( cmd, false, "SetMultilineRouteCommand failed besause can not create main route table rules.");
+        	}
     	}
+    	
     	script = "none.sh";
-    	result = routerProxy(script, routerIp, createRouteTableLableRulesCmd);
+    	String result = routerProxy(script, routerIp, createRouteTableLableRulesCmd);
     	if (result != null){
     		return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables.");
     	}
-    	result = routerProxy(script, routerIp, tableLabelGroupToRouteRulesCmd);
-    	if (result != null){
-    		return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables rules.");
+    	
+    	for(String tableLabelGroupToRouteRules : tableLabelGroupToRouteRulesCmdToArray){
+    		result = routerProxy(script, routerIp, tableLabelGroupToRouteRules);
+        	if (result != null){
+        		return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables rules.");
+        	}
     	}
     	return new Answer(cmd);
+    }
+    
+    private String[] splitScripteParameter(String scripteParameters, String regex, int maxNumPerLine){
+    	String[] scripteParametersToArray = scripteParameters.split(regex);
+    	int scripteParameterNO = 0;
+    	int num = scripteParametersToArray.length / maxNumPerLine;
+    	String[] scripteParametersResult;
+    	if(num == 0){
+    		scripteParametersResult = new String[1];
+    	} else {
+    		if(scripteParametersToArray.length % maxNumPerLine == 0){
+    			scripteParametersResult = new String[num];
+    		}else{
+    			scripteParametersResult = new String[num+1];
+    		}
+    	}
+    	for(int i = 0; i < scripteParametersResult.length; i++ ){
+    		scripteParametersResult[i] = "";
+    	}
+    	if(scripteParametersToArray.length > maxNumPerLine){
+    		for(int i = 0; i < scripteParametersToArray.length; i++){
+    			if(i != 0 && i % maxNumPerLine == 0){
+    				scripteParameterNO++;
+    			}
+    			scripteParametersResult[scripteParameterNO] += scripteParametersToArray[i] + ";";
+    		}
+    		
+    	}else{
+    		scripteParametersResult[0] = scripteParameters;
+    		return scripteParametersResult;
+    	}
+    	return scripteParametersResult;
     }
 
     public String assignPublicIpAddress(final String vmName,
