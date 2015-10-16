@@ -425,7 +425,7 @@ public enum Config {
 	//Add multilines to initialize switch label (if true is multiline,false is the one line)
 	NetworkAllowMmultiLine("Network", ManagementServer.class, Boolean.class, "allow.networks.multiline", "true", "Allow networks to use multiline", null),
 	
-	//Agent reboot the host (true: can reboot,false: cann't reboot the host)
+	//Agent reboot the host (true: can reboot,false: cann't reboot the host) 
 	AllowAgentRebootHost("Advanced", ManagementServer.class, Boolean.class, "allow.agent.reboot.host", "true", "Allow agent to reboot the host", null);
 	
     private final String _category;
