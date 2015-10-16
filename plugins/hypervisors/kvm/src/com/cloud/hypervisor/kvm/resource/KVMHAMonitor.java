@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Inject;
+
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.log4j.Logger;
 
@@ -42,6 +45,9 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
     private String _hostIP; /* private ip address */
 
+    @Inject
+    ConfigurationDao _configDao;
+    
     public KVMHAMonitor(NfsStoragePool pool, String host, String scriptPath) {
         if (pool != null) {
             this._storagePool.put(pool._poolUUID, pool);
@@ -133,7 +139,10 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     }
 
                     String agentTest = Config.AllowAgentRebootHost.key();
-                    s_logger.info("agentTest>>>>>>>>>>>>" + agentTest);
+                    s_logger.info("11--agentTest>>>>>>>>>>>>" + agentTest);
+                    
+                    s_logger.info("22--agentTest>>>>>>>>>>>>" + _configDao.getValue(agentTest));
+                    
                     if (result != null) {
                 	  /*    s_logger.warn("write heartbeat failed: " + result
                                 + "; reboot the host");
