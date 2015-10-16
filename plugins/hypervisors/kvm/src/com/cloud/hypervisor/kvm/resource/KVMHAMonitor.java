@@ -37,6 +37,7 @@ import org.libvirt.StoragePoolInfo;
 import org.libvirt.StoragePoolInfo.StoragePoolState;
 
 import com.cloud.configuration.Config;
+import com.cloud.configuration.ConfigurationManagerImpl;
 import com.cloud.hypervisor.kvm.resource.LibvirtConnection;
 
 public class KVMHAMonitor extends KVMHABase implements Runnable {
@@ -150,6 +151,8 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     String agentTest = Config.AllowAgentRebootHost.key();
                     s_logger.info("11--agentTest>>>>>>>>>>>>" + agentTest);
                     
+                    ConfigurationManagerImpl configurationMgr = new ConfigurationManagerImpl();
+                    s_logger.info("44-->>>>>>>>>>>>" + configurationMgr.test());
                     
                     String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
                     s_logger.info("33--isMultiline>>>>>>>>>>>>" + isMultiline);
