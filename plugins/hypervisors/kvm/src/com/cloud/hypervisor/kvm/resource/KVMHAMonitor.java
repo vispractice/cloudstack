@@ -141,9 +141,11 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                         cmd.add("-m", primaryStoragePool._mountDestPath);
                         cmd.add("-c");
                         result = cmd.execute();*/
+                    	
                     	for (int i = 0; i < 5; i++) {
                     		s_logger.warn("gaolei  test>>>>" + i);
                     	}
+                    	
                     	s_logger.warn("write heartbeat failed, by gaolei, but don't reboot the host");
                     }
                 }
