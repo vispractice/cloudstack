@@ -45,8 +45,8 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
     private String _hostIP; /* private ip address */
 
-    @Inject
-    ConfigurationDao _configDao;
+//    @Inject
+    private ConfigurationDao _configDao;
     
     public KVMHAMonitor(NfsStoragePool pool, String host, String scriptPath) {
         if (pool != null) {
@@ -139,9 +139,14 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     }
 
                     String agentTest = Config.AllowAgentRebootHost.key();
-                    s_logger.info("11--agentTest>>>>>>>>>>>>" + agentTest);
                     
-                    s_logger.info("22--agentTest>>>>>>>>>>>>" + _configDao.getValue(agentTest));
+                    String isAgent = _configDao.getValue(agentTest);
+                    
+                    String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+                    
+                    s_logger.info("11--agentTest>>>>>>>>>>>>" + agentTest);
+                    s_logger.info("33--isMultiline>>>>>>>>>>>>" + isMultiline);
+                    s_logger.info("22--isAgent>>>>>>>>>>>>" + isAgent);
                     
                     if (result != null) {
                 	  /*    s_logger.warn("write heartbeat failed: " + result
