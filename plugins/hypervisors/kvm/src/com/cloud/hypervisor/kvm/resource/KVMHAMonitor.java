@@ -146,7 +146,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     		s_logger.warn("gaolei  test>>>>" + i);
                     	}
                     	
-                    	s_logger.warn("write heartbeat failed, by gaolei, but don't reboot the host");
+                    	s_logger.warn("write heartbeat failed, by gaolei, but don't reboot the host.");
                     }
                 }
             }
