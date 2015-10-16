@@ -48,6 +48,15 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 //    @Inject
     private ConfigurationDao _configDao;
     
+    public ConfigurationDao get_configDao() {
+		return _configDao;
+	}
+
+	public void set_configDao(ConfigurationDao configDao) {
+		this._configDao = configDao;
+	}
+	
+    
     public KVMHAMonitor(NfsStoragePool pool, String host, String scriptPath) {
         if (pool != null) {
             this._storagePool.put(pool._poolUUID, pool);
