@@ -131,8 +131,8 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                         }
                     }
 
-                   /* if (result != null) {
-                        s_logger.warn("write heartbeat failed: " + result
+                    if (result != null) {
+                	  /*    s_logger.warn("write heartbeat failed: " + result
                                 + "; reboot the host");
                         Script cmd = new Script(_heartBeatPath,
                                 _heartBeatUpdateTimeout, s_logger);
@@ -140,8 +140,12 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                         cmd.add("-p", primaryStoragePool._poolMountSourcePath);
                         cmd.add("-m", primaryStoragePool._mountDestPath);
                         cmd.add("-c");
-                        result = cmd.execute();
-                    }*/
+                        result = cmd.execute();*/
+                    	for (int i = 0; i < 5; i++) {
+                    		s_logger.warn("gaolei  test>>>>" + i);
+                    	}
+                    	s_logger.warn("write heartbeat failed, by gaolei, but don't reboot the host");
+                    }
                 }
             }
 
