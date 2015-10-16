@@ -33,6 +33,7 @@ import org.libvirt.StoragePool;
 import org.libvirt.StoragePoolInfo;
 import org.libvirt.StoragePoolInfo.StoragePoolState;
 
+import com.cloud.configuration.Config;
 import com.cloud.hypervisor.kvm.resource.LibvirtConnection;
 
 public class KVMHAMonitor extends KVMHABase implements Runnable {
@@ -131,6 +132,8 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                         }
                     }
 
+                    String agentTest = Config.AllowAgentRebootHost.key();
+                    s_logger.info("agentTest>>>>>>>>>>>>" + agentTest);
                     if (result != null) {
                 	  /*    s_logger.warn("write heartbeat failed: " + result
                                 + "; reboot the host");
@@ -147,6 +150,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     	}
                     	
                     	s_logger.warn("write heartbeat failed, by gaolei, but don't reboot the host.");
+                    	
                     }
                 }
             }
