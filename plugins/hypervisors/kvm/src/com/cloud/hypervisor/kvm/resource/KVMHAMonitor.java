@@ -139,13 +139,13 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     }
 
                     String agentTest = Config.AllowAgentRebootHost.key();
+                    s_logger.info("11--agentTest>>>>>>>>>>>>" + agentTest);
                     
-                    String isAgent = _configDao.getValue(agentTest);
                     
                     String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-                    
-                    s_logger.info("11--agentTest>>>>>>>>>>>>" + agentTest);
                     s_logger.info("33--isMultiline>>>>>>>>>>>>" + isMultiline);
+                    
+                    String isAgent = _configDao.getValue(agentTest);
                     s_logger.info("22--isAgent>>>>>>>>>>>>" + isAgent);
                     
                     if (result != null) {
