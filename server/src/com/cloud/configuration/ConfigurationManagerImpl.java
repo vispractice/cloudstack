@@ -5393,10 +5393,6 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         return problemIps != null && problemIps.size() == 0;
     }
     
-    public String test() {
-    	return _configDao.getValue(Config.AllowAgentRebootHost.key());
-    }
-    
     /**
      * get default multiline label
      * @param multilineLabel
