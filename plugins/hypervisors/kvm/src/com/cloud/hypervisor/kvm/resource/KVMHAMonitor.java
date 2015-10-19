@@ -21,9 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.inject.Inject;
-
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.log4j.Logger;
 
@@ -36,8 +33,6 @@ import org.libvirt.StoragePool;
 import org.libvirt.StoragePoolInfo;
 import org.libvirt.StoragePoolInfo.StoragePoolState;
 
-import com.cloud.configuration.Config;
-import com.cloud.configuration.ConfigurationManagerImpl;
 import com.cloud.hypervisor.kvm.resource.LibvirtConnection;
 
 public class KVMHAMonitor extends KVMHABase implements Runnable {
@@ -46,18 +41,6 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
     private String _hostIP; /* private ip address */
 
-//    @Inject
-    private ConfigurationDao _configDao;
-    
-    public ConfigurationDao get_configDao() {
-		return _configDao;
-	}
-
-	public void set_configDao(ConfigurationDao configDao) {
-		this._configDao = configDao;
-	}
-	
-    
     public KVMHAMonitor(NfsStoragePool pool, String host, String scriptPath) {
         if (pool != null) {
             this._storagePool.put(pool._poolUUID, pool);
@@ -148,18 +131,6 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                         }
                     }
 
-                    String agentTest = Config.AllowAgentRebootHost.key();
-                    s_logger.info("11--agentTest>>>>>>>>>>>>" + agentTest);
-                    
-                    ConfigurationManagerImpl configurationMgr = new ConfigurationManagerImpl();
-                    s_logger.info("44-->>>>>>>>>>>>" + configurationMgr.test());
-                    
-                    String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-                    s_logger.info("33--isMultiline>>>>>>>>>>>>" + isMultiline);
-                    
-                    String isAgent = _configDao.getValue(agentTest);
-                    s_logger.info("22--isAgent>>>>>>>>>>>>" + isAgent);
-                    
                     if (result != null) {
                 	  /*    s_logger.warn("write heartbeat failed: " + result
                                 + "; reboot the host");
@@ -170,10 +141,6 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                         cmd.add("-m", primaryStoragePool._mountDestPath);
                         cmd.add("-c");
                         result = cmd.execute();*/
-                    	
-                    	for (int i = 0; i < 5; i++) {
-                    		s_logger.warn("gaolei  test>>>>" + i);
-                    	}
                     	
                     	s_logger.warn("write heartbeat failed, by gaolei, but don't reboot the host.");
                     	
