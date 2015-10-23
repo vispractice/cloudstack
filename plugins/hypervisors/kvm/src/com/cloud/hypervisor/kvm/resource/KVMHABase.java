@@ -51,14 +51,17 @@ public class KVMHABase {
         String _poolMountSourcePath;
         String _mountDestPath;
         PoolType _type;
-
+        String _isReboot;
+        
         public NfsStoragePool(String poolUUID, String poolIp,
-                String poolSourcePath, String mountDestPath, PoolType type) {
+                String poolSourcePath, String mountDestPath,
+                PoolType type, String isReboot) {
             this._poolUUID = poolUUID;
             this._poolIp = poolIp;
             this._poolMountSourcePath = poolSourcePath;
             this._mountDestPath = mountDestPath;
             this._type = type;
+            this._isReboot = isReboot;
         }
     }
 

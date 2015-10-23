@@ -28,9 +28,7 @@ import com.cloud.utils.script.Script;
 
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
-import org.libvirt.Secret;
 import org.libvirt.StoragePool;
-import org.libvirt.StoragePoolInfo;
 import org.libvirt.StoragePoolInfo.StoragePoolState;
 
 import com.cloud.hypervisor.kvm.resource.LibvirtConnection;
@@ -40,7 +38,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
     private Map<String, NfsStoragePool> _storagePool = new ConcurrentHashMap<String, NfsStoragePool>();
 
     private String _hostIP; /* private ip address */
-
+    
     public KVMHAMonitor(NfsStoragePool pool, String host, String scriptPath) {
         if (pool != null) {
             this._storagePool.put(pool._poolUUID, pool);
@@ -48,7 +46,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         this._hostIP = host;
         this._heartBeatPath = scriptPath;
     }
-
+    
     public void addStoragePool(NfsStoragePool pool) {
         synchronized (_storagePool) {
             this._storagePool.put(pool._poolUUID, pool);
@@ -130,24 +128,32 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                             break;
                         }
                     }
-
+                    /*
+                     * add by l.gao
+                     */
+                    s_logger.debug("_isReboot>>>>>>>>:" + primaryStoragePool._isReboot);
                     if (result != null) {
-                	  /*    s_logger.warn("write heartbeat failed: " + result
-                                + "; reboot the host");
-                        Script cmd = new Script(_heartBeatPath,
-                                _heartBeatUpdateTimeout, s_logger);
-                        cmd.add("-i", primaryStoragePool._poolIp);
-                        cmd.add("-p", primaryStoragePool._poolMountSourcePath);
-                        cmd.add("-m", primaryStoragePool._mountDestPath);
-                        cmd.add("-c");
-                        result = cmd.execute();*/
-                    	
-                    	s_logger.warn("write heartbeat failed, by gaolei, but don't reboot the host.");
-                    	
+                    	String isReboot = primaryStoragePool._isReboot;
+                    	if (isReboot != null && isReboot != "") {
+                    		if (isReboot == "true") {
+                    			s_logger.warn("write heartbeat failed: " + result
+                                        + "; reboot the host");
+                                Script cmd = new Script(_heartBeatPath,
+                                        _heartBeatUpdateTimeout, s_logger);
+                                cmd.add("-i", primaryStoragePool._poolIp);
+                                cmd.add("-p", primaryStoragePool._poolMountSourcePath);
+                                cmd.add("-m", primaryStoragePool._mountDestPath);
+                                cmd.add("-c");
+                                result = cmd.execute();
+                    		} else {
+                    			s_logger.warn("The NFS service is interrupted, but don't allow the agent to restart the host.");
+                    		}
+                    	} else {
+                			s_logger.warn("The NFS service is interrupted, but don't allow the agent to restart the host.");
+                		}
                     }
                 }
             }
-
         }
     }
 
