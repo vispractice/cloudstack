@@ -25,6 +25,6 @@ public class CreateStoragePoolCommand extends ModifyStoragePoolCommand {
 	}
 
     public CreateStoragePoolCommand(boolean add, StoragePool pool) {
-        super(add, pool);
+        super(add, pool, "");
 	}
 }

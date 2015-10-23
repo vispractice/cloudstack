@@ -29,21 +29,21 @@ public class ModifyStoragePoolCommand extends Command {
     String localPath;
 	String [] options;
 	public static final String LOCAL_PATH_PREFIX="/mnt/";
-
+	String isReboot;
 
 	public ModifyStoragePoolCommand() {
 
 	}
 
-    public ModifyStoragePoolCommand(boolean add, StoragePool pool, String localPath) {
+    public ModifyStoragePoolCommand(boolean add, StoragePool pool, String localPath, String isReboot) {
     	this.add = add;
     	this.pool = new StorageFilerTO(pool);
         this.localPath = localPath;
-
+        this.isReboot = isReboot;
     }
-
-    public ModifyStoragePoolCommand(boolean add, StoragePool pool) {
-		this(add, pool, LOCAL_PATH_PREFIX + File.separator + UUID.nameUUIDFromBytes((pool.getHostAddress() + pool.getPath()).getBytes()));
+    
+    public ModifyStoragePoolCommand(boolean add, StoragePool pool, String isReboot) {
+		this(add, pool, LOCAL_PATH_PREFIX + File.separator + UUID.nameUUIDFromBytes((pool.getHostAddress() + pool.getPath()).getBytes()), isReboot);
 	}
 
     public StorageFilerTO getPool() {
@@ -71,5 +71,8 @@ public class ModifyStoragePoolCommand extends Command {
 		this.options = options;
 	}
 
+	public String getIsReboot() {
+		return isReboot;
+	}
 
 }
