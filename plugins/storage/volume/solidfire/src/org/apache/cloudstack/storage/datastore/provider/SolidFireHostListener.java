@@ -65,7 +65,7 @@ public class SolidFireHostListener implements HypervisorHostListener {
         }
 
         StoragePool storagePool = (StoragePool)_dataStoreMgr.getDataStore(storagePoolId, DataStoreRole.Primary);
-        ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(true, storagePool);
+        ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(true, storagePool, "");
 
         Answer answer = _agentMgr.easySend(hostId, cmd);
 
