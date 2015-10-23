@@ -153,7 +153,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
             // remove heartbeat
             for (HostVO host : hosts) {
                 ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(
-                        false, storagePool);
+                        false, storagePool, "");
                 final Answer answer = agentMgr.easySend(host.getId(), cmd);
                 if (answer == null || !answer.getResult()) {
                     if (s_logger.isDebugEnabled()) {
@@ -330,7 +330,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
         // add heartbeat
         for (HostVO host : hosts) {
             ModifyStoragePoolCommand msPoolCmd = new ModifyStoragePoolCommand(
-                    true, pool);
+                    true, pool, "");
             final Answer answer = agentMgr.easySend(host.getId(), msPoolCmd);
             if (answer == null || !answer.getResult()) {
                 if (s_logger.isDebugEnabled()) {
