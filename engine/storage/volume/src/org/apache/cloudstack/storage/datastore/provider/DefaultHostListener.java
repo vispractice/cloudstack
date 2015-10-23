@@ -31,6 +31,10 @@ import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.ModifyStoragePoolAnswer;
 import com.cloud.agent.api.ModifyStoragePoolCommand;
 import com.cloud.alert.AlertManager;
+import com.cloud.dc.ClusterDetailsDao;
+import com.cloud.dc.ClusterDetailsVO;
+import com.cloud.host.HostVO;
+import com.cloud.host.dao.HostDao;
 import com.cloud.storage.DataStoreRole;
 import com.cloud.storage.StoragePool;
 import com.cloud.storage.StoragePoolHostVO;
@@ -49,13 +53,33 @@ public class DefaultHostListener implements HypervisorHostListener {
     StoragePoolHostDao storagePoolHostDao;
     @Inject
     PrimaryDataStoreDao primaryStoreDao;
-
+    @Inject
+    HostDao hostDao;
+    @Inject
+    ClusterDetailsDao clusterDetailsDao;
+    
     @Override
     public boolean hostConnect(long hostId, long poolId) {
+    	/*
+         * add by l.gao
+         */
+        //begin
+        String isreboot = "";
+        HostVO host = hostDao.findById(hostId);
+        if (host != null) {
+        	Long clusterId = host.getClusterId();
+        	String nameParam = "cluster.allow.agent.reboot";
+        	if (clusterId != null) {
+        		ClusterDetailsVO clusterDetails = clusterDetailsDao.findDetail(clusterId, nameParam);
+        		if (clusterDetails != null) {
+        			isreboot = clusterDetails.getValue();
+        		}
+        	}
+        }
+        //end
         StoragePool pool = (StoragePool) this.dataStoreMgr.getDataStore(poolId, DataStoreRole.Primary);
-        ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(true, pool);
+        ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(true, pool, isreboot);
         final Answer answer = agentMgr.easySend(hostId, cmd);
-
         if (answer == null) {
             throw new CloudRuntimeException("Unable to get an answer to the modify storage pool command" + pool.getId());
         }
