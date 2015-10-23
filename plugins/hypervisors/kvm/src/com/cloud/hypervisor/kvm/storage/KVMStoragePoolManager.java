@@ -209,7 +209,7 @@ public class KVMStoragePoolManager {
         } catch(Exception e) {
             StoragePoolInformation info = _storagePools.get(uuid);
             if (info != null) {
-                pool = createStoragePool(info.name, info.host, info.port, info.path, info.userInfo, info.poolType, info.type);
+                pool = createStoragePool(info.name, info.host, info.port, info.path, info.userInfo, info.poolType, info.type, "");
             }
         }
         return pool;
@@ -238,7 +238,7 @@ public class KVMStoragePoolManager {
         }
 
         // secondary storage registers itself through here
-        return createStoragePool(uuid, sourceHost, 0, sourcePath, "", protocol, false);
+        return createStoragePool(uuid, sourceHost, 0, sourcePath, "", protocol, false, "");
     }
 
     public KVMPhysicalDisk getPhysicalDisk(StoragePoolType type, String poolUuid, String volName) {
@@ -276,15 +276,15 @@ public class KVMStoragePoolManager {
 
     public KVMStoragePool createStoragePool( String name, String host, int port,
                                              String path, String userInfo,
-                                             StoragePoolType type) {
+                                             StoragePoolType type, String isReboot) {
         // primary storage registers itself through here
-        return createStoragePool(name, host, port, path, userInfo, type, true);
+        return createStoragePool(name, host, port, path, userInfo, type, true, isReboot);
     }
 
     //Note: due to bug CLOUDSTACK-4459, createStoragepool can be called in parallel, so need to be synced.
     private synchronized KVMStoragePool createStoragePool( String name, String host, int port,
                                              String path, String userInfo,
-                                             StoragePoolType type, boolean primaryStorage) {
+                                             StoragePoolType type, boolean primaryStorage, String isReboot) {
         StorageAdaptor adaptor = getStorageAdaptor(type);
         KVMStoragePool pool = adaptor.createStoragePool(name,
                                 host, port, path, userInfo, type);
@@ -293,7 +293,7 @@ public class KVMStoragePoolManager {
         if (type == StoragePoolType.NetworkFilesystem && primaryStorage) {
             KVMHABase.NfsStoragePool nfspool = new KVMHABase.NfsStoragePool(
                     pool.getUuid(), host, path, pool.getLocalPath(),
-                    PoolType.PrimaryStorage);
+                    PoolType.PrimaryStorage, isReboot);
             _haMonitor.addStoragePool(nfspool);
         }
         StoragePoolInformation info = new StoragePoolInformation(name, host, port, path, userInfo, type, primaryStorage);

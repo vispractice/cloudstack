@@ -374,7 +374,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                     primaryPool = storagePoolMgr.createStoragePool(primaryStore.getUuid(),
                             primaryStore.getHost(), primaryStore.getPort(),
                             primaryStore.getPath(), null,
-                            primaryStore.getPoolType());
+                            primaryStore.getPoolType(), "");
                 } else {
                     return new CopyCmdAnswer(e.getMessage());
                 }
