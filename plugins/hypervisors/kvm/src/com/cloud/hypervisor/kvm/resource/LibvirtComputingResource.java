@@ -300,7 +300,7 @@ ServerResource {
     private String _pod;
     private String _clusterId;
     private int _migrateSpeed;
-
+    
     private long _hvVersion;
     private long _kernelVersion;
     private KVMHAMonitor _monitor;
@@ -1400,7 +1400,7 @@ ServerResource {
                     primaryPool = _storagePoolMgr.createStoragePool(cmd.getPool().getUuid(),
                                       cmd.getPool().getHost(), cmd.getPool().getPort(),
                                       cmd.getPool().getPath(), cmd.getPool().getUserInfo(),
-                                      cmd.getPool().getType());
+                                      cmd.getPool().getType(), "");
                 } else {
                     return new CopyVolumeAnswer(cmd, false, e.getMessage(), null, null);
                 }
@@ -2574,7 +2574,7 @@ ServerResource {
                     primary = _storagePoolMgr.createStoragePool(cmd.getPool().getUuid(),
                                       cmd.getPool().getHost(), cmd.getPool().getPort(),
                                       cmd.getPool().getPath(), cmd.getPool().getUserInfo(),
-                                      cmd.getPool().getType());
+                                      cmd.getPool().getType(), "");
                 } else {
                     return new CreatePrivateTemplateAnswer(cmd, false, e.getMessage());
                 }
@@ -2729,12 +2729,12 @@ ServerResource {
     protected Answer execute(CreateStoragePoolCommand cmd) {
         return new Answer(cmd, true, "success");
     }
-
+    
     protected Answer execute(ModifyStoragePoolCommand cmd) {
         KVMStoragePool storagepool = _storagePoolMgr.createStoragePool(cmd
                 .getPool().getUuid(), cmd.getPool().getHost(),
                 cmd.getPool().getPort(), cmd.getPool().getPath(),
-                cmd.getPool().getUserInfo(), cmd.getPool().getType());
+                cmd.getPool().getUserInfo(), cmd.getPool().getType(), cmd.getIsReboot());
         if (storagepool == null) {
             return new Answer(cmd, false, " Failed to create storage pool");
         }
@@ -4118,7 +4118,7 @@ ServerResource {
 
             KVMStoragePool localStoragePool = _storagePoolMgr
                     .createStoragePool(_localStorageUUID, "localhost", -1,
-                            _localStoragePath, "", StoragePoolType.Filesystem);
+                            _localStoragePath, "", StoragePoolType.Filesystem, "");
             com.cloud.agent.api.StoragePoolInfo pi = new com.cloud.agent.api.StoragePoolInfo(
                     localStoragePool.getUuid(), cmd.getPrivateIpAddress(),
                     _localStoragePath, _localStoragePath,
