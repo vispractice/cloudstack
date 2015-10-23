@@ -369,6 +369,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
     private void weightBasedParametersForValidation() {
         weightBasedParametersForValidation = new HashSet<String>();
         weightBasedParametersForValidation.add(AlertManager.CPUCapacityThreshold.key());
+        weightBasedParametersForValidation.add(AlertManager.IsAllowRebootHost.key());
         weightBasedParametersForValidation.add(AlertManager.StorageAllocatedCapacityThreshold.key());
         weightBasedParametersForValidation.add(AlertManager.StorageCapacityThreshold.key());
         weightBasedParametersForValidation.add(AlertManager.MemoryCapacityThreshold.key());
