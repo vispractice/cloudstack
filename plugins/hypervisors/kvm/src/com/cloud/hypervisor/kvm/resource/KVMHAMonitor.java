@@ -135,7 +135,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     if (result != null) {
                     	String isReboot = primaryStoragePool._isReboot;
                     	if (isReboot != null && isReboot != "") {
-                    		if (isReboot == "true") {
+                    		if ("true".equals(isReboot)) {
                     			s_logger.warn("write heartbeat failed: " + result
                                         + "; reboot the host");
                                 Script cmd = new Script(_heartBeatPath,
