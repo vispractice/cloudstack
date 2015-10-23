@@ -75,6 +75,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     protected SearchBuilder<HostVO> TypePodDcStatusSearch;
 
     protected SearchBuilder<HostVO> IdStatusSearch;
+    protected SearchBuilder<HostVO> IdSearch;
     protected SearchBuilder<HostVO> TypeDcSearch;
     protected SearchBuilder<HostVO> TypeDcStatusSearch;
     protected SearchBuilder<HostVO> TypeClusterStatusSearch;
@@ -190,6 +191,10 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         IdStatusSearch.and("states", IdStatusSearch.entity().getStatus(), SearchCriteria.Op.IN);
         IdStatusSearch.done();
 
+        IdSearch = createSearchBuilder();
+        IdSearch.and("id", IdSearch.entity().getId(), SearchCriteria.Op.EQ);
+        IdSearch.done();
+        
         DcPrivateIpAddressSearch = createSearchBuilder();
         DcPrivateIpAddressSearch.and("privateIpAddress", DcPrivateIpAddressSearch.entity().getPrivateIpAddress(), SearchCriteria.Op.EQ);
         DcPrivateIpAddressSearch.and("dc", DcPrivateIpAddressSearch.entity().getDataCenterId(), SearchCriteria.Op.EQ);
@@ -414,6 +419,14 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         SearchCriteria<HostVO> sc = GuidSearch.create("guid", guid);
         return findOneBy(sc);
     }
+    /* (non-Javadoc)
+	 * @see com.cloud.host.dao.HostDao#findById(long)
+	 */
+	@Override
+	public HostVO findById(long id) {
+		SearchCriteria<HostVO> sc = IdSearch.create("id", id);
+        return findOneBy(sc);
+	}
 
     /*
      * Find hosts which is in Disconnected, Down, Alert and ping timeout and server is not null, set server to null

@@ -66,7 +66,19 @@ public interface HostDao extends GenericDao<HostVO, Long>, StateDao<Status, Stat
     boolean updateResourceState(ResourceState oldState, ResourceState.Event event, ResourceState newState, Host vo);
 
     HostVO findByGuid(String guid);
-
+    /*
+     * 
+     */
+    /**
+	 * @Description TODO
+	 * @author l.gao 
+	 * @date 2015年10月22日下午8:14:56
+	 * @param id:
+	 * @return HostVO
+	 * @throws 
+	 */
+    HostVO findById(long id);
+	
     HostVO findByTypeNameAndZoneId(long zoneId, String name, Host.Type type);
     List<HostVO> findHypervisorHostInCluster(long clusterId);
 
