@@ -551,6 +551,7 @@ public class ApiConstants {
     public static final String BANDWIDTH_RATE = "rate";
     public static final String BANDWIDTH_CEIL = "ceil";
     public static final String BANDWIDTH_TYPE = "bandwidthtype";
+    public static final String BANDWIDTH_PRIO = "bandwidthprio";
     
 
     public enum HostDetails {

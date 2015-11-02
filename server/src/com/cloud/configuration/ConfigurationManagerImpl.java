@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -147,6 +148,8 @@ import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.PhysicalNetwork;
 import com.cloud.network.dao.BandwidthOfferingDao;
 import com.cloud.network.dao.BandwidthOfferingVO;
+import com.cloud.network.dao.BandwidthRulesDao;
+import com.cloud.network.dao.BandwidthRulesVO;
 import com.cloud.network.dao.BandwidthVO;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
@@ -247,6 +250,8 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
     NetworkOfferingDao _networkOfferingDao;
     @Inject
     BandwidthOfferingDao _bandwidthOfferingDao;
+    @Inject
+    BandwidthRulesDao _bandwidthRulesDao;
     @Inject
     VlanDao _vlanDao;
     @Inject
@@ -2351,20 +2356,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
                 localStorageRequired, isDisplayOfferingEnabled, isCustomizedIops, minIops, maxIops,
                 bytesReadRate, bytesWriteRate, iopsReadRate, iopsWriteRate, hypervisorSnapshotReserve);
     }
-    //andrew ling add
-    @Override
-    @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_CREATE, eventDescription = "creating bandwidth offering")
-    public BandwidthOffering createBandwidthOffering(CreateBandwidthOfferingCmd cmd){
-		return null;
-    	
-    }
-    //andrew ling add
-    @Override
-    @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_EDIT, eventDescription = "updating bandwidth offering")
-    public BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd) {
-		return null;
-    	
-    }
+    
     
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_DISK_OFFERING_EDIT, eventDescription = "updating disk offering")
@@ -2456,29 +2448,6 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         } else {
             return false;
         }
-    }
-    
-    //andrew ling add
-    @Override
-    @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_DELETE, eventDescription = "deleting bandwidth offering")
-    public boolean deleteBandwidthOffering(DeleteBandwidthOfferingCmd cmd) {
-    	Long bandwidthOfferingId = cmd.getId();
-    	BandwidthOfferingVO offering = _bandwidthOfferingDao.findById(bandwidthOfferingId);
-    	
-    	if (offering == null){
-    		throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
-    	}
-    	
-    	//TODO check the bandwidth offering whether was used by the bandwidth rules.
-    	
-    	
-    	offering.setState(BandwidthOfferingState.Inactive);
-    	if(_bandwidthOfferingDao.update(bandwidthOfferingId, offering)){
-    		CallContext.current().setEventDetails("Disk offering id=" + bandwidthOfferingId);
-            return true;
-    	} else {
-    		return false;
-    	}
     }
     
     @Override
@@ -5456,6 +5425,126 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
              } 
         } 
         return _multilineDao.getDefaultMultiline();        
+    }
+    
+    //andrew ling add
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_CREATE, eventDescription = "creating bandwidth offering")
+    public BandwidthOffering createBandwidthOffering(CreateBandwidthOfferingCmd cmd){
+    	Long zoneId = cmd.getZoneId();
+    	String name = cmd.getBandwidthOfferingName();
+		String displayText = cmd.getDisplayText();
+		Integer rate = cmd.getRate();
+		Integer ceil = cmd.getCeil();
+		
+		//check the parameters
+		if(zoneId != null || name.isEmpty() || displayText.isEmpty()){
+			throw new InvalidParameterValueException("It need the parameters, like name, display etc.");
+		}
+		if(rate < 0 || ceil < 0){
+			throw new InvalidParameterValueException("The rate or ceil must more than zero.");
+		}
+    	return createBandwidthOffering(zoneId, name, displayText, rate, ceil);
+    	
+    }
+    
+    //andrew ling add
+    protected BandwidthOfferingVO createBandwidthOffering(Long zoneId, String name, String displayText, Integer rate, Integer ceil){
+    	BandwidthOfferingVO newBandwidthOffering = new BandwidthOfferingVO(zoneId, name, displayText, rate ,ceil);
+    	newBandwidthOffering.setCreated(new Date());
+    	CallContext.current().setEventDetails("bandwidth offering id=" + newBandwidthOffering.getId());
+    	BandwidthOfferingVO offering = _bandwidthOfferingDao.persist(newBandwidthOffering);
+        if (offering != null) {
+            CallContext.current().setEventDetails("Bandwidth offering id=" + newBandwidthOffering.getId());
+            return offering;
+        } else {
+            return null;
+        }
+    }
+    
+    //TODO andrew ling add
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_EDIT, eventDescription = "updating bandwidth offering")
+    public BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd) {
+    	Long bandwidthOfferingId = cmd.getId();
+    	String updateName = cmd.getBandwidthOfferingName();
+		String updateDisplayText = cmd.getDisplayText();
+		Integer updateRate = cmd.getRate();
+		Integer updateCeil = cmd.getCeil();
+		if(updateRate < 0 || updateCeil < 0){
+			throw new InvalidParameterValueException("The rate or ceil must more than zero.");
+		}
+		// Check if bandwidthOffering exists
+		BandwidthOffering bandwidthOfferingHandle = _entityMgr.findById(BandwidthOffering.class, bandwidthOfferingId);
+
+        if (bandwidthOfferingHandle == null) {
+            throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
+        }
+        
+        //check if the rate and ceil changed.
+        boolean updateNeeded = (updateName != null || updateDisplayText != null || updateRate != null || updateCeil != null);
+        if (!updateNeeded) {
+            return _bandwidthOfferingDao.findById(bandwidthOfferingId);
+        }
+
+        //TODO rate or ceil changed, then refresh the bandwidth rules which used this bandwidth offering.
+        BandwidthOfferingVO oldBandwidthOfferingVO = _bandwidthOfferingDao.findById(bandwidthOfferingId);
+        if(oldBandwidthOfferingVO.getRate().equals(updateRate) || oldBandwidthOfferingVO.getCeil().equals(updateCeil)){
+        	//go to re-execute the bandwidth rules which used this bandwidth offering.
+        }
+        
+        //store the update bandwidth offering to the DB.
+        BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.createForUpdate(bandwidthOfferingId);
+
+        if (updateName != null) {
+        	bandwidthOffering.setName(updateName);
+        }
+
+        if (updateDisplayText != null) {
+        	bandwidthOffering.setDisplayText(updateDisplayText);
+        }
+        
+        if (updateRate != null) {
+        	bandwidthOffering.setRate(updateRate);
+        }
+        
+        if (updateCeil != null) {
+        	bandwidthOffering.setCeil(updateCeil);
+        }
+        
+        if (_bandwidthOfferingDao.update(bandwidthOfferingId, bandwidthOffering)) {
+            CallContext.current().setEventDetails("Bandwidth offering id=" + bandwidthOffering.getId());
+            return _bandwidthOfferingDao.findById(bandwidthOfferingId);
+        } else {
+            return null;
+        }
+        
+    }
+
+    //andrew ling add
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_DELETE, eventDescription = "deleting bandwidth offering")
+    public boolean deleteBandwidthOffering(DeleteBandwidthOfferingCmd cmd) {
+    	Long bandwidthOfferingId = cmd.getId();
+    	BandwidthOfferingVO offering = _bandwidthOfferingDao.findById(bandwidthOfferingId);
+    	
+    	if (offering == null){
+    		throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
+    	}
+    	
+    	List<BandwidthRulesVO> rules = _bandwidthRulesDao.listByBandwidthOfferingId(bandwidthOfferingId);
+    	if(rules != null | !rules.isEmpty()){
+    		throw new InvalidParameterValueException("Unable to delete the bandwidth offering by id " + bandwidthOfferingId + ", because it was used.");
+    	}
+    	
+    	offering.setState(BandwidthOfferingState.Inactive);
+    	offering.setRemoved(new Date());
+    	if(_bandwidthOfferingDao.update(bandwidthOfferingId, offering)){
+    		CallContext.current().setEventDetails("Disk offering id=" + bandwidthOfferingId);
+            return true;
+    	} else {
+    		return false;
+    	}
     }
     
 }

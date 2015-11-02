@@ -23,12 +23,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.affinity.AffinityGroupResponse;
 import org.apache.cloudstack.api.ApiConstants.HostDetails;
 import org.apache.cloudstack.api.ApiConstants.VMDetails;
 import org.apache.cloudstack.api.response.AccountResponse;
 import org.apache.cloudstack.api.response.AsyncJobResponse;
+import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
 import org.apache.cloudstack.api.response.DiskOfferingResponse;
 import org.apache.cloudstack.api.response.DomainRouterResponse;
 import org.apache.cloudstack.api.response.EventResponse;
@@ -72,6 +72,7 @@ import com.cloud.api.query.vo.TemplateJoinVO;
 import com.cloud.api.query.vo.UserAccountJoinVO;
 import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.api.query.vo.VolumeJoinVO;
+import com.cloud.network.dao.BandwidthOfferingVO;
 import com.cloud.user.Account;
 
 /**
@@ -354,6 +355,23 @@ public class ViewResponseHelper {
         List<DiskOfferingResponse> respList = new ArrayList<DiskOfferingResponse>();
         for (DiskOfferingJoinVO vt : offerings){
             respList.add(ApiDBUtils.newDiskOfferingResponse(vt));
+        }
+        return respList;
+    }
+    
+    //andrew ling add
+    public static List<BandwidthOfferingResponse> createBandwidthOfferingResponse(BandwidthOfferingVO... offerings) {
+        List<BandwidthOfferingResponse> respList = new ArrayList<BandwidthOfferingResponse>();
+        for (BandwidthOfferingVO vo : offerings){
+        	BandwidthOfferingResponse bandwidthOfferingResponse = new BandwidthOfferingResponse();
+        	bandwidthOfferingResponse.setId(vo.getUuid());
+        	bandwidthOfferingResponse.setName(vo.getName());
+        	bandwidthOfferingResponse.setDisplayText(vo.getDisplayText());
+        	bandwidthOfferingResponse.setRate(vo.getRate());
+        	bandwidthOfferingResponse.setCeil(vo.getCeil());
+        	bandwidthOfferingResponse.setCreated(vo.getCreated());
+        	bandwidthOfferingResponse.setObjectName("bandwidthoffering");
+            respList.add(bandwidthOfferingResponse);
         }
         return respList;
     }

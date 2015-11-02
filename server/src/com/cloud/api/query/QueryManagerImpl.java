@@ -62,6 +62,7 @@ import org.apache.cloudstack.api.command.user.zone.ListZonesByCmd;
 import org.apache.cloudstack.api.response.AccountResponse;
 import org.apache.cloudstack.api.response.AsyncJobResponse;
 import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
+import org.apache.cloudstack.api.response.BandwidthResponse;
 import org.apache.cloudstack.api.response.DiskOfferingResponse;
 import org.apache.cloudstack.api.response.DomainRouterResponse;
 import org.apache.cloudstack.api.response.EventResponse;
@@ -147,6 +148,8 @@ import com.cloud.exception.PermissionDeniedException;
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.network.dao.BandwidthOfferingDao;
+import com.cloud.network.dao.BandwidthOfferingVO;
 import com.cloud.network.dao.NetworkDetailsDao;
 import com.cloud.network.security.SecurityGroupVMMapVO;
 import com.cloud.network.security.dao.SecurityGroupVMMapDao;
@@ -286,7 +289,9 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
 
     @Inject
     private DiskOfferingJoinDao _diskOfferingJoinDao;
-
+    
+    @Inject
+    private BandwidthOfferingDao _bandwidthOfferingDao;
     @Inject
     private ServiceOfferingJoinDao _srvOfferingJoinDao;
 
@@ -2324,12 +2329,6 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         response.setResponses(offeringResponses, result.second());
         return response;
     }
-    //andrew ling add
-    @Override
-	public ListResponse<BandwidthOfferingResponse> searchForBandwidthOfferings(ListBandwidthOfferingsCmd cmd) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
     private Pair<List<DiskOfferingJoinVO>, Integer> searchForDiskOfferingsInternal(ListDiskOfferingsCmd cmd) {
         // Note
@@ -2448,6 +2447,52 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
 
         return _diskOfferingJoinDao.searchAndCount(sc, searchFilter);
     }
+    
+    //andrew ling add
+    @Override
+	public ListResponse<BandwidthOfferingResponse> searchForBandwidthOfferings(ListBandwidthOfferingsCmd cmd) {
+		Pair<List<BandwidthOfferingVO>, Integer> result = searchForBandwidthOffering(cmd);
+		ListResponse<BandwidthOfferingResponse> response = new ListResponse<BandwidthOfferingResponse>();
+		List<BandwidthOfferingResponse> offeringResponses = ViewResponseHelper.createBandwidthOfferingResponse(result.first().toArray(new BandwidthOfferingVO[result.first().size()]));
+        response.setResponses(offeringResponses, result.second());
+        return response;
+	}
+    
+    //andrew ling add
+    private Pair<List<BandwidthOfferingVO>, Integer> searchForBandwidthOffering(ListBandwidthOfferingsCmd cmd) {
+    	Boolean isAscending = Boolean.parseBoolean(_configDao.getValue("sortkey.algorithm"));
+        isAscending = (isAscending == null ? true : isAscending);
+        Filter searchFilter = new Filter(BandwidthOfferingVO.class, "sortKey", isAscending, cmd.getStartIndex(),
+                cmd.getPageSizeVal());
+        SearchCriteria<BandwidthOfferingVO> sc = _bandwidthOfferingDao.createSearchCriteria();
+        Object name = cmd.getBandwidthOfferingName();
+        Object id = cmd.getId();
+        Object keyword = cmd.getKeyword();
+        Long zoneId = cmd.getZoneId();
+        if(zoneId != null){
+        	sc.addAnd("zoneId", SearchCriteria.Op.EQ, zoneId);
+        	return _bandwidthOfferingDao.searchAndCount(sc, searchFilter);
+        }
+        
+        if (keyword != null) {
+            SearchCriteria<BandwidthOfferingVO> ssc = _bandwidthOfferingDao.createSearchCriteria();
+            ssc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+
+            sc.addAnd("name", SearchCriteria.Op.SC, ssc);
+        }
+
+        if (id != null) {
+            sc.addAnd("id", SearchCriteria.Op.EQ, id);
+        }
+
+        if (name != null) {
+            sc.addAnd("name", SearchCriteria.Op.EQ, name);
+        }
+        
+        return _bandwidthOfferingDao.searchAndCount(sc, searchFilter);
+    }
+    
 
     @Override
     public ListResponse<ServiceOfferingResponse> searchForServiceOfferings(ListServiceOfferingsCmd cmd) {

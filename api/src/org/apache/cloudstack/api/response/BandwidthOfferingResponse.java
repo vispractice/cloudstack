@@ -26,8 +26,11 @@ public class BandwidthOfferingResponse extends BaseResponse {
     @SerializedName("ceil") @Param(description="the ceil of the bandwidth offering in Kbit")
     private Integer ceil;
     
-    @SerializedName("created") @Param(description="the date this service offering was created")
+    @SerializedName("created") @Param(description="the date this bandwidth offering was created")
     private Date created;
+    
+//    @SerializedName("zoneId") @Param(description="the zone ID this bandwidth offering belong to. Ignore this information as it is not must need when all in the same zone.")
+//    private String zoneId;
 
 	public String getId() {
 		return id;
@@ -76,5 +79,5 @@ public class BandwidthOfferingResponse extends BaseResponse {
 	public void setCreated(Date created) {
 		this.created = created;
 	}
-	
+
 }

@@ -32,7 +32,6 @@ import java.util.TimeZone;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.affinity.AffinityGroup;
@@ -49,6 +48,7 @@ import org.apache.cloudstack.api.response.AsyncJobResponse;
 import org.apache.cloudstack.api.response.AutoScalePolicyResponse;
 import org.apache.cloudstack.api.response.AutoScaleVmGroupResponse;
 import org.apache.cloudstack.api.response.AutoScaleVmProfileResponse;
+import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
 import org.apache.cloudstack.api.response.CapabilityResponse;
 import org.apache.cloudstack.api.response.CapacityResponse;
 import org.apache.cloudstack.api.response.ClusterResponse;
@@ -247,6 +247,7 @@ import com.cloud.network.vpc.PrivateGateway;
 import com.cloud.network.vpc.StaticRoute;
 import com.cloud.network.vpc.Vpc;
 import com.cloud.network.vpc.VpcOffering;
+import com.cloud.offering.BandwidthOffering;
 import com.cloud.offering.DiskOffering;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.NetworkOffering.Detail;
@@ -374,7 +375,21 @@ public class ApiResponseHelper implements ResponseGenerator {
         DiskOfferingJoinVO vOffering = ApiDBUtils.newDiskOfferingView(offering);
         return ApiDBUtils.newDiskOfferingResponse(vOffering);
     }
-
+    
+    //andrew ling add
+    @Override
+    public BandwidthOfferingResponse createBandwidthOfferingResponse(BandwidthOffering offering) {
+    	BandwidthOfferingResponse bandwidthOfferingResponse = new BandwidthOfferingResponse();
+    	bandwidthOfferingResponse.setId(offering.getUuid());
+    	bandwidthOfferingResponse.setName(offering.getName());
+    	bandwidthOfferingResponse.setDisplayText(offering.getDisplayText());
+    	bandwidthOfferingResponse.setRate(offering.getRate());
+    	bandwidthOfferingResponse.setCeil(offering.getCeil());
+    	bandwidthOfferingResponse.setCreated(offering.getCreated());
+    	bandwidthOfferingResponse.setObjectName("bandwidthoffering");
+        return bandwidthOfferingResponse;
+    }
+    
     @Override
     public ResourceLimitResponse createResourceLimitResponse(ResourceLimit limit) {
         ResourceLimitResponse resourceLimitResponse = new ResourceLimitResponse();

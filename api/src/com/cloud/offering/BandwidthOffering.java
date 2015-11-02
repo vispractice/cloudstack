@@ -28,4 +28,8 @@ public interface BandwidthOffering extends InfrastructureEntity, Identity, Inter
      * @return ceil size in Kbit
      */
     Integer getCeil();
+    
+    BandwidthOfferingState getState();
+    
+    Long getDateCenterId();
 }

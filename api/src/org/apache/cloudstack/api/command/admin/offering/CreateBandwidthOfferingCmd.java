@@ -5,16 +5,10 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
-import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
+import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.log4j.Logger;
-
-import com.cloud.exception.ConcurrentOperationException;
-import com.cloud.exception.InsufficientCapacityException;
-import com.cloud.exception.NetworkRuleConflictException;
-import com.cloud.exception.ResourceAllocationException;
-import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.offering.BandwidthOffering;
 import com.cloud.user.Account;
 
@@ -31,7 +25,10 @@ public class CreateBandwidthOfferingCmd extends BaseCmd{
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 	
-	@Parameter(name=ApiConstants.NAME, type=CommandType.STRING, required=true, description="the name of the bandwidth offering")
+    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType=ZoneResponse.class, description= "the ID of the zone")
+    private Long zoneId;
+    
+    @Parameter(name=ApiConstants.NAME, type=CommandType.STRING, required=true, description="the name of the bandwidth offering")
     private String bandwidthOfferingName;
 	
 	@Parameter(name=ApiConstants.DISPLAY_TEXT, type=CommandType.STRING, required=true, description="the display text of the bandwidth offering")
@@ -62,6 +59,10 @@ public class CreateBandwidthOfferingCmd extends BaseCmd{
 	public Integer getCeil() {
 		return ceil;
 	}
+	
+	public Long getZoneId() {
+		return zoneId;
+	}
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
@@ -72,7 +73,9 @@ public class CreateBandwidthOfferingCmd extends BaseCmd{
 		BandwidthOffering result = _configService.createBandwidthOffering(this);
 		if (result != null){
 			//TODO get the response
-//			BandwidthOfferingResponse response = 
+			BandwidthOfferingResponse response = _responseGenerator.createBandwidthOfferingResponse(result);
+            response.setResponseName(getCommandName());
+            this.setResponseObject(response);
 		} else {
 			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create bandwidth offering");
 		}

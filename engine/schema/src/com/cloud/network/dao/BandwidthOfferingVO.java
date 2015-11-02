@@ -28,6 +28,9 @@ public class BandwidthOfferingVO implements BandwidthOffering{
 	@Column(name="uuid")
     private String uuid;
 	
+	@Column(name="date_center_id")
+    private Long dateCenterId;
+	
 	@Column(name = "unique_name")
     private String uniqueName;
 
@@ -58,7 +61,8 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     	uuid = UUID.randomUUID().toString();
     }
 	
-    public BandwidthOfferingVO(String name, String displayText, Integer rate, Integer ceil){
+    public BandwidthOfferingVO(Long dateCenterId, String name, String displayText, Integer rate, Integer ceil){
+    	this.dateCenterId = dateCenterId;
     	this.name = name;
     	this.displayText = displayText;
     	this.rate = rate;
@@ -146,13 +150,23 @@ public class BandwidthOfferingVO implements BandwidthOffering{
 	public Date getCreated() {
 		return created;
 	}
-
+    
+	@Override
 	public BandwidthOfferingState getState() {
 		return state;
 	}
 
 	public void setState(BandwidthOfferingState state) {
 		this.state = state;
+	}
+    
+	@Override
+	public Long getDateCenterId() {
+		return dateCenterId;
+	}
+
+	public void setDateCenterId(Long dateCenterId) {
+		this.dateCenterId = dateCenterId;
 	}
 	
 }
