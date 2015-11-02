@@ -547,6 +547,11 @@ public class ApiConstants {
     public static final String GUEST_OS_ID = "guestosid";
     public static final String MULTILINE_LABEL = "multilinelabel";
     public static final String IS_DEFAULT_STATIC = "isdefaultstaticnat";
+    //andrew ling add, for bandwidth offering 
+    public static final String BANDWIDTH_RATE = "rate";
+    public static final String BANDWIDTH_CEIL = "ceil";
+    public static final String BANDWIDTH_TYPE = "bandwidthtype";
+    
 
     public enum HostDetails {
         all, capacity, events, stats, min;

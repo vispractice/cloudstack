@@ -24,10 +24,13 @@ import org.apache.cloudstack.api.command.admin.config.UpdateCfgCmd;
 import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
 import org.apache.cloudstack.api.command.admin.network.DeleteNetworkOfferingCmd;
 import org.apache.cloudstack.api.command.admin.network.UpdateNetworkOfferingCmd;
+import org.apache.cloudstack.api.command.admin.offering.CreateBandwidthOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.CreateDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.CreateServiceOfferingCmd;
+import org.apache.cloudstack.api.command.admin.offering.DeleteBandwidthOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.DeleteDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.DeleteServiceOfferingCmd;
+import org.apache.cloudstack.api.command.admin.offering.UpdateBandwidthOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.UpdateDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.UpdateServiceOfferingCmd;
 import org.apache.cloudstack.api.command.admin.pod.DeletePodCmd;
@@ -56,6 +59,7 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.Networks.TrafficType;
+import com.cloud.offering.BandwidthOffering;
 import com.cloud.offering.DiskOffering;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.ServiceOffering;
@@ -266,4 +270,36 @@ public interface ConfigurationService {
     List<? extends PortableIpRange> listPortableIpRanges(ListPortableIpRangesCmd cmd);
 
     List<? extends PortableIp> listPortableIps(long id);
+    
+    //andrew ling add, bandwidth offering.
+   /**
+    * Create a bandwidth offering through the API
+    *
+    * @param cmd
+    *            the command object that specifies the name,display_text, rate, ceil. for the bandwidth
+    *            offering
+    * @return the newly created bandwidth offering if successful, null otherwise
+    */
+   BandwidthOffering createBandwidthOffering(CreateBandwidthOfferingCmd cmd);
+  
+   /**
+    * Updates a bandwidth offering
+    *
+    * @param bandwidthOfferingId
+    * @param name
+    * @param displayText
+    * @param rate
+    * @param ceil
+    * @return updated service offering
+    */
+   BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd );
+
+   /**
+    * Deletes a bandwidth offering
+    *
+    * @param serviceOfferingId
+    */
+   boolean deleteBandwidthOffering( DeleteBandwidthOfferingCmd cmd);
+
+    
 }

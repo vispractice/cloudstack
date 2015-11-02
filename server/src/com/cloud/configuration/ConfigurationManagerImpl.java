@@ -44,10 +44,13 @@ import org.apache.cloudstack.api.command.admin.config.UpdateCfgCmd;
 import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
 import org.apache.cloudstack.api.command.admin.network.DeleteNetworkOfferingCmd;
 import org.apache.cloudstack.api.command.admin.network.UpdateNetworkOfferingCmd;
+import org.apache.cloudstack.api.command.admin.offering.CreateBandwidthOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.CreateDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.CreateServiceOfferingCmd;
+import org.apache.cloudstack.api.command.admin.offering.DeleteBandwidthOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.DeleteDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.DeleteServiceOfferingCmd;
+import org.apache.cloudstack.api.command.admin.offering.UpdateBandwidthOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.UpdateDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.UpdateServiceOfferingCmd;
 import org.apache.cloudstack.api.command.admin.pod.DeletePodCmd;
@@ -142,6 +145,9 @@ import com.cloud.network.NetworkService;
 import com.cloud.network.Networks.BroadcastDomainType;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.PhysicalNetwork;
+import com.cloud.network.dao.BandwidthOfferingDao;
+import com.cloud.network.dao.BandwidthOfferingVO;
+import com.cloud.network.dao.BandwidthVO;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.IPAddressVO;
@@ -155,6 +161,8 @@ import com.cloud.network.dao.PhysicalNetworkTrafficTypeVO;
 import com.cloud.network.dao.PhysicalNetworkVO;
 import com.cloud.network.rules.LoadBalancerContainer.Scheme;
 import com.cloud.network.vpc.VpcManager;
+import com.cloud.offering.BandwidthOffering.BandwidthOfferingState;
+import com.cloud.offering.BandwidthOffering;
 import com.cloud.offering.DiskOffering;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.NetworkOffering.Availability;
@@ -237,6 +245,8 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
     DiskOfferingDao _diskOfferingDao;
     @Inject
     NetworkOfferingDao _networkOfferingDao;
+    @Inject
+    BandwidthOfferingDao _bandwidthOfferingDao;
     @Inject
     VlanDao _vlanDao;
     @Inject
@@ -2341,7 +2351,21 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
                 localStorageRequired, isDisplayOfferingEnabled, isCustomizedIops, minIops, maxIops,
                 bytesReadRate, bytesWriteRate, iopsReadRate, iopsWriteRate, hypervisorSnapshotReserve);
     }
-
+    //andrew ling add
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_CREATE, eventDescription = "creating bandwidth offering")
+    public BandwidthOffering createBandwidthOffering(CreateBandwidthOfferingCmd cmd){
+		return null;
+    	
+    }
+    //andrew ling add
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_EDIT, eventDescription = "updating bandwidth offering")
+    public BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd) {
+		return null;
+    	
+    }
+    
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_DISK_OFFERING_EDIT, eventDescription = "updating disk offering")
     public DiskOffering updateDiskOffering(UpdateDiskOfferingCmd cmd) {
@@ -2433,7 +2457,30 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
             return false;
         }
     }
-
+    
+    //andrew ling add
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_DELETE, eventDescription = "deleting bandwidth offering")
+    public boolean deleteBandwidthOffering(DeleteBandwidthOfferingCmd cmd) {
+    	Long bandwidthOfferingId = cmd.getId();
+    	BandwidthOfferingVO offering = _bandwidthOfferingDao.findById(bandwidthOfferingId);
+    	
+    	if (offering == null){
+    		throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
+    	}
+    	
+    	//TODO check the bandwidth offering whether was used by the bandwidth rules.
+    	
+    	
+    	offering.setState(BandwidthOfferingState.Inactive);
+    	if(_bandwidthOfferingDao.update(bandwidthOfferingId, offering)){
+    		CallContext.current().setEventDetails("Disk offering id=" + bandwidthOfferingId);
+            return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_SERVICE_OFFERING_DELETE, eventDescription = "deleting service offering")
     public boolean deleteServiceOffering(DeleteServiceOfferingCmd cmd) {

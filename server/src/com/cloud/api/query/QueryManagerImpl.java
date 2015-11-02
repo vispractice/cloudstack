@@ -46,6 +46,7 @@ import org.apache.cloudstack.api.command.user.account.ListProjectAccountsCmd;
 import org.apache.cloudstack.api.command.user.event.ListEventsCmd;
 import org.apache.cloudstack.api.command.user.iso.ListIsosCmd;
 import org.apache.cloudstack.api.command.user.job.ListAsyncJobsCmd;
+import org.apache.cloudstack.api.command.user.offering.ListBandwidthOfferingsCmd;
 import org.apache.cloudstack.api.command.user.offering.ListDiskOfferingsCmd;
 import org.apache.cloudstack.api.command.user.offering.ListServiceOfferingsCmd;
 import org.apache.cloudstack.api.command.user.project.ListProjectInvitationsCmd;
@@ -60,6 +61,7 @@ import org.apache.cloudstack.api.command.user.volume.ListVolumesCmd;
 import org.apache.cloudstack.api.command.user.zone.ListZonesByCmd;
 import org.apache.cloudstack.api.response.AccountResponse;
 import org.apache.cloudstack.api.response.AsyncJobResponse;
+import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
 import org.apache.cloudstack.api.response.DiskOfferingResponse;
 import org.apache.cloudstack.api.response.DomainRouterResponse;
 import org.apache.cloudstack.api.response.EventResponse;
@@ -2322,6 +2324,12 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         response.setResponses(offeringResponses, result.second());
         return response;
     }
+    //andrew ling add
+    @Override
+	public ListResponse<BandwidthOfferingResponse> searchForBandwidthOfferings(ListBandwidthOfferingsCmd cmd) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
     private Pair<List<DiskOfferingJoinVO>, Integer> searchForDiskOfferingsInternal(ListDiskOfferingsCmd cmd) {
         // Note
@@ -3423,5 +3431,7 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         resourceDetailResponse.setObjectName("resourcedetail");
         return resourceDetailResponse;
     }
+
+	
 
 }

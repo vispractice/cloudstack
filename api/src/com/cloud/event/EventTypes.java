@@ -242,6 +242,12 @@ public class EventTypes {
     public static final String EVENT_NETWORK_OFFERING_EDIT = "NETWORK.OFFERING.EDIT";
     public static final String EVENT_NETWORK_OFFERING_REMOVE = "NETWORK.OFFERING.REMOVE";
     public static final String EVENT_NETWORK_OFFERING_DELETE = "NETWORK.OFFERING.DELETE";
+    
+    //andrew ling add, Bandwidth Offerings
+    public static final String EVENT_BANDWIDTH_OFFERING_CREATE = "BANDWIDTH.OFFERING.CREATE";
+    public static final String EVENT_BANDWIDTH_OFFERING_EDIT = "BANDWIDTH.OFFERING.EDIT";
+    public static final String EVENT_BANDWIDTH_OFFERING_DELETE = "BANDWIDTH.OFFERING.DELETE";
+    
 
     // Pods
     public static final String EVENT_POD_CREATE = "POD.CREATE";
