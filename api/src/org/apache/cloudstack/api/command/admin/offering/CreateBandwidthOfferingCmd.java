@@ -25,7 +25,7 @@ public class CreateBandwidthOfferingCmd extends BaseCmd{
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 	
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType=ZoneResponse.class, description= "the ID of the zone")
+    @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.UUID, entityType=ZoneResponse.class, description= "the ID of the zone")
     private Long zoneId;
     
     @Parameter(name=ApiConstants.NAME, type=CommandType.STRING, required=true, description="the name of the bandwidth offering")

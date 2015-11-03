@@ -1,5 +1,7 @@
 package org.apache.cloudstack.api.response;
 
-public class BandwidthRulesResponse {
+import org.apache.cloudstack.api.BaseResponse;
+
+public class BandwidthRulesResponse  extends BaseResponse {
 
 }

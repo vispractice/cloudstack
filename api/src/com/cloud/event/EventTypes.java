@@ -248,6 +248,12 @@ public class EventTypes {
     public static final String EVENT_BANDWIDTH_OFFERING_EDIT = "BANDWIDTH.OFFERING.EDIT";
     public static final String EVENT_BANDWIDTH_OFFERING_DELETE = "BANDWIDTH.OFFERING.DELETE";
     
+    //andrew ling add bandwidth rules
+    public static final String EVENT_ASSIGN_TO_BANDWIDTH_RULE = "BANDWIDTH.ASSIGN.TO.RULE";
+    public static final String EVENT_REMOVE_FROM_BANDWIDTH_RULE = "BANDWIDTH.REMOVE.FROM.RULE";
+    public static final String EVENT_BANDWIDTH_RULE_CREATE = "BANDWIDTH.RULE.CREATE";
+    public static final String EVENT_BANDWIDTH_RULE_DELETE = "BANDWIDTH.RULE.DELETE";
+    public static final String EVENT_BANDWIDTH_RULE_EDIT = "BANDWIDTH.RULE.DELETE";
 
     // Pods
     public static final String EVENT_POD_CREATE = "POD.CREATE";
