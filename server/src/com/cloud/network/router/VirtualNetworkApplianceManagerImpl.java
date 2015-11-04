@@ -3497,14 +3497,12 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
      		if(nic != null){
      			return nic.getDeviceId();
      		}
-     	}
-     	
-     	if(ipAddress.isOneToOneNat()){
+     	} else {
      		IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(ipAddress.getAssociatedWithNetworkId(),Boolean.TRUE,ipAddress.getMultilineLabel());
      		if(ip != null){
      			nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(),routerId);
      		}
-     		if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
+     		if (nic != null) {
          		return nic.getDeviceId();
             } 
         }
