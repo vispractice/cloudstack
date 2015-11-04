@@ -2,6 +2,7 @@ package org.apache.cloudstack.api.command.user.bandwidth;
 
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
@@ -20,7 +21,7 @@ import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 
-@APICommand(name = "removeFromBandwidthRule", description="Removes IP, startPort and endPort from a bandwidth rule.", responseObject=SuccessResponse.class)
+@APICommand(name = "removeFromBandwidthRule", description="Removes filter: IP, startPort and endPort from a bandwidth rule.", responseObject=SuccessResponse.class)
 public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
     public static final Logger s_logger = Logger.getLogger(RemoveFromBandwidthRuleCmd.class.getName());
 
@@ -31,7 +32,7 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
     /////////////////////////////////////////////////////
 
     @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = FirewallRuleResponse.class,
-            required=true, description="The ID of the assign bandwidth rule")
+            required=true, description="The ID of the bandwidth filter rule")
     private Long id;
     
     /////////////////////////////////////////////////////
@@ -53,13 +54,19 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
 
 	@Override
 	public String getEventDescription() {
-		return ("Remove from bandwidth rule by id="+getId());
+		return ("Remove bandwidth filter rule by id="+getId());
 	}
 
 	@Override
 	public void execute() {
-		// TODO Auto-generated method stub
-		
+		CallContext.current().setEventDetails("bandwidth filter rule Id= " + getId());
+		boolean result = _bandwidthService.removeFromBandwidthRule(this);
+        if (result) {
+            SuccessResponse response = new SuccessResponse(getCommandName());
+            this.setResponseObject(response);
+        } else {
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to remove bandwidth filter rule");
+        }		
 	}
 
 	@Override

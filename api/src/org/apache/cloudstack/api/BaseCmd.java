@@ -50,6 +50,7 @@ import com.cloud.network.NetworkUsageService;
 import com.cloud.network.StorageNetworkService;
 import com.cloud.network.VpcVirtualNetworkApplianceService;
 import com.cloud.network.as.AutoScaleService;
+import com.cloud.network.bandwidth.BandwidthService;
 import com.cloud.network.firewall.FirewallService;
 import com.cloud.network.lb.LoadBalancingRulesService;
 import com.cloud.network.rules.RulesService;
@@ -150,6 +151,8 @@ public abstract class BaseCmd {
     @Inject public InternalLoadBalancerVMService _internalLbSvc;
     @Inject public NetworkModel _ntwkModel;
     @Inject public AlertService _alertSvc;
+    //andrew ling add
+    @Inject public BandwidthService _bandwidthService;
 
     public abstract void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException, ResourceAllocationException, NetworkRuleConflictException;
 

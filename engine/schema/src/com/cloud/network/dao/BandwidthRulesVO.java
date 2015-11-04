@@ -71,6 +71,17 @@ public class BandwidthRulesVO implements InternalIdentity {
     	this.ceil = ceil;
     }
     
+    public BandwidthRulesVO(Long bandwidthId, Long networksId, Integer trafficRuleId, BandwidthType type, Integer prio, Integer rate, Integer ceil ){
+    	uuid = UUID.randomUUID().toString();
+    	this.bandwidthId = bandwidthId;
+    	this.networksId = networksId;
+    	this.trafficRuleId = trafficRuleId;
+    	this.type = type;
+    	this.prio = prio;
+    	this.rate = rate;
+    	this.ceil = ceil;
+    }
+    
 	@Override
 	public long getId() {
 		return id;

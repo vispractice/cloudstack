@@ -235,4 +235,5 @@
         <property name="gslbServiceProviders" value="#{gslbServiceProvidersRegistry.registered}" />
     </bean>
     <bean id="certServiceImpl" class="org.apache.cloudstack.network.lb.CertServiceImpl" />
+    <bean id="bandwidthManagerImpl" class="com.cloud.network.bandwidth.BandwidthManagerImpl" />
 </beans>
