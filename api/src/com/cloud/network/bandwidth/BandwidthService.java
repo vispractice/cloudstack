@@ -8,10 +8,12 @@ import org.apache.cloudstack.api.command.user.bandwidth.RemoveFromBandwidthRuleC
 import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthRuleCmd;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
 
+import com.cloud.exception.ResourceUnavailableException;
+
 public interface BandwidthService {
 	//业务层的响应接口，从页面发送过来的请求，内部接收的接口方法
 	Long createBandwidthRule(CreateBandwidthRuleCmd cmd);
-	boolean applyBandwidthRule(Long ruleId);
+	boolean applyBandwidthRule(Long ruleId) throws ResourceUnavailableException;
 	boolean revokeRelatedBandwidthRule(Long ruleId);
 	boolean deleteBandwidthRule(DeleteBandwidthRuleCmd cmd);
 	boolean updateBandwidthRule(UpdateBandwidthRuleCmd cmd);

@@ -66,6 +66,8 @@ import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SavePasswordCommand;
+import com.cloud.agent.api.routing.SetBandwidthRulesAnswer;
+import com.cloud.agent.api.routing.SetBandwidthRulesCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesAnswer;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
 import com.cloud.agent.api.routing.SetMultilineRouteCommand;
@@ -79,6 +81,7 @@ import com.cloud.agent.api.routing.SetStaticRouteCommand;
 import com.cloud.agent.api.routing.Site2SiteVpnCfgCommand;
 import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.agent.api.routing.VpnUsersCfgCommand;
+import com.cloud.agent.api.to.BandwidthRuleTO;
 import com.cloud.agent.api.to.DhcpTO;
 import com.cloud.agent.api.to.FirewallRuleTO;
 import com.cloud.agent.api.to.IpAddressTO;
@@ -181,7 +184,10 @@ public class VirtualRoutingResource implements Manager {
               //Andrew ling add, accept the multiline route command from the manger
         	} else if (cmd instanceof SetMultilineRouteCommand) {
         		return execute((SetMultilineRouteCommand) cmd);
-            }
+            //Andrew ling add, accept the bandwidth rules command from the manger
+    		} else if (cmd instanceof SetBandwidthRulesCommand) {
+    		return execute((SetBandwidthRulesCommand) cmd);
+    		}
             else {
                 return Answer.createUnsupportedCommandAnswer(cmd);
             }
@@ -1067,6 +1073,53 @@ public class VirtualRoutingResource implements Manager {
         	}
     	}
     	return new Answer(cmd);
+    }
+    
+    //Andrew ling add
+    private SetBandwidthRulesAnswer execute(SetBandwidthRulesCommand cmd){
+//    	tc qdisc add dev eth0 root handle 1: htb r2q 1
+//    	tc class add dev eth0 parent 1: classid 1:2 htb rate 1000kbit ceil 2000kbit prio 2
+//    	tc class add dev eth0 parent 1: classid 1:3 htb rate 1mbit ceil 2mbit prio 2
+//    	tc qdisc add dev eth0 parent 1:2 handle 2: sfq perturb 10
+//    	tc qdisc add dev eth0 parent 1:3 handle 3: sfq perturb 10
+//    	tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.2 match ip dport 80 0xffff flowid 1:2
+//    	tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.3 flowid 1:3
+        
+    	
+    	
+    	 String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+         String[] results = new String[cmd.getRules().length];
+         int i = 0;
+         String executeRules = "";
+         boolean endResult = true;
+         for(BandwidthRuleTO rule : cmd.getRules()){
+             int deviceId = rule.getDeviceId();
+             int prio = rule.getPrio();
+             int trafficRuleId = rule.getTrafficRuleId();
+             int rate = -1;
+             int ceil = -1;
+        	 if(!rule.isKeepState()){
+        		//need to create class
+        		 rate = rule.getRate();
+        		 ceil = rule.getCeil();
+                 
+             }
+        	 if(rule.isRevoked()){
+        		 //delete rule
+        	 } else {
+        		 //add rule
+        	 }
+             
+
+             String result = routerProxy("none.sh", routerIp, executeRules);
+             if (result != null) {
+                 results[i++] = "Failed";
+                 endResult = false;
+             } else {
+                 results[i++] = null;
+             }
+         }
+         return new SetBandwidthRulesAnswer(cmd, endResult, results);
     }
     
     private String[] splitScripteParameter(String scripteParameters, String regex, int maxNumPerLine){

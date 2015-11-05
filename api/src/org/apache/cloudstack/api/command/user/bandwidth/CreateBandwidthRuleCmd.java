@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceAllocationException;
+import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.Network;
 import com.cloud.user.Account;
 
@@ -120,8 +121,7 @@ public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{
 	}
     
 	@Override
-	public void execute(){
-		// TODO send to agent execute the rule and make it work.
+	public void execute() throws ResourceUnavailableException{
 		boolean result = _bandwidthService.applyBandwidthRule(getEntityId());
 		if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());

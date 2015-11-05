@@ -19,19 +19,24 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
-import com.cloud.exception.InsufficientCapacityException;
-import com.cloud.exception.InsufficientNetworkCapacityException;
 import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.network.Network;
+import com.cloud.network.NetworkModel;
 import com.cloud.network.dao.BandwidthDao;
 import com.cloud.network.dao.BandwidthOfferingDao;
 import com.cloud.network.dao.BandwidthOfferingVO;
 import com.cloud.network.dao.BandwidthRulesDao;
 import com.cloud.network.dao.BandwidthRulesVO;
-import com.cloud.network.dao.BandwidthRulesVO.BandwidthType;
 import com.cloud.network.dao.BandwidthVO;
 import com.cloud.network.dao.MultilineDao;
 import com.cloud.network.dao.MultilineVO;
+import com.cloud.network.dao.NetworkDao;
+import com.cloud.network.element.BandwidthServiceProvider;
 import com.cloud.network.rules.BandwidthManager;
+import com.cloud.network.rules.BandwidthRule;
+import com.cloud.network.rules.BandwidthRule.BandwidthType;
+import com.cloud.offering.BandwidthOffering;
 import com.cloud.utils.component.ManagerBase;
 
 @Component
@@ -47,6 +52,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	BandwidthDao _bandwidthDao;
 	@Inject
 	BandwidthOfferingDao _bandwidthOfferingDao;
+	@Inject
+	NetworkDao _networksDao;
+	@Inject
+	NetworkModel _networkModel;
+	@Inject
+	BandwidthServiceProvider _bandwidthServiceProvider;
 	
 	@Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -125,6 +136,11 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		if(bandwidthOfferingId != null){
 			newBandwidthRulesVO.setBandwidthOfferingId(bandwidthOfferingId);
 		}
+		Network network = _networkModel.getNetwork(networkId);
+        Long accountId = network.getAccountId();
+        Long domainId = network.getDomainId();
+		newBandwidthRulesVO.setAccountId(accountId);
+		newBandwidthRulesVO.setDomainId(domainId);
 		CallContext.current().setEventDetails("bandwidth rule id=" + newBandwidthRulesVO.getId());
 		BandwidthRulesVO bandwidthRules = _bandwidthRulesDao.persist(newBandwidthRulesVO);
         if (bandwidthRules != null) {
@@ -136,15 +152,28 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	}
 
 	@Override
-	public boolean applyBandwidthRule(Long ruleId) {
-		// TODO Auto-generated method stub  根据networkId，找到VR所在的hostId，然后把参数发送到VR中执行相关的命令。
-		return false;
+	public boolean applyBandwidthRule(Long ruleId) throws ResourceUnavailableException{
+		// TODO  根据networkId，找到VR所在的hostId，然后把参数发送到VR中执行相关的命令。
+		// find the network id and get the network
+		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
+		BandwidthRulesVO rule = _bandwidthRulesDao.findById(ruleId);
+		rule.setRevoked(false);
+		//TODO need to find device id by the IP when the type is out traffic
+		Network network = _networksDao.findById(rule.getNetworksId());
+		rules.add(rule);
+		return applyBandwidthRules(network, rules);
 	}
-
+	
+	@Override
+	public boolean applyBandwidthRules(Network network, List<BandwidthRule> rules) throws ResourceUnavailableException {
+		return _bandwidthServiceProvider.applyBandwidthRules(network, rules);
+	}
 	@Override
 	public boolean revokeRelatedBandwidthRule(Long ruleId) {
-		// TODO Auto-generated method stub
-		return false;
+		// delete the rule from the DB.
+		CallContext.current().setEventDetails("bandwidth rule id=" + ruleId);
+		_bandwidthRulesDao.remove(ruleId);
+		return true;
 	}
 
 	@Override
@@ -180,6 +209,13 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	@Override
 	public boolean checkBandwidthCapacity(Integer newRate) {
 		// 查询数据库表
+		return false;
+	}
+
+	@Override
+	public boolean updateOfferingRefreshRules(BandwidthOffering newOffering,
+			BandwidthOffering oldOffering) {
+		// TODO Auto-generated method stub
 		return false;
 	}
 

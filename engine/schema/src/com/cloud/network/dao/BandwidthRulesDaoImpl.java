@@ -6,8 +6,7 @@ import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
-import com.cloud.network.dao.BandwidthRulesVO.BandwidthType;
-import com.cloud.utils.db.Attribute;
+import com.cloud.network.rules.BandwidthRule.BandwidthType;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
@@ -56,7 +55,5 @@ public class BandwidthRulesDaoImpl extends GenericDaoBase<BandwidthRulesVO, Long
 		sc.setParameters("networksId", networksId);
 		return listBy(sc);
 	}
-	
-	
 
 }

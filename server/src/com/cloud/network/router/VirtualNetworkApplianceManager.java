@@ -31,6 +31,7 @@ import com.cloud.network.RemoteAccessVpn;
 import com.cloud.network.VirtualNetworkApplianceService;
 import com.cloud.network.VpnUser;
 import com.cloud.network.lb.LoadBalancingRule;
+import com.cloud.network.rules.BandwidthRule;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.StaticNat;
 import com.cloud.user.Account;
@@ -131,4 +132,7 @@ public interface VirtualNetworkApplianceManager extends Manager, VirtualNetworkA
     boolean removeDhcpSupportForSubnet(Network network, List<DomainRouterVO> routers) throws ResourceUnavailableException;
 
     boolean setupDhcpForPvlan(boolean add, DomainRouterVO router, Long hostId, NicProfile nic);
+    
+    //andrew ling add
+    boolean applyBandwidthRules(Network network, final List<? extends BandwidthRule> rules, List<? extends VirtualRouter> routers) throws ResourceUnavailableException;
 }

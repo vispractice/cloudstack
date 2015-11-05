@@ -44,7 +44,6 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.alert.AlertService;
 import org.apache.cloudstack.api.command.admin.router.RebootRouterCmd;
 import org.apache.cloudstack.api.command.admin.router.UpgradeRouterCmd;
@@ -90,6 +89,7 @@ import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SavePasswordCommand;
+import com.cloud.agent.api.routing.SetBandwidthRulesCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
 import com.cloud.agent.api.routing.SetMonitorServiceCommand;
 import com.cloud.agent.api.routing.SetMultilineRouteCommand;
@@ -98,6 +98,7 @@ import com.cloud.agent.api.routing.SetPortForwardingRulesVpcCommand;
 import com.cloud.agent.api.routing.SetStaticNatRulesCommand;
 import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.agent.api.routing.VpnUsersCfgCommand;
+import com.cloud.agent.api.to.BandwidthRuleTO;
 import com.cloud.agent.api.to.DhcpTO;
 import com.cloud.agent.api.to.FirewallRuleTO;
 import com.cloud.agent.api.to.IpAddressTO;
@@ -204,6 +205,7 @@ import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.lb.LoadBalancingRulesManager;
 import com.cloud.network.router.VirtualRouter.RedundantState;
 import com.cloud.network.router.VirtualRouter.Role;
+import com.cloud.network.rules.BandwidthRule;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRuleVO;
@@ -4640,4 +4642,47 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             }
         }
     }
+
+	@Override
+	public boolean applyBandwidthRules(Network network, final List<? extends BandwidthRule> rules, List<? extends VirtualRouter> routers) throws ResourceUnavailableException {
+		if (rules == null || rules.isEmpty()) {
+            s_logger.debug("No bandwidth rules to be applied for network " + network.getId());
+            return true;
+        }
+		return applyRules(network, routers, "bandwidth rules", false, null, false, new RuleApplier() {
+            @Override
+            public boolean execute(Network network, VirtualRouter router) throws ResourceUnavailableException {
+                return applyBandwidthRule(router, rules, network.getId());
+            }
+        });
+	}
+	
+	protected boolean applyBandwidthRule(VirtualRouter router, List<? extends BandwidthRule> rules, long guestNetworkId) throws ResourceUnavailableException {
+        Commands cmds = new Commands(Command.OnError.Continue);
+        createApplyBandwidthRulesCommands(rules, router, cmds, guestNetworkId);
+        return sendCommandsToRouter(router, cmds);
+    }
+	
+	
+    private void createApplyBandwidthRulesCommands(List<? extends BandwidthRule> rules, VirtualRouter router, Commands cmds, long guestNetworkId) {
+    	List<BandwidthRuleTO> rulesTO = null;
+    	if(rules != null){
+    		rulesTO = new ArrayList<BandwidthRuleTO>();
+    		for(BandwidthRule rule : rules){
+    			//TODO put the parameters to the BandwidthRuleTO
+    			
+    		}
+    	}
+    	
+    	SetBandwidthRulesCommand cmd = new SetBandwidthRulesCommand(rulesTO);
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, getRouterControlIp(router.getId()));
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, getRouterIpInNetwork(guestNetworkId, router.getId()));
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
+        DataCenterVO dcVo = _dcDao.findById(router.getDataCenterId());
+        cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
+        cmds.addCommand(cmd);
+    }
+	
+	
+	
 }

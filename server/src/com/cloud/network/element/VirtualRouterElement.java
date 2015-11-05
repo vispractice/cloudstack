@@ -68,6 +68,7 @@ import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.lb.LoadBalancingRulesManager;
 import com.cloud.network.router.VirtualRouter.Role;
 import com.cloud.network.router.VpcVirtualNetworkApplianceManager;
+import com.cloud.network.rules.BandwidthRule;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.LbStickinessMethod;
 import com.cloud.network.rules.LbStickinessMethod.StickinessMethodType;
@@ -104,7 +105,7 @@ import com.cloud.vm.dao.UserVmDao;
 public class VirtualRouterElement extends AdapterBase implements VirtualRouterElementService, DhcpServiceProvider,
     UserDataServiceProvider, SourceNatServiceProvider, StaticNatServiceProvider, FirewallServiceProvider,
         LoadBalancingServiceProvider, PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer,
-        NetworkMigrationResponder {
+        NetworkMigrationResponder,  BandwidthServiceProvider{
     private static final Logger s_logger = Logger.getLogger(VirtualRouterElement.class);
 
     protected static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
@@ -1112,5 +1113,24 @@ public class VirtualRouterElement extends AdapterBase implements VirtualRouterEl
 			UserVmVO userVm = (UserVmVO)vm.getVirtualMachine();
 			_userVmMgr.setupVmForPvlan(true, userVm.getHostId(), nic);
 		}
+	}
+    //andrew ling add
+	@Override
+	public boolean applyBandwidthRules(Network config, List<BandwidthRule> rules)
+			throws ResourceUnavailableException {
+		// TODO Auto-generated method stub
+		List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(config.getId(), Role.VIRTUAL_ROUTER);
+		if (routers == null || routers.isEmpty()) {
+			s_logger.debug("Virtual router elemnt doesn't need to apply firewall rules on the backend; virtual "
+					+ "router doesn't exist in the network " + config.getId());
+			return true;
+		}
+
+		if (!_routerMgr.applyBandwidthRules(config, rules, routers)) {
+			throw new CloudRuntimeException("Failed to apply bandwidth rules in network " + config.getId());
+		} else {
+			return true;
+		}
+
 	}
 }

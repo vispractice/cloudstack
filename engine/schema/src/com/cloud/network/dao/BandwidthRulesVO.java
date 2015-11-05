@@ -11,14 +11,11 @@ import javax.persistence.Table;
 
 import org.apache.cloudstack.api.InternalIdentity;
 
+import com.cloud.network.rules.BandwidthRule;
+
 @Entity
 @Table(name="bandwidth_rules")
-public class BandwidthRulesVO implements InternalIdentity {
-	//bandwidth_rules(uuid, id, bandwidth_id, networks_id, bandwidth_offering_id, traffic_rule_id, type, prio, ceil, rate)
-	public enum BandwidthType {
-		InTraffic, OutTraffic
-	};
-	
+public class BandwidthRulesVO implements BandwidthRule {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id")
@@ -36,6 +33,12 @@ public class BandwidthRulesVO implements InternalIdentity {
 	@Column(name="bandwidth_offering_id")
     private Long bandwidthOfferingId;
 	
+	@Column(name="domain_id")
+    private Long domainId;
+	
+	@Column(name="account_id")
+    private Long accountId;
+	
 	@Column(name="traffic_rule_id")
     private Integer trafficRuleId;
 	
@@ -50,11 +53,11 @@ public class BandwidthRulesVO implements InternalIdentity {
 
     @Column(name="ceil")
     private Integer ceil;
-	
-    public void setId(long id) {
-		this.id = id;
-	}
-
+    
+    private Boolean revoked;
+    
+    private Boolean keepState;
+    
     public BandwidthRulesVO(){
     	uuid = UUID.randomUUID().toString();
     }
@@ -85,6 +88,10 @@ public class BandwidthRulesVO implements InternalIdentity {
 	@Override
 	public long getId() {
 		return id;
+	}
+    
+    public void setId(long id) {
+		this.id = id;
 	}
     
 	public String getUuid() {
@@ -158,4 +165,39 @@ public class BandwidthRulesVO implements InternalIdentity {
 	public void setCeil(Integer ceil) {
 		this.ceil = ceil;
 	}
+
+	@Override
+	public long getAccountId() {
+		return accountId;
+	}
+
+	public void setAccountId(Long accountId) {
+		this.accountId = accountId;
+	}
+	
+	@Override
+	public long getDomainId() {
+		return domainId;
+	}
+
+	public void setDomainId(Long domainId) {
+		this.domainId = domainId;
+	}
+
+	public Boolean isRevoked() {
+		return revoked;
+	}
+
+	public void setRevoked(Boolean revoked) {
+		this.revoked = revoked;
+	}
+
+	public Boolean isKeepState() {
+		return keepState;
+	}
+
+	public void setKeepState(Boolean keepState) {
+		this.keepState = keepState;
+	}
+	
 }

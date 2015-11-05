@@ -24,6 +24,7 @@ import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
 import com.cloud.network.vpc.NetworkACLItem;
+
 import org.apache.cloudstack.api.command.admin.router.*;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +41,7 @@ import com.cloud.network.VpnUser;
 import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.network.router.VpcVirtualNetworkApplianceManager;
+import com.cloud.network.rules.BandwidthRule;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.StaticNat;
 import com.cloud.network.vpc.PrivateGateway;
@@ -452,5 +454,14 @@ VpcVirtualNetworkApplianceService {
 			throws ResourceUnavailableException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean applyBandwidthRules(Network network,
+			List<? extends BandwidthRule> rules,
+			List<? extends VirtualRouter> routers)
+			throws ResourceUnavailableException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
