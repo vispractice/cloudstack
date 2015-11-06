@@ -82,6 +82,7 @@ import com.cloud.agent.api.routing.Site2SiteVpnCfgCommand;
 import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.agent.api.routing.VpnUsersCfgCommand;
 import com.cloud.agent.api.to.BandwidthRuleTO;
+import com.cloud.agent.api.to.BandwidthRuleTO.BandwidthFilterTO;
 import com.cloud.agent.api.to.DhcpTO;
 import com.cloud.agent.api.to.FirewallRuleTO;
 import com.cloud.agent.api.to.IpAddressTO;
@@ -92,6 +93,7 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.network.HAProxyConfigurator;
 import com.cloud.network.LoadBalancerConfigurator;
 import com.cloud.network.rules.FirewallRule;
+import com.cloud.network.rules.BandwidthRule.BandwidthType;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.component.ComponentLifecycle;
 import com.cloud.utils.component.Manager;
@@ -1075,53 +1077,6 @@ public class VirtualRoutingResource implements Manager {
     	return new Answer(cmd);
     }
     
-    //Andrew ling add
-    private SetBandwidthRulesAnswer execute(SetBandwidthRulesCommand cmd){
-//    	tc qdisc add dev eth0 root handle 1: htb r2q 1
-//    	tc class add dev eth0 parent 1: classid 1:2 htb rate 1000kbit ceil 2000kbit prio 2
-//    	tc class add dev eth0 parent 1: classid 1:3 htb rate 1mbit ceil 2mbit prio 2
-//    	tc qdisc add dev eth0 parent 1:2 handle 2: sfq perturb 10
-//    	tc qdisc add dev eth0 parent 1:3 handle 3: sfq perturb 10
-//    	tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.2 match ip dport 80 0xffff flowid 1:2
-//    	tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.3 flowid 1:3
-        
-    	
-    	
-    	 String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
-         String[] results = new String[cmd.getRules().length];
-         int i = 0;
-         String executeRules = "";
-         boolean endResult = true;
-         for(BandwidthRuleTO rule : cmd.getRules()){
-             int deviceId = rule.getDeviceId();
-             int prio = rule.getPrio();
-             int trafficRuleId = rule.getTrafficRuleId();
-             int rate = -1;
-             int ceil = -1;
-        	 if(!rule.isKeepState()){
-        		//need to create class
-        		 rate = rule.getRate();
-        		 ceil = rule.getCeil();
-                 
-             }
-        	 if(rule.isRevoked()){
-        		 //delete rule
-        	 } else {
-        		 //add rule
-        	 }
-             
-
-             String result = routerProxy("none.sh", routerIp, executeRules);
-             if (result != null) {
-                 results[i++] = "Failed";
-                 endResult = false;
-             } else {
-                 results[i++] = null;
-             }
-         }
-         return new SetBandwidthRulesAnswer(cmd, endResult, results);
-    }
-    
     private String[] splitScripteParameter(String scripteParameters, String regex, int maxNumPerLine){
     	String[] scripteParametersToArray = scripteParameters.split(regex);
     	int scripteParameterNO = 0;
@@ -1153,7 +1108,236 @@ public class VirtualRoutingResource implements Manager {
     	}
     	return scripteParametersResult;
     }
+    
+    //Andrew ling add
+    private SetBandwidthRulesAnswer execute(SetBandwidthRulesCommand cmd){
+//    	tc qdisc add dev eth0 root handle 1: htb r2q 1 这一段在网卡创建的时候执行。
+//    	tc class add dev eth0 parent 1: classid 1:2 htb rate 1000kbit ceil 2000kbit prio 2
+//    	tc class add dev eth0 parent 1: classid 1:3 htb rate 1mbit ceil 2mbit prio 2
+//    	tc qdisc add dev eth0 parent 1:2 handle 2: sfq perturb 10
+//    	tc qdisc add dev eth0 parent 1:3 handle 3: sfq perturb 10
+//    	tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.2 match ip dport 80 0xffff flowid 1:2
+//    	tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.3 flowid 1:3
+    	 String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+         String[] results = new String[cmd.getRules().length];
+         int i = 0;
+         String executeRules = "";
+		boolean endResult = true;
+		for (BandwidthRuleTO rule : cmd.getRules()) {
+			int deviceId = rule.getDeviceId();
+			int prio = rule.getPrio();
+			int trafficRuleId = rule.getTrafficRuleId();
+			int rate = -1;
+			int ceil = -1;
+			String script = "";
+			if (rule.isKeepState()) {
+				// no need to create class, just create or delete the filter rules.when delete the filter,must delete all the filters and create the still use filters.
+				boolean  isDel = checkFiltersIncludeDel(rule.getBandwidthFilters());
+				executeRules += buildFilterRules(rule.getBandwidthFilters(), isDel, false, rule.getType(), deviceId, prio, trafficRuleId);
+				// if isDel is true, then need to execute the script, if not, then no need to execute the script.
+				if(isDel){
+					executeRules = " -D -c eth"+ deviceId +" -r "+trafficRuleId+" -p " + prio + " ;" + executeRules;
+					script = "bandwidth_rule.sh";
+					String result = routerProxy(script, routerIp, executeRules);
+					if (result != null) {
+						results[i++] = "Failed";
+						endResult = false;
+					} else {
+						results[i++] = null;
+					}
+				} else {
+					script = "none.sh";
+					String result = routerProxy(script, routerIp, executeRules);
+					if (result != null) {
+						results[i++] = "Failed";
+						endResult = false;
+					} else {
+						results[i++] = null;
+					}
+				}
 
+			} else {
+				rate = rule.getRate();
+				ceil = rule.getCeil();
+
+				if (rule.isRevoked()) {
+					// before delete bandwidth rule, need to delete the filter rules first
+					executeRules = " -D -c eth"+ deviceId +" -r "+trafficRuleId+" -p " + prio + " ;";
+			    	//tc class add dev eth0 parent 1: classid 1:2 htb rate 1000kbit ceil 2000kbit prio 2
+					// tc qdisc add dev eth0 parent 1:2 handle 2: sfq perturb 10
+					executeRules += "tc class del dev eth" + deviceId+ " parent 1: classid 1:" + trafficRuleId+ " htb rate " + rate + "kbit ceil " + ceil
+							+ "kbit prio " + prio + "; tc qdisc del dev eth"+ deviceId + " parent 1:" + trafficRuleId+ " handle " + trafficRuleId + ": sfq perturb 10;";
+					
+					script = "bandwidth_rule.sh";
+					String result = routerProxy(script, routerIp, executeRules);
+					if (result != null) {
+						results[i++] = "Failed";
+						endResult = false;
+					} else {
+						results[i++] = null;
+					}
+				} else {
+					// add the bandwidth rule first and then add the filter rules
+					executeRules += "tc class add dev eth" + deviceId+ " parent 1: classid 1:" + trafficRuleId+ " htb rate " + rate + "kbit ceil " + ceil
+							+ "kbit prio " + prio + "; tc qdisc add dev eth"+ deviceId + " parent 1:" + trafficRuleId+ " handle " + trafficRuleId + ": sfq perturb 10;";
+					executeRules += buildFilterRules(rule.getBandwidthFilters(), false, true, rule.getType(), deviceId, prio, trafficRuleId);
+					script = "none.sh";
+					String result = routerProxy(script, routerIp, executeRules);
+					if (result != null) {
+						results[i++] = "Failed";
+						endResult = false;
+					} else {
+						results[i++] = null;
+					}
+				}
+			}
+		}
+		return new SetBandwidthRulesAnswer(cmd, endResult, results);
+	}
+    
+    private boolean checkFiltersIncludeDel(BandwidthFilterTO[] bandwidthFilters){
+    	for (BandwidthFilterTO filters : bandwidthFilters) {
+    		if(filters.isRevoke()){
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
+    private String buildFilterRules(BandwidthFilterTO[] bandwidthFilters, boolean isDel, boolean isAddAll, BandwidthType type, int deviceId, int prio, int trafficRuleId){
+    	String filterRules = "";
+    	if(isAddAll){
+    		//retrun all the filter rules
+    		for (BandwidthFilterTO filter : bandwidthFilters) {
+        		if(filter.isAlreadyAdded() && !filter.isRevoke()){
+        			filterRules += buildFilterRule(filter, type, deviceId, prio, trafficRuleId);
+        		}
+        	}
+    		return filterRules;
+    	} else {
+    		if(!isDel){
+        		//return the filter rules superposition,返回额外增加的filter规则
+        		for (BandwidthFilterTO filter : bandwidthFilters) {
+            		if(!filter.isAlreadyAdded() && !filter.isRevoke()){
+            			filterRules += buildFilterRule(filter, type, deviceId, prio, trafficRuleId);
+            		}
+            	}
+        		return filterRules;
+        	}
+        	if(isDel){
+        		//return all the already added filter rules
+        		for (BandwidthFilterTO filter : bandwidthFilters) {
+            		if(filter.isAlreadyAdded() && !filter.isRevoke()){
+            			filterRules += buildFilterRule(filter, type, deviceId, prio, trafficRuleId);
+            		}
+            	}
+        		return filterRules;
+        	}
+    	}
+    	return null;
+    }
+    
+    private String buildFilterRule(BandwidthFilterTO bandwidthFilter, BandwidthType type, int deviceId, int prio, int trafficRuleId){
+    	String filterRule = "";
+    	String ip = bandwidthFilter.getIp();
+		int startPort = bandwidthFilter.getStartPort();
+		int endPort = bandwidthFilter.getEndPort();
+		String trafficType = "";
+		String portType = "";
+		if (type.equals(BandwidthType.InTraffic)) {
+			trafficType = "dst";
+			portType = "dport";
+		} else if (type.equals(BandwidthType.OutTraffic)) {
+			trafficType = "src";
+			portType = "sport";
+		} else {
+			throw new InvalidParameterValueException("The bandwidth type is not rigth, it only support two type, include in traffic and out traffic.");
+		}
+		Map<Integer, String> portRangeParams = createBandwidthPortRangeParams(startPort, endPort);
+		for (Map.Entry<Integer, String> entry : portRangeParams.entrySet()) {
+			// tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.2 match ip dport 80 0xffff flowid 1:2
+			filterRule += "tc filter add dev eth" + deviceId + " protocol ip parent 1: prio " + prio
+					+ " u32 match ip " + trafficType + " " + ip + " match ip " + portType + " " + entry.getKey() + " "
+					+ entry.getValue() + " flowid 1:"+ trafficRuleId + ";";
+		}
+		return filterRule;
+    }
+    
+    private  Map<Integer, String> createBandwidthPortRangeParams(int startPort, int endPort){
+		Map<Integer, String> mask = new HashMap<Integer, String>();
+		mask.put(1, "0xffff");
+		mask.put(2, "0xfffe");
+		mask.put(4, "0xfffc");
+		mask.put(8, "0xfff8");
+		mask.put(16, "0xfff0");
+		mask.put(32, "0xffe0");
+		mask.put(64, "0xffc0");
+		mask.put(128, "0xff80");
+		mask.put(256, "0xff00");
+		mask.put(512, "0xfe00");
+		mask.put(1024, "0xfc00");
+		mask.put(2048, "0xf800");
+		mask.put(4096, "0xf000");
+		mask.put(8192, "0xe000");
+		mask.put(16384, "0xc000");
+		mask.put(32768, "0x8000");
+		mask.put(65536, "0x0000");
+		
+		Map<Integer, String> result = new HashMap<Integer, String>();
+		if(startPort == endPort){
+			result.put(startPort, mask.get(1));
+			return result;
+		}
+		//找到开始端口对应的最大端口区间值
+		if(startPort % 2 != 0){
+			if(startPort == 1){
+				result.put(startPort, mask.get(1));
+			} else{
+				startPort = startPort + 1;
+				result.put(startPort, mask.get(1));
+			}
+		}
+		if(startPort == endPort){
+			result.put(startPort, mask.get(1));
+			return result;
+		}
+		
+		////////////////会循环部分/////////////////
+		endPort++;
+		while(startPort != endPort){
+			int portDifference = endPort - startPort;
+			//开始端口能达到的最大区间值A
+			int startPort2IntervalTop = getTop2Exponentiation(startPort);
+			
+			//结束端口和开始端口之差能达到的最大区间值B
+			int portDifference2intervalTop = getTop2Exponentiation(portDifference);
+			
+			//最大区间值B只能
+			if(portDifference2intervalTop >= startPort2IntervalTop){
+				result.put(startPort, mask.get(startPort2IntervalTop));
+				startPort = startPort + startPort2IntervalTop;
+			} else {
+				result.put(startPort, mask.get(portDifference2intervalTop));
+				startPort = startPort + portDifference2intervalTop;
+			}
+		}
+		return result;
+	}
+	
+	//开始端口的最大能取到的区间值
+	private  int getTop2Exponentiation(int value){
+		int i = 0;
+		double Top2Exponentiation = 0;
+		while(value >= Top2Exponentiation){
+			Top2Exponentiation = Math.pow(2, i);
+			i ++;
+		}
+		Top2Exponentiation = Math.pow(2, i-2);
+		return (int)Top2Exponentiation;
+	}
+    
+    
+    
     public String assignPublicIpAddress(final String vmName,
             final String privateIpAddress, final String publicIpAddress,
             final boolean add, final boolean firstIP, final boolean sourceNat,

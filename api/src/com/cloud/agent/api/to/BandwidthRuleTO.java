@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.cloud.network.rules.BandwidthRule.BandwidthFilterRules;
+import com.cloud.network.rules.BandwidthRule.BandwidthType;
 
 public class BandwidthRuleTO {
     private int deviceId;
+    private BandwidthType type;
     private int rate;
     private int ceil;
     private int trafficRuleId;
@@ -36,11 +38,12 @@ public class BandwidthRuleTO {
     	}
     }
     
-    public BandwidthRuleTO(int deviceId, int rate, int ceil, int trafficRuleId, boolean revoked, boolean alreadyAdded,boolean keepState, List<BandwidthFilterRules> bandwidthFilters){
+    public BandwidthRuleTO(int deviceId, BandwidthType type ,int rate, int ceil, int trafficRuleId, boolean revoked, boolean alreadyAdded,boolean keepState, List<BandwidthFilterRules> bandwidthFilters){
     	if(bandwidthFilters == null){
     		bandwidthFilters = new ArrayList<BandwidthFilterRules>();
     	}
     	this.deviceId = deviceId;
+    	this.type = type;
     	this.rate = rate;
     	this.ceil = ceil;
     	this.revoked = revoked;
@@ -120,6 +123,13 @@ public class BandwidthRuleTO {
 	}
 	public void setKeepState(boolean keepState) {
 		this.keepState = keepState;
+	}
+
+	public BandwidthType getType() {
+		return type;
+	}
+	public void setType(BandwidthType type) {
+		this.type = type;
 	}
 
 	public static class BandwidthFilterTO{
