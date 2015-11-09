@@ -15,8 +15,8 @@ public interface BandwidthService {
 	Long createBandwidthRule(CreateBandwidthRuleCmd cmd);
 	boolean applyBandwidthRule(Long ruleId) throws ResourceUnavailableException;
 	boolean revokeRelatedBandwidthRule(Long ruleId);
-	boolean deleteBandwidthRule(DeleteBandwidthRuleCmd cmd);
-	boolean updateBandwidthRule(UpdateBandwidthRuleCmd cmd);
+	boolean deleteBandwidthRule(DeleteBandwidthRuleCmd cmd) throws ResourceUnavailableException;
+	boolean updateBandwidthRule(UpdateBandwidthRuleCmd cmd) throws ResourceUnavailableException;
 	BandwidthRulesResponse listBandwidthRules(ListBandwidthRulesCmd cmd);
 	boolean assignToBandwidthRule(AssignToBandwidthRuleCmd cmd);
 	boolean removeFromBandwidthRule(RemoveFromBandwidthRuleCmd cmd);

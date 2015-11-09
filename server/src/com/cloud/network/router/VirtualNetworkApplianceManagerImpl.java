@@ -176,6 +176,8 @@ import com.cloud.network.VirtualRouterProvider.Type;
 import com.cloud.network.VpnUser;
 import com.cloud.network.VpnUserVO;
 import com.cloud.network.addr.PublicIp;
+import com.cloud.network.dao.BandwidthDao;
+import com.cloud.network.dao.BandwidthVO;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.IPAddressVO;
@@ -205,8 +207,10 @@ import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.lb.LoadBalancingRulesManager;
 import com.cloud.network.router.VirtualRouter.RedundantState;
 import com.cloud.network.router.VirtualRouter.Role;
+import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
 import com.cloud.network.rules.BandwidthRule;
 import com.cloud.network.rules.FirewallRule;
+import com.cloud.network.rules.BandwidthRule.BandwidthFilterRules;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.LoadBalancerContainer.Scheme;
@@ -405,6 +409,8 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     
     @Inject
     MultilineDao _multilineLabelDao;
+    @Inject
+	BandwidthDao _bandwidthDao;
 
     int _routerRamSize;
     int _routerCpuMHz;
@@ -4664,25 +4670,64 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     }
 	
 	
-    private void createApplyBandwidthRulesCommands(List<? extends BandwidthRule> rules, VirtualRouter router, Commands cmds, long guestNetworkId) {
-    	List<BandwidthRuleTO> rulesTO = null;
-    	if(rules != null){
-    		rulesTO = new ArrayList<BandwidthRuleTO>();
-    		for(BandwidthRule rule : rules){
-    			//TODO put the parameters to the BandwidthRuleTO
-    			
-    		}
-    	}
-    	
-    	SetBandwidthRulesCommand cmd = new SetBandwidthRulesCommand(rulesTO);
-        cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, getRouterControlIp(router.getId()));
-        cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, getRouterIpInNetwork(guestNetworkId, router.getId()));
-        cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
-        DataCenterVO dcVo = _dcDao.findById(router.getDataCenterId());
-        cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
-        cmds.addCommand(cmd);
-    }
-	
-	
-	
+	private void createApplyBandwidthRulesCommands(List<? extends BandwidthRule> rules, VirtualRouter router, Commands cmds, long guestNetworkId) {
+		List<BandwidthRuleTO> rulesTO = null;
+		if (rules != null) {
+			rulesTO = new ArrayList<BandwidthRuleTO>();
+			for (BandwidthRule rule : rules) {
+				int deviceId = -1;
+				// need to find device id by the IP when the type is out traffic
+				if (rule.getType().equals(BandwidthType.OutTraffic)) {
+					Long bandwidthId = rule.getBandwidthId();
+					BandwidthVO bandwidthVO = _bandwidthDao.findById(bandwidthId);
+					Long multilineId = bandwidthVO.getMultilineId();
+					String mutilineLabel = _multilineLabelDao.findById(multilineId).getLabel();
+
+					NicVO nic = null;
+					IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(guestNetworkId, Boolean.TRUE, mutilineLabel);
+					if (ip != null) {
+						nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(), router.getId());
+					}
+					if (nic != null) {
+						deviceId = nic.getDeviceId();
+					} else {
+						deviceId = -1;
+					}
+				} else if (rule.getType().equals(BandwidthType.InTraffic)) {
+					deviceId = 0;
+				} else {
+					s_logger.error("The bandwidth rule command execute wrong, Because type is not right, Only support InTraffic and OutTraffic.");
+					throw new InvalidParameterValueException("The bandwidth rule parameter: type is not right, Only support InTraffic and OutTraffic.");
+				}
+
+				if (deviceId == -1) {
+					s_logger.error("The bandwidth rule command execute wrong, Because can not find the right device id in the VR.");
+					throw new InvalidParameterValueException("The bandwidth rule parameter: public ip address is not right.");
+				}
+
+				BandwidthType type = rule.getType();
+				int rate = rule.getRate();
+				int ceil = rule.getCeil();
+				int trafficRuleId = rule.getTrafficRuleId();
+				boolean revoked = rule.isClassRuleRevoked();
+				boolean alreadyAdded = rule.isClassRuleAlreadyAdded();
+				boolean keepState = rule.isClassRuleKeepState();
+				List<BandwidthFilterRules> bandwidthFilters = rule.getBandwidthFilterRules();
+				BandwidthRuleTO bandwidthRule = new BandwidthRuleTO(deviceId, type, rate, ceil, trafficRuleId, revoked, alreadyAdded, keepState, bandwidthFilters);
+				rulesTO.add(bandwidthRule);
+			}
+			// 组合RuleTO数据里面的嵌套FilterTO数据,根据bandwidth_rules_id查询数据表bandwidth_ip_port_map获取这个id之下的所以filter数据信息
+			// 组合command里面的RuleTO数据
+			// 组合command
+		}
+
+		SetBandwidthRulesCommand cmd = new SetBandwidthRulesCommand(rulesTO);
+		cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, getRouterControlIp(router.getId()));
+		cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, getRouterIpInNetwork(guestNetworkId, router.getId()));
+		cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
+		DataCenterVO dcVo = _dcDao.findById(router.getDataCenterId());
+		cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
+		cmds.addCommand(cmd);
+	}
+    
 }

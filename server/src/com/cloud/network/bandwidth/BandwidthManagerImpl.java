@@ -8,6 +8,8 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import org.apache.cloudstack.api.ApiErrorCode;
+import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.user.bandwidth.AssignToBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.CreateBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.DeleteBandwidthRuleCmd;
@@ -24,20 +26,28 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.dao.BandwidthDao;
+import com.cloud.network.dao.BandwidthIPPortMapDao;
+import com.cloud.network.dao.BandwidthIPPortMapVO;
 import com.cloud.network.dao.BandwidthOfferingDao;
 import com.cloud.network.dao.BandwidthOfferingVO;
 import com.cloud.network.dao.BandwidthRulesDao;
 import com.cloud.network.dao.BandwidthRulesVO;
 import com.cloud.network.dao.BandwidthVO;
+import com.cloud.network.dao.IPAddressDao;
+import com.cloud.network.dao.IPAddressVO;
 import com.cloud.network.dao.MultilineDao;
 import com.cloud.network.dao.MultilineVO;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.element.BandwidthServiceProvider;
+import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
+import com.cloud.network.rules.BandwidthRule.BandwidthFilterRules;
 import com.cloud.network.rules.BandwidthManager;
 import com.cloud.network.rules.BandwidthRule;
-import com.cloud.network.rules.BandwidthRule.BandwidthType;
 import com.cloud.offering.BandwidthOffering;
 import com.cloud.utils.component.ManagerBase;
+import com.cloud.utils.net.NetUtils;
+import com.cloud.vm.VMInstanceVO;
+import com.cloud.vm.dao.VMInstanceDao;
 
 @Component
 @Local(value = { BandwidthService.class, BandwidthManager.class})
@@ -58,6 +68,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	NetworkModel _networkModel;
 	@Inject
 	BandwidthServiceProvider _bandwidthServiceProvider;
+	@Inject
+	BandwidthIPPortMapDao _bandwidthIPPortMapDao;
+	@Inject
+    IPAddressDao _ipAddressDao;
+	@Inject
+	VMInstanceDao _vMInstanceDao;
 	
 	@Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -158,9 +174,13 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
 		BandwidthRulesVO rule = _bandwidthRulesDao.findById(ruleId);
 		rule.setRevoked(false);
-		//TODO need to find device id by the IP when the type is out traffic
+		rule.setKeepState(false);
+		rule.setAlreadyAdded(false);
+
 		Network network = _networksDao.findById(rule.getNetworksId());
-		rules.add(rule);
+		BandwidthRule bandwidthRule = new BandwidthRule(rule);
+		
+		rules.add(bandwidthRule);
 		return applyBandwidthRules(network, rules);
 	}
 	
@@ -177,15 +197,100 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	}
 
 	@Override
-	public boolean deleteBandwidthRule(DeleteBandwidthRuleCmd cmd) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean deleteBandwidthRule(DeleteBandwidthRuleCmd cmd) throws ResourceUnavailableException{
+		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
+		BandwidthRulesVO rule = _bandwidthRulesDao.findById(cmd.getId());
+		rule.setRevoked(true);
+		rule.setKeepState(false);
+		rule.setAlreadyAdded(true);
+		Network network = _networksDao.findById(rule.getNetworksId());
+		//update the filter rules
+//		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
+//		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(rule.getId());
+//		for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+//			String ip = bandwidthIPPortMap.getIpAddress();
+//			int startPort = bandwidthIPPortMap.getBandwidthPortStart();
+//			int endPort = bandwidthIPPortMap.getBandwidthPortEnd();
+//			boolean revoke = true;
+//			boolean alreadyAdded = true;
+//			BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, startPort, endPort, revoke, alreadyAdded);
+//			bandwidthFilterRules.add(bandwidthFilterRule);
+//		}
+//		
+//		BandwidthRule bandwidthRule = new BandwidthRule(rule, bandwidthFilterRules);
+		BandwidthRule bandwidthRule = new BandwidthRule(rule);
+		rules.add(bandwidthRule);
+		return applyBandwidthRules(network, rules);
 	}
 
 	@Override
-	public boolean updateBandwidthRule(UpdateBandwidthRuleCmd cmd) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean updateBandwidthRule(UpdateBandwidthRuleCmd cmd)  throws ResourceUnavailableException{
+		//check the parameters are changed or not, get the old from the DB.
+		BandwidthRulesVO rule = _bandwidthRulesDao.findById(cmd.getBandwidthRuleId());
+		int oldRate = rule.getRate();
+		int oldCeil = rule.getCeil();
+		int oldPrio = rule.getPrio();
+		if(oldRate == cmd.getRate() && oldCeil == cmd.getCeil() && oldPrio == cmd.getPrio()){
+			throw new InvalidParameterValueException("The update bandwidth rule parameters is not different between the old, not execute the update operation.");
+		}
+		//check the parameter rate is right or not.
+		if(oldRate < cmd.getRate()){
+			BandwidthVO bandwidthVO = _bandwidthDao.findById(rule.getBandwidthId());
+			if(!checkBandwidthCapacity(bandwidthVO, rule.getType(), cmd.getRate(), oldRate)){
+				throw new InvalidParameterValueException("The bandwidth rule parameter: rate is not right, The bandwidth Capacity is not enough.");
+			}
+		}
+		
+		//first delete the old
+		List<BandwidthRule> oldRules = new ArrayList<BandwidthRule>();
+		rule.setRevoked(true);
+		rule.setKeepState(false);
+		rule.setAlreadyAdded(true);
+		Network network = _networksDao.findById(rule.getNetworksId());
+		BandwidthRule oldBandwidthRule = new BandwidthRule(rule);
+		oldRules.add(oldBandwidthRule);
+		if(!applyBandwidthRules(network, oldRules)){
+			s_logger.error("Update the bandwidth rules, when delete the old rules, it get wrong.");
+			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update bandwidth rule");
+		}
+		//then create the new and store to DB.
+		List<BandwidthRule> newRules = new ArrayList<BandwidthRule>();
+		//reload the bandwidth class rule.
+		rule.setRevoked(false);
+		rule.setKeepState(false);
+		rule.setAlreadyAdded(false);
+		rule.setRate(cmd.getRate());
+		rule.setCeil(cmd.getCeil());
+		rule.setPrio(cmd.getPrio());
+		
+		//reload the filter rules
+		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
+		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(rule.getId());
+		for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+			String ip = bandwidthIPPortMap.getIpAddress();
+			int startPort = bandwidthIPPortMap.getBandwidthPortStart();
+			int endPort = bandwidthIPPortMap.getBandwidthPortEnd();
+			boolean revoke = false;
+			boolean alreadyAdded = false;
+			BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, startPort, endPort, revoke, alreadyAdded);
+			bandwidthFilterRules.add(bandwidthFilterRule);
+		}
+		
+		BandwidthRule newBandwidthRule = new BandwidthRule(rule, bandwidthFilterRules);
+		newRules.add(newBandwidthRule);
+		if(!applyBandwidthRules(network, newRules)){
+			s_logger.error("Update the bandwidth rules, when create the new rules, it get wrong.");
+			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update bandwidth rule");
+		}
+		//store to DB, if this need to delete the rule ,when can not update the DB?
+		CallContext.current().setEventDetails("bandwidth rule id=" + rule.getId());
+		BandwidthRulesVO bandwidthRules = _bandwidthRulesDao.persist(rule);
+        if (bandwidthRules != null) {
+            CallContext.current().setEventDetails("Bandwidth rule id=" + rule.getId());
+            return true;
+        } else {
+            return false;
+        }
 	}
 
 	@Override
@@ -194,22 +299,86 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		return null;
 	}
 
+	private boolean validateBandwidthFilterRule(Long bandwidthRuleId, BandwidthType type, String ip, Integer portStart, Integer portEnd){
+		
+		if (portStart != null && !NetUtils.isValidPort(portStart)) {
+            throw new InvalidParameterValueException("publicPort is an invalid value: " + portStart);
+        }
+        if (portEnd != null && !NetUtils.isValidPort(portEnd)) {
+            throw new InvalidParameterValueException("Public port range is an invalid value: " + portEnd);
+        }
+
+        // start port can't be bigger than end port
+        if (portStart != null && portEnd != null && portStart > portEnd) {
+            throw new InvalidParameterValueException("Start port can't be bigger than end port");
+        }
+        //check the ip form
+        if(!NetUtils.isValidIp(ip)){
+        	throw new InvalidParameterValueException("The ip address is not right.");
+        }
+        
+		if(type.equals(BandwidthType.InTraffic)){
+			//TODO vm ip address, if it want to check the private ip address in the network?
+			VMInstanceVO vMInstanceVO = _vMInstanceDao.findVMByIpAddress(ip);
+			if(vMInstanceVO == null){
+				throw new InvalidParameterValueException("Unable to create bandwidth filter rule ; The private ip is not right.");
+			}
+		} else if(type.equals(BandwidthType.OutTraffic)){
+			//public ip address
+			IPAddressVO ipAddress = null;
+			ipAddress = _ipAddressDao.findByIp(ip);
+			if(ipAddress == null){
+				throw new InvalidParameterValueException("The ip address in the bandwidth filter rule is not right.");
+			} else {
+				BandwidthRulesVO rule = _bandwidthRulesDao.findById(bandwidthRuleId);
+				if (ipAddress.getAssociatedWithNetworkId() == null || ipAddress.getAssociatedWithNetworkId() != rule.getNetworksId()) {
+                    throw new InvalidParameterValueException("Unable to create bandwidth filter rule ; The public ip is not right.");
+				}
+			}
+		} else {
+			s_logger.error("The bandwidth rule parameter: type is not right, Only support InTraffic and OutTraffic.");
+			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Get the wrong bandwidth type");
+		}
+		return true;
+	}
+	
 	@Override
 	public boolean assignToBandwidthRule(AssignToBandwidthRuleCmd cmd) {
-		// TODO Auto-generated method stub
+		// TODO check the parameters, get the bandwidth rule by the id, and add the filter rule to the bandwidth rule
+		
 		return false;
 	}
 
 	@Override
 	public boolean removeFromBandwidthRule(RemoveFromBandwidthRuleCmd cmd) {
-		// TODO Auto-generated method stub
+		// TODO check the parameters, then get the bandwidth rule by the id, and add the filter rule to the bandwidth rule
 		return false;
 	}
 
 	@Override
-	public boolean checkBandwidthCapacity(Integer newRate) {
+	public boolean checkBandwidthCapacity(BandwidthVO bandwidthVO, BandwidthType type, Integer newRate, Integer oldRate) {
 		// 查询数据库表
-		return false;
+		int bandwidthCapacity = 0;
+		//检查rate参数是否合格，要查询数据库，所有的rate相加，不能大于总带宽数。
+		if(BandwidthType.InTraffic.equals(type)){
+			bandwidthCapacity = bandwidthVO.getInTraffic();
+		} else if(BandwidthType.OutTraffic.equals(type)){
+			bandwidthCapacity = bandwidthVO.getOutTraffic();
+		} else {
+			throw new InvalidParameterValueException("The bandwidth rule parameter: type is not right, Only support InTraffic and OutTraffic.");
+		}
+		List<BandwidthRulesVO> BandwidthRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(bandwidthVO.getId(), type);
+		int sumOfRuleUsed = 0;
+		for(BandwidthRulesVO vo : BandwidthRulesList){
+			sumOfRuleUsed += vo.getRate();
+		}
+		int nowSumOfRuleUsed = 0;
+		
+		nowSumOfRuleUsed = sumOfRuleUsed + newRate - oldRate;
+		if(bandwidthCapacity < nowSumOfRuleUsed){
+			return false;
+		}
+		return true;
 	}
 
 	@Override

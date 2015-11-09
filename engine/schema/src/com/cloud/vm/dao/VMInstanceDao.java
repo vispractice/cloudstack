@@ -129,4 +129,7 @@ public interface VMInstanceDao extends GenericDao<VMInstanceVO, Long>, StateDao<
     void resetVmPowerStateTracking(long instanceId);
 
     void resetHostPowerStateTracking(long hostId);
+    
+    //andrew ling add
+    VMInstanceVO findVMByIpAddress(String ipAddress);
 }

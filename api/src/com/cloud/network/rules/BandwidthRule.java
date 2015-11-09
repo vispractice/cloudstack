@@ -1,40 +1,101 @@
 package com.cloud.network.rules;
 
-import org.apache.cloudstack.acl.ControlledEntity;
-import org.apache.cloudstack.api.Identity;
-import org.apache.cloudstack.api.InternalIdentity;
+import java.util.List;
 
-public interface BandwidthRule extends ControlledEntity, Identity, InternalIdentity{
-	//bandwidth_rules(uuid, id, bandwidth_id, networks_id, bandwidth_offering_id, traffic_rule_id, type, prio, ceil, rate)
-	public enum BandwidthType {
-		InTraffic, OutTraffic
-	};
+import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
+
+
+public class BandwidthRule{
+	private BandwidthClassRule bandwidthClassRule;
 	
-	String getUuid();
+	private List<BandwidthFilterRules> bandwidthFilterRules;
 	
-	Long getBandwidthId();
+//	private int deviceId;
 	
-	Long getNetworksId();
+	public BandwidthRule(BandwidthClassRule bandwidthClassRule, List<BandwidthFilterRules> bandwidthFilterRules){
+		this.bandwidthClassRule = bandwidthClassRule;
+		this.bandwidthFilterRules = bandwidthFilterRules;
+	}
 	
-	Long getBandwidthOfferingId();
+	public BandwidthRule(BandwidthClassRule bandwidthClassRule){
+		this.bandwidthClassRule = bandwidthClassRule;
+	}
 	
-	Integer getTrafficRuleId();
+	public BandwidthClassRule getBandwidthClassRule() {
+		return bandwidthClassRule;
+	}
+
+	public void setBandwidthClassRule(BandwidthClassRule bandwidthClassRule) {
+		this.bandwidthClassRule = bandwidthClassRule;
+	}
+
+	public List<BandwidthFilterRules> getBandwidthFilterRules() {
+		return bandwidthFilterRules;
+	}
+
+	public void setBandwidthFilterRules(
+			List<BandwidthFilterRules> bandwidthFilterRules) {
+		this.bandwidthFilterRules = bandwidthFilterRules;
+	}
+
+//	public int getDeviceId() {
+//		return deviceId;
+//	}
+//
+//	public void setDeviceId(int deviceId) {
+//		this.deviceId = deviceId;
+//	}
+
+	public Long getBandwidthId(){
+		return bandwidthClassRule.getBandwidthId();
+	}
 	
-	BandwidthType getType();
+	public Long getNetworksId(){
+		return bandwidthClassRule.getNetworksId();
+	}
 	
-	Integer getPrio();
+	public Long getBandwidthOfferingId(){
+		return bandwidthClassRule.getBandwidthOfferingId();
+	}
 	
-	Integer getRate();
+	public Integer getTrafficRuleId(){
+		return bandwidthClassRule.getTrafficRuleId();
+	}
 	
-	Integer getCeil();
+	public BandwidthType getType(){
+		return bandwidthClassRule.getType();
+	}
 	
-	Boolean isRevoked();
+	public Integer getPrio(){
+		return bandwidthClassRule.getPrio();
+	}
+	
+	public Integer getRate(){
+		return bandwidthClassRule.getRate();
+	}
+	
+	public Integer getCeil(){
+		return bandwidthClassRule.getCeil();
+	}
+	
+	public Boolean isClassRuleRevoked(){
+		return bandwidthClassRule.isRevoked();
+	}
+	
+	public Boolean isClassRuleKeepState() {
+		return bandwidthClassRule.isKeepState();
+	}
+	
+	public Boolean isClassRuleAlreadyAdded(){
+		return bandwidthClassRule.isAlreadyAdded();
+	}
 	
 	public interface BandwidthFilter {
 		String getIpAddress();
 		int getStartPort();
 		int getEndPort();
 		boolean isRevoke();
+		boolean isAlreadyAdded();
 	}
 	
 	public static class BandwidthFilterRules implements BandwidthFilter {
@@ -42,12 +103,14 @@ public interface BandwidthRule extends ControlledEntity, Identity, InternalIdent
 		private int startPort;
 		private int endPort;
 		private boolean revoke;
+		private boolean alreadyAdded;
 		
-		public BandwidthFilterRules(String ip, int startPort, int endPort, boolean revoke){
+		public BandwidthFilterRules(String ip, int startPort, int endPort, boolean revoke, boolean alreadyAdded){
 			this.ip = ip;
 			this.startPort = startPort;
 			this.endPort = endPort;
 			this.revoke = revoke;
+			this.alreadyAdded = alreadyAdded;
 		}
 
 		public String getIp() {
@@ -87,7 +150,14 @@ public interface BandwidthRule extends ControlledEntity, Identity, InternalIdent
 			return ip;
 		}
 
-		
+		public boolean isAlreadyAdded() {
+			return alreadyAdded;
+		}
+
+		public void setAlreadyAdded(boolean alreadyAdded) {
+			this.alreadyAdded = alreadyAdded;
+		}
+
 	}
 	
 }

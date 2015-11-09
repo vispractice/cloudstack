@@ -3,8 +3,8 @@ package com.cloud.agent.api.to;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
 import com.cloud.network.rules.BandwidthRule.BandwidthFilterRules;
-import com.cloud.network.rules.BandwidthRule.BandwidthType;
 
 public class BandwidthRuleTO {
     private int deviceId;

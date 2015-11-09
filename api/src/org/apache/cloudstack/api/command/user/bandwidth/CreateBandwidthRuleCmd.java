@@ -100,7 +100,6 @@ public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{
 		if(!checkType()){
 			throw new InvalidParameterValueException("The bandwidth rule type must be inTraffic or outTraffic.");
 		}
-		// TODO check the parameters and store the parameters to db
 		if(bandwidthOfferingId == null){
 			if(rate < 0 || ceil < 0 || prio < 0){
 				throw new InvalidParameterValueException("The bandwidth rule parameter: rate, ceil can not less than zore.");

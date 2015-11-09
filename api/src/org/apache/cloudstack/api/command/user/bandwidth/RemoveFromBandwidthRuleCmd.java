@@ -7,18 +7,12 @@ import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.BaseCmd.CommandType;
-import org.apache.cloudstack.api.command.user.loadbalancer.RemoveFromLoadBalancerRuleCmd;
-import org.apache.cloudstack.api.response.FirewallRuleResponse;
+import org.apache.cloudstack.api.response.BandwidthRulesResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.event.EventTypes;
-import com.cloud.exception.ConcurrentOperationException;
-import com.cloud.exception.InsufficientCapacityException;
-import com.cloud.exception.NetworkRuleConflictException;
-import com.cloud.exception.ResourceAllocationException;
-import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 
 @APICommand(name = "removeFromBandwidthRule", description="Removes filter: IP, startPort and endPort from a bandwidth rule.", responseObject=SuccessResponse.class)
@@ -31,9 +25,18 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = FirewallRuleResponse.class,
-            required=true, description="The ID of the bandwidth filter rule")
+    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = BandwidthRulesResponse.class,
+            required=true, description="The ID of the bandwidth rule")
     private Long id;
+    
+    @Parameter(name=ApiConstants.BANDWIDTH_RULE_IP, type=CommandType.STRING, required=true, description="the IP address in this bandwidth rule for filter rule.")
+    private String ip;
+    
+    @Parameter(name = ApiConstants.START_PORT, type = CommandType.INTEGER, required=true, description = "the starting port of bandwidth rule for filter rule.")
+    private Integer startPort;
+
+    @Parameter(name = ApiConstants.END_PORT, type = CommandType.INTEGER, required=true, description = "the ending port of bandwidth rule for filter rule.")
+    private Integer endPort;
     
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -43,10 +46,22 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
         return id;
     }
     
+	public String getIp() {
+		return ip;
+	}
+
+	public Integer getStartPort() {
+		return startPort;
+	}
+
+	public Integer getEndPort() {
+		return endPort;
+	}
+	
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-    
+
 	@Override
 	public String getEventType() {
 		return EventTypes.EVENT_REMOVE_FROM_BANDWIDTH_RULE;

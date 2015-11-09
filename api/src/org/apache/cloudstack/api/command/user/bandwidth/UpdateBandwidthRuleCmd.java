@@ -12,6 +12,8 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.event.EventTypes;
+import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 
 @APICommand(name = "updateBandwidthRule", description="Update a bandwidth rule", responseObject=SuccessResponse.class)
@@ -69,16 +71,25 @@ public class UpdateBandwidthRuleCmd extends BaseAsyncCmd {
 	}
 
 	@Override
-	public void execute() {
+	public void execute() throws ResourceUnavailableException {
 		CallContext.current().setEventDetails("Bandwidth Rule Id: " + bandwidthRuleId);
-      boolean result = _bandwidthService.updateBandwidthRule(this);
-      if (result) {
-          SuccessResponse response = new SuccessResponse(getCommandName());
-          this.setResponseObject(response);
-      } else {
-          throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update bandwidth rule");
-      }
-		
+		if (rate < 0 || ceil < 0 || prio < 0) {
+			throw new InvalidParameterValueException("The bandwidth rule parameter: rate, ceil can not less than zore.");
+		}
+		if (rate > ceil) {
+			throw new InvalidParameterValueException("The bandwidth rule parameter: rate must  less than or equal ceil.");
+		}
+		if(prio < 0){
+			throw new InvalidParameterValueException("The bandwidth rule parameter: prio can not less than zore.");
+		}
+		boolean result = _bandwidthService.updateBandwidthRule(this);
+		if (result) {
+			SuccessResponse response = new SuccessResponse(getCommandName());
+			this.setResponseObject(response);
+		} else {
+			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR,"Failed to update bandwidth rule");
+		}
+
 	}
 
 	@Override

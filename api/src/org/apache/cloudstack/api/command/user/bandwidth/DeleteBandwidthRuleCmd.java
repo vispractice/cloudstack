@@ -12,6 +12,7 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.event.EventTypes;
+import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 
 @APICommand(name = "deleteBandwidthRule", description="Delete a bandwidth rule", responseObject=SuccessResponse.class)
@@ -49,7 +50,7 @@ public class DeleteBandwidthRuleCmd extends BaseAsyncCmd {
 	}
 
 	@Override
-	public void execute() {
+	public void execute()  throws ResourceUnavailableException{
 		CallContext.current().setEventDetails("Bandwidth Rule Id: " + id);
         boolean result = _bandwidthService.deleteBandwidthRule(this);
         if (result) {
@@ -58,7 +59,6 @@ public class DeleteBandwidthRuleCmd extends BaseAsyncCmd {
         } else {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete bandwidth rule");
         }
-		
 	}
 
 	@Override

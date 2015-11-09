@@ -2,7 +2,7 @@ package com.cloud.network.dao;
 
 import java.util.List;
 
-import com.cloud.network.rules.BandwidthRule.BandwidthType;
+import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
 import com.cloud.utils.db.GenericDao;
 
 public interface BandwidthRulesDao extends GenericDao<BandwidthRulesVO, Long>{

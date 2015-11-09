@@ -6,7 +6,7 @@ import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
-import com.cloud.network.rules.BandwidthRule.BandwidthType;
+import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
