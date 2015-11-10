@@ -7,6 +7,7 @@ import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthRulesCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.RemoveFromBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthRuleCmd;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
+import org.apache.cloudstack.api.response.ListResponse;
 
 import com.cloud.exception.ResourceUnavailableException;
 
@@ -17,8 +18,8 @@ public interface BandwidthService {
 	boolean revokeRelatedBandwidthRule(Long ruleId);
 	boolean deleteBandwidthRule(DeleteBandwidthRuleCmd cmd) throws ResourceUnavailableException;
 	boolean updateBandwidthRule(UpdateBandwidthRuleCmd cmd) throws ResourceUnavailableException;
-	BandwidthRulesResponse listBandwidthRules(ListBandwidthRulesCmd cmd);
-	boolean assignToBandwidthRule(AssignToBandwidthRuleCmd cmd);
-	boolean removeFromBandwidthRule(RemoveFromBandwidthRuleCmd cmd);
+	ListResponse<BandwidthRulesResponse> searchForBandwidthRules(ListBandwidthRulesCmd cmd);
+	boolean assignToBandwidthRule(AssignToBandwidthRuleCmd cmd) throws ResourceUnavailableException;
+	boolean removeFromBandwidthRule(RemoveFromBandwidthRuleCmd cmd) throws ResourceUnavailableException;
 	
 }

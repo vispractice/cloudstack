@@ -1,10 +1,15 @@
 package org.apache.cloudstack.api.command.user.bandwidth;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseListTaggedResourcesCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
+import org.apache.cloudstack.api.response.FirewallResponse;
+import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.log4j.Logger;
 
@@ -42,10 +47,10 @@ public class ListBandwidthRulesCmd  extends BaseListTaggedResourcesCmd {
 	
 	@Override
 	public void execute(){
-		// TODO Auto-generated method stub
-		
+		ListResponse<BandwidthRulesResponse> response = _bandwidthService.searchForBandwidthRules(this);
+		response.setResponseName(getCommandName());
+        this.setResponseObject(response);
 	}
-
 
 	@Override
 	public String getCommandName() {

@@ -16,7 +16,10 @@ import org.apache.cloudstack.api.command.user.bandwidth.DeleteBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthRulesCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.RemoveFromBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthRuleCmd;
+import org.apache.cloudstack.api.response.BandwidthFilterRuleResponse;
+import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
+import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -169,7 +172,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 
 	@Override
 	public boolean applyBandwidthRule(Long ruleId) throws ResourceUnavailableException{
-		// TODO  根据networkId，找到VR所在的hostId，然后把参数发送到VR中执行相关的命令。
+		// 根据networkId，找到VR所在的hostId，然后把参数发送到VR中执行相关的命令。
 		// find the network id and get the network
 		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
 		BandwidthRulesVO rule = _bandwidthRulesDao.findById(ruleId);
@@ -192,8 +195,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	public boolean revokeRelatedBandwidthRule(Long ruleId) {
 		// delete the rule from the DB.
 		CallContext.current().setEventDetails("bandwidth rule id=" + ruleId);
-		_bandwidthRulesDao.remove(ruleId);
-		return true;
+		return _bandwidthRulesDao.remove(ruleId);
 	}
 
 	@Override
@@ -293,11 +295,6 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         }
 	}
 
-	@Override
-	public BandwidthRulesResponse listBandwidthRules(ListBandwidthRulesCmd cmd) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	private boolean validateBandwidthFilterRule(Long bandwidthRuleId, BandwidthType type, String ip, Integer portStart, Integer portEnd){
 		
@@ -343,16 +340,114 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	}
 	
 	@Override
-	public boolean assignToBandwidthRule(AssignToBandwidthRuleCmd cmd) {
-		// TODO check the parameters, get the bandwidth rule by the id, and add the filter rule to the bandwidth rule
+	public boolean assignToBandwidthRule(AssignToBandwidthRuleCmd cmd) throws ResourceUnavailableException {
+		//check the parameters, get the bandwidth rule by the id, and add the filter rule to the bandwidth rule
+		Long bandwidthRuleId = cmd.getBandwidthRuleId();
+		String ip = cmd.getIp();
+		Integer newStartPort = cmd.getStartPort();
+		Integer newEndPort = cmd.getEndPort();
+		BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
+		BandwidthType type = bandwidthClassRule.getType();
 		
-		return false;
+		if(!validateBandwidthFilterRule(bandwidthRuleId, type, ip, newStartPort, newEndPort)){
+			s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,start port, end port.");
+			throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,start port, end port");
+		}
+		
+		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
+		bandwidthClassRule.setRevoked(false);
+		bandwidthClassRule.setKeepState(true);
+		bandwidthClassRule.setAlreadyAdded(true);
+		Network network = _networksDao.findById(bandwidthClassRule.getNetworksId());
+		//update the filter rules
+		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
+		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(bandwidthClassRule.getId());
+		if(bandwidthIPPortMapList != null){
+			for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+				String ipAddress = bandwidthIPPortMap.getIpAddress();
+				int startPort = bandwidthIPPortMap.getBandwidthPortStart();
+				int endPort = bandwidthIPPortMap.getBandwidthPortEnd();
+				boolean revoke = false;
+				boolean alreadyAdded = true;
+				BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ipAddress, startPort, endPort, revoke, alreadyAdded);
+				bandwidthFilterRules.add(bandwidthFilterRule);
+			}
+		}
+		
+		BandwidthFilterRules newBandwidthFilterRule = new BandwidthFilterRules(ip, newStartPort, newEndPort, false, false);
+		bandwidthFilterRules.add(newBandwidthFilterRule);
+		
+		BandwidthRule bandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
+		rules.add(bandwidthRule);
+		if(applyBandwidthRules(network, rules)){
+			//stort to db
+			BandwidthIPPortMapVO newBandwidthIPPortMapVO = new BandwidthIPPortMapVO(bandwidthRuleId, ip, newStartPort, newEndPort);
+	        CallContext.current().setEventDetails("bandwidth filter rule id=" + newBandwidthIPPortMapVO.getId());
+	        BandwidthIPPortMapVO bandwidthIPPortMap = _bandwidthIPPortMapDao.persist(newBandwidthIPPortMapVO);
+	        if (bandwidthIPPortMap != null) {
+	            CallContext.current().setEventDetails("Bandwidth filter rule id=" + newBandwidthIPPortMapVO.getId());
+	            return true;
+	        } else {
+	            return false;
+	        }
+		} else{
+			return false;
+		}
 	}
 
 	@Override
-	public boolean removeFromBandwidthRule(RemoveFromBandwidthRuleCmd cmd) {
-		// TODO check the parameters, then get the bandwidth rule by the id, and add the filter rule to the bandwidth rule
-		return false;
+	public boolean removeFromBandwidthRule(RemoveFromBandwidthRuleCmd cmd) throws ResourceUnavailableException {
+		//check the parameters, then get the bandwidth rule by the id, and add the filter rule to the bandwidth rule
+		Long bandwidthRuleId = cmd.getId();
+		String removedIp = cmd.getIp();
+		Integer removedStartPort = cmd.getStartPort();
+		Integer removedEndPort = cmd.getEndPort();
+		Long bandwidthFilterRuleId = null;
+		BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
+		BandwidthType type = bandwidthClassRule.getType();
+		
+		if(!validateBandwidthFilterRule(bandwidthRuleId, type, removedIp, removedStartPort, removedEndPort)){
+			s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,start port, end port.");
+			throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,start port, end port");
+		}
+		
+		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
+		bandwidthClassRule.setRevoked(false);
+		bandwidthClassRule.setKeepState(true);
+		bandwidthClassRule.setAlreadyAdded(true);
+		Network network = _networksDao.findById(bandwidthClassRule.getNetworksId());
+		//update the filter rules
+		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
+		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(bandwidthClassRule.getId());
+		if(bandwidthIPPortMapList != null){
+			for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+				String ipAddress = bandwidthIPPortMap.getIpAddress();
+				int startPort = bandwidthIPPortMap.getBandwidthPortStart();
+				int endPort = bandwidthIPPortMap.getBandwidthPortEnd();
+				boolean revoke = false;
+				boolean alreadyAdded = true;
+				if(ipAddress.equalsIgnoreCase(removedIp) && startPort == removedStartPort && endPort == removedEndPort){
+					revoke = true;
+					alreadyAdded = true;
+					bandwidthFilterRuleId = bandwidthIPPortMap.getId();
+				}
+				BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ipAddress, startPort, endPort, revoke, alreadyAdded);
+				bandwidthFilterRules.add(bandwidthFilterRule);
+			}
+		}
+		
+		BandwidthFilterRules newBandwidthFilterRule = new BandwidthFilterRules(removedIp, removedStartPort, removedEndPort, false, false);
+		bandwidthFilterRules.add(newBandwidthFilterRule);
+		
+		BandwidthRule bandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
+		rules.add(bandwidthRule);
+		if(applyBandwidthRules(network, rules)){
+			//remove from the DB
+	        CallContext.current().setEventDetails("bandwidth filter rule id=" + bandwidthFilterRuleId);
+	        return _bandwidthIPPortMapDao.remove(bandwidthFilterRuleId);
+		} else{
+			return false;
+		}
 	}
 
 	@Override
@@ -386,6 +481,124 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			BandwidthOffering oldOffering) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public ListResponse<BandwidthRulesResponse> searchForBandwidthRules(ListBandwidthRulesCmd cmd) {
+		
+		ListResponse<BandwidthRulesResponse> response = new ListResponse<BandwidthRulesResponse>();
+		List<BandwidthRulesResponse> respList = new ArrayList<BandwidthRulesResponse>();
+		int count = 0;
+		//get the result by the search condition.
+		if(cmd.listAll()){
+			//get all the bandwidth rule from DB.
+			List<BandwidthRulesVO> bandwidthList = _bandwidthRulesDao.listAll();
+			//id,bandwidth_id, networks_id, bandwidth_offering_id, domain_id, account_id, type, prio, ceil, rate, traffic_rule_id
+			//ip_address, start_port, end_port
+			count = bandwidthList.size();
+			for(BandwidthRulesVO vo : bandwidthList){
+				BandwidthRulesResponse bandwidthRulesResponse = new BandwidthRulesResponse();
+				bandwidthRulesResponse.setId(vo.getUuid());
+				BandwidthVO bandwidth = _bandwidthDao.findById(vo.getBandwidthId());
+				bandwidthRulesResponse.setBandwidthId(bandwidth.getUuid());
+				Network network = _networksDao.findById(vo.getNetworksId());
+				bandwidthRulesResponse.setNetworkId(network.getUuid());
+				BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.findById(vo.getBandwidthOfferingId());
+				bandwidthRulesResponse.setBandwidthOfferingId(bandwidthOffering.getUuid());
+				bandwidthRulesResponse.setType(vo.getType().toString());
+				bandwidthRulesResponse.setPrio(vo.getPrio());
+				bandwidthRulesResponse.setRate(vo.getRate());
+				bandwidthRulesResponse.setCeil(vo.getCeil());
+				bandwidthRulesResponse.setTrafficRuleId(vo.getTrafficRuleId());
+				List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(vo.getId());
+				if(bandwidthIPPortMapList != null){
+					for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+						BandwidthFilterRuleResponse bandwidthFilterRuleResponse = new BandwidthFilterRuleResponse();
+						bandwidthFilterRuleResponse.setIpAddress(bandwidthIPPortMap.getIpAddress());
+						bandwidthFilterRuleResponse.setStartPort(bandwidthIPPortMap.getBandwidthPortStart());
+						bandwidthFilterRuleResponse.setEndPort(bandwidthIPPortMap.getBandwidthPortEnd());
+						bandwidthFilterRuleResponse.setObjectName("bandwidthfilter");
+						bandwidthRulesResponse.addFilterRule(bandwidthFilterRuleResponse);
+					}
+				}
+				bandwidthRulesResponse.setObjectName("bandwidthrule");
+				respList.add(bandwidthRulesResponse);
+			}
+			
+		} else if (cmd.getNetworkId() != null){
+			//get the bandwidth rule from DB.
+			List<BandwidthRulesVO> bandwidthList = _bandwidthRulesDao.listByNetworksId(cmd.getNetworkId());
+			//id,bandwidth_id, networks_id, bandwidth_offering_id, domain_id, account_id, type, prio, ceil, rate, traffic_rule_id
+			//ip_address, start_port, end_port
+			count = bandwidthList.size();
+			for(BandwidthRulesVO vo : bandwidthList){
+				BandwidthRulesResponse bandwidthRulesResponse = new BandwidthRulesResponse();
+				bandwidthRulesResponse.setId(vo.getUuid());
+				BandwidthVO bandwidth = _bandwidthDao.findById(vo.getBandwidthId());
+				bandwidthRulesResponse.setBandwidthId(bandwidth.getUuid());
+				Network network = _networksDao.findById(vo.getNetworksId());
+				bandwidthRulesResponse.setNetworkId(network.getUuid());
+				BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.findById(vo.getBandwidthOfferingId());
+				bandwidthRulesResponse.setBandwidthOfferingId(bandwidthOffering.getUuid());
+				bandwidthRulesResponse.setType(vo.getType().toString());
+				bandwidthRulesResponse.setPrio(vo.getPrio());
+				bandwidthRulesResponse.setRate(vo.getRate());
+				bandwidthRulesResponse.setCeil(vo.getCeil());
+				bandwidthRulesResponse.setTrafficRuleId(vo.getTrafficRuleId());
+				List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(vo.getId());
+				if(bandwidthIPPortMapList != null){
+					for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+						BandwidthFilterRuleResponse bandwidthFilterRuleResponse = new BandwidthFilterRuleResponse();
+						bandwidthFilterRuleResponse.setIpAddress(bandwidthIPPortMap.getIpAddress());
+						bandwidthFilterRuleResponse.setStartPort(bandwidthIPPortMap.getBandwidthPortStart());
+						bandwidthFilterRuleResponse.setEndPort(bandwidthIPPortMap.getBandwidthPortEnd());
+						bandwidthFilterRuleResponse.setObjectName("bandwidthfilter");
+						bandwidthRulesResponse.addFilterRule(bandwidthFilterRuleResponse);
+					}
+				}
+				bandwidthRulesResponse.setObjectName("bandwidthrule");
+				respList.add(bandwidthRulesResponse);
+			}
+		} else if (cmd.getId() != null){
+			
+			//get the bandwidth rule from DB.
+			BandwidthRulesVO vo = _bandwidthRulesDao.findById(cmd.getId());
+			//id,bandwidth_id, networks_id, bandwidth_offering_id, domain_id, account_id, type, prio, ceil, rate, traffic_rule_id
+			//ip_address, start_port, end_port
+			count = 1;
+			BandwidthRulesResponse bandwidthRulesResponse = new BandwidthRulesResponse();
+			bandwidthRulesResponse.setId(vo.getUuid());
+			BandwidthVO bandwidth = _bandwidthDao.findById(vo.getBandwidthId());
+			bandwidthRulesResponse.setBandwidthId(bandwidth.getUuid());
+			Network network = _networksDao.findById(vo.getNetworksId());
+			bandwidthRulesResponse.setNetworkId(network.getUuid());
+			BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.findById(vo.getBandwidthOfferingId());
+			bandwidthRulesResponse.setBandwidthOfferingId(bandwidthOffering.getUuid());
+			bandwidthRulesResponse.setType(vo.getType().toString());
+			bandwidthRulesResponse.setPrio(vo.getPrio());
+			bandwidthRulesResponse.setRate(vo.getRate());
+			bandwidthRulesResponse.setCeil(vo.getCeil());
+			bandwidthRulesResponse.setTrafficRuleId(vo.getTrafficRuleId());
+			List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(vo.getId());
+			if(bandwidthIPPortMapList != null){
+				for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+					BandwidthFilterRuleResponse bandwidthFilterRuleResponse = new BandwidthFilterRuleResponse();
+					bandwidthFilterRuleResponse.setIpAddress(bandwidthIPPortMap.getIpAddress());
+					bandwidthFilterRuleResponse.setStartPort(bandwidthIPPortMap.getBandwidthPortStart());
+					bandwidthFilterRuleResponse.setEndPort(bandwidthIPPortMap.getBandwidthPortEnd());
+					bandwidthFilterRuleResponse.setObjectName("bandwidthfilter");
+					bandwidthRulesResponse.addFilterRule(bandwidthFilterRuleResponse);
+				}
+			}
+			bandwidthRulesResponse.setObjectName("bandwidthrule");
+			respList.add(bandwidthRulesResponse);
+		} else {
+			s_logger.error("The search criteria is insufficient, when list the bandwidth rules.");
+			throw new InvalidParameterValueException("The search criteria is insufficient.");
+		}
+		
+        response.setResponses(respList, count);
+        return response;
 	}
 
 }

@@ -13,6 +13,7 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.event.EventTypes;
+import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 
 @APICommand(name = "removeFromBandwidthRule", description="Removes filter: IP, startPort and endPort from a bandwidth rule.", responseObject=SuccessResponse.class)
@@ -73,7 +74,7 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
 	}
 
 	@Override
-	public void execute() {
+	public void execute() throws ResourceUnavailableException {
 		CallContext.current().setEventDetails("bandwidth filter rule Id= " + getId());
 		boolean result = _bandwidthService.removeFromBandwidthRule(this);
         if (result) {

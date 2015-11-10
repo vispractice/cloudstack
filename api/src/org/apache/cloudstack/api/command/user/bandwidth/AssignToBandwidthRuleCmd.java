@@ -12,6 +12,7 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.event.EventTypes;
+import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 
 @APICommand(name = "assignToBandwidthRule", description="Assigns filter: ip, startPort and endPort to a bandwidth rule.", responseObject=SuccessResponse.class)
@@ -72,7 +73,7 @@ public class AssignToBandwidthRuleCmd extends BaseAsyncCmd {
 	}
 
 	@Override
-	public void execute(){
+	public void execute() throws ResourceUnavailableException{
 		CallContext.current().setEventDetails("bandwidth filter rule Id= "+getBandwidthRuleId()+" IP="+getIp()+", start port="+getStartPort()+" and end port="+getEndPort());
 		boolean result = _bandwidthService.assignToBandwidthRule(this);
         if (result) {
