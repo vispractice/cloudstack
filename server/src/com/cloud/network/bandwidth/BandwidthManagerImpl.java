@@ -484,24 +484,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	public boolean updateOfferingRefreshRules(int updateRate, int updateCeil, BandwidthOffering oldOffering) throws ResourceUnavailableException {
 		// find all the rules which used the bandwidth offering
 		List<BandwidthRulesVO> bandwidthRulesList = _bandwidthRulesDao.listByBandwidthOfferingId(oldOffering.getId());
-		
-		//update the bandwidth rules and send to VR
-//		Map<Long, List<BandwidthRulesVO>> rulesClassByNetworkId = new HashMap<Long, List<BandwidthRulesVO>>();
-//		for(BandwidthRulesVO BandwidthRulesVO : bandwidthRulesList){
-//			List<BandwidthRulesVO> bandwidthRuleList = new ArrayList<BandwidthRulesVO>();
-//			bandwidthRuleList.add(BandwidthRulesVO);
-//			rulesClassByNetworkId.put(BandwidthRulesVO.getNetworksId(), bandwidthRuleList);
-//		}
-		
 		Set<Long> networksSet = new HashSet<Long>();
-		Map<Long, Integer> rulesClassByNetworkId = new HashMap<Long, Integer>();
 		for(BandwidthRulesVO BandwidthRulesVO : bandwidthRulesList){
 			networksSet.add(BandwidthRulesVO.getNetworksId());
 		}
-//		Map<Long, List<BandwidthRulesVO>> rulesClassByNetworkId = new HashMap<Long, List<BandwidthRulesVO>>();
 		for(Long networkId : networksSet){
 			List<BandwidthRule> oldRulesList = new ArrayList<BandwidthRule>();
-//			List<BandwidthRule> updateRules = new ArrayList<BandwidthRule>();
 			for(BandwidthRulesVO bandwidthClassRule : bandwidthRulesList){
 				if(networkId.equals(bandwidthClassRule.getNetworksId())){
 					bandwidthClassRule.setRevoked(true);
@@ -509,7 +497,6 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 					bandwidthClassRule.setAlreadyAdded(true);
 					BandwidthRule oldBandwidthRule = new BandwidthRule(bandwidthClassRule);
 					oldRulesList.add(oldBandwidthRule);
-//					bandwidthRulesList.remove(bandwidthRule);
 				}
 			}
 			Network network = _networksDao.findById(networkId);
@@ -519,9 +506,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			}
 		}
 		
-		
 		for(Long networkId : networksSet){
-//			List<BandwidthRule> oldRulesList = new ArrayList<BandwidthRule>();
 			List<BandwidthRule> updateRules = new ArrayList<BandwidthRule>();
 			for(BandwidthRulesVO bandwidthClassRule : bandwidthRulesList){
 				if(networkId.equals(bandwidthClassRule.getNetworksId())){
@@ -555,16 +540,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			}
 		}
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		return false;
+		return true;
 	}
 
 	@Override

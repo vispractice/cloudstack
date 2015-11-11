@@ -5566,13 +5566,11 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         	}
         	
         	//go to re-execute the bandwidth rules which used this bandwidth offering.
-        	//will be sorted by networkId.
-        	
-        	_bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
-        	
-        	
-        	
-        	
+        	boolean refreshRulesOK = _bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
+        	if(!refreshRulesOK){
+        		s_logger.error("When update the bandwidth offering, there are run wrong in refresh the bandwidth rule part. ");
+        		throw new CloudRuntimeException("When update the bandwidth offering , It run wrong.");
+        	}
         }
         
         //store the update bandwidth offering to the DB.
