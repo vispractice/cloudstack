@@ -60,5 +60,6 @@
     <bean id="VirtualRouter" class="com.cloud.network.element.VirtualRouterElement">
         <property name="name" value="VirtualRouter" />
     </bean>
+    <bean id="BandwidthManagerImpl" class="com.cloud.network.bandwidth.BandwidthManagerImpl"/>
 
 </beans>
