@@ -177,6 +177,10 @@ import com.cloud.network.VpnUser;
 import com.cloud.network.VpnUserVO;
 import com.cloud.network.addr.PublicIp;
 import com.cloud.network.dao.BandwidthDao;
+import com.cloud.network.dao.BandwidthIPPortMapDao;
+import com.cloud.network.dao.BandwidthIPPortMapVO;
+import com.cloud.network.dao.BandwidthRulesDao;
+import com.cloud.network.dao.BandwidthRulesVO;
 import com.cloud.network.dao.BandwidthVO;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
@@ -207,6 +211,7 @@ import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.lb.LoadBalancingRulesManager;
 import com.cloud.network.router.VirtualRouter.RedundantState;
 import com.cloud.network.router.VirtualRouter.Role;
+import com.cloud.network.rules.BandwidthClassRule;
 import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
 import com.cloud.network.rules.BandwidthRule;
 import com.cloud.network.rules.FirewallRule;
@@ -411,6 +416,10 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     MultilineDao _multilineLabelDao;
     @Inject
 	BandwidthDao _bandwidthDao;
+    @Inject
+	BandwidthRulesDao _bandwidthRulesDao;
+    @Inject
+    BandwidthIPPortMapDao _bandwidthIPPortMapDao;
 
     int _routerRamSize;
     int _routerCpuMHz;
@@ -2865,6 +2874,34 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 }
             }
         }
+        //Andrew ling add , Reapply bandwidth rule
+        //first get the bandwidth rules from the DB by the networkId
+        List<BandwidthRule> rulesList = new ArrayList<BandwidthRule>();
+        List<BandwidthRulesVO> classRulesList = _bandwidthRulesDao.listByNetworksId(guestNetworkId);
+        for(BandwidthRulesVO classRule : classRulesList){
+        	classRule.setRevoked(false);
+        	classRule.setKeepState(false);
+        	classRule.setAlreadyAdded(false);
+        	
+        	//reload the filter rules
+    		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
+    		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(classRule.getId());
+    		for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+    			String ip = bandwidthIPPortMap.getIpAddress();
+    			int startPort = bandwidthIPPortMap.getBandwidthPortStart();
+    			int endPort = bandwidthIPPortMap.getBandwidthPortEnd();
+    			boolean revoke = false;
+    			boolean alreadyAdded = false;
+    			BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, startPort, endPort, revoke, alreadyAdded);
+    			bandwidthFilterRules.add(bandwidthFilterRule);
+    		}
+    		
+    		BandwidthRule reapplyBandwidthRule = new BandwidthRule(classRule, bandwidthFilterRules);
+    		rulesList.add(reapplyBandwidthRule);
+        }
+        //build the commands
+        createApplyBandwidthRulesCommands(rulesList, router, cmds, guestNetworkId);
+        
     }
 
     private void removeRevokedIpAliasFromDb(List<NicIpAliasVO> revokedIpAliasVOs) {

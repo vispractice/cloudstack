@@ -512,7 +512,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				if(networkId.equals(bandwidthClassRule.getNetworksId())){
 					bandwidthClassRule.setRevoked(false);
 					bandwidthClassRule.setKeepState(false);
-					bandwidthClassRule.setAlreadyAdded(true);
+					bandwidthClassRule.setAlreadyAdded(false);
 					bandwidthClassRule.setRate(updateRate);
 					bandwidthClassRule.setCeil(updateCeil);
 					
