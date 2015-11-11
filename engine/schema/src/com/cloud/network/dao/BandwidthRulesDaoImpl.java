@@ -26,7 +26,7 @@ public class BandwidthRulesDaoImpl extends GenericDaoBase<BandwidthRulesVO, Long
 		
 		bandwidthIdAndTypeSearch = createSearchBuilder();
 		bandwidthIdAndTypeSearch.and("bandwidthId", bandwidthIdAndTypeSearch.entity().getBandwidthId(), SearchCriteria.Op.EQ);
-		bandwidthIdAndTypeSearch.and("type", bandwidthIdAndTypeSearch.entity().type, SearchCriteria.Op.EQ);
+		bandwidthIdAndTypeSearch.and("type", bandwidthIdAndTypeSearch.entity().type.toString(), SearchCriteria.Op.EQ);
 		bandwidthIdAndTypeSearch.done();
 		
 		NetworksIdSearch = createSearchBuilder();
