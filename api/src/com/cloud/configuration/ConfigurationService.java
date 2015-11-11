@@ -291,8 +291,9 @@ public interface ConfigurationService {
     * @param rate
     * @param ceil
     * @return updated service offering
+ * @throws ResourceUnavailableException 
     */
-   BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd );
+   BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd ) throws ResourceUnavailableException;
 
    /**
     * Deletes a bandwidth offering

@@ -9,6 +9,7 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
 import org.apache.log4j.Logger;
 
+import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.offering.BandwidthOffering;
 import com.cloud.user.Account;
 
@@ -76,7 +77,7 @@ public class UpdateBandwidthOfferingCmd extends BaseCmd{
 	}
 	
 	@Override
-	public void execute() {
+	public void execute() throws ResourceUnavailableException {
 		BandwidthOffering result = _configService.updateBandwidthOffering(this);
 		if (result != null){
 			BandwidthOfferingResponse response = _responseGenerator.createBandwidthOfferingResponse(result);

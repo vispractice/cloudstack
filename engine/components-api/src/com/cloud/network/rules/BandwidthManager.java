@@ -14,7 +14,7 @@ public interface BandwidthManager{
 	boolean checkBandwidthCapacity(BandwidthVO bandwidthVO, BandwidthType type, Integer newRate, Integer oldRate);
 	boolean applyBandwidthRules(Network network, List<BandwidthRule> rules) throws ResourceUnavailableException;
 	//update operation include remove old rules and create new rules
-	boolean updateOfferingRefreshRules(BandwidthOffering newOffering, BandwidthOffering oldOffering);
+	boolean updateOfferingRefreshRules(int updateRate, int updateCeil, BandwidthOffering oldOffering) throws ResourceUnavailableException;
 	
 	
 	

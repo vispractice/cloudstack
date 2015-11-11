@@ -1,8 +1,12 @@
 package com.cloud.network.bandwidth;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ejb.Local;
 import javax.inject.Inject;
@@ -477,9 +481,89 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	}
 
 	@Override
-	public boolean updateOfferingRefreshRules(BandwidthOffering newOffering,
-			BandwidthOffering oldOffering) {
-		// TODO Auto-generated method stub
+	public boolean updateOfferingRefreshRules(int updateRate, int updateCeil, BandwidthOffering oldOffering) throws ResourceUnavailableException {
+		// find all the rules which used the bandwidth offering
+		List<BandwidthRulesVO> bandwidthRulesList = _bandwidthRulesDao.listByBandwidthOfferingId(oldOffering.getId());
+		
+		//update the bandwidth rules and send to VR
+//		Map<Long, List<BandwidthRulesVO>> rulesClassByNetworkId = new HashMap<Long, List<BandwidthRulesVO>>();
+//		for(BandwidthRulesVO BandwidthRulesVO : bandwidthRulesList){
+//			List<BandwidthRulesVO> bandwidthRuleList = new ArrayList<BandwidthRulesVO>();
+//			bandwidthRuleList.add(BandwidthRulesVO);
+//			rulesClassByNetworkId.put(BandwidthRulesVO.getNetworksId(), bandwidthRuleList);
+//		}
+		
+		Set<Long> networksSet = new HashSet<Long>();
+		Map<Long, Integer> rulesClassByNetworkId = new HashMap<Long, Integer>();
+		for(BandwidthRulesVO BandwidthRulesVO : bandwidthRulesList){
+			networksSet.add(BandwidthRulesVO.getNetworksId());
+		}
+//		Map<Long, List<BandwidthRulesVO>> rulesClassByNetworkId = new HashMap<Long, List<BandwidthRulesVO>>();
+		for(Long networkId : networksSet){
+			List<BandwidthRule> oldRulesList = new ArrayList<BandwidthRule>();
+//			List<BandwidthRule> updateRules = new ArrayList<BandwidthRule>();
+			for(BandwidthRulesVO bandwidthClassRule : bandwidthRulesList){
+				if(networkId.equals(bandwidthClassRule.getNetworksId())){
+					bandwidthClassRule.setRevoked(true);
+					bandwidthClassRule.setKeepState(false);
+					bandwidthClassRule.setAlreadyAdded(true);
+					BandwidthRule oldBandwidthRule = new BandwidthRule(bandwidthClassRule);
+					oldRulesList.add(oldBandwidthRule);
+//					bandwidthRulesList.remove(bandwidthRule);
+				}
+			}
+			Network network = _networksDao.findById(networkId);
+			if(!applyBandwidthRules(network, oldRulesList)){
+				s_logger.error("Update the bandwidth rules, when delete the old rules, it get wrong.");
+				throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update bandwidth rule");
+			}
+		}
+		
+		
+		for(Long networkId : networksSet){
+//			List<BandwidthRule> oldRulesList = new ArrayList<BandwidthRule>();
+			List<BandwidthRule> updateRules = new ArrayList<BandwidthRule>();
+			for(BandwidthRulesVO bandwidthClassRule : bandwidthRulesList){
+				if(networkId.equals(bandwidthClassRule.getNetworksId())){
+					bandwidthClassRule.setRevoked(false);
+					bandwidthClassRule.setKeepState(false);
+					bandwidthClassRule.setAlreadyAdded(true);
+					bandwidthClassRule.setRate(updateRate);
+					bandwidthClassRule.setCeil(updateCeil);
+					
+					//reload the filter rules
+					List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
+					List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(bandwidthClassRule.getId());
+					for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+						String ip = bandwidthIPPortMap.getIpAddress();
+						int startPort = bandwidthIPPortMap.getBandwidthPortStart();
+						int endPort = bandwidthIPPortMap.getBandwidthPortEnd();
+						boolean revoke = false;
+						boolean alreadyAdded = false;
+						BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, startPort, endPort, revoke, alreadyAdded);
+						bandwidthFilterRules.add(bandwidthFilterRule);
+					}
+					
+					BandwidthRule updateBandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
+					updateRules.add(updateBandwidthRule);
+				}
+			}
+			Network network = _networksDao.findById(networkId);
+			if(!applyBandwidthRules(network, updateRules)){
+				s_logger.error("Update the bandwidth rules, when create the new rules, it get wrong.");
+				throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update bandwidth rule");
+			}
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		return false;
 	}
 
