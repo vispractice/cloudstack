@@ -5445,7 +5445,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
 		Integer ceil = cmd.getCeil();
 		
 		//check the parameters
-		if(zoneId != null || name.isEmpty() || displayText.isEmpty()){
+		if(zoneId == null || name.isEmpty() || displayText.isEmpty()){
 			throw new InvalidParameterValueException("It need the parameters, like name, display etc.");
 		}
 		if(rate < 0 || ceil < 0){
