@@ -333,6 +333,7 @@
   <bean id="Site2SiteVpnConnectionDetailsDaoImpl" class="org.apache.cloudstack.resourcedetail.dao.Site2SiteVpnConnectionDetailsDaoImpl" />
   <bean id="databaseIntegrityChecker" class="com.cloud.upgrade.DatabaseIntegrityChecker" />
   <bean id="multilineDaoImpl" class="com.cloud.network.dao.MultilineDaoImpl" />
+  <bean id="BandwidthDaoImpl" class="com.cloud.network.dao.BandwidthDaoImpl"/>
   <bean id="BandwidthOfferingDaoImpl" class="com.cloud.network.dao.BandwidthOfferingDaoImpl"/>
   <bean id="BandwidthRulesDaoImpl" class="com.cloud.network.dao.BandwidthRulesDaoImpl"/>
   <bean id="BandwidthIPPortMapDaoImpl" class="com.cloud.network.dao.BandwidthIPPortMapDaoImpl"/>
