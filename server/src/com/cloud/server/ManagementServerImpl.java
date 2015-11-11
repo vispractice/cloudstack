@@ -113,10 +113,13 @@ import org.apache.cloudstack.api.command.admin.network.UpdateNetworkOfferingCmd;
 import org.apache.cloudstack.api.command.admin.network.UpdateNetworkServiceProviderCmd;
 import org.apache.cloudstack.api.command.admin.network.UpdatePhysicalNetworkCmd;
 import org.apache.cloudstack.api.command.admin.network.UpdateStorageNetworkIpRangeCmd;
+import org.apache.cloudstack.api.command.admin.offering.CreateBandwidthOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.CreateDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.CreateServiceOfferingCmd;
+import org.apache.cloudstack.api.command.admin.offering.DeleteBandwidthOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.DeleteDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.DeleteServiceOfferingCmd;
+import org.apache.cloudstack.api.command.admin.offering.UpdateBandwidthOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.UpdateDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.offering.UpdateServiceOfferingCmd;
 import org.apache.cloudstack.api.command.admin.pod.CreatePodCmd;
@@ -243,6 +246,12 @@ import org.apache.cloudstack.api.command.user.autoscale.ListCountersCmd;
 import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScalePolicyCmd;
 import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScaleVmGroupCmd;
 import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScaleVmProfileCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.AssignToBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.CreateBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.DeleteBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthRulesCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.RemoveFromBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.config.ListCapabilitiesCmd;
 import org.apache.cloudstack.api.command.user.event.ArchiveEventsCmd;
 import org.apache.cloudstack.api.command.user.event.DeleteEventsCmd;
@@ -313,6 +322,7 @@ import org.apache.cloudstack.api.command.user.network.ReplaceNetworkACLListCmd;
 import org.apache.cloudstack.api.command.user.network.RestartNetworkCmd;
 import org.apache.cloudstack.api.command.user.network.UpdateNetworkACLItemCmd;
 import org.apache.cloudstack.api.command.user.network.UpdateNetworkCmd;
+import org.apache.cloudstack.api.command.user.offering.ListBandwidthOfferingsCmd;
 import org.apache.cloudstack.api.command.user.offering.ListDiskOfferingsCmd;
 import org.apache.cloudstack.api.command.user.offering.ListServiceOfferingsCmd;
 import org.apache.cloudstack.api.command.user.project.ActivateProjectCmd;
@@ -2918,7 +2928,18 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(GenerateAlertCmd.class);
         cmdList.add(GetVMUserDataCmd.class);
         cmdList.add(updateStaticNatCmd.class);
-
+        //andrew ling add bandwidth part
+        cmdList.add(CreateBandwidthOfferingCmd.class);
+        cmdList.add(DeleteBandwidthOfferingCmd.class);
+        cmdList.add(UpdateBandwidthOfferingCmd.class);
+        cmdList.add(ListBandwidthOfferingsCmd.class);
+        cmdList.add(CreateBandwidthRuleCmd.class);
+        cmdList.add(DeleteBandwidthRuleCmd.class);
+        cmdList.add(UpdateBandwidthRuleCmd.class);
+        cmdList.add(ListBandwidthRulesCmd.class);
+        cmdList.add(AssignToBandwidthRuleCmd.class);
+        cmdList.add(RemoveFromBandwidthRuleCmd.class);
+        
         return cmdList;
     }
 

@@ -164,7 +164,6 @@ import com.cloud.network.dao.PhysicalNetworkTrafficTypeDao;
 import com.cloud.network.dao.PhysicalNetworkTrafficTypeVO;
 import com.cloud.network.dao.PhysicalNetworkVO;
 import com.cloud.network.rules.BandwidthManager;
-import com.cloud.network.rules.BandwidthRule;
 import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
 import com.cloud.network.rules.LoadBalancerContainer.Scheme;
 import com.cloud.network.vpc.VpcManager;

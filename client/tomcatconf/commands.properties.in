@@ -712,3 +712,15 @@ importLdapUsers=3
 
 #### juniper-contrail commands
 createServiceInstance=1
+
+#### bandwidth commands
+createBandwidthOffering=1
+deleteBandwidthOffering=1
+updateBandwidthOffering=1
+listBandwidthOfferings=15
+createBandwidthRule=15
+deleteBandwidthRule=15
+updateBandwidthRule=15
+listBandwidthRules=15
+assignToBandwidthRule=15
+RemoveFromBandwidthRuleCmd=15

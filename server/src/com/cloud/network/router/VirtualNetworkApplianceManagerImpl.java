@@ -211,7 +211,6 @@ import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.lb.LoadBalancingRulesManager;
 import com.cloud.network.router.VirtualRouter.RedundantState;
 import com.cloud.network.router.VirtualRouter.Role;
-import com.cloud.network.rules.BandwidthClassRule;
 import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
 import com.cloud.network.rules.BandwidthRule;
 import com.cloud.network.rules.FirewallRule;

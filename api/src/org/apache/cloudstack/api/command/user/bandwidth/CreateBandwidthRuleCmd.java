@@ -6,11 +6,9 @@ import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCreateCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
-import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
-import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.event.EventTypes;
@@ -18,7 +16,6 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.Network;
-import com.cloud.user.Account;
 
 @APICommand(name = "createBandwidthRule", description="create a bandwidth offering.", responseObject=SuccessResponse.class)
 public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{

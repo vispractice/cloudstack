@@ -1,9 +1,7 @@
 package com.cloud.network.bandwidth;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,7 +19,6 @@ import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthRulesCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.RemoveFromBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthRuleCmd;
 import org.apache.cloudstack.api.response.BandwidthFilterRuleResponse;
-import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.context.CallContext;
