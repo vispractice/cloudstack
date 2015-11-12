@@ -5612,7 +5612,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
     	}
     	
     	List<BandwidthRulesVO> rules = _bandwidthRulesDao.listByBandwidthOfferingId(bandwidthOfferingId);
-    	if(rules != null | !rules.isEmpty()){
+    	if(!rules.isEmpty()){
     		throw new InvalidParameterValueException("Unable to delete the bandwidth offering by id " + bandwidthOfferingId + ", because it was used.");
     	}
     	

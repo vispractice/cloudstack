@@ -2462,15 +2462,15 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
     private Pair<List<BandwidthOfferingVO>, Integer> searchForBandwidthOffering(ListBandwidthOfferingsCmd cmd) {
     	Boolean isAscending = Boolean.parseBoolean(_configDao.getValue("sortkey.algorithm"));
         isAscending = (isAscending == null ? true : isAscending);
-        Filter searchFilter = new Filter(BandwidthOfferingVO.class, "sortKey", isAscending, cmd.getStartIndex(),
+        Filter searchFilter = new Filter(BandwidthOfferingVO.class, "id", isAscending, cmd.getStartIndex(),
                 cmd.getPageSizeVal());
         SearchCriteria<BandwidthOfferingVO> sc = _bandwidthOfferingDao.createSearchCriteria();
         Object name = cmd.getBandwidthOfferingName();
         Object id = cmd.getId();
         Object keyword = cmd.getKeyword();
-        Long zoneId = cmd.getZoneId();
-        if(zoneId != null){
-        	sc.addAnd("zoneId", SearchCriteria.Op.EQ, zoneId);
+        Long dateCenterId = cmd.getZoneId();
+        if(dateCenterId != null){
+        	sc.addAnd("dateCenterId", SearchCriteria.Op.EQ, dateCenterId);
         	return _bandwidthOfferingDao.searchAndCount(sc, searchFilter);
         }
         

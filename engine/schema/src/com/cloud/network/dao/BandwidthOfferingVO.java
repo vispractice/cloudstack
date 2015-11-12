@@ -28,8 +28,8 @@ public class BandwidthOfferingVO implements BandwidthOffering{
 	@Column(name="uuid")
     private String uuid;
 	
-	@Column(name="date_center_id")
-    private Long dateCenterId;
+	@Column(name="data_center_id")
+    private Long dataCenterId;
 	
 	@Column(name = "unique_name")
     private String uniqueName;
@@ -61,8 +61,8 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     	uuid = UUID.randomUUID().toString();
     }
 	
-    public BandwidthOfferingVO(Long dateCenterId, String name, String displayText, Integer rate, Integer ceil){
-    	this.dateCenterId = dateCenterId;
+    public BandwidthOfferingVO(Long dataCenterId, String name, String displayText, Integer rate, Integer ceil){
+    	this.dataCenterId = dataCenterId;
     	this.name = name;
     	this.displayText = displayText;
     	this.rate = rate;
@@ -161,12 +161,12 @@ public class BandwidthOfferingVO implements BandwidthOffering{
 	}
     
 	@Override
-	public Long getDateCenterId() {
-		return dateCenterId;
+	public Long getDataCenterId() {
+		return dataCenterId;
 	}
 
-	public void setDateCenterId(Long dateCenterId) {
-		this.dateCenterId = dateCenterId;
+	public void setDataCenterId(Long dateCenterId) {
+		this.dataCenterId = dateCenterId;
 	}
 	
 }

@@ -31,5 +31,5 @@ public interface BandwidthOffering extends InfrastructureEntity, Identity, Inter
     
     BandwidthOfferingState getState();
     
-    Long getDateCenterId();
+    Long getDataCenterId();
 }
