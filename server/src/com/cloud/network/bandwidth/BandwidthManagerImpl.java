@@ -149,6 +149,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		for(Integer i = 2; i < 9999; i++){
 			if(!trafficRuleIdList.contains(i)){
 				trafficRuleId = i;
+				break;
 			}
 		}
 		//参数合格之后，保存到DB中
@@ -583,8 +584,10 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				bandwidthRulesResponse.setBandwidthId(bandwidth.getUuid());
 				Network network = _networksDao.findById(vo.getNetworksId());
 				bandwidthRulesResponse.setNetworkId(network.getUuid());
-				BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.findById(vo.getBandwidthOfferingId());
-				bandwidthRulesResponse.setBandwidthOfferingId(bandwidthOffering.getUuid());
+				if(vo.getBandwidthOfferingId() != null){
+					BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.findById(vo.getBandwidthOfferingId());
+					bandwidthRulesResponse.setBandwidthOfferingId(bandwidthOffering.getUuid());
+				}
 				bandwidthRulesResponse.setType(vo.getType().toString());
 				bandwidthRulesResponse.setPrio(vo.getPrio());
 				bandwidthRulesResponse.setRate(vo.getRate());
@@ -618,8 +621,10 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				bandwidthRulesResponse.setBandwidthId(bandwidth.getUuid());
 				Network network = _networksDao.findById(vo.getNetworksId());
 				bandwidthRulesResponse.setNetworkId(network.getUuid());
-				BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.findById(vo.getBandwidthOfferingId());
-				bandwidthRulesResponse.setBandwidthOfferingId(bandwidthOffering.getUuid());
+				if(vo.getBandwidthOfferingId() != null){
+					BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.findById(vo.getBandwidthOfferingId());
+					bandwidthRulesResponse.setBandwidthOfferingId(bandwidthOffering.getUuid());
+				}
 				bandwidthRulesResponse.setType(vo.getType().toString());
 				bandwidthRulesResponse.setPrio(vo.getPrio());
 				bandwidthRulesResponse.setRate(vo.getRate());
@@ -652,8 +657,10 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			bandwidthRulesResponse.setBandwidthId(bandwidth.getUuid());
 			Network network = _networksDao.findById(vo.getNetworksId());
 			bandwidthRulesResponse.setNetworkId(network.getUuid());
-			BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.findById(vo.getBandwidthOfferingId());
-			bandwidthRulesResponse.setBandwidthOfferingId(bandwidthOffering.getUuid());
+			if(vo.getBandwidthOfferingId() != null){
+				BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.findById(vo.getBandwidthOfferingId());
+				bandwidthRulesResponse.setBandwidthOfferingId(bandwidthOffering.getUuid());
+			}
 			bandwidthRulesResponse.setType(vo.getType().toString());
 			bandwidthRulesResponse.setPrio(vo.getPrio());
 			bandwidthRulesResponse.setRate(vo.getRate());
