@@ -34,6 +34,8 @@ import com.cloud.agent.api.routing.IpAssocAnswer;
 import com.cloud.agent.api.routing.IpAssocCommand;
 import com.cloud.agent.api.routing.IpAssocVpcCommand;
 import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
+import com.cloud.agent.api.routing.SetBandwidthRulesAnswer;
+import com.cloud.agent.api.routing.SetBandwidthRulesCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
 import com.cloud.agent.api.routing.SetMultilineRouteCommand;
 import com.cloud.agent.api.routing.SetNetworkACLAnswer;
@@ -91,4 +93,6 @@ public interface MockNetworkManager extends Manager {
     Answer checkSiteToSiteVpnConnection(CheckS2SVpnConnectionsCommand cmd);
     
     Answer setMultilineRoute(SetMultilineRouteCommand cmd);
+    
+    SetBandwidthRulesAnswer SetBandwidthRules(SetBandwidthRulesCommand cmd);
 }

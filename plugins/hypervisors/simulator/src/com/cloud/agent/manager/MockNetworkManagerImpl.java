@@ -36,6 +36,8 @@ import com.cloud.agent.api.routing.IpAssocCommand;
 import com.cloud.agent.api.routing.IpAssocVpcCommand;
 import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.routing.NetworkElementCommand;
+import com.cloud.agent.api.routing.SetBandwidthRulesAnswer;
+import com.cloud.agent.api.routing.SetBandwidthRulesCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesAnswer;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
 import com.cloud.agent.api.routing.SetMultilineRouteCommand;
@@ -241,4 +243,10 @@ public class MockNetworkManagerImpl extends ManagerBase implements MockNetworkMa
     public  Answer setMultilineRoute(SetMultilineRouteCommand cmd){
         return new Answer(cmd);
     }
+
+	@Override
+	public SetBandwidthRulesAnswer SetBandwidthRules(SetBandwidthRulesCommand cmd) {
+		String[] results = new String[cmd.getRules().length];
+		return new SetBandwidthRulesAnswer(cmd, true, results);
+	}
 }

@@ -90,6 +90,7 @@ import com.cloud.agent.api.routing.IpAssocVpcCommand;
 import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SavePasswordCommand;
+import com.cloud.agent.api.routing.SetBandwidthRulesCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
 import com.cloud.agent.api.routing.SetMultilineRouteCommand;
 import com.cloud.agent.api.routing.SetNetworkACLCommand;
@@ -390,6 +391,8 @@ public class SimulatorManagerImpl extends ManagerBase implements SimulatorManage
                 return new Answer(cmd);
             }  else if (cmd instanceof SetMultilineRouteCommand) {
         		return _mockNetworkMgr.setMultilineRoute((SetMultilineRouteCommand) cmd);
+            }  else if (cmd instanceof SetBandwidthRulesCommand) {
+        		return _mockNetworkMgr.SetBandwidthRules((SetBandwidthRulesCommand) cmd);
             } else {
                 s_logger.error("Simulator does not implement command of type "+cmd.toString());
                 return Answer.createUnsupportedCommandAnswer(cmd);
