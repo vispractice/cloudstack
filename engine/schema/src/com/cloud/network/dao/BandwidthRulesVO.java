@@ -52,11 +52,11 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     @Column(name="ceil")
     private Integer ceil;
     
-    private Boolean revoked;
-    
-    private Boolean keepState;
-    
-    private boolean alreadyAdded;
+//    private Boolean revoked;
+//    
+//    private Boolean keepState;
+//    
+//    private Boolean alreadyAdded;
     
     public BandwidthRulesVO(){
     	uuid = UUID.randomUUID().toString();
@@ -193,31 +193,31 @@ public class BandwidthRulesVO implements BandwidthClassRule {
 		this.domainId = domainId;
 	}
 	
-	@Override
-	public Boolean isRevoked() {
-		return revoked;
-	}
-
-	public void setRevoked(Boolean revoked) {
-		this.revoked = revoked;
-	}
-	
-	@Override
-	public Boolean isKeepState() {
-		return keepState;
-	}
-
-	public void setKeepState(Boolean keepState) {
-		this.keepState = keepState;
-	}
-	
-	@Override
-	public Boolean isAlreadyAdded() {
-		return alreadyAdded;
-	}
-
-	public void setAlreadyAdded(boolean alreadyAdded) {
-		this.alreadyAdded = alreadyAdded;
-	}
+//	@Override
+//	public Boolean isRevoked() {
+//		return revoked;
+//	}
+//
+//	public void setRevoked(Boolean revoked) {
+//		this.revoked = revoked;
+//	}
+//	
+//	@Override
+//	public Boolean isKeepState() {
+//		return keepState;
+//	}
+//
+//	public void setKeepState(Boolean keepState) {
+//		this.keepState = keepState;
+//	}
+//	
+//	@Override
+//	public Boolean isAlreadyAdded() {
+//		return alreadyAdded;
+//	}
+//
+//	public void setAlreadyAdded(boolean alreadyAdded) {
+//		this.alreadyAdded = alreadyAdded;
+//	}
 	
 }

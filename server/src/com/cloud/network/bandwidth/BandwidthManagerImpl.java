@@ -177,13 +177,15 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		// find the network id and get the network
 		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
 		BandwidthRulesVO rule = _bandwidthRulesDao.findById(ruleId);
-		rule.setRevoked(false);
-		rule.setKeepState(false);
-		rule.setAlreadyAdded(false);
+//		rule.setRevoked(false);
+//		rule.setKeepState(false);
+//		rule.setAlreadyAdded(false);
 
 		Network network = _networksDao.findById(rule.getNetworksId());
 		BandwidthRule bandwidthRule = new BandwidthRule(rule);
-		
+		bandwidthRule.setClassRuleRevoked(false);
+		bandwidthRule.setClassRuleKeepState(false);
+		bandwidthRule.setClassRuleAlreadyAdded(false);
 		rules.add(bandwidthRule);
 		return applyBandwidthRules(network, rules);
 	}
@@ -203,9 +205,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	public boolean deleteBandwidthRule(DeleteBandwidthRuleCmd cmd) throws ResourceUnavailableException{
 		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
 		BandwidthRulesVO rule = _bandwidthRulesDao.findById(cmd.getId());
-		rule.setRevoked(true);
-		rule.setKeepState(false);
-		rule.setAlreadyAdded(true);
+//		rule.setRevoked(true);
+//		rule.setKeepState(false);
+//		rule.setAlreadyAdded(true);
 		Network network = _networksDao.findById(rule.getNetworksId());
 		//update the filter rules
 //		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
@@ -222,6 +224,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 //		
 //		BandwidthRule bandwidthRule = new BandwidthRule(rule, bandwidthFilterRules);
 		BandwidthRule bandwidthRule = new BandwidthRule(rule);
+		bandwidthRule.setClassRuleRevoked(true);
+		bandwidthRule.setClassRuleKeepState(false);
+		bandwidthRule.setClassRuleAlreadyAdded(true);
 		rules.add(bandwidthRule);
 		return applyBandwidthRules(network, rules);
 	}
@@ -246,11 +251,14 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		
 		//first delete the old
 		List<BandwidthRule> oldRules = new ArrayList<BandwidthRule>();
-		rule.setRevoked(true);
-		rule.setKeepState(false);
-		rule.setAlreadyAdded(true);
+//		rule.setRevoked(true);
+//		rule.setKeepState(false);
+//		rule.setAlreadyAdded(true);
 		Network network = _networksDao.findById(rule.getNetworksId());
 		BandwidthRule oldBandwidthRule = new BandwidthRule(rule);
+		oldBandwidthRule.setClassRuleRevoked(true);
+		oldBandwidthRule.setClassRuleKeepState(false);
+		oldBandwidthRule.setClassRuleAlreadyAdded(true);
 		oldRules.add(oldBandwidthRule);
 		if(!applyBandwidthRules(network, oldRules)){
 			s_logger.error("Update the bandwidth rules, when delete the old rules, it get wrong.");
@@ -259,9 +267,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		//then create the new and store to DB.
 		List<BandwidthRule> newRules = new ArrayList<BandwidthRule>();
 		//reload the bandwidth class rule.
-		rule.setRevoked(false);
-		rule.setKeepState(false);
-		rule.setAlreadyAdded(false);
+//		rule.setRevoked(false);
+//		rule.setKeepState(false);
+//		rule.setAlreadyAdded(false);
 		rule.setRate(cmd.getRate());
 		rule.setCeil(cmd.getCeil());
 		rule.setPrio(cmd.getPrio());
@@ -280,6 +288,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		}
 		
 		BandwidthRule newBandwidthRule = new BandwidthRule(rule, bandwidthFilterRules);
+		newBandwidthRule.setClassRuleRevoked(false);
+		newBandwidthRule.setClassRuleKeepState(false);
+		newBandwidthRule.setClassRuleAlreadyAdded(false);
 		newRules.add(newBandwidthRule);
 		if(!applyBandwidthRules(network, newRules)){
 			s_logger.error("Update the bandwidth rules, when create the new rules, it get wrong.");
@@ -356,9 +367,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		}
 		
 		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
-		bandwidthClassRule.setRevoked(false);
-		bandwidthClassRule.setKeepState(true);
-		bandwidthClassRule.setAlreadyAdded(true);
+//		bandwidthClassRule.setRevoked(false);
+//		bandwidthClassRule.setKeepState(true);
+//		bandwidthClassRule.setAlreadyAdded(true);
 		Network network = _networksDao.findById(bandwidthClassRule.getNetworksId());
 		//update the filter rules
 		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
@@ -379,6 +390,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		bandwidthFilterRules.add(newBandwidthFilterRule);
 		
 		BandwidthRule bandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
+		bandwidthRule.setClassRuleRevoked(false);
+		bandwidthRule.setClassRuleKeepState(true);
+		bandwidthRule.setClassRuleAlreadyAdded(true);
 		rules.add(bandwidthRule);
 		if(applyBandwidthRules(network, rules)){
 			//stort to db
@@ -413,9 +427,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		}
 		
 		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
-		bandwidthClassRule.setRevoked(false);
-		bandwidthClassRule.setKeepState(true);
-		bandwidthClassRule.setAlreadyAdded(true);
+//		bandwidthClassRule.setRevoked(false);
+//		bandwidthClassRule.setKeepState(true);
+//		bandwidthClassRule.setAlreadyAdded(true);
 		Network network = _networksDao.findById(bandwidthClassRule.getNetworksId());
 		//update the filter rules
 		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
@@ -441,6 +455,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		bandwidthFilterRules.add(newBandwidthFilterRule);
 		
 		BandwidthRule bandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
+		bandwidthRule.setClassRuleRevoked(false);
+		bandwidthRule.setClassRuleKeepState(true);
+		bandwidthRule.setClassRuleAlreadyAdded(true);
 		rules.add(bandwidthRule);
 		if(applyBandwidthRules(network, rules)){
 			//remove from the DB
@@ -489,10 +506,13 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			List<BandwidthRule> oldRulesList = new ArrayList<BandwidthRule>();
 			for(BandwidthRulesVO bandwidthClassRule : bandwidthRulesList){
 				if(networkId.equals(bandwidthClassRule.getNetworksId())){
-					bandwidthClassRule.setRevoked(true);
-					bandwidthClassRule.setKeepState(false);
-					bandwidthClassRule.setAlreadyAdded(true);
+//					bandwidthClassRule.setRevoked(true);
+//					bandwidthClassRule.setKeepState(false);
+//					bandwidthClassRule.setAlreadyAdded(true);
 					BandwidthRule oldBandwidthRule = new BandwidthRule(bandwidthClassRule);
+					oldBandwidthRule.setClassRuleRevoked(true);
+					oldBandwidthRule.setClassRuleKeepState(false);
+					oldBandwidthRule.setClassRuleAlreadyAdded(true);
 					oldRulesList.add(oldBandwidthRule);
 				}
 			}
@@ -507,9 +527,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			List<BandwidthRule> updateRules = new ArrayList<BandwidthRule>();
 			for(BandwidthRulesVO bandwidthClassRule : bandwidthRulesList){
 				if(networkId.equals(bandwidthClassRule.getNetworksId())){
-					bandwidthClassRule.setRevoked(false);
-					bandwidthClassRule.setKeepState(false);
-					bandwidthClassRule.setAlreadyAdded(false);
+//					bandwidthClassRule.setRevoked(false);
+//					bandwidthClassRule.setKeepState(false);
+//					bandwidthClassRule.setAlreadyAdded(false);
 					bandwidthClassRule.setRate(updateRate);
 					bandwidthClassRule.setCeil(updateCeil);
 					
@@ -527,6 +547,9 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 					}
 					
 					BandwidthRule updateBandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
+					updateBandwidthRule.setClassRuleRevoked(false);
+					updateBandwidthRule.setClassRuleKeepState(false);
+					updateBandwidthRule.setClassRuleAlreadyAdded(false);
 					updateRules.add(updateBandwidthRule);
 				}
 			}

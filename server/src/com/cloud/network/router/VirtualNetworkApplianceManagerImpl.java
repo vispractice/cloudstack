@@ -2878,9 +2878,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         List<BandwidthRule> rulesList = new ArrayList<BandwidthRule>();
         List<BandwidthRulesVO> classRulesList = _bandwidthRulesDao.listByNetworksId(guestNetworkId);
         for(BandwidthRulesVO classRule : classRulesList){
-        	classRule.setRevoked(false);
-        	classRule.setKeepState(false);
-        	classRule.setAlreadyAdded(false);
+//        	classRule.setRevoked(false);
+//        	classRule.setKeepState(false);
+//        	classRule.setAlreadyAdded(false);
         	
         	//reload the filter rules
     		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
@@ -2896,6 +2896,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     		}
     		
     		BandwidthRule reapplyBandwidthRule = new BandwidthRule(classRule, bandwidthFilterRules);
+    		reapplyBandwidthRule.setClassRuleRevoked(false);
+    		reapplyBandwidthRule.setClassRuleKeepState(false);
+    		reapplyBandwidthRule.setClassRuleAlreadyAdded(false);
     		rulesList.add(reapplyBandwidthRule);
         }
         //build the commands

@@ -28,9 +28,9 @@ public interface BandwidthClassRule extends ControlledEntity, Identity, Internal
 	
 	Integer getCeil();
 	
-	Boolean isRevoked();
-	
-	Boolean isKeepState();
-	
-	Boolean isAlreadyAdded();
+//	Boolean isRevoked();
+//	
+//	Boolean isKeepState();
+//	
+//	Boolean isAlreadyAdded();
 }

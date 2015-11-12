@@ -10,6 +10,12 @@ public class BandwidthRule{
 	
 	private List<BandwidthFilterRules> bandwidthFilterRules;
 	
+    private Boolean classRuleRevoked;
+  
+    private Boolean classRuleKeepState;
+  
+    private Boolean classRuleAlreadyAdded;
+	
 //	private int deviceId;
 	
 	public BandwidthRule(BandwidthClassRule bandwidthClassRule, List<BandwidthFilterRules> bandwidthFilterRules){
@@ -79,17 +85,31 @@ public class BandwidthRule{
 	}
 	
 	public Boolean isClassRuleRevoked(){
-		return bandwidthClassRule.isRevoked();
+		return classRuleRevoked;
 	}
 	
 	public Boolean isClassRuleKeepState() {
-		return bandwidthClassRule.isKeepState();
+		return classRuleKeepState;
 	}
 	
 	public Boolean isClassRuleAlreadyAdded(){
-		return bandwidthClassRule.isAlreadyAdded();
+		return classRuleAlreadyAdded;
 	}
 	
+	public void setClassRuleRevoked(Boolean classRuleRevoked) {
+		this.classRuleRevoked = classRuleRevoked;
+	}
+
+	public void setClassRuleKeepState(Boolean classRuleKeepState) {
+		this.classRuleKeepState = classRuleKeepState;
+	}
+
+	public void setClassRuleAlreadyAdded(Boolean classRuleAlreadyAdded) {
+		this.classRuleAlreadyAdded = classRuleAlreadyAdded;
+	}
+
+
+
 	public interface BandwidthFilter {
 		String getIpAddress();
 		int getStartPort();
