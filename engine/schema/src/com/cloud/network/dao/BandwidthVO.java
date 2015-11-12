@@ -27,8 +27,8 @@ public class BandwidthVO implements InternalIdentity {
 	@Column(name="multiline_id")
     private Long multilineId;
 	
-	@Column(name="date_center_id")
-    private Long dateCenterId;
+	@Column(name="data_center_id")
+    private Long dataCenterId;
 	
 	@Column(name="in_traffic")
     private Integer inTraffic;
@@ -40,7 +40,7 @@ public class BandwidthVO implements InternalIdentity {
     	uuid = UUID.randomUUID().toString();
     }
     
-    public BandwidthVO(Long multilineId, Long dateCenterId, Integer inTraffic, Integer outTraffic){
+    public BandwidthVO(Long multilineId, Long dataCenterId, Integer inTraffic, Integer outTraffic){
     	uuid = UUID.randomUUID().toString();
     }
     
@@ -69,12 +69,12 @@ public class BandwidthVO implements InternalIdentity {
 		this.multilineId = multilineId;
 	}
 
-	public Long getDateCenterId() {
-		return dateCenterId;
+	public Long getDataCenterId() {
+		return dataCenterId;
 	}
 
-	public void setDateCenterId(Long dateCenterId) {
-		this.dateCenterId = dateCenterId;
+	public void setDataCenterId(Long dataCenterId) {
+		this.dataCenterId = dataCenterId;
 	}
 
 	public Integer getInTraffic() {
