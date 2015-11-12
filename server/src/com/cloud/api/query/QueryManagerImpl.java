@@ -2468,9 +2468,9 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
         Object name = cmd.getBandwidthOfferingName();
         Object id = cmd.getId();
         Object keyword = cmd.getKeyword();
-        Long dateCenterId = cmd.getZoneId();
-        if(dateCenterId != null){
-        	sc.addAnd("dateCenterId", SearchCriteria.Op.EQ, dateCenterId);
+        Long zoneId = cmd.getZoneId();
+        if(zoneId != null){
+        	sc.addAnd("dataCenterId", SearchCriteria.Op.EQ, zoneId);
         	return _bandwidthOfferingDao.searchAndCount(sc, searchFilter);
         }
         

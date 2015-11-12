@@ -5522,7 +5522,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         				throw new CloudRuntimeException("The bandwidth only support two type: in traffic and out traffic.");
         			}
         		}
-        		if(addInRulesClassStatistics != null){
+        		if(addInRulesClassStatistics != null && !addInRulesClassStatistics.isEmpty()){
         			for(Map.Entry<Long, Integer> entry : addInRulesClassStatistics.entrySet()){
         				//type = InTraffic and bandwidth_id is same
         				//get all the rule which match type = InTraffic and this bandwidth_id
@@ -5542,7 +5542,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         				}
         			}
         		}
-        		if(addOutRulesClassStatistics != null){
+        		if(addOutRulesClassStatistics != null && !addOutRulesClassStatistics.isEmpty()){
         			for(Map.Entry<Long, Integer> entry : addOutRulesClassStatistics.entrySet()){
         				//type = OutTraffic and bandwidth_id is same
         				//get all the rule which match type = OutTraffic and this bandwidth_id
