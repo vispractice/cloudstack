@@ -2878,10 +2878,6 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
         List<BandwidthRule> rulesList = new ArrayList<BandwidthRule>();
         List<BandwidthRulesVO> classRulesList = _bandwidthRulesDao.listByNetworksId(guestNetworkId);
         for(BandwidthRulesVO classRule : classRulesList){
-//        	classRule.setRevoked(false);
-//        	classRule.setKeepState(false);
-//        	classRule.setAlreadyAdded(false);
-        	
         	//reload the filter rules
     		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
     		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(classRule.getId());
@@ -4713,6 +4709,9 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
 		List<BandwidthRuleTO> rulesTO = null;
 		if (rules != null) {
 			rulesTO = new ArrayList<BandwidthRuleTO>();
+			// 组合RuleTO数据里面的嵌套FilterTO数据,根据bandwidth_rules_id查询数据表bandwidth_ip_port_map获取这个id之下的所以filter数据信息
+			// 组合command里面的RuleTO数据
+			// 组合command
 			for (BandwidthRule rule : rules) {
 				int deviceId = -1;
 				// need to find device id by the IP when the type is out traffic
@@ -4755,9 +4754,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
 				BandwidthRuleTO bandwidthRule = new BandwidthRuleTO(deviceId, type, rate, ceil, trafficRuleId, revoked, alreadyAdded, keepState, bandwidthFilters);
 				rulesTO.add(bandwidthRule);
 			}
-			// 组合RuleTO数据里面的嵌套FilterTO数据,根据bandwidth_rules_id查询数据表bandwidth_ip_port_map获取这个id之下的所以filter数据信息
-			// 组合command里面的RuleTO数据
-			// 组合command
+			
 		}
 
 		SetBandwidthRulesCommand cmd = new SetBandwidthRulesCommand(rulesTO);
