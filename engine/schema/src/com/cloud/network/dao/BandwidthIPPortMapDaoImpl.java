@@ -30,8 +30,8 @@ public class BandwidthIPPortMapDaoImpl extends GenericDaoBase<BandwidthIPPortMap
 		AllFilterSearch.done();
 		
 		BandwidthRulesIdIpSearch = createSearchBuilder();
-		BandwidthRulesIdIpSearch.and("bandwidthRulesId", AllFilterSearch.entity().getBandwidthRulesId(), SearchCriteria.Op.EQ);
-		BandwidthRulesIdIpSearch.and("ipAddress", AllFilterSearch.entity().getIpAddress(), SearchCriteria.Op.EQ);
+		BandwidthRulesIdIpSearch.and("bandwidthRulesId", BandwidthRulesIdIpSearch.entity().getBandwidthRulesId(), SearchCriteria.Op.EQ);
+		BandwidthRulesIdIpSearch.and("ipAddress", BandwidthRulesIdIpSearch.entity().getIpAddress(), SearchCriteria.Op.EQ);
 		BandwidthRulesIdIpSearch.done();
 		
 	}

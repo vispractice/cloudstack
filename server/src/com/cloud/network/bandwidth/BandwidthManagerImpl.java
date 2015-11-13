@@ -27,9 +27,11 @@ import org.apache.cloudstack.api.response.BandwidthResponse;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import com.cloud.configuration.Config;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.exception.InvalidParameterValueException;
@@ -87,6 +89,8 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	VMInstanceDao _vMInstanceDao;
 	@Inject
 	DataCenterDao _dataCenterDao;
+	@Inject
+    ConfigurationDao _configDao;
 	
 	@Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -154,12 +158,17 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		for(BandwidthRulesVO vo: BandwidthRulesByNetwork){
 			trafficRuleIdList.add(vo.getTrafficRuleId());
 		}
-		//TODO the number 9999 must be write in the global setting.
-		for(Integer i = 2; i < 9999; i++){
+		// the number 9999 must be write in the global setting.
+		Integer maxTrafficRuleId = Integer.parseInt(_configDao.getValue(Config.NetworkRouterBandwidthTrafficIdRange.key()));
+		for(Integer i = 2; i <= maxTrafficRuleId; i++){
 			if(!trafficRuleIdList.contains(i)){
 				trafficRuleId = i;
 				break;
 			}
+		}
+		if(trafficRuleId == null){
+			s_logger.error("Failed to create bandwidth rule, because there is not enough traffic id to be used. Only support range is:2~9999");
+			throw new ServerApiException(ApiErrorCode.INSUFFICIENT_CAPACITY_ERROR, "Failed to create bandwidth rule.");
 		}
 		//参数合格之后，保存到DB中
 		BandwidthRulesVO newBandwidthRulesVO = new BandwidthRulesVO(bandwidthVO.getId(), networkId, trafficRuleId, bandwidthType, prio, rate, ceil );

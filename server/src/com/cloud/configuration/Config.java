@@ -89,7 +89,9 @@ public enum Config {
 	NetworkLBHaproxyStatsPort("Network", ManagementServer.class, String.class, "network.loadbalancer.haproxy.stats.port","8081","Load Balancer(haproxy) stats port number.",null),
     NetworkLBHaproxyMaxConn("Network", ManagementServer.class, Integer.class, "network.loadbalancer.haproxy.max.conn", "4096", "Load Balancer(haproxy) maximum number of concurrent connections(global max)", null),
 	NetworkRouterRpFilter("Network", ManagementServer.class, Integer.class, "network.disable.rpfilter", "true", "disable rp_filter on Domain Router VM public interfaces.", null),
-
+    //andrew ling add bandwidth traffic class rule id range.
+	NetworkRouterBandwidthTrafficIdRange("Network", ManagementServer.class, Integer.class, "network.bandwidth.traffic.id.maximum", "9999", "The bandwidth traffic rule id max number can be use for any one of the virtual router, now only support the max number can up to 9999.", null),
+	
 	GuestVlanBits("Network", ManagementServer.class, Integer.class, "guest.vlan.bits", "12", "The number of bits to reserve for the VLAN identifier in the guest subnet.", null),
 	//MulticastThrottlingRate("Network", ManagementServer.class, Integer.class, "multicast.throttling.rate", "10", "Default multicast rate in megabits per second allowed.", null),
 	DirectNetworkNoDefaultRoute("Network", ManagementServer.class, Boolean.class, "direct.network.no.default.route", "false", "Direct Network Dhcp Server should not send a default route", "true/false"),
