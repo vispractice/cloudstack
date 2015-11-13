@@ -12,7 +12,7 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 import com.cloud.user.Account;
 
-@APICommand(name = "addBandwidthCmd",description = "add a bandwidth", responseObject = SuccessResponse.class)
+@APICommand(name = "addBandwidth",description = "add a bandwidth", responseObject = SuccessResponse.class)
 public class AddBandwidthCmd extends BaseCmd{
 
 	public static final Logger s_logger = Logger.getLogger(AddBandwidthCmd.class.getName());

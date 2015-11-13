@@ -11,7 +11,7 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 import com.cloud.user.Account;
 
-@APICommand(name = "updateBandwidthCmd",description = "update a bandwidth", responseObject = SuccessResponse.class)
+@APICommand(name = "updateBandwidth",description = "update a bandwidth", responseObject = SuccessResponse.class)
 public class UpdateBandwidthCmd extends BaseCmd {
 	public static final Logger s_logger = Logger.getLogger(UpdateBandwidthCmd.class.getName());
 
