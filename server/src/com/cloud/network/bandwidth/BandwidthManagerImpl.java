@@ -12,19 +12,26 @@ import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.command.user.bandwidth.AddBandwidthCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.AssignToBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.CreateBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.DeleteBandwidthCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.DeleteBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthRulesCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthsCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.RemoveFromBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthRuleCmd;
 import org.apache.cloudstack.api.response.BandwidthFilterRuleResponse;
+import org.apache.cloudstack.api.response.BandwidthResponse;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import com.cloud.dc.DataCenterVO;
+import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.Network;
@@ -78,6 +85,8 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
     IPAddressDao _ipAddressDao;
 	@Inject
 	VMInstanceDao _vMInstanceDao;
+	@Inject
+	DataCenterDao _dataCenterDao;
 	
 	@Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -674,6 +683,105 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		
         response.setResponses(respList, count);
         return response;
+	}
+
+	@Override
+	public boolean addBandwidth(AddBandwidthCmd cmd) {
+		//check the parameters
+		Long multilineId = cmd.getMultilineId();
+		Long zoneId = cmd.getZoneId();
+		int inTraffic = cmd.getInTraffic();
+		int outTraffic = cmd.getOutTraffic();
+		MultilineVO multiline = _multilineDao.findById(multilineId);
+//		MultilineVO multiline = _multilineDao.findByUuid(multilineId.toString());
+		if(multiline == null){
+			throw new InvalidParameterValueException("The multiline id is wrong in this zone.");
+		}
+		DataCenterVO dataCenter = _dataCenterDao.findById(zoneId);
+		if(dataCenter == null){
+			throw new InvalidParameterValueException("The zone id is wrong.");
+		}
+		if(inTraffic <= 0 || outTraffic <= 0 ){
+			throw new InvalidParameterValueException("The in traffic and out traffic must be more than zero.");
+		}
+		//persist to DB
+		BandwidthVO bandwidth = new BandwidthVO(multilineId, zoneId, inTraffic, outTraffic);
+		CallContext.current().setEventDetails("bandwidth rule id=" + bandwidth.getId());
+		BandwidthVO bandwidthVO = _bandwidthDao.persist(bandwidth);
+        if (bandwidthVO != null) {
+            CallContext.current().setEventDetails("Bandwidth rule id=" + bandwidthVO.getId());
+            return true;
+        } else {
+            return false;
+        }
+	}
+
+	@Override
+	public boolean deleteBandwidth(DeleteBandwidthCmd cmd) {
+		Long bandwidthId = cmd.getId();
+		BandwidthVO bandwidth = _bandwidthDao.findById(bandwidthId);
+		if(bandwidth == null){
+			throw new InvalidParameterValueException("The bandwidth id is wrong.");
+		}
+		//remove from the DB
+        CallContext.current().setEventDetails("bandwidth id=" + bandwidthId);
+		return _bandwidthDao.remove(bandwidthId);
+	}
+	
+	@Override
+	public ListResponse<BandwidthResponse> searchForBandwidths(ListBandwidthsCmd cmd) {
+		ListResponse<BandwidthResponse> response = new ListResponse<BandwidthResponse>();
+		List<BandwidthResponse> respList = new ArrayList<BandwidthResponse>();
+		int count = 0;
+		//get the result by the search condition.
+		if(cmd.getZoneId() != null){
+			List<BandwidthVO> bandwidthList = _bandwidthDao.listByZoneId(cmd.getZoneId());
+			count = bandwidthList.size();
+			for(BandwidthVO vo : bandwidthList){
+				BandwidthResponse bandwidthResponse = new BandwidthResponse();
+				bandwidthResponse.setId(vo.getUuid());
+				MultilineVO multilineVO = _multilineDao.findById(vo.getMultilineId());
+				if(multilineVO != null){
+					bandwidthResponse.setMultilineId(multilineVO.getUuid());
+				}
+				bandwidthResponse.setInTraffic(vo.getInTraffic());
+				bandwidthResponse.setOutTraffic(vo.getOutTraffic());
+				bandwidthResponse.setObjectName("bandwidth");
+				respList.add(bandwidthResponse);
+			}
+		} else if(cmd.getId() != null){
+			BandwidthVO bandwidth = _bandwidthDao.findById(cmd.getId());
+			BandwidthResponse bandwidthResponse = new BandwidthResponse();
+			bandwidthResponse.setId(bandwidth.getUuid());
+			MultilineVO multilineVO = _multilineDao.findById(bandwidth.getMultilineId());
+			if(multilineVO != null){
+				bandwidthResponse.setMultilineId(multilineVO.getUuid());
+			}
+			bandwidthResponse.setInTraffic(bandwidth.getInTraffic());
+			bandwidthResponse.setOutTraffic(bandwidth.getOutTraffic());
+			bandwidthResponse.setObjectName("bandwidth");
+			respList.add(bandwidthResponse);
+		}
+		
+		response.setResponses(respList, count);
+        return response;
+	}
+
+	@Override
+	public boolean updateBandwidth(UpdateBandwidthCmd cmd) {
+		// only support to expand the bandwidth capacity.
+		BandwidthVO bandwidth = _bandwidthDao.findById(cmd.getBandwidthId());
+		if(bandwidth.getInTraffic() > cmd.getInTraffic() || bandwidth.getOutTraffic() > cmd.getOutTraffic()){
+			throw new InvalidParameterValueException("The bandwidth now only support to expand the in traffic and out traffic.");
+		}
+		CallContext.current().setEventDetails("bandwidth id=" + bandwidth.getId());
+		BandwidthVO bandwidthVO = _bandwidthDao.persist(bandwidth);
+        if (bandwidthVO != null) {
+            CallContext.current().setEventDetails("Bandwidth id=" + bandwidthVO.getId());
+            return true;
+        } else {
+            return false;
+        }
 	}
 
 }

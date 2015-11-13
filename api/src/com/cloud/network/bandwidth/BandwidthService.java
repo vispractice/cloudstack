@@ -1,11 +1,16 @@
 package com.cloud.network.bandwidth;
 
+import org.apache.cloudstack.api.command.user.bandwidth.AddBandwidthCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.AssignToBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.CreateBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.DeleteBandwidthCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.DeleteBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthRulesCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthsCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.RemoveFromBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthRuleCmd;
+import org.apache.cloudstack.api.response.BandwidthResponse;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 
@@ -21,5 +26,9 @@ public interface BandwidthService {
 	ListResponse<BandwidthRulesResponse> searchForBandwidthRules(ListBandwidthRulesCmd cmd);
 	boolean assignToBandwidthRule(AssignToBandwidthRuleCmd cmd) throws ResourceUnavailableException;
 	boolean removeFromBandwidthRule(RemoveFromBandwidthRuleCmd cmd) throws ResourceUnavailableException;
+	boolean addBandwidth(AddBandwidthCmd cmd);
+	boolean deleteBandwidth(DeleteBandwidthCmd cmd);
+	boolean updateBandwidth(UpdateBandwidthCmd cmd);
+	ListResponse<BandwidthResponse> searchForBandwidths(ListBandwidthsCmd cmd);
 	
 }

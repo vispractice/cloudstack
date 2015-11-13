@@ -545,9 +545,12 @@ public class ApiConstants {
     public static final String START = "start";
     public static final String NAME_OR_IP = "nameorip";
     public static final String GUEST_OS_ID = "guestosid";
+    public static final String MULTILINE_ID = "multilineid";
     public static final String MULTILINE_LABEL = "multilinelabel";
     public static final String IS_DEFAULT_STATIC = "isdefaultstaticnat";
-    //andrew ling add, for bandwidth offering 
+    //andrew ling add, for bandwidth offering
+    public static final String BANDWIDTH_IN = "intraffic";
+    public static final String BANDWIDTH_OUT = "outtraffic";
     public static final String BANDWIDTH_RATE = "rate";
     public static final String BANDWIDTH_CEIL = "ceil";
     public static final String BANDWIDTH_TYPE = "bandwidthtype";

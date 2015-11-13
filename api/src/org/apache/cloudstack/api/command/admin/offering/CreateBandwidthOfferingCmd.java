@@ -72,7 +72,6 @@ public class CreateBandwidthOfferingCmd extends BaseCmd{
 	public void execute(){
 		BandwidthOffering result = _configService.createBandwidthOffering(this);
 		if (result != null){
-			//TODO get the response
 			BandwidthOfferingResponse response = _responseGenerator.createBandwidthOfferingResponse(result);
             response.setResponseName(getCommandName());
             this.setResponseObject(response);
