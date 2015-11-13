@@ -286,13 +286,13 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	}
 
 
-	private boolean validateBandwidthFilterRule(Long bandwidthRuleId, BandwidthType type, String ip, Integer portStart, Integer portEnd){
+	private boolean validateBandwidthFilterRule(boolean isAdd, Long bandwidthRuleId, BandwidthType type, String ip, Integer portStart, Integer portEnd){
 		
 		if (portStart != null && !NetUtils.isValidPort(portStart)) {
-            throw new InvalidParameterValueException("publicPort is an invalid value: " + portStart);
+            throw new InvalidParameterValueException("Port is an invalid value: " + portStart);
         }
         if (portEnd != null && !NetUtils.isValidPort(portEnd)) {
-            throw new InvalidParameterValueException("Public port range is an invalid value: " + portEnd);
+            throw new InvalidParameterValueException("Port range is an invalid value: " + portEnd);
         }
 
         // start port can't be bigger than end port
@@ -308,7 +308,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			//TODO vm ip address, if it want to check the private ip address in the network?
 			VMInstanceVO vMInstanceVO = _vMInstanceDao.findVMByIpAddress(ip);
 			if(vMInstanceVO == null){
-				throw new InvalidParameterValueException("Unable to create bandwidth filter rule ; The private ip is not right.");
+				throw new InvalidParameterValueException("Unable to create or delete bandwidth filter rule ; The private ip is not right.");
 			}
 		} else if(type.equals(BandwidthType.OutTraffic)){
 			//public ip address
@@ -319,12 +319,35 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			} else {
 				BandwidthRulesVO rule = _bandwidthRulesDao.findById(bandwidthRuleId);
 				if (ipAddress.getAssociatedWithNetworkId() == null || ipAddress.getAssociatedWithNetworkId() != rule.getNetworksId()) {
-                    throw new InvalidParameterValueException("Unable to create bandwidth filter rule ; The public ip is not right.");
+                    throw new InvalidParameterValueException("Unable to create or delete bandwidth filter rule ; The public ip is not right.");
 				}
 			}
 		} else {
 			s_logger.error("The bandwidth rule parameter: type is not right, Only support InTraffic and OutTraffic.");
 			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Get the wrong bandwidth type");
+		}
+		if(isAdd){
+			//when the operation is add the filter rule to the bandwidth class rule, 
+			//it want to compare the port with the DB which be used in the same bandwidth_rule_id and ip.
+			List<BandwidthIPPortMapVO> listVOs = _bandwidthIPPortMapDao.listByBWClassIdIp(bandwidthRuleId, ip);
+			for(BandwidthIPPortMapVO vo : listVOs){
+				if(portStart <= vo.getBandwidthPortStart() && portEnd >= vo.getBandwidthPortStart()){
+					throw new InvalidParameterValueException("Port range is an invalid value: " + portEnd + ", Conflict with the old rules");
+				}
+				if(portStart >= vo.getBandwidthPortStart() && portEnd <= vo.getBandwidthPortEnd()){
+					throw new InvalidParameterValueException("Port range is an invalid value: "+ portStart +":"+ portEnd+ ", Conflict with the old rules");
+				}
+				if(portStart <= vo.getBandwidthPortEnd() && portEnd >= vo.getBandwidthPortEnd()){
+					throw new InvalidParameterValueException("Port range is an invalid value: " + portStart+ ", Conflict with the old rules");
+				}
+			}
+		} else {
+			//when the operation is delete the filter rule to the bandwidth class rule, 
+			//it must be a old filter rule in the DB.
+			BandwidthIPPortMapVO BandwidthIPPortMapVO = _bandwidthIPPortMapDao.findOneByBWClassIdIpPorts(bandwidthRuleId, ip, portStart, portEnd);
+			if(BandwidthIPPortMapVO == null){
+				throw new InvalidParameterValueException("Unable to delete bandwidth filter rule ; Can not find the filter rule in the DB.");
+			}
 		}
 		return true;
 	}
@@ -339,7 +362,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
 		BandwidthType type = bandwidthClassRule.getType();
 		
-		if(!validateBandwidthFilterRule(bandwidthRuleId, type, ip, newStartPort, newEndPort)){
+		if(!validateBandwidthFilterRule(true, bandwidthRuleId, type, ip, newStartPort, newEndPort)){
 			s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,start port, end port.");
 			throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,start port, end port");
 		}
@@ -349,7 +372,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		//update the filter rules
 		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
 		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(bandwidthClassRule.getId());
-		if(bandwidthIPPortMapList != null){
+		if(bandwidthIPPortMapList != null && !bandwidthIPPortMapList.isEmpty()){
 			for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
 				String ipAddress = bandwidthIPPortMap.getIpAddress();
 				int startPort = bandwidthIPPortMap.getBandwidthPortStart();
@@ -396,7 +419,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
 		BandwidthType type = bandwidthClassRule.getType();
 		
-		if(!validateBandwidthFilterRule(bandwidthRuleId, type, removedIp, removedStartPort, removedEndPort)){
+		if(!validateBandwidthFilterRule(false, bandwidthRuleId, type, removedIp, removedStartPort, removedEndPort)){
 			s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,start port, end port.");
 			throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,start port, end port");
 		}
