@@ -785,6 +785,8 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			throw new InvalidParameterValueException("The bandwidth now only support to expand the in traffic and out traffic.");
 		}
 		CallContext.current().setEventDetails("bandwidth id=" + bandwidth.getId());
+		bandwidth.setInTraffic(cmd.getInTraffic());
+		bandwidth.setOutTraffic(cmd.getOutTraffic());
 		BandwidthVO bandwidthVO = _bandwidthDao.persist(bandwidth);
         if (bandwidthVO != null) {
             CallContext.current().setEventDetails("Bandwidth id=" + bandwidthVO.getId());
