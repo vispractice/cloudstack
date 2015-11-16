@@ -41,6 +41,10 @@ public class BandwidthVO implements Bandwidth{
     
     public BandwidthVO(Long multilineId, Long dataCenterId, Integer inTraffic, Integer outTraffic){
     	uuid = UUID.randomUUID().toString();
+    	this.multilineId = multilineId;
+    	this.dataCenterId = dataCenterId;
+    	this.inTraffic = inTraffic;
+    	this.outTraffic = outTraffic;
     }
     
 	public void setId(long id) {
