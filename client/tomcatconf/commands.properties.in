@@ -714,6 +714,10 @@ importLdapUsers=3
 createServiceInstance=1
 
 #### bandwidth commands
+addBandwidth=1
+deleteBandwidth=1
+updateBandwidth=1
+listBandwidths=15
 createBandwidthOffering=1
 deleteBandwidthOffering=1
 updateBandwidthOffering=1
