@@ -49,7 +49,7 @@
     <bean id="storagePoolHostDaoImpl" class="com.cloud.storage.dao.StoragePoolHostDaoImpl" />
     <bean id="primaryDataStoreDaoImpl" class="org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDaoImpl" />
     <bean id="multilineDaoImpl" class="com.cloud.network.dao.MultilineDaoImpl" />
-	<bean id="BandwidthManagerImpl" class="com.cloud.network.bandwidth.BandwidthManagerImpl" />
+	<!--  bean id="BandwidthManagerImpl" class="com.cloud.network.bandwidth.BandwidthManagerImpl" / -->
 	<bean id="BandwidthDaoImpl" class="com.cloud.network.dao.BandwidthDaoImpl"/>
 	<bean id="BandwidthOfferingDaoImpl" class="com.cloud.network.dao.BandwidthOfferingDaoImpl"/>
     <bean id="BandwidthRulesDaoImpl" class="com.cloud.network.dao.BandwidthRulesDaoImpl"/>
