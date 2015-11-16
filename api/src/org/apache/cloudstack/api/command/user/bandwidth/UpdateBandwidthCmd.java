@@ -6,9 +6,11 @@ import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.response.BandwidthResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
+
 import com.cloud.user.Account;
 
 @APICommand(name = "updateBandwidth",description = "update a bandwidth", responseObject = SuccessResponse.class)
@@ -19,7 +21,7 @@ public class UpdateBandwidthCmd extends BaseCmd {
 	// ///////////////////////////////////////////////////
 	// ////////////// API parameters /////////////////////
 	// ///////////////////////////////////////////////////
-	@Parameter(name = ApiConstants.ID, type = CommandType.UUID, required = true, description = "the ID of the multiline")
+	@Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = BandwidthResponse.class, required = true, description = "the ID of the bandwidth。")
 	private Long bandwidthId;
 
 	@Parameter(name = ApiConstants.BANDWIDTH_IN, type = CommandType.INTEGER, required = true, description = "the in traffic of the bandwidth offering in Kbit.")

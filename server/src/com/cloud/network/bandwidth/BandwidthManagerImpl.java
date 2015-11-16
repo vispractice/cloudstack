@@ -697,12 +697,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	@Override
 	public boolean addBandwidth(AddBandwidthCmd cmd) {
 		//check the parameters
-		Long multilineId = cmd.getMultilineId();
+		String multilineId = cmd.getMultilineId();
 		Long zoneId = cmd.getZoneId();
 		int inTraffic = cmd.getInTraffic();
 		int outTraffic = cmd.getOutTraffic();
-		MultilineVO multiline = _multilineDao.findById(multilineId);
-//		MultilineVO multiline = _multilineDao.findByUuid(multilineId.toString());
+//		MultilineVO multiline = _multilineDao.findById(multilineId);
+		MultilineVO multiline = _multilineDao.findByUuid(multilineId);
 		if(multiline == null){
 			throw new InvalidParameterValueException("The multiline id is wrong in this zone.");
 		}
@@ -714,7 +714,8 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			throw new InvalidParameterValueException("The in traffic and out traffic must be more than zero.");
 		}
 		//persist to DB
-		BandwidthVO bandwidth = new BandwidthVO(multilineId, zoneId, inTraffic, outTraffic);
+//		BandwidthVO bandwidth = new BandwidthVO(multilineId, zoneId, inTraffic, outTraffic);
+		BandwidthVO bandwidth = new BandwidthVO(multiline.getId(), zoneId, inTraffic, outTraffic);
 		CallContext.current().setEventDetails("bandwidth rule id=" + bandwidth.getId());
 		BandwidthVO bandwidthVO = _bandwidthDao.persist(bandwidth);
         if (bandwidthVO != null) {

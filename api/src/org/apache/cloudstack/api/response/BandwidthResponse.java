@@ -1,10 +1,12 @@
 package org.apache.cloudstack.api.response;
 
 import org.apache.cloudstack.api.BaseResponse;
+import org.apache.cloudstack.api.EntityReference;
 
+import com.cloud.network.rules.Bandwidth;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
-
+@EntityReference(value=Bandwidth.class)
 public class BandwidthResponse  extends BaseResponse {
 	//id, multilineId, dataCenterId, inTraffic, outTraffic
 	@SerializedName("id") @Param(description="the id of the bandwidth rule")

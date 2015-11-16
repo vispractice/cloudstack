@@ -22,8 +22,8 @@ public class AddBandwidthCmd extends BaseCmd{
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name=ApiConstants.MULTILINE_ID, type=CommandType.UUID, required=true, description= "the ID of the multiline")
-    private Long multilineId;
+    @Parameter(name=ApiConstants.MULTILINE_ID, type=CommandType.STRING, required=true, description= "the ID of the multiline")
+    private String multilineId;
     
     @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.UUID, required=true, entityType=ZoneResponse.class, description= "the ID of the zone")
     private Long zoneId;
@@ -38,7 +38,7 @@ public class AddBandwidthCmd extends BaseCmd{
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 	
-	public Long getMultilineId() {
+	public String getMultilineId() {
 		return multilineId;
 	}
 

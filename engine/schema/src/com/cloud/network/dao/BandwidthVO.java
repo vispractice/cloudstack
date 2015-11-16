@@ -8,12 +8,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
-import org.apache.cloudstack.api.InternalIdentity;
+import com.cloud.network.rules.Bandwidth;
 
 @Entity
 @Table(name="bandwidth")
-public class BandwidthVO implements InternalIdentity {
+public class BandwidthVO implements Bandwidth{
 	//bandwidth(uuid,id,multiline_id,date_center_id, in_traffic, out_traffic)
 	
 	@Id
