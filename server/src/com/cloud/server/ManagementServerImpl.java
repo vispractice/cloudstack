@@ -246,11 +246,15 @@ import org.apache.cloudstack.api.command.user.autoscale.ListCountersCmd;
 import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScalePolicyCmd;
 import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScaleVmGroupCmd;
 import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScaleVmProfileCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.AddBandwidthCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.AssignToBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.CreateBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.DeleteBandwidthCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.DeleteBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthRulesCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.ListBandwidthsCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.RemoveFromBandwidthRuleCmd;
+import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthCmd;
 import org.apache.cloudstack.api.command.user.bandwidth.UpdateBandwidthRuleCmd;
 import org.apache.cloudstack.api.command.user.config.ListCapabilitiesCmd;
 import org.apache.cloudstack.api.command.user.event.ArchiveEventsCmd;
@@ -2929,6 +2933,10 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(GetVMUserDataCmd.class);
         cmdList.add(updateStaticNatCmd.class);
         //andrew ling add bandwidth part
+        cmdList.add(AddBandwidthCmd.class);
+        cmdList.add(DeleteBandwidthCmd.class);
+        cmdList.add(UpdateBandwidthCmd.class);
+        cmdList.add(ListBandwidthsCmd.class);
         cmdList.add(CreateBandwidthOfferingCmd.class);
         cmdList.add(DeleteBandwidthOfferingCmd.class);
         cmdList.add(UpdateBandwidthOfferingCmd.class);
