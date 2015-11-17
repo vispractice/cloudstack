@@ -260,7 +260,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
     @Inject
 	BandwidthDao _bandwidthDao;
     @Inject
-    BandwidthService _bandwidthService;
+    BandwidthManager _bandwidthManager;
     @Inject
     VlanDao _vlanDao;
     @Inject
@@ -5567,9 +5567,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         	}
         	
         	//go to re-execute the bandwidth rules which used this bandwidth offering.
-//        	BandwidthManager bandwidthManager = new BandwidthManagerImpl();
-        	boolean refreshRulesOK = _bandwidthService.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
-//        	boolean refreshRulesOK = _bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
+        	boolean refreshRulesOK = _bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
         	if(!refreshRulesOK){
         		s_logger.error("When update the bandwidth offering, there are run wrong in refresh the bandwidth rule part. ");
         		throw new CloudRuntimeException("When update the bandwidth offering , It run wrong.");
