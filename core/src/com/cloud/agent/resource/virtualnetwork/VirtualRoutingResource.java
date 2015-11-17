@@ -1138,10 +1138,10 @@ public class VirtualRoutingResource implements Manager {
 				if(isDel){
 					String deleteAllClassRule = " -D -c eth"+ deviceId +" -r "+trafficRuleId+" -p " + prio;
 					script = "bandwidth_rule.sh";
-					String resultDelete = routerProxy(script, routerIp, deleteAllClassRule);
+					String deleteResult = routerProxy(script, routerIp, deleteAllClassRule);
 					script = "none.sh";
 					String result = routerProxy(script, routerIp, executeRules);
-					if (resultDelete != null || result != null) {
+					if (deleteResult != null || result != null) {
 						results[i++] = "Failed";
 						endResult = false;
 					} else {
@@ -1164,15 +1164,17 @@ public class VirtualRoutingResource implements Manager {
 
 				if (rule.isRevoked()) {
 					// before delete bandwidth rule, need to delete the filter rules first
-					executeRules = " -D -c eth"+ deviceId +" -r "+trafficRuleId+" -p " + prio + " ;";
+					String deleteAllClassRule = " -D -c eth"+ deviceId +" -r "+trafficRuleId+" -p " + prio;
+					script = "bandwidth_rule.sh";
+					String deleteResult = routerProxy(script, routerIp, deleteAllClassRule);
 			    	//tc class add dev eth0 parent 1: classid 1:2 htb rate 1000kbit ceil 2000kbit prio 2
 					// tc qdisc add dev eth0 parent 1:2 handle 2: sfq perturb 10
 					executeRules += "tc class del dev eth" + deviceId+ " parent 1: classid 1:" + trafficRuleId+ " htb rate " + rate + "kbit ceil " + ceil
 							+ "kbit prio " + prio + "; tc qdisc del dev eth"+ deviceId + " parent 1:" + trafficRuleId+ " handle " + trafficRuleId + ": sfq perturb 10;";
 					
-					script = "bandwidth_rule.sh";
+					script = "none.sh";
 					String result = routerProxy(script, routerIp, executeRules);
-					if (result != null) {
+					if (deleteResult != null || result != null) {
 						results[i++] = "Failed";
 						endResult = false;
 					} else {
