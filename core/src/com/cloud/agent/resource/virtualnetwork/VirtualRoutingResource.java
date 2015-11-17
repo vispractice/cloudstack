@@ -1136,10 +1136,12 @@ public class VirtualRoutingResource implements Manager {
 				executeRules += buildFilterRules(rule.getBandwidthFilters(), isDel, false, rule.getType(), deviceId, prio, trafficRuleId);
 				// if isDel is true, then need to execute the script, if not, then no need to execute the script.
 				if(isDel){
-					executeRules = " -D -c eth"+ deviceId +" -r "+trafficRuleId+" -p " + prio + " ;" + executeRules;
+					String deleteAllClassRule = " -D -c eth"+ deviceId +" -r "+trafficRuleId+" -p " + prio;
 					script = "bandwidth_rule.sh";
+					String resultDelete = routerProxy(script, routerIp, deleteAllClassRule);
+					script = "none.sh";
 					String result = routerProxy(script, routerIp, executeRules);
-					if (result != null) {
+					if (resultDelete != null || result != null) {
 						results[i++] = "Failed";
 						endResult = false;
 					} else {
