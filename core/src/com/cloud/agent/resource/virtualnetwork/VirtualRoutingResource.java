@@ -1167,11 +1167,11 @@ public class VirtualRoutingResource implements Manager {
 					String deleteAllClassRule = " -D -c eth"+ deviceId +" -r "+trafficRuleId+" -p " + prio;
 					script = "bandwidth_rule.sh";
 					String deleteResult = routerProxy(script, routerIp, deleteAllClassRule);
-			    	//tc class add dev eth0 parent 1: classid 1:2 htb rate 1000kbit ceil 2000kbit prio 2
-					// tc qdisc add dev eth0 parent 1:2 handle 2: sfq perturb 10
-					executeRules += "tc class del dev eth" + deviceId+ " parent 1: classid 1:" + trafficRuleId+ " htb rate " + rate + "kbit ceil " + ceil
-							+ "kbit prio " + prio + "; tc qdisc del dev eth"+ deviceId + " parent 1:" + trafficRuleId+ " handle " + trafficRuleId + ": sfq perturb 10;";
-					
+					// tc qdisc del dev eth0 parent 1:2 handle 2: sfq perturb 10
+					//tc class del dev eth0 parent 1: classid 1:2 htb rate 1000kbit ceil 2000kbit prio 2
+					executeRules +=  "tc qdisc del dev eth"+ deviceId + " parent 1:" + trafficRuleId+ " handle " + trafficRuleId + ": sfq perturb 10;" 
+					        + "tc class del dev eth" + deviceId+ " parent 1: classid 1:" + trafficRuleId+ " htb rate " + rate + "kbit ceil " + ceil
+							+ "kbit prio " + prio ;
 					script = "none.sh";
 					String result = routerProxy(script, routerIp, executeRules);
 					if (deleteResult != null || result != null) {
