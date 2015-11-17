@@ -6,6 +6,11 @@ import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
 public class BandwidthFilterRuleResponse extends BaseResponse {
+	
+	@SerializedName("filterRuleId")
+	@Param(description = "the id of the bandwidth filter rule")
+	private String filterRuleId;
+	
 	@SerializedName("ipAddress")
 	@Param(description = "the ipAddress of the bandwidth filter rule")
 	private String ipAddress;
@@ -28,6 +33,10 @@ public class BandwidthFilterRuleResponse extends BaseResponse {
 
 	public void setEndPort(Integer endPort) {
 		this.endPort = endPort;
+	}
+
+	public void setFilterRuleId(String filterRuleId) {
+		this.filterRuleId = filterRuleId;
 	}
 
 }

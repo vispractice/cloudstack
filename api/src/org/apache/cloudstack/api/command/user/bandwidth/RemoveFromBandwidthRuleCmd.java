@@ -29,14 +29,17 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
             required=true, description="The ID of the bandwidth rule")
     private Long id;
     
-    @Parameter(name=ApiConstants.BANDWIDTH_RULE_IP, type=CommandType.STRING, required=true, description="the IP address in this bandwidth rule for filter rule.")
-    private String ip;
+    @Parameter(name=ApiConstants.BANDWIDTH_FILTER_ID, type=CommandType.STRING, required=true, description="the ID of this bandwidth rule for filter rule.")
+    private String filterRuleId;
     
-    @Parameter(name = ApiConstants.START_PORT, type = CommandType.INTEGER, required=true, description = "the starting port of bandwidth rule for filter rule.")
-    private Integer startPort;
-
-    @Parameter(name = ApiConstants.END_PORT, type = CommandType.INTEGER, required=true, description = "the ending port of bandwidth rule for filter rule.")
-    private Integer endPort;
+//    @Parameter(name=ApiConstants.BANDWIDTH_RULE_IP, type=CommandType.STRING, required=true, description="the IP address in this bandwidth rule for filter rule.")
+//    private String ip;
+//    
+//    @Parameter(name = ApiConstants.START_PORT, type = CommandType.INTEGER, required=true, description = "the starting port of bandwidth rule for filter rule.")
+//    private Integer startPort;
+//
+//    @Parameter(name = ApiConstants.END_PORT, type = CommandType.INTEGER, required=true, description = "the ending port of bandwidth rule for filter rule.")
+//    private Integer endPort;
     
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -46,17 +49,21 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
         return id;
     }
     
-	public String getIp() {
-		return ip;
+	public String getFilterRuleId() {
+		return filterRuleId;
 	}
 
-	public Integer getStartPort() {
-		return startPort;
-	}
-
-	public Integer getEndPort() {
-		return endPort;
-	}
+//	public String getIp() {
+//		return ip;
+//	}
+//
+//	public Integer getStartPort() {
+//		return startPort;
+//	}
+//
+//	public Integer getEndPort() {
+//		return endPort;
+//	}
 	
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////

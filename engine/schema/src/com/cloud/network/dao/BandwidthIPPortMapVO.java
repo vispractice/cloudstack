@@ -1,5 +1,7 @@
 package com.cloud.network.dao;
 
+import java.util.UUID;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -18,6 +20,9 @@ public class BandwidthIPPortMapVO implements InternalIdentity {
     @Column(name="id")
     private long id;
 	
+	@Column(name="uuid")
+    private String uuid;
+	
 	@Column(name="bandwidth_rules_id")
     private Long bandwidthRulesId;
 
@@ -31,10 +36,11 @@ public class BandwidthIPPortMapVO implements InternalIdentity {
     private Integer bandwidthPortEnd;
 	
     public BandwidthIPPortMapVO(){
-    	
+    	uuid = UUID.randomUUID().toString();
     }
     
     public BandwidthIPPortMapVO(long bandwidthRulesId, String ipAddress, Integer bandwidthPortStart, Integer bandwidthPortEnd){
+    	uuid = UUID.randomUUID().toString();
     	this.bandwidthRulesId = bandwidthRulesId;
     	this.ipAddress = ipAddress;
     	this.bandwidthPortStart = bandwidthPortStart;
@@ -80,6 +86,14 @@ public class BandwidthIPPortMapVO implements InternalIdentity {
 	@Override
 	public long getId() {
 		return id;
+	}
+
+	public String getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
 	}
 
 }
