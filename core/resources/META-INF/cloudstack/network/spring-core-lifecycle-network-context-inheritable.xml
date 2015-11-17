@@ -68,6 +68,12 @@
     </bean>
 
     <bean class="org.apache.cloudstack.spring.lifecycle.registry.RegistryLifecycle">
+        <property name="registry" ref="bandwidthServiceProvidersRegistry" />
+        <property name="typeClass"
+            value="com.cloud.network.element.BandwidthServiceProvider" />
+    </bean>
+
+    <bean class="org.apache.cloudstack.spring.lifecycle.registry.RegistryLifecycle">
         <property name="registry" ref="staticNatServiceProvidersRegistry" />
         <property name="typeClass"
             value="com.cloud.network.element.StaticNatServiceProvider" />
