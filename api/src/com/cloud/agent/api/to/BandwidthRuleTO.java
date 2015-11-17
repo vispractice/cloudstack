@@ -38,7 +38,7 @@ public class BandwidthRuleTO {
     	}
     }
     
-    public BandwidthRuleTO(int deviceId, BandwidthType type ,int rate, int ceil, int trafficRuleId, boolean revoked, boolean alreadyAdded,boolean keepState, List<BandwidthFilterRules> bandwidthFilters){
+    public BandwidthRuleTO(int deviceId, BandwidthType type ,int rate, int ceil, int trafficRuleId, int prio, boolean revoked, boolean alreadyAdded,boolean keepState, List<BandwidthFilterRules> bandwidthFilters){
     	if(bandwidthFilters == null){
     		bandwidthFilters = new ArrayList<BandwidthFilterRules>();
     	}

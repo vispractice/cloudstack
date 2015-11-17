@@ -4747,11 +4747,12 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
 				int rate = rule.getRate();
 				int ceil = rule.getCeil();
 				int trafficRuleId = rule.getTrafficRuleId();
+				int prio = rule.getPrio();
 				boolean revoked = rule.isClassRuleRevoked();
 				boolean alreadyAdded = rule.isClassRuleAlreadyAdded();
 				boolean keepState = rule.isClassRuleKeepState();
 				List<BandwidthFilterRules> bandwidthFilters = rule.getBandwidthFilterRules();
-				BandwidthRuleTO bandwidthRule = new BandwidthRuleTO(deviceId, type, rate, ceil, trafficRuleId, revoked, alreadyAdded, keepState, bandwidthFilters);
+				BandwidthRuleTO bandwidthRule = new BandwidthRuleTO(deviceId, type, rate, ceil, trafficRuleId, prio, revoked, alreadyAdded, keepState, bandwidthFilters);
 				rulesTO.add(bandwidthRule);
 			}
 			

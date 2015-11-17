@@ -1139,8 +1139,12 @@ public class VirtualRoutingResource implements Manager {
 					String deleteAllClassRule = " -D -c eth"+ deviceId +" -r "+trafficRuleId+" -p " + prio;
 					script = "bandwidth_rule.sh";
 					String deleteResult = routerProxy(script, routerIp, deleteAllClassRule);
-					script = "none.sh";
-					String result = routerProxy(script, routerIp, executeRules);
+					String result = null;
+					if(executeRules != null && executeRules != ""){
+						script = "none.sh";
+						result = routerProxy(script, routerIp, executeRules);
+					}
+					
 					if (deleteResult != null || result != null) {
 						results[i++] = "Failed";
 						endResult = false;
