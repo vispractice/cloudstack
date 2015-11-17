@@ -147,6 +147,7 @@ import com.cloud.network.Networks.BroadcastDomainType;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.PhysicalNetwork;
 import com.cloud.network.bandwidth.BandwidthManagerImpl;
+import com.cloud.network.bandwidth.BandwidthService;
 import com.cloud.network.dao.BandwidthDao;
 import com.cloud.network.dao.BandwidthOfferingDao;
 import com.cloud.network.dao.BandwidthOfferingVO;
@@ -258,8 +259,8 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
     BandwidthRulesDao _bandwidthRulesDao;
     @Inject
 	BandwidthDao _bandwidthDao;
-//    @Inject
-//    BandwidthManager _bandwidthManager;
+    @Inject
+    BandwidthService _bandwidthService;
     @Inject
     VlanDao _vlanDao;
     @Inject
@@ -5566,8 +5567,8 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         	}
         	
         	//go to re-execute the bandwidth rules which used this bandwidth offering.
-        	BandwidthManager bandwidthManager = new BandwidthManagerImpl();
-        	boolean refreshRulesOK = bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
+//        	BandwidthManager bandwidthManager = new BandwidthManagerImpl();
+        	boolean refreshRulesOK = _bandwidthService.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
 //        	boolean refreshRulesOK = _bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
         	if(!refreshRulesOK){
         		s_logger.error("When update the bandwidth offering, there are run wrong in refresh the bandwidth rule part. ");

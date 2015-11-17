@@ -701,7 +701,6 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		Long zoneId = cmd.getZoneId();
 		int inTraffic = cmd.getInTraffic();
 		int outTraffic = cmd.getOutTraffic();
-//		MultilineVO multiline = _multilineDao.findById(multilineId);
 		MultilineVO multiline = _multilineDao.findByUuid(multilineId);
 		if(multiline == null){
 			throw new InvalidParameterValueException("The multiline id is wrong in this zone.");
@@ -713,8 +712,11 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		if(inTraffic <= 0 || outTraffic <= 0 ){
 			throw new InvalidParameterValueException("The in traffic and out traffic must be more than zero.");
 		}
+		BandwidthVO oldBandwidth = _bandwidthDao.getBandwidthByMultilineId(multiline.getId());
+		if(oldBandwidth != null){
+			throw new InvalidParameterValueException("The multiline and the bandwidth are one-to-one relationship.");
+		}
 		//persist to DB
-//		BandwidthVO bandwidth = new BandwidthVO(multilineId, zoneId, inTraffic, outTraffic);
 		BandwidthVO bandwidth = new BandwidthVO(multiline.getId(), zoneId, inTraffic, outTraffic);
 		CallContext.current().setEventDetails("bandwidth rule id=" + bandwidth.getId());
 		BandwidthVO bandwidthVO = _bandwidthDao.persist(bandwidth);
@@ -753,6 +755,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				MultilineVO multilineVO = _multilineDao.findById(vo.getMultilineId());
 				if(multilineVO != null){
 					bandwidthResponse.setMultilineId(multilineVO.getUuid());
+					bandwidthResponse.setMultilineLabel(multilineVO.getLabel());
 				}
 				bandwidthResponse.setInTraffic(vo.getInTraffic());
 				bandwidthResponse.setOutTraffic(vo.getOutTraffic());
@@ -766,6 +769,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			MultilineVO multilineVO = _multilineDao.findById(bandwidth.getMultilineId());
 			if(multilineVO != null){
 				bandwidthResponse.setMultilineId(multilineVO.getUuid());
+				bandwidthResponse.setMultilineLabel(multilineVO.getLabel());
 			}
 			bandwidthResponse.setInTraffic(bandwidth.getInTraffic());
 			bandwidthResponse.setOutTraffic(bandwidth.getOutTraffic());

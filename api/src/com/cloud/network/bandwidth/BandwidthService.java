@@ -15,6 +15,7 @@ import org.apache.cloudstack.api.response.BandwidthRulesResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.offering.BandwidthOffering;
 
 public interface BandwidthService {
 	//业务层的响应接口，从页面发送过来的请求，内部接收的接口方法
@@ -30,5 +31,7 @@ public interface BandwidthService {
 	boolean deleteBandwidth(DeleteBandwidthCmd cmd);
 	boolean updateBandwidth(UpdateBandwidthCmd cmd);
 	ListResponse<BandwidthResponse> searchForBandwidths(ListBandwidthsCmd cmd);
+	//update operation include remove old rules and create new rules
+	boolean updateOfferingRefreshRules(int updateRate, int updateCeil, BandwidthOffering oldOffering) throws ResourceUnavailableException;
 	
 }
