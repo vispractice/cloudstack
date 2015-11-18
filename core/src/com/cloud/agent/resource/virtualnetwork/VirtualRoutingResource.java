@@ -1175,7 +1175,7 @@ public class VirtualRoutingResource implements Manager {
 					//tc class del dev eth0 parent 1: classid 1:2 htb rate 1000kbit ceil 2000kbit prio 2
 					executeRules +=  "tc qdisc del dev eth"+ deviceId + " parent 1:" + trafficRuleId+ " handle " + trafficRuleId + ": sfq perturb 10;" 
 					        + "tc class del dev eth" + deviceId+ " parent 1: classid 1:" + trafficRuleId+ " htb rate " + rate + "kbit ceil " + ceil
-							+ "kbit prio " + prio ;
+							+ "kbit prio " + prio + ";";
 					script = "none.sh";
 					String result = routerProxy(script, routerIp, executeRules);
 					if (deleteResult != null || result != null) {
