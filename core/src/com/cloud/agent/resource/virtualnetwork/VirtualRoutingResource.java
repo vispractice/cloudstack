@@ -1121,9 +1121,9 @@ public class VirtualRoutingResource implements Manager {
     	 String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
          String[] results = new String[cmd.getRules().length];
          int i = 0;
-         String executeRules = "";
 		boolean endResult = true;
 		for (BandwidthRuleTO rule : cmd.getRules()) {
+			String executeRules = "";
 			int deviceId = rule.getDeviceId();
 			int prio = rule.getPrio();
 			int trafficRuleId = rule.getTrafficRuleId();
@@ -1217,7 +1217,7 @@ public class VirtualRoutingResource implements Manager {
     	if(isAddAll){
     		//retrun all the filter rules
     		for (BandwidthFilterTO filter : bandwidthFilters) {
-        		if(filter.isAlreadyAdded() && !filter.isRevoke()){
+        		if(!filter.isAlreadyAdded() && !filter.isRevoke()){
         			filterRules += buildFilterRule(filter, type, deviceId, prio, trafficRuleId);
         		}
         	}

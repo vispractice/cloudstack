@@ -14,7 +14,7 @@ public class BandwidthRuleTO {
     private int trafficRuleId;
     private int prio;
     boolean revoked;
-	boolean alreadyAdded;
+	boolean alreadyAdded;//it means that the rule was added in the VR.
 	boolean keepState;
     private BandwidthFilterTO[] bandwidthFilters;
     
