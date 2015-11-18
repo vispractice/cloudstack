@@ -73,14 +73,14 @@ public class UpdateBandwidthRuleCmd extends BaseAsyncCmd {
 	@Override
 	public void execute() throws ResourceUnavailableException {
 		CallContext.current().setEventDetails("Bandwidth Rule Id: " + bandwidthRuleId);
-		if (rate < 0 || ceil < 0 || prio < 0) {
+		if (rate < 0 || ceil < 0) {
 			throw new InvalidParameterValueException("The bandwidth rule parameter: rate, ceil can not less than zore.");
 		}
 		if (rate > ceil) {
 			throw new InvalidParameterValueException("The bandwidth rule parameter: rate must  less than or equal ceil.");
 		}
-		if(prio < 0){
-			throw new InvalidParameterValueException("The bandwidth rule parameter: prio can not less than zore.");
+		if(prio < 0 || prio > 7){
+			throw new InvalidParameterValueException("The bandwidth rule parameter: prio available scope is 0~7.");
 		}
 		boolean result = _bandwidthService.updateBandwidthRule(this);
 		if (result) {
