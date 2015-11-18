@@ -332,6 +332,19 @@ enable_rpsrfs() {
      fi
 }
 
+#andrew ling add init bandwidth rule in the dev
+init_bandwidth_for_dev() {
+    devEth0=`tc qdisc show |grep eth0 |grep r2q`
+    if [ -z "$devEth0" ];then
+         tc qdisc add dev eth0 root handle 1: htb r2q 1
+    fi
+    local dev=$1
+    devEthn=`tc qdisc show |grep $dev |grep r2q`
+    if [ -z "$devEthn" ];then
+         tc qdisc add dev $ethDev root handle 1: htb r2q 1
+    fi
+}
+
 #set -x
 sflag=0
 lflag=
@@ -413,7 +426,8 @@ if [ "$fflag" == "1" ] && [ "$Aflag" == "1" ]
 then
   add_first_ip  $publicIp  &&
   add_vpn_chain_for_ip $publicIp &&
-  add_fw_chain_for_ip $publicIp 
+  add_fw_chain_for_ip $publicIp
+  init_bandwidth_for_dev $ethDev 
   unlock_exit $? $lock $locked
 fi
 
