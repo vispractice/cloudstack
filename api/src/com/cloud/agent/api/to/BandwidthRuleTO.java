@@ -21,22 +21,6 @@ public class BandwidthRuleTO {
     protected BandwidthRuleTO() {
     	
     }
-    public BandwidthRuleTO(int deviceId, int rate, int ceil, int trafficRuleId, boolean revoked, boolean alreadyAdded, List<BandwidthFilterRules> bandwidthFilters){
-    	if(bandwidthFilters == null){
-    		bandwidthFilters = new ArrayList<BandwidthFilterRules>();
-    	}
-    	this.deviceId = deviceId;
-    	this.rate = rate;
-    	this.ceil = ceil;
-    	this.revoked = revoked;
-    	this.alreadyAdded = alreadyAdded;
-    	this.trafficRuleId = trafficRuleId;
-    	this.bandwidthFilters = new BandwidthFilterTO[bandwidthFilters.size()];
-    	int i = 0;
-    	for(BandwidthFilterRules bandwidthFilter : bandwidthFilters){
-    		this.bandwidthFilters[i++] = new BandwidthFilterTO(bandwidthFilter.getIpAddress(), bandwidthFilter.getStartPort(), bandwidthFilter.getEndPort(), bandwidthFilter.isRevoke(), false);
-    	}
-    }
     
     public BandwidthRuleTO(int deviceId, BandwidthType type ,int rate, int ceil, int trafficRuleId, int prio, boolean revoked, boolean alreadyAdded,boolean keepState, List<BandwidthFilterRules> bandwidthFilters){
     	if(bandwidthFilters == null){
@@ -46,6 +30,7 @@ public class BandwidthRuleTO {
     	this.type = type;
     	this.rate = rate;
     	this.ceil = ceil;
+    	this.prio = prio;
     	this.revoked = revoked;
     	this.alreadyAdded = alreadyAdded;
     	this.keepState = keepState;

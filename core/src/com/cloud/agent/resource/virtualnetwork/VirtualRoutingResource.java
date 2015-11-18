@@ -1140,7 +1140,7 @@ public class VirtualRoutingResource implements Manager {
 					script = "bandwidth_rule.sh";
 					String deleteResult = routerProxy(script, routerIp, deleteAllClassRule);
 					String result = null;
-					if(executeRules != null && executeRules != ""){
+					if(executeRules != ""){
 						script = "none.sh";
 						result = routerProxy(script, routerIp, executeRules);
 					}
