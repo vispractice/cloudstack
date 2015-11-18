@@ -38,7 +38,7 @@ public class BandwidthRuleTO {
     	this.bandwidthFilters = new BandwidthFilterTO[bandwidthFilters.size()];
     	int i = 0;
     	for(BandwidthFilterRules bandwidthFilter : bandwidthFilters){
-    		this.bandwidthFilters[i++] = new BandwidthFilterTO(bandwidthFilter.getIpAddress(), bandwidthFilter.getStartPort(), bandwidthFilter.getEndPort(), bandwidthFilter.isRevoke(), false);
+    		this.bandwidthFilters[i++] = new BandwidthFilterTO(bandwidthFilter.getIpAddress(), bandwidthFilter.getStartPort(), bandwidthFilter.getEndPort(), bandwidthFilter.isRevoke(), bandwidthFilter.isAlreadyAdded());
     	}
     }
     
