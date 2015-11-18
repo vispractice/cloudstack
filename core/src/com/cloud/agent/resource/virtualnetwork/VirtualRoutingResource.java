@@ -1301,8 +1301,8 @@ public class VirtualRoutingResource implements Manager {
 			if(startPort == 1){
 				result.put(startPort, mask.get(1));
 			} else{
-				startPort = startPort + 1;
 				result.put(startPort, mask.get(1));
+				startPort = startPort + 1;
 			}
 		}
 		if(startPort == endPort){
