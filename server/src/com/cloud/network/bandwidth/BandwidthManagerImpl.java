@@ -350,7 +350,10 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				throw new InvalidParameterValueException("The ip address in the bandwidth filter rule is not right.");
 			} else {
 				BandwidthRulesVO rule = _bandwidthRulesDao.findById(bandwidthRuleId);
-				if (ipAddress.getAssociatedWithNetworkId() == null || ipAddress.getAssociatedWithNetworkId().longValue() != rule.getNetworksId().longValue()) {
+				//get the public ip multiline label and compare with the bandwidth rule multiline label,if it is same, it is ok.
+				BandwidthVO bandwidth = _bandwidthDao.findById(rule.getBandwidthId());
+				MultilineVO multiline = _multilineDao.findById(bandwidth.getMultilineId());
+				if (ipAddress.getAssociatedWithNetworkId() == null || ipAddress.getAssociatedWithNetworkId().longValue() != rule.getNetworksId().longValue() || !multiline.getLabel().equalsIgnoreCase(ipAddress.getMultilineLabel())) {
                     throw new InvalidParameterValueException("Unable to create or delete bandwidth filter rule ; The public ip is not right.");
 				}
 			}
