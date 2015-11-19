@@ -27,6 +27,7 @@ import org.apache.cloudstack.api.response.BandwidthResponse;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.engine.cloud.entity.api.db.dao.VMNetworkMapDao;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -91,6 +92,8 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	DataCenterDao _dataCenterDao;
 	@Inject
     ConfigurationDao _configDao;
+	@Inject
+	VMNetworkMapDao _vmNetworkMapDao;
 	
 	@Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -323,9 +326,20 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         }
         
 		if(type.equals(BandwidthType.InTraffic)){
-			//TODO vm ip address, if it want to check the private ip address in the network?
+			// vm ip address, it want to check the private ip address in the network.
 			VMInstanceVO vMInstanceVO = _vMInstanceDao.findVMByIpAddress(ip);
 			if(vMInstanceVO == null){
+				throw new InvalidParameterValueException("Unable to create or delete bandwidth filter rule ; The private ip is not right.");
+			}
+			List<Long> networksIds = _vmNetworkMapDao.getNetworks(vMInstanceVO.getId());
+			boolean isVmUsedNetwork = false;
+			BandwidthRulesVO rule = _bandwidthRulesDao.findById(bandwidthRuleId);
+			for(Long networksId : networksIds){
+				if(networksId.longValue() == rule.getNetworksId().longValue()){
+					isVmUsedNetwork = true;
+				}
+			}
+			if(!isVmUsedNetwork){
 				throw new InvalidParameterValueException("Unable to create or delete bandwidth filter rule ; The private ip is not right.");
 			}
 		} else if(type.equals(BandwidthType.OutTraffic)){
