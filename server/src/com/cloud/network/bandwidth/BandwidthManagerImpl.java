@@ -583,6 +583,17 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update bandwidth rule");
 			}
 		}
+		//when update the offering and update the bandwidth class rule.
+		for(BandwidthRulesVO BandwidthRulesVO : bandwidthRulesList){
+			BandwidthRulesVO.setRate(updateRate);
+			BandwidthRulesVO.setCeil(updateCeil);
+			CallContext.current().setEventDetails("bandwidth rule id=" + BandwidthRulesVO.getId());
+			BandwidthRulesVO bandwidthRules = _bandwidthRulesDao.persist(BandwidthRulesVO);
+	        if (bandwidthRules != null) {
+	            CallContext.current().setEventDetails("Bandwidth rule id=" + bandwidthRules.getId());
+	        }
+		}
+		
 		
 		return true;
 	}
