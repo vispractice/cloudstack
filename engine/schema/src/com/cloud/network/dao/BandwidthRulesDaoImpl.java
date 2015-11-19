@@ -17,7 +17,7 @@ public class BandwidthRulesDaoImpl extends GenericDaoBase<BandwidthRulesVO, Long
 	private final SearchBuilder<BandwidthRulesVO> bandwidthOfferingIdSearch;
 	private final SearchBuilder<BandwidthRulesVO> bandwidthIdAndTypeSearch;
 	private final SearchBuilder<BandwidthRulesVO> NetworksIdSearch;
-	
+	private final SearchBuilder<BandwidthRulesVO> bandwidthIdSearch;
 	
 	protected BandwidthRulesDaoImpl(){
 		bandwidthOfferingIdSearch = createSearchBuilder();
@@ -32,6 +32,10 @@ public class BandwidthRulesDaoImpl extends GenericDaoBase<BandwidthRulesVO, Long
 		NetworksIdSearch = createSearchBuilder();
 		NetworksIdSearch.and("networksId", NetworksIdSearch.entity().getNetworksId(), SearchCriteria.Op.EQ);
 		NetworksIdSearch.done();
+		
+		bandwidthIdSearch = createSearchBuilder();
+		bandwidthIdSearch.and("bandwidthId", bandwidthIdSearch.entity().getBandwidthId(), SearchCriteria.Op.EQ);
+		bandwidthIdSearch.done();
 	}
 	
 	@Override
@@ -53,6 +57,13 @@ public class BandwidthRulesDaoImpl extends GenericDaoBase<BandwidthRulesVO, Long
 	public List<BandwidthRulesVO> listByNetworksId(long networksId) {
 		SearchCriteria<BandwidthRulesVO> sc = NetworksIdSearch.create();
 		sc.setParameters("networksId", networksId);
+		return listBy(sc);
+	}
+
+	@Override
+	public List<BandwidthRulesVO> listByBandwidthId(long bandwidthId) {
+		SearchCriteria<BandwidthRulesVO> sc = bandwidthIdSearch.create();
+		sc.setParameters("bandwidthId", bandwidthId);
 		return listBy(sc);
 	}
 

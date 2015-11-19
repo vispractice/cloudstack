@@ -752,6 +752,10 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		if(bandwidth == null){
 			throw new InvalidParameterValueException("The bandwidth id is wrong.");
 		}
+		List<BandwidthRulesVO> bandwidthList = _bandwidthRulesDao.listByBandwidthId(bandwidthId);
+		if(bandwidthList == null || bandwidthList.isEmpty()){
+			throw new InvalidParameterValueException("The bandwidth is in use now.");
+		}
 		//remove from the DB
         CallContext.current().setEventDetails("bandwidth id=" + bandwidthId);
 		return _bandwidthDao.remove(bandwidthId);
