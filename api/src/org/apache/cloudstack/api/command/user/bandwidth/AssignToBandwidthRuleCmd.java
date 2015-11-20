@@ -32,10 +32,10 @@ public class AssignToBandwidthRuleCmd extends BaseAsyncCmd {
     @Parameter(name=ApiConstants.BANDWIDTH_RULE_IP, type=CommandType.STRING, required=true, description="the IP address in this bandwidth rule for filter rule.")
     private String ip;
     
-    @Parameter(name = ApiConstants.START_PORT, type = CommandType.INTEGER, required=true, description = "the starting port of bandwidth rule for filter rule.")
+    @Parameter(name = ApiConstants.START_PORT, type = CommandType.INTEGER, description = "the starting port of bandwidth rule for filter rule.")
     private Integer startPort;
 
-    @Parameter(name = ApiConstants.END_PORT, type = CommandType.INTEGER, required=true, description = "the ending port of bandwidth rule for filter rule.")
+    @Parameter(name = ApiConstants.END_PORT, type = CommandType.INTEGER, description = "the ending port of bandwidth rule for filter rule.")
     private Integer endPort;
 
     /////////////////////////////////////////////////////

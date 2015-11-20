@@ -1248,8 +1248,8 @@ public class VirtualRoutingResource implements Manager {
     private String buildFilterRule(BandwidthFilterTO bandwidthFilter, BandwidthType type, int deviceId, int prio, int trafficRuleId){
     	String filterRule = "";
     	String ip = bandwidthFilter.getIp();
-		int startPort = bandwidthFilter.getStartPort();
-		int endPort = bandwidthFilter.getEndPort();
+		Integer startPort = bandwidthFilter.getStartPort();
+		Integer endPort = bandwidthFilter.getEndPort();
 		String trafficType = "";
 		String portType = "";
 		if (type.equals(BandwidthType.InTraffic)) {
@@ -1260,6 +1260,13 @@ public class VirtualRoutingResource implements Manager {
 			portType = "sport";
 		} else {
 			throw new InvalidParameterValueException("The bandwidth type is not rigth, it only support two type, include in traffic and out traffic.");
+		}
+
+		if(startPort == null && endPort == null){
+//			tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.3 flowid 1:3
+			filterRule += "tc filter add dev eth" + deviceId + " protocol ip parent 1: prio " + prio
+					+ " u32 match ip " + trafficType + " " + ip + " flowid 1:"+ trafficRuleId + ";";
+			return filterRule;
 		}
 		Map<Integer, String> portRangeParams = createBandwidthPortRangeParams(startPort, endPort);
 		for (Map.Entry<Integer, String> entry : portRangeParams.entrySet()) {

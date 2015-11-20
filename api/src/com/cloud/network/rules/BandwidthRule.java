@@ -112,20 +112,20 @@ public class BandwidthRule{
 
 	public interface BandwidthFilter {
 		String getIpAddress();
-		int getStartPort();
-		int getEndPort();
+		Integer getStartPort();
+		Integer getEndPort();
 		boolean isRevoke();
 		boolean isAlreadyAdded();
 	}
 	
 	public static class BandwidthFilterRules implements BandwidthFilter {
 		private String ip;
-		private int startPort;
-		private int endPort;
+		private Integer startPort;
+		private Integer endPort;
 		private boolean revoke;
 		private boolean alreadyAdded;
 		
-		public BandwidthFilterRules(String ip, int startPort, int endPort, boolean revoke, boolean alreadyAdded){
+		public BandwidthFilterRules(String ip, Integer startPort, Integer endPort, boolean revoke, boolean alreadyAdded){
 			this.ip = ip;
 			this.startPort = startPort;
 			this.endPort = endPort;
@@ -141,19 +141,19 @@ public class BandwidthRule{
 			this.ip = ip;
 		}
 
-		public int getStartPort() {
+		public Integer getStartPort() {
 			return startPort;
 		}
 
-		public void setStartPort(int startPort) {
+		public void setStartPort(Integer startPort) {
 			this.startPort = startPort;
 		}
 
-		public int getEndPort() {
+		public Integer getEndPort() {
 			return endPort;
 		}
 
-		public void setEndPort(int endPort) {
+		public void setEndPort(Integer endPort) {
 			this.endPort = endPort;
 		}
 

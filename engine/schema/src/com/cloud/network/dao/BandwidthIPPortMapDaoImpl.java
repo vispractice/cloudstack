@@ -44,7 +44,7 @@ public class BandwidthIPPortMapDaoImpl extends GenericDaoBase<BandwidthIPPortMap
 	}
 
 	@Override
-	public BandwidthIPPortMapVO findOneByBWClassIdIpPorts(long bandwidthRulesId, String ip, int startPort, int endPort) {
+	public BandwidthIPPortMapVO findOneByBWClassIdIpPorts(long bandwidthRulesId, String ip, Integer startPort, Integer endPort) {
 		SearchCriteria<BandwidthIPPortMapVO> sc = AllFilterSearch.create();
         sc.setParameters("bandwidthRulesId", bandwidthRulesId);
         sc.setParameters("ipAddress", ip);

@@ -119,8 +119,8 @@ public class BandwidthRuleTO {
 
 	public static class BandwidthFilterTO{
     	private String ip;
-    	private int startPort;
-    	private int endPort;
+    	private Integer startPort;
+    	private Integer endPort;
     	boolean revoke;
     	boolean alreadyAdded;
 		public String getIp() {
@@ -129,16 +129,16 @@ public class BandwidthRuleTO {
 		public void setIp(String ip) {
 			this.ip = ip;
 		}
-		public int getStartPort() {
+		public Integer getStartPort() {
 			return startPort;
 		}
-		public void setStartPort(int startPort) {
+		public void setStartPort(Integer startPort) {
 			this.startPort = startPort;
 		}
-		public int getEndPort() {
+		public Integer getEndPort() {
 			return endPort;
 		}
-		public void setEndPort(int endPort) {
+		public void setEndPort(Integer endPort) {
 			this.endPort = endPort;
 		}
     	
@@ -154,8 +154,8 @@ public class BandwidthRuleTO {
 		public void setAlreadyAdded(boolean alreadyAdded) {
 			this.alreadyAdded = alreadyAdded;
 		}
-		public BandwidthFilterTO(String ip, int startPort, int endPort, boolean revoke, boolean alreadyAdded){
-    		this.ip = ip;
+		public BandwidthFilterTO(String ip, Integer startPort, Integer endPort, boolean revoke, boolean alreadyAdded){
+			this.ip = ip;
     		this.startPort = startPort;
     		this.endPort = endPort;
     		this.revoke = revoke;

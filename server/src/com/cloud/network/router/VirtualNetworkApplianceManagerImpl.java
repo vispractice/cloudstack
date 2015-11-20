@@ -2883,8 +2883,8 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(classRule.getId());
     		for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
     			String ip = bandwidthIPPortMap.getIpAddress();
-    			int startPort = bandwidthIPPortMap.getBandwidthPortStart();
-    			int endPort = bandwidthIPPortMap.getBandwidthPortEnd();
+    			Integer startPort = bandwidthIPPortMap.getBandwidthPortStart();
+    			Integer endPort = bandwidthIPPortMap.getBandwidthPortEnd();
     			boolean revoke = false;
     			boolean alreadyAdded = false;
     			BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, startPort, endPort, revoke, alreadyAdded);
