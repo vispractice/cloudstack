@@ -376,7 +376,8 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 					if(portStart <= vo.getBandwidthPortEnd() && portEnd >= vo.getBandwidthPortEnd()){
 						throw new InvalidParameterValueException("Port range is an invalid value: " + portStart+ ", Conflict with the old rules");
 					}
-				} else {
+				}
+				if(portStart == null && portEnd == null && vo.getBandwidthPortStart() == null && vo.getBandwidthPortEnd() == null){
 					throw new InvalidParameterValueException("IP address is an invalid value: " + ip+ ", It was been created which was only use the IP address for the filter rule.");
 				}
 			}
