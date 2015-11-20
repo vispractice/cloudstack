@@ -366,7 +366,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			//it want to compare the port with the DB which be used in the same bandwidth_rule_id and ip.
 			List<BandwidthIPPortMapVO> listVOs = _bandwidthIPPortMapDao.listByBWClassIdIp(bandwidthRuleId, ip);
 			for(BandwidthIPPortMapVO vo : listVOs){
-				if(vo.getBandwidthPortStart() != null && vo.getBandwidthPortEnd() != null){
+				if(portStart != null && portEnd != null && vo.getBandwidthPortStart() != null && vo.getBandwidthPortEnd() != null){
 					if(portStart <= vo.getBandwidthPortStart() && portEnd >= vo.getBandwidthPortStart()){
 						throw new InvalidParameterValueException("Port range is an invalid value: " + portEnd + ", Conflict with the old rules");
 					}
