@@ -483,7 +483,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				Integer endPort = bandwidthIPPortMap.getBandwidthPortEnd();
 				boolean revoke = false;
 				boolean alreadyAdded = true;
-				if(ipAddress.equalsIgnoreCase(removedIp) && startPort == removedStartPort && endPort == removedEndPort){
+				if(ipAddress.equalsIgnoreCase(removedIp) && startPort.intValue() == removedStartPort.intValue() && endPort.intValue() == removedEndPort.intValue()){
 					revoke = true;
 					alreadyAdded = true;
 				}
