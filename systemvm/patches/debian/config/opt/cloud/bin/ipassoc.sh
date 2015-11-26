@@ -110,8 +110,8 @@ remove_routing() {
   if [ "$remainip" == "" ]
   then
 # rules and routes will be deleted for the last ip of the interface.
-     sudo ip rule delete fwmark $tableNo table $tableName
-     sudo ip rule delete table $tableName
+     sudo ip rule delete fwmark $tableNo table $tableName pref $tableNo
+     sudo ip rule delete table $tableName pref $tableNo
      sudo ip route flush  table $tableName 
      sudo ip route flush cache
      logger -t cloud "$(basename $0):Remove routing $pubIp - routes and rules deleted"
@@ -169,8 +169,8 @@ add_routing() {
   if [ "$rulePresent" == "" ]
   then
 # rules will be added while adding the first ip of the interface 
-     sudo ip rule add from $ethMask table $tableName
-     sudo ip rule add fwmark $tableNo table $tableName
+     sudo ip rule add from $ethMask table $tableName pref $tableNo
+     sudo ip rule add fwmark $tableNo table $tableName pref $tableNo
      logger -t cloud "$(basename $0):Add routing $pubIp rules added"
   fi
   return 0;

@@ -262,13 +262,13 @@ setMutiline_vm_route_rule() {
   local oldRouteTableName=$(sudo ip rule show |grep "from $vmInstanceIp lookup"|awk -F' ' '{print $5}')
   if [ -n "$oldRouteTableName" ]
   then
-        sudo ip rule del from $vmInstanceIp table $oldRouteTableName
+        sudo ip rule del from $vmInstanceIp table $oldRouteTableName pref 4000
         if [ "$routeTableName" != "none" ]
         then
-          sudo ip rule add from $vmInstanceIp table $routeTableName
+          sudo ip rule add from $vmInstanceIp table $routeTableName pref 4000
         fi
   else
-   sudo ip rule add from $vmInstanceIp table $routeTableName
+   sudo ip rule add from $vmInstanceIp table $routeTableName pref 4000
   fi 
   result=$?
   logger -t cloud "$(basename $0): done setMutiline_vm_route_rule: route table name=$routeTableName instance ip=$vmInstanceIp  op=$op result=$result"
