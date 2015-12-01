@@ -105,8 +105,8 @@ public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{
 				throw new InvalidParameterValueException("The bandwidth rule parameter: rate must  less than or equal ceil.");
 			}
 		}
-		if(prio < 0 || prio > 7){
-			throw new InvalidParameterValueException("The bandwidth rule parameter: prio available scope is 0~7.");
+		if(prio < 1 || prio > 7){
+			throw new InvalidParameterValueException("The bandwidth rule parameter: prio available scope is 1~7.");
 		}
 		
 		Long ruleId = _bandwidthService.createBandwidthRule(this);
