@@ -555,6 +555,7 @@ public class ApiConstants {
     public static final String BANDWIDTH_CEIL = "ceil";
     public static final String BANDWIDTH_TYPE = "bandwidthtype";
     public static final String BANDWIDTH_PRIO = "bandwidthprio";
+    public static final String BANDWIDTH_RULE_ID = "bandwidthruleid";
     public static final String BANDWIDTH_RULE_IP = "bandwidthruleip";
     public static final String BANDWIDTH_OFFERING_ID = "bandwidthofferingid";
     public static final String BANDWIDTH_FILTER_ID = "bandwidthfilterid";

@@ -41,9 +41,6 @@ public class BandwidthRulesResponse  extends BaseResponse {
     @SerializedName("prio") @Param(description="the prio of the bandwidth rule")
     private Integer prio;
     
-    @SerializedName("trafficRuleId") @Param(description="the trafficRuleId of the bandwidth rule")
-    private Integer trafficRuleId;
-    
 	@SerializedName("filterRule")  @Param(description="the list of filter rules associated with bandwidth class rule", responseObject = BandwidthFilterRuleResponse.class)
 	private Set<BandwidthFilterRuleResponse> filterRules;
 
@@ -113,14 +110,6 @@ public class BandwidthRulesResponse  extends BaseResponse {
 
 	public void setPrio(Integer prio) {
 		this.prio = prio;
-	}
-
-	public Integer getTrafficRuleId() {
-		return trafficRuleId;
-	}
-
-	public void setTrafficRuleId(Integer trafficRuleId) {
-		this.trafficRuleId = trafficRuleId;
 	}
 
 	public Set<BandwidthFilterRuleResponse> getFilterRules() {

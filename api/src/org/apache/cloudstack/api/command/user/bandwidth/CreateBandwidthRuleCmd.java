@@ -6,6 +6,7 @@ import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCreateCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.response.BandwidthOfferingResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
@@ -46,8 +47,8 @@ public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{
 	@Parameter(name=ApiConstants.BANDWIDTH_TYPE, type=CommandType.STRING, required=true, description="the type of the bandwidth rule. Values are inTraffic and outTraffic")
     private String type;
 	
-	@Parameter(name=ApiConstants.MULTILINE_LABEL, type=CommandType.STRING,required=true, description="The bandwidth rule in this network which multiline label.")
-    private String multilineLabel;
+	@Parameter(name=ApiConstants.MULTILINE_ID, type=CommandType.STRING, required=true, description= "the ID of the multiline")
+    private String multilineId;
     
 	/////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -76,8 +77,8 @@ public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{
 		return type;
 	}
 	
-    public String getMultilineLabel() {
-		return multilineLabel;
+	public String getMultilineId() {
+		return multilineId;
 	}
 
 	// ///////////////////////////////////////////////////

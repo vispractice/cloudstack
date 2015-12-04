@@ -25,7 +25,7 @@ public class AssignToBandwidthRuleCmd extends BaseAsyncCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = BandwidthRulesResponse.class,
+    @Parameter(name=ApiConstants.BANDWIDTH_RULE_ID, type=CommandType.UUID, entityType = BandwidthRulesResponse.class,
             required=true, description="the ID of the bandwidth rule")
     private Long bandwidthRuleId;
     

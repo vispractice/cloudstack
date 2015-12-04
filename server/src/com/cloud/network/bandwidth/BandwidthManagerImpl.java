@@ -118,10 +118,10 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		Integer ceil = cmd.getCeil();
 		Integer prio = cmd.getPrio();
 		String type = cmd.getType();
-		String multilineLable = cmd.getMultilineLabel();
+		String multilineId = cmd.getMultilineId();
 		Integer trafficRuleId = null;
 		
-		MultilineVO multilineVO = _multilineDao.getMultilineByLabel(multilineLable);
+		MultilineVO multilineVO = _multilineDao.findByUuid(multilineId);
 		if(multilineVO == null){
 			throw new InvalidParameterValueException("The bandwidth rule parameter: multiline lable is not right.");
 		}
@@ -642,7 +642,6 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				bandwidthRulesResponse.setPrio(vo.getPrio());
 				bandwidthRulesResponse.setRate(vo.getRate());
 				bandwidthRulesResponse.setCeil(vo.getCeil());
-				bandwidthRulesResponse.setTrafficRuleId(vo.getTrafficRuleId());
 				List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(vo.getId());
 				if(bandwidthIPPortMapList != null){
 					for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
@@ -680,7 +679,6 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				bandwidthRulesResponse.setPrio(vo.getPrio());
 				bandwidthRulesResponse.setRate(vo.getRate());
 				bandwidthRulesResponse.setCeil(vo.getCeil());
-				bandwidthRulesResponse.setTrafficRuleId(vo.getTrafficRuleId());
 				List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(vo.getId());
 				if(bandwidthIPPortMapList != null){
 					for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
@@ -717,7 +715,6 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			bandwidthRulesResponse.setPrio(vo.getPrio());
 			bandwidthRulesResponse.setRate(vo.getRate());
 			bandwidthRulesResponse.setCeil(vo.getCeil());
-			bandwidthRulesResponse.setTrafficRuleId(vo.getTrafficRuleId());
 			List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(vo.getId());
 			if(bandwidthIPPortMapList != null){
 				for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
