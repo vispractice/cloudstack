@@ -834,10 +834,24 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 
 	@Override
 	public boolean updateBandwidth(UpdateBandwidthCmd cmd) {
-		// only support to expand the bandwidth capacity.
 		BandwidthVO bandwidth = _bandwidthDao.findById(cmd.getBandwidthId());
 		if(bandwidth.getInTraffic() > cmd.getInTraffic() || bandwidth.getOutTraffic() > cmd.getOutTraffic()){
-			throw new InvalidParameterValueException("The bandwidth now only support to expand the in traffic and out traffic.");
+			List<BandwidthRulesVO> BandwidthIntrafficRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(cmd.getBandwidthId(), BandwidthType.InTraffic);
+			int sumOfIntrafficRuleUsed = 0;
+			for(BandwidthRulesVO vo : BandwidthIntrafficRulesList){
+				sumOfIntrafficRuleUsed += vo.getRate();
+			}
+			if(sumOfIntrafficRuleUsed > cmd.getInTraffic()){
+				throw new InvalidParameterValueException("The bandwidth can not update the in traffic. Because the bandwidth which was used capacity is more than the update value.");
+			}
+			List<BandwidthRulesVO> BandwidthOuttrafficRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(cmd.getBandwidthId(), BandwidthType.OutTraffic);
+			int sumOfOuttrafficRuleUsed = 0;
+			for(BandwidthRulesVO vo : BandwidthOuttrafficRulesList){
+				sumOfOuttrafficRuleUsed += vo.getRate();
+			}
+			if(sumOfOuttrafficRuleUsed > cmd.getOutTraffic()){
+				throw new InvalidParameterValueException("The bandwidth can not update the out traffic. Because the bandwidth which was used capacity is more than the update value.");
+			}
 		}
 		CallContext.current().setEventDetails("bandwidth id=" + bandwidth.getId());
 		bandwidth.setInTraffic(cmd.getInTraffic());
