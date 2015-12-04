@@ -11,6 +11,8 @@ import javax.persistence.Table;
 
 import org.apache.cloudstack.api.InternalIdentity;
 
+import com.cloud.utils.net.NetUtils;
+
 @Entity
 @Table(name="bandwidth_ip_port_map")
 public class BandwidthIPPortMapVO implements InternalIdentity {
@@ -29,6 +31,9 @@ public class BandwidthIPPortMapVO implements InternalIdentity {
 	@Column(name="ip_address")
     private String ipAddress;
 	
+	@Column(name="protocol")
+    String protocol;
+	
 	@Column(name="start_port")
     private Integer bandwidthPortStart;
 
@@ -39,10 +44,11 @@ public class BandwidthIPPortMapVO implements InternalIdentity {
     	uuid = UUID.randomUUID().toString();
     }
     
-    public BandwidthIPPortMapVO(long bandwidthRulesId, String ipAddress, Integer bandwidthPortStart, Integer bandwidthPortEnd){
+    public BandwidthIPPortMapVO(long bandwidthRulesId, String ipAddress, String protocol, Integer bandwidthPortStart, Integer bandwidthPortEnd){
     	uuid = UUID.randomUUID().toString();
     	this.bandwidthRulesId = bandwidthRulesId;
     	this.ipAddress = ipAddress;
+    	this.protocol = protocol;
     	this.bandwidthPortStart = bandwidthPortStart;
     	this.bandwidthPortEnd = bandwidthPortEnd;
     }
@@ -61,6 +67,14 @@ public class BandwidthIPPortMapVO implements InternalIdentity {
 
 	public void setIpAddress(String ipAddress) {
 		this.ipAddress = ipAddress;
+	}
+
+	public String getProtocol() {
+		return protocol;
+	}
+
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
 	}
 
 	public Integer getBandwidthPortStart() {

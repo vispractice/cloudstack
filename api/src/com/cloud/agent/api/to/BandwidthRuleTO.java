@@ -38,7 +38,7 @@ public class BandwidthRuleTO {
     	this.bandwidthFilters = new BandwidthFilterTO[bandwidthFilters.size()];
     	int i = 0;
     	for(BandwidthFilterRules bandwidthFilter : bandwidthFilters){
-    		this.bandwidthFilters[i++] = new BandwidthFilterTO(bandwidthFilter.getIpAddress(), bandwidthFilter.getStartPort(), bandwidthFilter.getEndPort(), bandwidthFilter.isRevoke(), bandwidthFilter.isAlreadyAdded());
+    		this.bandwidthFilters[i++] = new BandwidthFilterTO(bandwidthFilter.getIpAddress(), bandwidthFilter.getProtocol(), bandwidthFilter.getStartPort(), bandwidthFilter.getEndPort(), bandwidthFilter.isRevoke(), bandwidthFilter.isAlreadyAdded());
     	}
     }
     
@@ -119,6 +119,7 @@ public class BandwidthRuleTO {
 
 	public static class BandwidthFilterTO{
     	private String ip;
+    	private String protocol;
     	private Integer startPort;
     	private Integer endPort;
     	boolean revoke;
@@ -154,8 +155,16 @@ public class BandwidthRuleTO {
 		public void setAlreadyAdded(boolean alreadyAdded) {
 			this.alreadyAdded = alreadyAdded;
 		}
-		public BandwidthFilterTO(String ip, Integer startPort, Integer endPort, boolean revoke, boolean alreadyAdded){
+		
+		public String getProtocol() {
+			return protocol;
+		}
+		public void setProtocol(String protocol) {
+			this.protocol = protocol;
+		}
+		public BandwidthFilterTO(String ip, String protocol, Integer startPort, Integer endPort, boolean revoke, boolean alreadyAdded){
 			this.ip = ip;
+			this.protocol = protocol;
     		this.startPort = startPort;
     		this.endPort = endPort;
     		this.revoke = revoke;

@@ -278,11 +278,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(rule.getId());
 		for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
 			String ip = bandwidthIPPortMap.getIpAddress();
+			String protocol = bandwidthIPPortMap.getProtocol();
 			Integer startPort = bandwidthIPPortMap.getBandwidthPortStart();
 			Integer endPort = bandwidthIPPortMap.getBandwidthPortEnd();
 			boolean revoke = false;
 			boolean alreadyAdded = false;
-			BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, startPort, endPort, revoke, alreadyAdded);
+			BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, protocol, startPort, endPort, revoke, alreadyAdded);
 			bandwidthFilterRules.add(bandwidthFilterRule);
 		}
 		
@@ -307,7 +308,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	}
 
 
-	private boolean validateBandwidthFilterRule(boolean isAdd, Long bandwidthRuleId, BandwidthType type, String ip, Integer portStart, Integer portEnd){
+	private boolean validateBandwidthFilterRule(boolean isAdd, Long bandwidthRuleId, BandwidthType type, String ip, String protocol, Integer portStart, Integer portEnd){
 		
 		if (portStart != null && !NetUtils.isValidPort(portStart)) {
             throw new InvalidParameterValueException("Port is an invalid value: " + portStart);
@@ -323,6 +324,10 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         //check the ip form
         if(!NetUtils.isValidIp(ip)){
         	throw new InvalidParameterValueException("The ip address is not right.");
+        }
+        
+        if(!protocol.equalsIgnoreCase(NetUtils.TCP_PROTO) && !protocol.equalsIgnoreCase(NetUtils.UDP_PROTO)){
+        	throw new InvalidParameterValueException("Protocol " + protocol + " is not supported by the bandwidth filter rule, It only support: tcp/udp.");
         }
         
 		if(type.equals(BandwidthType.InTraffic)){
@@ -397,6 +402,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		//check the parameters, get the bandwidth rule by the id, and add the filter rule to the bandwidth rule
 		Long bandwidthRuleId = cmd.getBandwidthRuleId();
 		String ip = cmd.getIp();
+		String newProtocol = cmd.getProtocol();
 		Integer newStartPort = cmd.getStartPort();
 		Integer newEndPort = cmd.getEndPort();
 		if((newStartPort != null && newEndPort == null) || (newStartPort == null && newEndPort != null)){
@@ -405,29 +411,30 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
 		BandwidthType type = bandwidthClassRule.getType();
 		
-		if(!validateBandwidthFilterRule(true, bandwidthRuleId, type, ip, newStartPort, newEndPort)){
+		if(!validateBandwidthFilterRule(true, bandwidthRuleId, type, ip, newProtocol, newStartPort, newEndPort)){
 			s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,start port, end port.");
 			throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,start port, end port");
 		}
 		
 		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
 		Network network = _networksDao.findById(bandwidthClassRule.getNetworksId());
-		//update the filter rules
+		//get the filter rules in the class
 		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
 		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(bandwidthClassRule.getId());
 		if(bandwidthIPPortMapList != null && !bandwidthIPPortMapList.isEmpty()){
 			for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
 				String ipAddress = bandwidthIPPortMap.getIpAddress();
+				String protocol = bandwidthIPPortMap.getProtocol();
 				Integer startPort = bandwidthIPPortMap.getBandwidthPortStart();
 				Integer endPort = bandwidthIPPortMap.getBandwidthPortEnd();
 				boolean revoke = false;
 				boolean alreadyAdded = true;
-				BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ipAddress, startPort, endPort, revoke, alreadyAdded);
+				BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ipAddress, protocol, startPort, endPort, revoke, alreadyAdded);
 				bandwidthFilterRules.add(bandwidthFilterRule);
 			}
 		}
 		
-		BandwidthFilterRules newBandwidthFilterRule = new BandwidthFilterRules(ip, newStartPort, newEndPort, false, false);
+		BandwidthFilterRules newBandwidthFilterRule = new BandwidthFilterRules(ip, newProtocol, newStartPort, newEndPort, false, false);
 		bandwidthFilterRules.add(newBandwidthFilterRule);
 		
 		BandwidthRule bandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
@@ -437,7 +444,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		rules.add(bandwidthRule);
 		if(applyBandwidthRules(network, rules)){
 			//stort to db
-			BandwidthIPPortMapVO newBandwidthIPPortMapVO = new BandwidthIPPortMapVO(bandwidthRuleId, ip, newStartPort, newEndPort);
+			BandwidthIPPortMapVO newBandwidthIPPortMapVO = new BandwidthIPPortMapVO(bandwidthRuleId, ip, newProtocol, newStartPort, newEndPort);
 	        CallContext.current().setEventDetails("bandwidth filter rule id=" + newBandwidthIPPortMapVO.getId());
 	        BandwidthIPPortMapVO bandwidthIPPortMap = _bandwidthIPPortMapDao.persist(newBandwidthIPPortMapVO);
 	        if (bandwidthIPPortMap != null) {
@@ -464,10 +471,11 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		Integer removedEndPort = oldBandwidthIPPortMap.getBandwidthPortEnd();
 		Long bandwidthFilterRuleId = oldBandwidthIPPortMap.getId();
 		Long bandwidthRuleId = oldBandwidthIPPortMap.getBandwidthRulesId();
+		String removedProtocol = oldBandwidthIPPortMap.getProtocol();
 		BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
 		BandwidthType type = bandwidthClassRule.getType();
 		
-		if(!validateBandwidthFilterRule(false, bandwidthRuleId, type, removedIp, removedStartPort, removedEndPort)){
+		if(!validateBandwidthFilterRule(false, bandwidthRuleId, type, removedIp, removedProtocol, removedStartPort, removedEndPort)){
 			s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,start port, end port.");
 			throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,start port, end port");
 		}
@@ -480,6 +488,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		if(bandwidthIPPortMapList != null){
 			for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
 				String ipAddress = bandwidthIPPortMap.getIpAddress();
+				String protocol = bandwidthIPPortMap.getProtocol();
 				Integer startPort = bandwidthIPPortMap.getBandwidthPortStart();
 				Integer endPort = bandwidthIPPortMap.getBandwidthPortEnd();
 				boolean revoke = false;
@@ -496,7 +505,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 						}
 					}
 				}
-				BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ipAddress, startPort, endPort, revoke, alreadyAdded);
+				BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ipAddress, protocol, startPort, endPort, revoke, alreadyAdded);
 				bandwidthFilterRules.add(bandwidthFilterRule);
 			}
 		}
@@ -579,11 +588,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 					List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(bandwidthClassRule.getId());
 					for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
 						String ip = bandwidthIPPortMap.getIpAddress();
+						String protocol = bandwidthIPPortMap.getProtocol();
 						Integer startPort = bandwidthIPPortMap.getBandwidthPortStart();
 						Integer endPort = bandwidthIPPortMap.getBandwidthPortEnd();
 						boolean revoke = false;
 						boolean alreadyAdded = false;
-						BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, startPort, endPort, revoke, alreadyAdded);
+						BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, protocol, startPort, endPort, revoke, alreadyAdded);
 						bandwidthFilterRules.add(bandwidthFilterRule);
 					}
 					

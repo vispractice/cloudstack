@@ -16,8 +16,6 @@ public class BandwidthRule{
   
     private Boolean classRuleAlreadyAdded;
 	
-//	private int deviceId;
-	
 	public BandwidthRule(BandwidthClassRule bandwidthClassRule, List<BandwidthFilterRules> bandwidthFilterRules){
 		this.bandwidthClassRule = bandwidthClassRule;
 		this.bandwidthFilterRules = bandwidthFilterRules;
@@ -43,14 +41,6 @@ public class BandwidthRule{
 			List<BandwidthFilterRules> bandwidthFilterRules) {
 		this.bandwidthFilterRules = bandwidthFilterRules;
 	}
-
-//	public int getDeviceId() {
-//		return deviceId;
-//	}
-//
-//	public void setDeviceId(int deviceId) {
-//		this.deviceId = deviceId;
-//	}
 
 	public Long getBandwidthId(){
 		return bandwidthClassRule.getBandwidthId();
@@ -112,6 +102,7 @@ public class BandwidthRule{
 
 	public interface BandwidthFilter {
 		String getIpAddress();
+		String getProtocol();
 		Integer getStartPort();
 		Integer getEndPort();
 		boolean isRevoke();
@@ -120,13 +111,15 @@ public class BandwidthRule{
 	
 	public static class BandwidthFilterRules implements BandwidthFilter {
 		private String ip;
+		private String protocol;
 		private Integer startPort;
 		private Integer endPort;
 		private boolean revoke;
 		private boolean alreadyAdded;
 		
-		public BandwidthFilterRules(String ip, Integer startPort, Integer endPort, boolean revoke, boolean alreadyAdded){
+		public BandwidthFilterRules(String ip, String protocol, Integer startPort, Integer endPort, boolean revoke, boolean alreadyAdded){
 			this.ip = ip;
+			this.protocol = protocol;
 			this.startPort = startPort;
 			this.endPort = endPort;
 			this.revoke = revoke;
@@ -139,6 +132,14 @@ public class BandwidthRule{
 
 		public void setIp(String ip) {
 			this.ip = ip;
+		}
+
+		public String getProtocol() {
+			return protocol;
+		}
+
+		public void setProtocol(String protocol) {
+			this.protocol = protocol;
 		}
 
 		public Integer getStartPort() {

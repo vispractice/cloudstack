@@ -6,6 +6,7 @@ import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.response.BandwidthRulesResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.context.CallContext;
@@ -32,6 +33,9 @@ public class AssignToBandwidthRuleCmd extends BaseAsyncCmd {
     @Parameter(name=ApiConstants.BANDWIDTH_RULE_IP, type=CommandType.STRING, required=true, description="the IP address in this bandwidth rule for filter rule.")
     private String ip;
     
+    @Parameter(name = ApiConstants.PROTOCOL, type = CommandType.STRING, description = "the protocol for the bandwidth filter rule. Valid values are TCP/UDP.")
+    private String protocol;
+    
     @Parameter(name = ApiConstants.START_PORT, type = CommandType.INTEGER, description = "the starting port of bandwidth rule for filter rule.")
     private Integer startPort;
 
@@ -48,6 +52,10 @@ public class AssignToBandwidthRuleCmd extends BaseAsyncCmd {
 
 	public String getIp() {
 		return ip;
+	}
+
+	public String getProtocol() {
+		return protocol.trim();
 	}
 
 	public Integer getStartPort() {

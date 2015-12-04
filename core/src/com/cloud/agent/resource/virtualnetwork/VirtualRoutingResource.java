@@ -29,10 +29,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
@@ -1250,6 +1248,7 @@ public class VirtualRoutingResource implements Manager {
     	String ip = bandwidthFilter.getIp();
 		Integer startPort = bandwidthFilter.getStartPort();
 		Integer endPort = bandwidthFilter.getEndPort();
+		String protocol = bandwidthFilter.getProtocol();
 		String trafficType = "";
 		String portType = "";
 		if (type.equals(BandwidthType.InTraffic)) {
@@ -1270,9 +1269,9 @@ public class VirtualRoutingResource implements Manager {
 		}
 		Map<Integer, String> portRangeParams = createBandwidthPortRangeParams(startPort, endPort);
 		for (Map.Entry<Integer, String> entry : portRangeParams.entrySet()) {
-			// tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.2 match ip dport 80 0xffff flowid 1:2
+			// tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.2 match ip tcp/udp dport 80 0xffff flowid 1:2
 			filterRule += "tc filter add dev eth" + deviceId + " protocol ip parent 1: prio " + prio
-					+ " u32 match ip " + trafficType + " " + ip + " match ip " + portType + " " + entry.getKey() + " "
+					+ " u32 match ip " + trafficType + " " + ip + " match ip " + protocol + " " + portType + " " + entry.getKey() + " "
 					+ entry.getValue() + " flowid 1:"+ trafficRuleId + ";";
 		}
 		return filterRule;
