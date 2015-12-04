@@ -454,8 +454,8 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 	@Override
 	public boolean removeFromBandwidthRule(RemoveFromBandwidthRuleCmd cmd) throws ResourceUnavailableException {
 		//check the parameters, then get the bandwidth rule by the id, and add the filter rule to the bandwidth rule
-		Long bandwidthRuleId = cmd.getId();
-		BandwidthIPPortMapVO oldBandwidthIPPortMap = _bandwidthIPPortMapDao.findByUuid(cmd.getFilterRuleId());
+		String filterUuid = cmd.getId();
+		BandwidthIPPortMapVO oldBandwidthIPPortMap = _bandwidthIPPortMapDao.findByUuid(filterUuid);
 		if(oldBandwidthIPPortMap == null){
 			throw new InvalidParameterValueException("The input parameters is not right, can not find the rule, please reconfirm the parameters.");
 		}
@@ -463,6 +463,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		Integer removedStartPort = oldBandwidthIPPortMap.getBandwidthPortStart();
 		Integer removedEndPort = oldBandwidthIPPortMap.getBandwidthPortEnd();
 		Long bandwidthFilterRuleId = oldBandwidthIPPortMap.getId();
+		Long bandwidthRuleId = oldBandwidthIPPortMap.getBandwidthRulesId();
 		BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
 		BandwidthType type = bandwidthClassRule.getType();
 		
