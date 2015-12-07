@@ -1263,14 +1263,13 @@ public class VirtualRoutingResource implements Manager {
 		} else {
 			throw new InvalidParameterValueException("The bandwidth type is not rigth, it only support two type, include in traffic and out traffic.");
 		}
-        if(protocol.equalsIgnoreCase(NetUtils.TCP_PROTO)){
+        if(protocol != null && protocol.equalsIgnoreCase(NetUtils.TCP_PROTO)){
         	protocolNum = _tcProtocolTcpNum;
-        } else if (protocol.equalsIgnoreCase(NetUtils.UDP_PROTO)){
-        	protocolNum = _tcProtocolUdpNum;
-        } else {
-        	throw new InvalidParameterValueException("The bandwidth protocol type is not rigth, it only support two type: tcp/udp.");
         }
-		if(startPort == null && endPort == null){
+        if (protocol != null && protocol.equalsIgnoreCase(NetUtils.UDP_PROTO)){
+        	protocolNum = _tcProtocolUdpNum;
+        }
+		if(protocol == null && startPort == null && endPort == null){
 //			tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.3 flowid 1:3
 			filterRule += "tc filter add dev eth" + deviceId + " protocol ip parent 1: prio " + prio
 					+ " u32 match ip " + trafficType + " " + ip + " flowid 1:"+ trafficRuleId + ";";
