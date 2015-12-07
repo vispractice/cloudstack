@@ -131,7 +131,9 @@ public class VirtualRoutingResource implements Manager {
     private int _retry;
     private int _port;
     private int _maxParamterNum = 1000;
-
+    private int _tcProtocolTcpNum = 6;
+    private int _tcProtocolUdpNum = 17;
+    private int _tcProtocolIcmpNum = 1;
 
     public Answer executeRequest(final Command cmd) {
         try {
@@ -1250,17 +1252,24 @@ public class VirtualRoutingResource implements Manager {
 		Integer endPort = bandwidthFilter.getEndPort();
 		String protocol = bandwidthFilter.getProtocol();
 		String trafficType = "";
-		String portType = "";
+//		String portType = "";
+		int protocolNum = _tcProtocolTcpNum;
 		if (type.equals(BandwidthType.InTraffic)) {
 			trafficType = "dst";
-			portType = "dport";
+//			portType = "dport";
 		} else if (type.equals(BandwidthType.OutTraffic)) {
 			trafficType = "src";
-			portType = "sport";
+//			portType = "sport";
 		} else {
 			throw new InvalidParameterValueException("The bandwidth type is not rigth, it only support two type, include in traffic and out traffic.");
 		}
-
+        if(protocol.equalsIgnoreCase(NetUtils.TCP_PROTO)){
+        	protocolNum = _tcProtocolTcpNum;
+        } else if (protocol.equalsIgnoreCase(NetUtils.UDP_PROTO)){
+        	protocolNum = _tcProtocolUdpNum;
+        } else {
+        	throw new InvalidParameterValueException("The bandwidth protocol type is not rigth, it only support two type: tcp/udp.");
+        }
 		if(startPort == null && endPort == null){
 //			tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.3 flowid 1:3
 			filterRule += "tc filter add dev eth" + deviceId + " protocol ip parent 1: prio " + prio
@@ -1270,9 +1279,10 @@ public class VirtualRoutingResource implements Manager {
 		Map<Integer, String> portRangeParams = createBandwidthPortRangeParams(startPort, endPort);
 		for (Map.Entry<Integer, String> entry : portRangeParams.entrySet()) {
 			// tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.2 match ip tcp/udp dport 80 0xffff flowid 1:2
+			// tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 10.207.110.230 match udp/tcp dst 25 0xffff match ip protocol 17/6 0xff flowid 1:2;
 			filterRule += "tc filter add dev eth" + deviceId + " protocol ip parent 1: prio " + prio
-					+ " u32 match ip " + trafficType + " " + ip + " match ip " + protocol + " " + portType + " " + entry.getKey() + " "
-					+ entry.getValue() + " flowid 1:"+ trafficRuleId + ";";
+					+ " u32 match ip " + trafficType + " " + ip + " match " + protocol + " " + trafficType + " " + entry.getKey() + " "
+					+ entry.getValue() + " match ip protocol " + protocolNum + " 0xff flowid 1:"+ trafficRuleId + ";";
 		}
 		return filterRule;
     }
