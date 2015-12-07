@@ -326,7 +326,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         	throw new InvalidParameterValueException("The ip address is not right.");
         }
         
-        if(!protocol.equalsIgnoreCase(NetUtils.TCP_PROTO) && !protocol.equalsIgnoreCase(NetUtils.UDP_PROTO)){
+        if(protocol != null && (!protocol.equalsIgnoreCase(NetUtils.TCP_PROTO) && !protocol.equalsIgnoreCase(NetUtils.UDP_PROTO))){
         	throw new InvalidParameterValueException("Protocol " + protocol + " is not supported by the bandwidth filter rule, It only support: tcp/udp.");
         }
         
@@ -366,24 +366,29 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 			s_logger.error("The bandwidth rule parameter: type is not right, Only support InTraffic and OutTraffic.");
 			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Get the wrong bandwidth type");
 		}
-		if(isAdd){
-			//when the operation is add the filter rule to the bandwidth class rule, 
-			//it want to compare the port with the DB which be used in the same bandwidth_rule_id and ip.
+		if (isAdd) {
+			// when the operation is add the filter rule to the bandwidth class
+			// rule,
+			// it want to compare the port with the DB which be used in the same
+			// bandwidth_rule_id and ip.
 			List<BandwidthIPPortMapVO> listVOs = _bandwidthIPPortMapDao.listByBWClassIdIp(bandwidthRuleId, ip);
-			for(BandwidthIPPortMapVO vo : listVOs){
-				if(portStart != null && portEnd != null && vo.getBandwidthPortStart() != null && vo.getBandwidthPortEnd() != null){
-					if(portStart <= vo.getBandwidthPortStart() && portEnd >= vo.getBandwidthPortStart()){
-						throw new InvalidParameterValueException("Port range is an invalid value: " + portEnd + ", Conflict with the old rules");
-					}
-					if(portStart >= vo.getBandwidthPortStart() && portEnd <= vo.getBandwidthPortEnd()){
-						throw new InvalidParameterValueException("Port range is an invalid value: "+ portStart +":"+ portEnd+ ", Conflict with the old rules");
-					}
-					if(portStart <= vo.getBandwidthPortEnd() && portEnd >= vo.getBandwidthPortEnd()){
-						throw new InvalidParameterValueException("Port range is an invalid value: " + portStart+ ", Conflict with the old rules");
-					}
+			for (BandwidthIPPortMapVO vo : listVOs) {
+				if (protocol == null && portStart == null && portEnd == null && vo.getProtocol() == null && vo.getBandwidthPortStart() == null && vo.getBandwidthPortEnd() == null) {
+					throw new InvalidParameterValueException("IP address is an invalid value: " + ip + ", It was been created which was only use the IP address for the filter rule.");
 				}
-				if(portStart == null && portEnd == null && vo.getBandwidthPortStart() == null && vo.getBandwidthPortEnd() == null){
-					throw new InvalidParameterValueException("IP address is an invalid value: " + ip+ ", It was been created which was only use the IP address for the filter rule.");
+
+				if (protocol != null && protocol.equalsIgnoreCase(vo.getProtocol())) {
+					if (portStart != null && portEnd != null && vo.getBandwidthPortStart() != null && vo.getBandwidthPortEnd() != null) {
+						if (portStart <= vo.getBandwidthPortStart() && portEnd >= vo.getBandwidthPortStart()) {
+							throw new InvalidParameterValueException("Port range is an invalid value: " + portEnd + ", Conflict with the old rules");
+						}
+						if (portStart >= vo.getBandwidthPortStart() && portEnd <= vo.getBandwidthPortEnd()) {
+							throw new InvalidParameterValueException("Port range is an invalid value: " + portStart + ":" + portEnd + ", Conflict with the old rules");
+						}
+						if (portStart <= vo.getBandwidthPortEnd() && portEnd >= vo.getBandwidthPortEnd()) {
+							throw new InvalidParameterValueException("Port range is an invalid value: " + portStart + ", Conflict with the old rules");
+						}
+					}
 				}
 			}
 		} else {
@@ -494,12 +499,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 				boolean revoke = false;
 				boolean alreadyAdded = true;
 				if(ipAddress.equalsIgnoreCase(removedIp)){
-					if((startPort == null && endPort == null) && (removedStartPort == null && removedEndPort == null)){
+					if((protocol == null && removedProtocol == null) && (startPort == null && endPort == null) && (removedStartPort == null && removedEndPort == null)){
 						revoke = true;
 						alreadyAdded = true;
 					}
-					if((startPort != null && endPort != null) && (removedStartPort != null && removedEndPort != null)){
-						if(startPort.intValue() == removedStartPort.intValue() && endPort.intValue() == removedEndPort.intValue()){
+					if((protocol != null && removedProtocol != null) &&(startPort != null && endPort != null) && (removedStartPort != null && removedEndPort != null)){
+						if(protocol.equalsIgnoreCase(removedProtocol) && startPort.intValue() == removedStartPort.intValue() && endPort.intValue() == removedEndPort.intValue()){
 							revoke = true;
 							alreadyAdded = true;
 						}

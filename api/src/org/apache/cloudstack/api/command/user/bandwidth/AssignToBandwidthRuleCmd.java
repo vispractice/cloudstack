@@ -55,7 +55,10 @@ public class AssignToBandwidthRuleCmd extends BaseAsyncCmd {
 	}
 
 	public String getProtocol() {
-		return protocol.trim();
+		if(protocol != null){
+			return protocol.trim();
+		}
+		return protocol;
 	}
 
 	public Integer getStartPort() {
