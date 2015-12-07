@@ -14,6 +14,10 @@ public class BandwidthFilterRuleResponse extends BaseResponse {
 	@SerializedName("ipAddress")
 	@Param(description = "the ipAddress of the bandwidth filter rule")
 	private String ipAddress;
+	
+	@SerializedName("protocol")
+	@Param(description = "the protocol of the bandwidth filter rule")
+	private String protocol;
 
 	@SerializedName("startPort")
 	@Param(description = "the start port of the bandwidth filter rule")
@@ -25,6 +29,10 @@ public class BandwidthFilterRuleResponse extends BaseResponse {
 
 	public void setIpAddress(String ipAddress) {
 		this.ipAddress = ipAddress;
+	}
+    
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
 	}
 
 	public void setStartPort(Integer startPort) {

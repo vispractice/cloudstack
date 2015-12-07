@@ -659,6 +659,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 						BandwidthFilterRuleResponse bandwidthFilterRuleResponse = new BandwidthFilterRuleResponse();
 						bandwidthFilterRuleResponse.setFilterRuleId(bandwidthIPPortMap.getUuid());
 						bandwidthFilterRuleResponse.setIpAddress(bandwidthIPPortMap.getIpAddress());
+						bandwidthFilterRuleResponse.setProtocol(bandwidthIPPortMap.getProtocol());
 						bandwidthFilterRuleResponse.setStartPort(bandwidthIPPortMap.getBandwidthPortStart());
 						bandwidthFilterRuleResponse.setEndPort(bandwidthIPPortMap.getBandwidthPortEnd());
 						bandwidthFilterRuleResponse.setObjectName("bandwidthfilter");
@@ -696,6 +697,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 						BandwidthFilterRuleResponse bandwidthFilterRuleResponse = new BandwidthFilterRuleResponse();
 						bandwidthFilterRuleResponse.setFilterRuleId(bandwidthIPPortMap.getUuid());
 						bandwidthFilterRuleResponse.setIpAddress(bandwidthIPPortMap.getIpAddress());
+						bandwidthFilterRuleResponse.setProtocol(bandwidthIPPortMap.getProtocol());
 						bandwidthFilterRuleResponse.setStartPort(bandwidthIPPortMap.getBandwidthPortStart());
 						bandwidthFilterRuleResponse.setEndPort(bandwidthIPPortMap.getBandwidthPortEnd());
 						bandwidthFilterRuleResponse.setObjectName("bandwidthfilter");
@@ -732,6 +734,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 					BandwidthFilterRuleResponse bandwidthFilterRuleResponse = new BandwidthFilterRuleResponse();
 					bandwidthFilterRuleResponse.setFilterRuleId(bandwidthIPPortMap.getUuid());
 					bandwidthFilterRuleResponse.setIpAddress(bandwidthIPPortMap.getIpAddress());
+					bandwidthFilterRuleResponse.setProtocol(bandwidthIPPortMap.getProtocol());
 					bandwidthFilterRuleResponse.setStartPort(bandwidthIPPortMap.getBandwidthPortStart());
 					bandwidthFilterRuleResponse.setEndPort(bandwidthIPPortMap.getBandwidthPortEnd());
 					bandwidthFilterRuleResponse.setObjectName("bandwidthfilter");
