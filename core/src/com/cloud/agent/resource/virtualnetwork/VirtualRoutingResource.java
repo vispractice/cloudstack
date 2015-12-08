@@ -1252,14 +1252,14 @@ public class VirtualRoutingResource implements Manager {
 		Integer endPort = bandwidthFilter.getEndPort();
 		String protocol = bandwidthFilter.getProtocol();
 		String trafficType = "";
-//		String portType = "";
+		String portType = "";
 		int protocolNum = _tcProtocolTcpNum;
 		if (type.equals(BandwidthType.InTraffic)) {
 			trafficType = "dst";
-//			portType = "dport";
+			portType = "dport";
 		} else if (type.equals(BandwidthType.OutTraffic)) {
 			trafficType = "src";
-//			portType = "sport";
+			portType = "sport";
 		} else {
 			throw new InvalidParameterValueException("The bandwidth type is not rigth, it only support two type, include in traffic and out traffic.");
 		}
@@ -1277,11 +1277,10 @@ public class VirtualRoutingResource implements Manager {
 		}
 		Map<Integer, String> portRangeParams = createBandwidthPortRangeParams(startPort, endPort);
 		for (Map.Entry<Integer, String> entry : portRangeParams.entrySet()) {
-			// tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 192.168.0.2 match ip tcp/udp dport 80 0xffff flowid 1:2
-			// tc filter add dev eth0 protocol ip parent 1: prio 2 u32 match ip dst 10.207.110.230 match udp/tcp dst 25 0xffff match ip protocol 17/6 0xff flowid 1:2;
-			filterRule += "tc filter add dev eth" + deviceId + " protocol ip parent 1: prio " + prio
-					+ " u32 match ip " + trafficType + " " + ip + " match " + protocol + " " + trafficType + " " + entry.getKey() + " "
-					+ entry.getValue() + " match ip protocol " + protocolNum + " 0xff flowid 1:"+ trafficRuleId + ";";
+			// tc filter add dev eth3 protocol ip prio 2 u32 match ip protocol 6 0xff match ip sport 8090 0xffff match ip src 122.13.159.230 flowid 1:4;
+			filterRule += "tc filter add dev eth" + deviceId + " protocol ip prio " + prio 
+					+ " u32 match ip protocol " + protocolNum + " 0xff match ip " + portType + " " + entry.getKey() + " "+ entry.getValue() 
+					+ " match ip " + trafficType + " " + ip + " flowid 1:"+ trafficRuleId + ";" ;
 		}
 		return filterRule;
     }
