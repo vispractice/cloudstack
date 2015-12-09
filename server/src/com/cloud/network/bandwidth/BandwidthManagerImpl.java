@@ -410,15 +410,18 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 		String newProtocol = cmd.getProtocol();
 		Integer newStartPort = cmd.getStartPort();
 		Integer newEndPort = cmd.getEndPort();
-		if((newStartPort != null && newEndPort == null) || (newStartPort == null && newEndPort != null)){
-			throw new InvalidParameterValueException("If you want to input the port, please input the start port and end port.");
+		//check if the protocol or start port or end port is not null ,then all of them are not null.
+		if(newProtocol != null || newStartPort != null || newEndPort != null){
+			if(!(newProtocol != null && newStartPort != null && newEndPort != null)){
+				throw new InvalidParameterValueException("If you want to input the ports and protocol, please input the protocol and start port and end port.");
+			}
 		}
 		BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
 		BandwidthType type = bandwidthClassRule.getType();
 		
 		if(!validateBandwidthFilterRule(true, bandwidthRuleId, type, ip, newProtocol, newStartPort, newEndPort)){
-			s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,start port, end port.");
-			throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,start port, end port");
+			s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,protocol,start port, end port.");
+			throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,protocol,start port, end port");
 		}
 		
 		List<BandwidthRule> rules = new ArrayList<BandwidthRule>();

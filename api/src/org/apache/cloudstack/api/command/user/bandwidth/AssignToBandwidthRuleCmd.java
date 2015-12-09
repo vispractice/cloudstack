@@ -85,7 +85,7 @@ public class AssignToBandwidthRuleCmd extends BaseAsyncCmd {
 
 	@Override
 	public void execute() throws ResourceUnavailableException{
-		CallContext.current().setEventDetails("bandwidth filter rule Id= "+getBandwidthRuleId()+" IP="+getIp()+", start port="+getStartPort()+" and end port="+getEndPort());
+		CallContext.current().setEventDetails("bandwidth filter rule Id= "+getBandwidthRuleId()+" IP="+getIp()+ " protocol="+getProtocol()+", start port="+getStartPort()+" and end port="+getEndPort());
 		boolean result = _bandwidthService.assignToBandwidthRule(this);
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());

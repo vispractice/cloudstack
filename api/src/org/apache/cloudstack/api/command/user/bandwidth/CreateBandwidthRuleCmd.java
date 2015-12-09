@@ -98,6 +98,9 @@ public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{
 		if(!checkType()){
 			throw new InvalidParameterValueException("The bandwidth rule type must be inTraffic or outTraffic.");
 		}
+		if(bandwidthOfferingId == null && (rate == null || ceil == null)){
+			throw new InvalidParameterValueException("You must input the bandwidth offering id or rate and ceil to create the bandwidth rule.");
+		}
 		if(bandwidthOfferingId == null){
 			if(rate < 0 || ceil < 0){
 				throw new InvalidParameterValueException("The bandwidth rule parameter: rate, ceil can not less than zore.");
@@ -105,6 +108,9 @@ public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{
 			if(rate > ceil){
 				throw new InvalidParameterValueException("The bandwidth rule parameter: rate must  less than or equal ceil.");
 			}
+		}
+		if(bandwidthOfferingId != null && (rate != null || ceil != null)){
+			throw new InvalidParameterValueException("You must input the bandwidth offering id or rate and ceil to create the bandwidth rule.");
 		}
 		if(prio < 1 || prio > 7){
 			throw new InvalidParameterValueException("The bandwidth rule parameter: prio available scope is 1~7.");

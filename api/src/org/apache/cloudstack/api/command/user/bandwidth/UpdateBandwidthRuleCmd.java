@@ -24,16 +24,16 @@ public class UpdateBandwidthRuleCmd extends BaseAsyncCmd {
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID,  required=true, entityType=BandwidthRulesResponse.class, description="list by network id")
+    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, required=true, entityType=BandwidthRulesResponse.class, description="list by network id")
     private Long bandwidthRuleId;
     
-    @Parameter(name=ApiConstants.BANDWIDTH_RATE, type=CommandType.INTEGER, description="the rate of the bandwidth rule in Kbit.")
+    @Parameter(name=ApiConstants.BANDWIDTH_RATE, type=CommandType.INTEGER, required=true, description="the rate of the bandwidth rule in Kbit.")
     private Integer rate;
 	
-	@Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, description="the ceil of the bandwidth rule in Kbit.")
+	@Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, required=true, description="the ceil of the bandwidth rule in Kbit.")
     private Integer ceil;
 	
-	@Parameter(name=ApiConstants.BANDWIDTH_PRIO, type=CommandType.INTEGER, description="the prio of the bandwidth rule.")
+	@Parameter(name=ApiConstants.BANDWIDTH_PRIO, type=CommandType.INTEGER, required=true, description="the prio of the bandwidth rule.")
     private Integer prio;
 	
     /////////////////////////////////////////////////////

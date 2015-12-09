@@ -5490,88 +5490,98 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
             throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
         }
         
-        //check if the rate and ceil changed.
+        //if all the parameter is not input ,then return the old offering.
         boolean updateNeeded = (updateName != null || updateDisplayText != null || updateRate != null || updateCeil != null);
         if (!updateNeeded) {
             return _bandwidthOfferingDao.findById(bandwidthOfferingId);
         }
-
-        //TODO rate or ceil changed, then refresh the bandwidth rules which used this bandwidth offering.
-        BandwidthOfferingVO oldBandwidthOfferingVO = _bandwidthOfferingDao.findById(bandwidthOfferingId);
-        if(!oldBandwidthOfferingVO.getRate().equals(updateRate) || !oldBandwidthOfferingVO.getCeil().equals(updateCeil)){
-        	
-        	if(oldBandwidthOfferingVO.getRate() < updateRate){
-        		//check the new parameter rate, if it has enough capacity.
-            	//find all the rules which used the offering, and count the bandwidth capacity
-        		List<BandwidthRulesVO> bandwidthRules = _bandwidthRulesDao.listByBandwidthOfferingId(cmd.getId());
-        		Map<Long, Integer> addInRulesClassStatistics = new HashMap<Long, Integer>();
-        		Map<Long, Integer> addOutRulesClassStatistics = new HashMap<Long, Integer>();
-        		//统计各类别增加的总量
-        		//统计每个类别还可以使用的总量
-        		//比较两个总量，超出可用容量，就抛出错误。
-        		int addCapatity = updateRate - oldBandwidthOfferingVO.getRate();
-        		int addInRuleCapatitys = 0;
-        		int addOutRuleCapatitys = 0;
-        		for(BandwidthRulesVO bandwidthRule : bandwidthRules){
-        			if(bandwidthRule.getType().equals(BandwidthType.InTraffic)){
-        				addInRuleCapatitys += addCapatity;
-        				addInRulesClassStatistics.put(bandwidthRule.getBandwidthId(), addInRuleCapatitys);
-        			} else if (bandwidthRule.getType().equals(BandwidthType.OutTraffic)){
-        				addOutRuleCapatitys += addCapatity;
-        				addOutRulesClassStatistics.put(bandwidthRule.getBandwidthId(), addOutRuleCapatitys);
-        			} else {
-        				s_logger.error("The bandwidth only support two type: in traffic and out traffic");
-        				throw new CloudRuntimeException("The bandwidth only support two type: in traffic and out traffic.");
-        			}
-        		}
-        		if(addInRulesClassStatistics != null && !addInRulesClassStatistics.isEmpty()){
-        			for(Map.Entry<Long, Integer> entry : addInRulesClassStatistics.entrySet()){
-        				//type = InTraffic and bandwidth_id is same
-        				//get all the rule which match type = InTraffic and this bandwidth_id
-        				int bandwidthCapacity = 0;
-        				BandwidthVO bandwidthVO = _bandwidthDao.findById(entry.getKey());
-        				bandwidthCapacity = bandwidthVO.getInTraffic();
-        				List<BandwidthRulesVO> BandwidthRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(entry.getKey(), BandwidthType.InTraffic);
-        				int sumOfRuleUsed = 0;
-        				for(BandwidthRulesVO vo : BandwidthRulesList){
-        					sumOfRuleUsed += vo.getRate();
-        				}
-        				int nowSumOfRuleUsed = 0;
-        				nowSumOfRuleUsed = sumOfRuleUsed + entry.getValue();
-        				if(bandwidthCapacity < nowSumOfRuleUsed){
-        					s_logger.error("The parameter rate in the bandwidth offering is out of the bandwidth capacity.more "+ (nowSumOfRuleUsed-bandwidthCapacity) + "Kbit.");
-        					throw new InvalidParameterValueException("The parameter rate in the bandwidth offering is out of the bandwidth capacity.");
-        				}
-        			}
-        		}
-        		if(addOutRulesClassStatistics != null && !addOutRulesClassStatistics.isEmpty()){
-        			for(Map.Entry<Long, Integer> entry : addOutRulesClassStatistics.entrySet()){
-        				//type = OutTraffic and bandwidth_id is same
-        				//get all the rule which match type = OutTraffic and this bandwidth_id
-        				int bandwidthCapacity = 0;
-        				BandwidthVO bandwidthVO = _bandwidthDao.findById(entry.getKey());
-        				bandwidthCapacity = bandwidthVO.getInTraffic();
-        				List<BandwidthRulesVO> BandwidthRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(entry.getKey(), BandwidthType.OutTraffic);
-        				int sumOfRuleUsed = 0;
-        				for(BandwidthRulesVO vo : BandwidthRulesList){
-        					sumOfRuleUsed += vo.getRate();
-        				}
-        				int nowSumOfRuleUsed = 0;
-        				nowSumOfRuleUsed = sumOfRuleUsed + entry.getValue();
-        				if(bandwidthCapacity < nowSumOfRuleUsed){
-        					s_logger.error("The parameter rate in the bandwidth offering is out of the bandwidth capacity.more "+ (nowSumOfRuleUsed-bandwidthCapacity) + "Kbit.");
-        					throw new InvalidParameterValueException("The parameter rate in the bandwidth offering is out of the bandwidth capacity.");
-        				}
-        			}
-        		}
-        	}
-        	
-        	//go to re-execute the bandwidth rules which used this bandwidth offering.
-        	boolean refreshRulesOK = _bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
-        	if(!refreshRulesOK){
-        		s_logger.error("When update the bandwidth offering, there are run wrong in refresh the bandwidth rule part. ");
-        		throw new CloudRuntimeException("When update the bandwidth offering , It run wrong.");
-        	}
+        //check if the rate or ceil changed.
+        if(updateRate != null || updateCeil != null){
+        	if(updateRate == null){
+            	updateRate = bandwidthOfferingHandle.getRate();
+            }
+            if(updateCeil == null){
+            	updateCeil = bandwidthOfferingHandle.getCeil();
+            }
+            
+            //rate or ceil changed, then refresh the bandwidth rules which used this bandwidth offering.
+            BandwidthOfferingVO oldBandwidthOfferingVO = _bandwidthOfferingDao.findById(bandwidthOfferingId);
+            if(!oldBandwidthOfferingVO.getRate().equals(updateRate) || !oldBandwidthOfferingVO.getCeil().equals(updateCeil)){
+            	
+            	if(oldBandwidthOfferingVO.getRate() < updateRate){
+            		//check the new parameter rate, if it has enough capacity.
+                	//find all the rules which used the offering, and count the bandwidth capacity
+            		List<BandwidthRulesVO> bandwidthRules = _bandwidthRulesDao.listByBandwidthOfferingId(cmd.getId());
+            		Map<Long, Integer> addInRulesClassStatistics = new HashMap<Long, Integer>();
+            		Map<Long, Integer> addOutRulesClassStatistics = new HashMap<Long, Integer>();
+            		//统计各类别增加的总量
+            		//统计每个类别还可以使用的总量
+            		//比较两个总量，超出可用容量，就抛出错误。
+            		int addCapatity = updateRate - oldBandwidthOfferingVO.getRate();
+            		int addInRuleCapatitys = 0;
+            		int addOutRuleCapatitys = 0;
+            		for(BandwidthRulesVO bandwidthRule : bandwidthRules){
+            			if(bandwidthRule.getType().equals(BandwidthType.InTraffic)){
+            				addInRuleCapatitys += addCapatity;
+            				addInRulesClassStatistics.put(bandwidthRule.getBandwidthId(), addInRuleCapatitys);
+            			} else if (bandwidthRule.getType().equals(BandwidthType.OutTraffic)){
+            				addOutRuleCapatitys += addCapatity;
+            				addOutRulesClassStatistics.put(bandwidthRule.getBandwidthId(), addOutRuleCapatitys);
+            			} else {
+            				s_logger.error("The bandwidth only support two type: in traffic and out traffic");
+            				throw new CloudRuntimeException("The bandwidth only support two type: in traffic and out traffic.");
+            			}
+            		}
+            		if(addInRulesClassStatistics != null && !addInRulesClassStatistics.isEmpty()){
+            			for(Map.Entry<Long, Integer> entry : addInRulesClassStatistics.entrySet()){
+            				//type = InTraffic and bandwidth_id is same
+            				//get all the rule which match type = InTraffic and this bandwidth_id
+            				int bandwidthCapacity = 0;
+            				BandwidthVO bandwidthVO = _bandwidthDao.findById(entry.getKey());
+            				bandwidthCapacity = bandwidthVO.getInTraffic();
+            				List<BandwidthRulesVO> BandwidthRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(entry.getKey(), BandwidthType.InTraffic);
+            				int sumOfRuleUsed = 0;
+            				for(BandwidthRulesVO vo : BandwidthRulesList){
+            					sumOfRuleUsed += vo.getRate();
+            				}
+            				int nowSumOfRuleUsed = 0;
+            				nowSumOfRuleUsed = sumOfRuleUsed + entry.getValue();
+            				if(bandwidthCapacity < nowSumOfRuleUsed){
+            					s_logger.error("The parameter rate in the bandwidth offering is out of the bandwidth capacity.more "+ (nowSumOfRuleUsed-bandwidthCapacity) + "Kbit.");
+            					throw new InvalidParameterValueException("The parameter rate in the bandwidth offering is out of the bandwidth capacity.");
+            				}
+            			}
+            		}
+            		if(addOutRulesClassStatistics != null && !addOutRulesClassStatistics.isEmpty()){
+            			for(Map.Entry<Long, Integer> entry : addOutRulesClassStatistics.entrySet()){
+            				//type = OutTraffic and bandwidth_id is same
+            				//get all the rule which match type = OutTraffic and this bandwidth_id
+            				int bandwidthCapacity = 0;
+            				BandwidthVO bandwidthVO = _bandwidthDao.findById(entry.getKey());
+            				bandwidthCapacity = bandwidthVO.getInTraffic();
+            				List<BandwidthRulesVO> BandwidthRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(entry.getKey(), BandwidthType.OutTraffic);
+            				int sumOfRuleUsed = 0;
+            				for(BandwidthRulesVO vo : BandwidthRulesList){
+            					sumOfRuleUsed += vo.getRate();
+            				}
+            				int nowSumOfRuleUsed = 0;
+            				nowSumOfRuleUsed = sumOfRuleUsed + entry.getValue();
+            				if(bandwidthCapacity < nowSumOfRuleUsed){
+            					s_logger.error("The parameter rate in the bandwidth offering is out of the bandwidth capacity.more "+ (nowSumOfRuleUsed-bandwidthCapacity) + "Kbit.");
+            					throw new InvalidParameterValueException("The parameter rate in the bandwidth offering is out of the bandwidth capacity.");
+            				}
+            			}
+            		}
+            	}
+            	
+            	//go to re-execute the bandwidth rules which used this bandwidth offering.
+            	boolean refreshRulesOK = _bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
+            	if(!refreshRulesOK){
+            		s_logger.error("When update the bandwidth offering, there are run wrong in refresh the bandwidth rule part. ");
+            		throw new CloudRuntimeException("When update the bandwidth offering , It run wrong.");
+            	}
+            }
+            
         }
         
         //store the update bandwidth offering to the DB.
