@@ -1835,7 +1835,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
     @DB
     public DataCenterVO createZone(long userId, String zoneName, String dns1, String dns2, String internalDns1,
             String internalDns2, String guestCidr, String domain, final Long domainId, NetworkType zoneType,
-            String allocationStateStr, String networkDomain, boolean isSecurityGroupEnabled,
+            String allocationStateStr, String networkDomain, boolean isSecurityGroupEnabled, boolean isPublicServiceInSGEnabled, 
             boolean isLocalStorageEnabled, String ip6Dns1, String ip6Dns2) {
 
         // checking the following params outside checkzoneparams method as we do
@@ -1862,7 +1862,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
 
         // Create the new zone in the database
         final DataCenterVO zoneFinal = new DataCenterVO(zoneName, null, dns1, dns2, internalDns1, internalDns2, guestCidr,
-                domain, domainId, zoneType, zoneToken, networkDomain, isSecurityGroupEnabled,
+                domain, domainId, zoneType, zoneToken, networkDomain, isSecurityGroupEnabled,isSecurityGroupEnabled, 
                 isLocalStorageEnabled,
                 ip6Dns1, ip6Dns2);
         if (allocationStateStr != null && !allocationStateStr.isEmpty()) {
@@ -1985,6 +1985,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         String allocationState = cmd.getAllocationState();
         String networkDomain = cmd.getDomain();
         boolean isSecurityGroupEnabled = cmd.getSecuritygroupenabled();
+        boolean isPublicServiceInSGEnabled = cmd.getPublicServiceInSGEnabled();
         boolean isLocalStorageEnabled = cmd.getLocalStorageEnabled();
 
         if (allocationState == null) {
@@ -2021,7 +2022,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
 
         return createZone(userId, zoneName, dns1, dns2, internalDns1, internalDns2, guestCidr,
                 domainVO != null ? domainVO.getName() : null, domainId, zoneType, allocationState, networkDomain,
-                        isSecurityGroupEnabled, isLocalStorageEnabled, ip6Dns1, ip6Dns2);
+                        isSecurityGroupEnabled, isPublicServiceInSGEnabled, isLocalStorageEnabled, ip6Dns1, ip6Dns2);
     }
 
     @Override
@@ -2637,10 +2638,9 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
                 && !_accountMgr.isRootAdmin(caller.getType())) {
             throw new PermissionDeniedException("Cannot perform this operation, Zone is currently disabled: " + zoneId);
         }
-
-        if (zone.isSecurityGroupEnabled() && zone.getNetworkType() != DataCenter.NetworkType.Basic && forVirtualNetwork) {
-            throw new InvalidParameterValueException(
-                    "Can't add virtual ip range into a zone with security group enabled");
+        //andrew ling add, can add virtual ip range into a zone with security group enabled zone when the public service enabled
+        if (zone.isSecurityGroupEnabled() && !zone.isPublicServiceInSGEnabled() && zone.getNetworkType() != DataCenter.NetworkType.Basic && forVirtualNetwork) {
+           throw new InvalidParameterValueException("Can't add virtual ip range into a zone with security group enabled");
         }
 
         // If networkId is not specified, and vlan is Virtual or Direct

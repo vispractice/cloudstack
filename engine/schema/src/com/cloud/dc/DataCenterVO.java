@@ -133,6 +133,10 @@ public class DataCenterVO implements DataCenter {
 
     @Column(name="is_security_group_enabled")
     boolean securityGroupEnabled;
+    
+    //andrew ling add
+    @Column(name="is_public_service_in_sg_enabled")
+    boolean publicServiceInSGEnabled;
 
     @Column(name="is_local_storage_enabled")
     boolean localStorageEnabled;
@@ -204,6 +208,44 @@ public class DataCenterVO implements DataCenter {
         this.networkType = zoneType;
         this.allocationState = Grouping.AllocationState.Enabled;
         this.securityGroupEnabled = securityGroupEnabled;
+        this.localStorageEnabled = localStorageEnabled;
+
+        if (zoneType == NetworkType.Advanced) {
+            loadBalancerProvider = Provider.VirtualRouter.getName();
+            firewallProvider = Provider.VirtualRouter.getName();
+            dhcpProvider = Provider.VirtualRouter.getName();
+            dnsProvider = Provider.VirtualRouter.getName();
+            gatewayProvider = Provider.VirtualRouter.getName();
+            vpnProvider = Provider.VirtualRouter.getName();
+            userDataProvider = Provider.VirtualRouter.getName();
+        } else if (zoneType == NetworkType.Basic){
+            dhcpProvider = Provider.VirtualRouter.getName();
+            dnsProvider = Provider.VirtualRouter.getName();
+            userDataProvider = Provider.VirtualRouter.getName();
+            loadBalancerProvider = Provider.ElasticLoadBalancerVm.getName();
+        }
+
+        this.zoneToken = zoneToken;
+        this.domain = domainSuffix;
+        this.uuid = UUID.randomUUID().toString();
+    }
+    
+    public DataCenterVO(String name, String description, String dns1, String dns2, String dns3, String dns4, String guestCidr, String domain, Long domainId, NetworkType zoneType, String zoneToken, String domainSuffix, boolean securityGroupEnabled, boolean publicServiceInSGEnabled, boolean localStorageEnabled, String ip6Dns1, String ip6Dns2) {
+        this.name = name;
+        this.description = description;
+        this.dns1 = dns1;
+        this.dns2 = dns2;
+        this.ip6Dns1 = ip6Dns1;
+        this.ip6Dns2 = ip6Dns2;
+        this.internalDns1 = dns3;
+        this.internalDns2 = dns4;
+        this.guestNetworkCidr = guestCidr;
+        this.domain = domain;
+        this.domainId = domainId;
+        this.networkType = zoneType;
+        this.allocationState = Grouping.AllocationState.Enabled;
+        this.securityGroupEnabled = securityGroupEnabled;
+        this.publicServiceInSGEnabled = publicServiceInSGEnabled;
         this.localStorageEnabled = localStorageEnabled;
 
         if (zoneType == NetworkType.Advanced) {
@@ -356,8 +398,16 @@ public class DataCenterVO implements DataCenter {
     public void setSecurityGroupEnabled(boolean enabled) {
         this.securityGroupEnabled = enabled;
     }
-
     @Override
+    public boolean isPublicServiceInSGEnabled() {
+		return publicServiceInSGEnabled;
+	}
+
+    public void setPublicServiceInSGEnabled(boolean publicServiceInSGEnabled) {
+		this.publicServiceInSGEnabled = publicServiceInSGEnabled;
+    }
+
+	@Override
     public boolean isLocalStorageEnabled() {
         return localStorageEnabled;
     }
