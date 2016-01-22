@@ -82,6 +82,7 @@ public class SecurityGroupRulesCmd extends Command {
     IpPortAndProto [] ingressRuleSet;
     IpPortAndProto [] egressRuleSet;
     private List<String> secIps;
+    Boolean publicServiceInSGEnabled;
 
     public SecurityGroupRulesCmd() {
         super();
@@ -300,5 +301,13 @@ public class SecurityGroupRulesCmd extends Command {
     public Long getMsId() {
         return msId;
     }
+
+    public Boolean IsPublicServiceInSGEnabled() {
+	  return publicServiceInSGEnabled;
+	}
+
+    public void setPublicServiceInSGEnabled(Boolean publicServiceInSGEnabled) {
+    	  this.publicServiceInSGEnabled = publicServiceInSGEnabled;
+	}
 
 }

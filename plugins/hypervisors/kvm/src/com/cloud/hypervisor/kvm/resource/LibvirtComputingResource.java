@@ -2761,7 +2761,7 @@ ServerResource {
         boolean result = add_network_rules(cmd.getVmName(),
                 Long.toString(cmd.getVmId()), cmd.getGuestIp(),
                 cmd.getSignature(), Long.toString(cmd.getSeqNum()),
-                cmd.getGuestMac(), cmd.stringifyRules(), vif, brname, cmd.getSecIpsString());
+                cmd.getGuestMac(), cmd.stringifyRules(), vif, brname, cmd.getSecIpsString(), cmd.IsPublicServiceInSGEnabled());
 
         if (!result) {
             s_logger.warn("Failed to program network rules for vm "
@@ -5229,7 +5229,7 @@ ServerResource {
 
     private boolean add_network_rules(String vmName, String vmId,
             String guestIP, String sig, String seq, String mac, String rules,
-            String vif, String brname, String secIps) {
+            String vif, String brname, String secIps, Boolean isPublicServiceInSGEnabled) {
         if (!_can_bridge_firewall) {
             return false;
         }
@@ -5249,6 +5249,7 @@ ServerResource {
         if (newRules != null && !newRules.isEmpty()) {
             cmd.add("--rules", newRules);
         }
+        cmd.add("--ispublicsevice", isPublicServiceInSGEnabled.toString());
         String result = cmd.execute();
         if (result != null) {
             return false;
