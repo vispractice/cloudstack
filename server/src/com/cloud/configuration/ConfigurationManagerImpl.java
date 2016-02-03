@@ -1862,7 +1862,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
 
         // Create the new zone in the database
         final DataCenterVO zoneFinal = new DataCenterVO(zoneName, null, dns1, dns2, internalDns1, internalDns2, guestCidr,
-                domain, domainId, zoneType, zoneToken, networkDomain, isSecurityGroupEnabled,isSecurityGroupEnabled, 
+                domain, domainId, zoneType, zoneToken, networkDomain, isSecurityGroupEnabled,isPublicServiceInSGEnabled, 
                 isLocalStorageEnabled,
                 ip6Dns1, ip6Dns2);
         if (allocationStateStr != null && !allocationStateStr.isEmpty()) {
