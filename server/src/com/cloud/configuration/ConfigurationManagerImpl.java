@@ -1862,7 +1862,7 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
 
         // Create the new zone in the database
         final DataCenterVO zoneFinal = new DataCenterVO(zoneName, null, dns1, dns2, internalDns1, internalDns2, guestCidr,
-                domain, domainId, zoneType, zoneToken, networkDomain, isSecurityGroupEnabled,isSecurityGroupEnabled, 
+                domain, domainId, zoneType, zoneToken, networkDomain, isSecurityGroupEnabled,isPublicServiceInSGEnabled, 
                 isLocalStorageEnabled,
                 ip6Dns1, ip6Dns2);
         if (allocationStateStr != null && !allocationStateStr.isEmpty()) {
@@ -1948,7 +1948,9 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
                 } else if (offering.getTrafficType() == TrafficType.Control) {
                     broadcastDomainType = BroadcastDomainType.LinkLocal;
                 } else if (offering.getTrafficType() == TrafficType.Public) {
-                    if ((zone.getNetworkType() == NetworkType.Advanced && !zone.isSecurityGroupEnabled())
+                	//andrew ling add, change the default network ,when use the security group and public service .
+                    if ((zone.getNetworkType() == NetworkType.Advanced && zone.isSecurityGroupEnabled() && zone.isPublicServiceInSGEnabled()) 
+                    	    || (zone.getNetworkType() == NetworkType.Advanced && !zone.isSecurityGroupEnabled())
                             || zone.getNetworkType() == NetworkType.Basic) {
                         broadcastDomainType = BroadcastDomainType.Vlan;
                     } else {
@@ -1988,6 +1990,10 @@ ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, Co
         boolean isPublicServiceInSGEnabled = cmd.getPublicServiceInSGEnabled();
         boolean isLocalStorageEnabled = cmd.getLocalStorageEnabled();
 
+        // andrew ling add, check the parameters about the isSecurityGroupEnabled and isPublicServiceInSGEnabled relation
+        if(!isSecurityGroupEnabled && isPublicServiceInSGEnabled){
+        	throw new InvalidParameterValueException("when the public service is enabled, the security group must been enabled.");
+        }
         if (allocationState == null) {
             allocationState = Grouping.AllocationState.Disabled.toString();
         }
