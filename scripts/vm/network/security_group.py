@@ -538,7 +538,7 @@ def post_default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname, dhcpS
             logging.debug("Failed to log default network rules, ignoring")
 def delete_rules_for_vm_in_bridge_firewall_chain(vmName):
     vm_name = vmName
-    if vm_name.startswith('i-'):
+    if vm_name.startswith('i-') or vm_name.startswith('r-'):
 	vm_name = '-'.join(vm_name.split('-')[:-1]) + "-def"
 
     vmchain = vm_name
@@ -547,8 +547,6 @@ def delete_rules_for_vm_in_bridge_firewall_chain(vmName):
     delcmds = execute(delcmd).split('\n')
     delcmds.pop()
     for cmd in delcmds:
-        if cmd == "":
-            continue
         try:
             execute("iptables " + cmd)
         except:
@@ -685,43 +683,38 @@ def cleanup_rules_for_dead_vms():
 
 def cleanup_rules():
     try:
-        chainscmd = """iptables-save | awk '{for(i=1;i<=NF;i++){ if($i ~ /[i|r|s|v]-[0-9]/){print $i} } }'"""
+        chainscmd = """iptables-save | grep -P '^:(?!.*-(def|eg))' | awk '{sub(/^:/, "", $1) ; print $1}'"""
         chains = execute(chainscmd).split('\n')
-        cleanup = set()
-        results = []
-        results = virshlist('paused', 'running')
+        cleanup = []
         for chain in chains:
-            if chain == "":
-                continue
-            elif chain.startswith(":"):
-                chain = chain[1:]
-            if chain.endswith("-eg"):
-                chain = chain[:-3]
-            elif chain.endswith("-def"):
-                chain = chain[:-3] + "VM"
+            if 1 in [ chain.startswith(c) for c in ['r-', 'i-', 's-', 'v-'] ]:
+                vm_name = chain
 
-            vm_name = chain
+                result = virshdomstate(vm_name)
 
-            if not vm_name in results:
-                logging.debug("chain " + chain + " does not correspond to a vm or vm is not running or paused, cleaning up iptable rules")
-                cleanup.add(vm_name)
+                if result == None or len(result) == 0:
+                    logging.debug("chain " + chain + " does not correspond to a vm, cleaning up iptable rules")
+                    cleanup.append(vm_name)
+                    continue
+                if not (result == "running" or result == "paused"):
+                    logging.debug("vm " + vm_name + " is not running or paused, cleaning up iptable rules")
+                    cleanup.append(vm_name)
 
-        chainscmd = """ebtables-save | awk '{for(i=1;i<=NF;i++){ if($i ~ /[i|r|s|v]-[0-9]/){print $i} } }'"""
+        chainscmd = """ebtables-save | awk '/:i/ { gsub(/(^:|-(in|out|ips))/, "") ; print $1}'"""
         chains = execute(chainscmd).split('\n')
         for chain in chains:
-            if chain == "":
-                continue
-            elif chain.startswith(":"):
-                chain = chain[1:]
-            if not chain.endswith("VM"):
-                chain = chain.split("VM")[0] + "VM"
+            if 1 in [ chain.startswith(c) for c in ['r-', 'i-', 's-', 'v-'] ]:
+                vm_name = chain
 
-            vm_name = chain
+                result = virshdomstate(vm_name)
 
-            if not vm_name in results:
-                logging.debug("chain " + chain + " does not correspond to a vm or vm is not running or paused, cleaning up ebtable rules")
-                cleanup.add(vm_name)
-
+                if result == None or len(result) == 0:
+                    logging.debug("chain " + chain + " does not correspond to a vm, cleaning up ebtable rules")
+                    cleanup.append(vm_name)
+                    continue
+                if not (result == "running" or result == "paused"):
+                    logging.debug("vm " + vm_name + " is not running or paused, cleaning up ebtable rules")
+                    cleanup.append(vm_name)
 
         for vmname in cleanup:
             destroy_network_rules_for_vm(vmname)
@@ -788,7 +781,7 @@ def remove_rule_log_for_vm(vmName):
 def egress_chain_name(vm_name):
     return vm_name + "-eg"
 
-def add_network_rules(vm_name, vm_id, vm_ip, signature, seqno, vmMac, rules, vif, brname, sec_ips):
+def add_network_rules(vm_name, vm_id, vm_ip, signature, seqno, vmMac, rules, vif, brname, sec_ips, is_public_sevice):
   try:
     vmName = vm_name
     domId = getvmId(vmName)
@@ -818,6 +811,8 @@ def add_network_rules(vm_name, vm_id, vm_ip, signature, seqno, vmMac, rules, vif
       logging.debug("Error flushing iptables rules for " + vmchain + ". Presuming firewall rules deleted, re-initializing." )
       default_network_rules(vm_name, vm_id, vm_ip, vmMac, vif, brname)
     egressrule = 0
+    #Andrew Ling add
+    allow_any_rules = []
     for line in lines:
 
         tokens = line.split(':')
@@ -861,12 +856,26 @@ def add_network_rules(vm_name, vm_id, vm_ip, signature, seqno, vmMac, rules, vif
 
         if allow_any and protocol != 'all':
             if protocol != 'icmp':
-                execute("iptables -I " + vmchain + " -p " + protocol + " -m " + protocol + " --dport " + range + " -m state --state NEW -j "+ action)
+                if is_public_sevice == "true":
+                    allow_any_rules.append("iptables -A " + vmchain + " -p " + protocol + " -m " + protocol + " --dport " + range + " -m state --state NEW -j "+ action)
+                else:
+                    execute("iptables -I " + vmchain + " -p " + protocol + " -m " + protocol + " --dport " + range + " -m state --state NEW -j "+ action)
             else:
                 range = start + "/" + end
                 if start == "-1":
                     range = "any"
-                execute("iptables -I " + vmchain + " -p icmp --icmp-type " + range + " -j "+action)
+                    if is_public_sevice == "true":
+                        allow_any_rules.append("iptables -A " + vmchain + " -p icmp --icmp-type " + range + " -j "+action)
+                    else:
+                        execute("iptables -I " + vmchain + " -p icmp --icmp-type " + range + " -j "+action)
+
+    if is_public_sevice == "true":
+        execute("iptables -A " + vm_name + " -s 10.0.0.0/8 -m state --state NEW -j DROP")
+        execute("iptables -A " + vm_name + " -s 172.16.0.0/12 -m state --state NEW -j DROP")
+        execute("iptables -A " + vm_name + " -s 192.168.0.0/16 -m state --state NEW -j DROP")
+        if allow_any_rules:
+            for allow_any_rule in allow_any_rules:
+                execute(allow_any_rule)
 
     egress_vmchain = egress_chain_name(vm_name)
     if egressrule == 0 :
@@ -877,7 +886,10 @@ def add_network_rules(vm_name, vm_id, vm_ip, signature, seqno, vmMac, rules, vif
         execute(iptables)
 
     vmchain = vm_name
-    iptables = "iptables -A " + vmchain + " -j DROP"
+    if is_public_sevice == "true":
+        iptables = "iptables -A " + vmchain + " -j ACCEPT"
+    else:
+        iptables = "iptables -A " + vmchain + " -j DROP"
     execute(iptables)
 
     if write_rule_log_for_vm(vmName, vm_id, vm_ip, domId, signature, seqno) == False:
@@ -944,10 +956,7 @@ def getvmId(vmName):
 
     conn.close()
 
-    res = dom.ID()
-    if isinstance(res, int):
-        res = str(res)
-    return res
+    return dom.ID()
 
 def getBrfw(brname):
     cmd = "iptables-save |grep physdev-is-bridged |grep FORWARD |grep BF |grep '\-o' | grep -w " + brname  + "|awk '{print $9}' | head -1"
@@ -1027,6 +1036,8 @@ if __name__ == '__main__':
     parser.add_option("--hostMacAddr", dest="hostMacAddr")
     parser.add_option("--nicsecips", dest="nicSecIps")
     parser.add_option("--action", dest="action")
+    #andrew ling add ispublicsevice parameter.
+    parser.add_option("--ispublicsevice", dest="isPublicSevice")
     (option, args) = parser.parse_args()
     if len(args) == 0:
         logging.debug("No command to execute")
@@ -1043,7 +1054,7 @@ if __name__ == '__main__':
     elif cmd == "get_rule_logs_for_vms":
         get_rule_logs_for_vms()
     elif cmd == "add_network_rules":
-        add_network_rules(option.vmName, option.vmID, option.vmIP, option.sig, option.seq, option.vmMAC, option.rules, option.vif, option.brname, option.nicSecIps)
+        add_network_rules(option.vmName, option.vmID, option.vmIP, option.sig, option.seq, option.vmMAC, option.rules, option.vif, option.brname, option.nicSecIps, option.isPublicSevice)
     elif cmd == "network_rules_vmSecondaryIp":
         network_rules_vmSecondaryIp(option.vmName, option.nicSecIps, option.action)
     elif cmd == "cleanup_rules":
