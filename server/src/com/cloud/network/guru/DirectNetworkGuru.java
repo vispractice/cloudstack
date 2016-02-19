@@ -326,8 +326,10 @@ public class DirectNetworkGuru extends AdapterBase implements NetworkGuru {
                     if (nic.getIp4Address() != null) {
                         s_logger.debug("Releasing ip " + nic.getIp4Address() + " of placeholder nic " + nic);
                         IPAddressVO ip = _ipAddressDao.findByIpAndSourceNetworkId(nic.getNetworkId(), nic.getIp4Address());
-                        _ipAddrMgr.markIpAsUnavailable(ip.getId());
-                        _ipAddressDao.unassignIpAddress(ip.getId());
+                        if(ip != null) {
+                        	_ipAddrMgr.markIpAsUnavailable(ip.getId());
+                              _ipAddressDao.unassignIpAddress(ip.getId());
+                        }
                         s_logger.debug("Removing placeholder nic " + nic);
                         _nicDao.remove(nic.getId());
                     }
