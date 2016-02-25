@@ -64,6 +64,7 @@ public class DataCenterJoinDaoImpl extends GenericDaoBase<DataCenterJoinVO, Long
         zoneResponse.setId(dataCenter.getUuid());
         zoneResponse.setName(dataCenter.getName());
         zoneResponse.setSecurityGroupsEnabled(ApiDBUtils.isSecurityGroupEnabledInZone(dataCenter.getId()));
+        zoneResponse.setPublicServiceInSGEnabled(dataCenter.isPublicServiceInSGEnabled());
         zoneResponse.setLocalStorageEnabled(dataCenter.isLocalStorageEnabled());
 
         if ((dataCenter.getDescription() != null) && !dataCenter.getDescription().equalsIgnoreCase("null")) {
