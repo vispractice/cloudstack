@@ -176,6 +176,7 @@ public class NetworkACLServiceTest extends TestCase{
     @Test
     public void testDeleteACLItem() throws Exception {
         Mockito.when(_networkACLItemDao.findById(Mockito.anyLong())).thenReturn(aclItem);
+        Mockito.when(_networkAclMgr.getNetworkACL(Mockito.anyLong())).thenReturn(acl);
         Mockito.when(_networkAclMgr.revokeNetworkACLItem(Mockito.anyLong())).thenReturn(true);
         Mockito.when(_entityMgr.findById(Mockito.eq(Vpc.class), Mockito.anyLong())).thenReturn(new VpcVO());
         assertTrue(_aclService.revokeNetworkACLItem(1L));
