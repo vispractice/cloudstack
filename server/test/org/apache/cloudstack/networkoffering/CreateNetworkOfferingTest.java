@@ -65,7 +65,11 @@ public class CreateNetworkOfferingTest extends TestCase{
     
 //    @Inject
 //    ConfigurationManager configMgr;
+<<<<<<< HEAD
 //    
+=======
+    
+>>>>>>> 4.3.2-SG-vlan-combine
 //    @Inject
 //    ConfigurationDao configDao;
     
@@ -94,7 +98,11 @@ public class CreateNetworkOfferingTest extends TestCase{
     @Before
     public void setUp() {
 //    	ComponentContext.initComponentsLifeCycle();
+<<<<<<< HEAD
 //    	
+=======
+    	
+>>>>>>> 4.3.2-SG-vlan-combine
 //        ConfigurationVO configVO = new ConfigurationVO("200", "200","200","200","200","200");
 //        Mockito.when(configDao.findByName(Mockito.anyString())).thenReturn(configVO);
 //        
@@ -177,7 +185,11 @@ public class CreateNetworkOfferingTest extends TestCase{
 //                Availability.Optional, 200, serviceProviderMap, false, Network.GuestType.Isolated, false,
 //                null, false, null, false, false, null, false, null, true);
 //        assertNotNull("Isolated network offering with specifyVlan=true wasn't created", off);
+<<<<<<< HEAD
 //       
+=======
+       
+>>>>>>> 4.3.2-SG-vlan-combine
     }
     
     @Test
@@ -197,7 +209,11 @@ public class CreateNetworkOfferingTest extends TestCase{
     
     @Test
     public void createIsolatedNtwkOffWithSpecifyIpRangesAndNoSourceNat() {
+<<<<<<< HEAD
 //        
+=======
+        
+>>>>>>> 4.3.2-SG-vlan-combine
 //        Map<Service, Set<Provider>> serviceProviderMap = new HashMap<Network.Service, Set<Network.Provider>>();
 //        Set<Network.Provider> vrProvider = new HashSet<Network.Provider>();
 //        NetworkOfferingVO off = configMgr.createNetworkOffering("isolated", "isolated", TrafficType.Guest, null, false,

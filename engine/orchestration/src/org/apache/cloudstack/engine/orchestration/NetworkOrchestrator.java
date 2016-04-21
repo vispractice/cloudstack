@@ -1724,7 +1724,8 @@ public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestra
                 if (ntwkOff.getGuestType() != GuestType.Shared) {
                     throw new InvalidParameterValueException("Only shared guest network can be created in security group enabled zone");
                 }
-                if (_networkModel.areServicesSupportedByNetworkOffering(ntwkOff.getId(), Service.SourceNat)) {
+                //andrew ling add, allow the service SourceNat in security group enabled zone when the public service enabled
+                if (_networkModel.areServicesSupportedByNetworkOffering(ntwkOff.getId(), Service.SourceNat) && !zone.isPublicServiceInSGEnabled()) {
                     throw new InvalidParameterValueException("Service SourceNat is not allowed in security group enabled zone");
                 }
                 if (!(_networkModel.areServicesSupportedByNetworkOffering(ntwkOff.getId(), Service.SecurityGroup))) {

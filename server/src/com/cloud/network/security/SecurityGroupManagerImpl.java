@@ -42,7 +42,6 @@ import javax.naming.ConfigurationException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.api.command.user.securitygroup.AuthorizeSecurityGroupEgressCmd;
 import org.apache.cloudstack.api.command.user.securitygroup.AuthorizeSecurityGroupIngressCmd;
 import org.apache.cloudstack.api.command.user.securitygroup.CreateSecurityGroupCmd;
@@ -64,6 +63,8 @@ import com.cloud.agent.manager.Commands;
 import com.cloud.api.query.dao.SecurityGroupJoinDao;
 import com.cloud.api.query.vo.SecurityGroupJoinVO;
 import com.cloud.configuration.Config;
+import com.cloud.dc.DataCenterVO;
+import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.domain.dao.DomainDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
@@ -73,6 +74,8 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.OperationTimedoutException;
 import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceInUseException;
+import com.cloud.host.HostVO;
+import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkModel;
@@ -171,6 +174,10 @@ public class SecurityGroupManagerImpl extends ManagerBase implements SecurityGro
     NicDao _nicDao;
     @Inject
     NicSecondaryIpDao _nicSecIpDao;
+    @Inject
+    HostDao hostDao;
+    @Inject
+    DataCenterDao dcDao;
 
     ScheduledExecutorService _executorPool;
     ScheduledExecutorService _cleanupExecutor;
@@ -1009,6 +1016,12 @@ public class SecurityGroupManagerImpl extends ManagerBase implements SecurityGro
                             }
                             SecurityGroupRulesCmd cmd = generateRulesetCmd( vm.getInstanceName(), vm.getPrivateIpAddress(), vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(ingressRules, egressRules), seqnum,
                                     ingressRules, egressRules, nicSecIps);
+                            // andrew ling add, to add the new parameter, which can control the security group default rule when the public service can be used or not.
+                            HostVO hostVo = hostDao.findById(agentId);
+                            DataCenterVO dcVo = dcDao.findById(hostVo.getDataCenterId());
+                            Boolean publicServiceInSGEnabled = dcVo.isPublicServiceInSGEnabled();
+                            cmd.setPublicServiceInSGEnabled(publicServiceInSGEnabled);
+                            
                             Commands cmds = new Commands(cmd);
                             try {
                                 _agentMgr.send(agentId, cmds, _answerListener);

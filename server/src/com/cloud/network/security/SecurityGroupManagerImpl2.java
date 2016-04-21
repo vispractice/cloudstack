@@ -35,7 +35,9 @@ import org.springframework.stereotype.Component;
 import com.cloud.agent.api.SecurityGroupRulesCmd;
 import com.cloud.agent.manager.Commands;
 import com.cloud.configuration.Config;
+import com.cloud.dc.DataCenterVO;
 import com.cloud.exception.AgentUnavailableException;
+import com.cloud.host.HostVO;
 import com.cloud.network.security.SecurityGroupWork.Step;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.NumbersUtil;
@@ -194,6 +196,12 @@ public class SecurityGroupManagerImpl2 extends SecurityGroupManagerImpl{
                         vm.getPrivateMacAddress(), vm.getId(), null, 
                         work.getLogsequenceNumber(), ingressRules, egressRules, nicSecIps);
                 cmd.setMsId(_serverId);
+                // andrew ling add, to add the new parameter, which can control the security group default rule when the public service can be used or not.
+                HostVO hostVo = hostDao.findById(agentId);
+                DataCenterVO dcVo = dcDao.findById(hostVo.getDataCenterId());
+                Boolean publicServiceInSGEnabled = dcVo.isPublicServiceInSGEnabled();
+                cmd.setPublicServiceInSGEnabled(publicServiceInSGEnabled);
+                
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("SecurityGroupManager v2: sending ruleset update for vm " + vm.getInstanceName() + 
                                    ":ingress num rules=" + cmd.getIngressRuleSet().length + ":egress num rules=" + cmd.getEgressRuleSet().length + " num cidrs=" + cmd.getTotalNumCidrs() + " sig=" + cmd.getSignature());
