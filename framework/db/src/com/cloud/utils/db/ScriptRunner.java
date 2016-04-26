@@ -28,7 +28,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 /**
@@ -38,6 +39,11 @@ public class ScriptRunner {
     private static Logger s_logger = Logger.getLogger(ScriptRunner.class); 
 
     private static final String DEFAULT_DELIMITER = ";";
+    /**
+     * regex to detect delimiter.
+     * ignores spaces, allows delimiter in comment, allows an equals-sign
+     */
+    public static final Pattern delimP = Pattern.compile("^\\s*(--)?\\s*delimiter\\s*=?\\s*([^\\s]+)+\\s*.*$", Pattern.CASE_INSENSITIVE);
 
     private Connection connection;
 
@@ -120,6 +126,7 @@ public class ScriptRunner {
                     command = new StringBuffer();
                 }
                 String trimmedLine = line.trim();
+                final Matcher delimMatch = delimP.matcher(trimmedLine);
                 if (trimmedLine.startsWith("--")) {
                     println(trimmedLine);
                 } else if (trimmedLine.length() < 1 || trimmedLine.startsWith("//")) {
@@ -128,6 +135,8 @@ public class ScriptRunner {
                     // Do nothing
                 } else if (trimmedLine.length() < 1 || trimmedLine.startsWith("#")) { 
                     // Do nothing  
+                } else if (delimMatch.matches()) {
+                	setDelimiter(delimMatch.group(2), false);
                 } else if (!fullLineDelimiter && trimmedLine.endsWith(getDelimiter()) || fullLineDelimiter && trimmedLine.equals(getDelimiter())) {
                     command.append(line.substring(0, line.lastIndexOf(getDelimiter())));
                     command.append(" ");
