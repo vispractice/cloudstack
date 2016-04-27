@@ -11,9 +11,9 @@
 -- specific language governing permissions and limitations
 -- under the License.
 
---;
+-- ;
 -- Schema upgrade from 4.3.2 to 4.3.3;
---;
+-- ;
 
 -- vispractice add db script
 
@@ -42,15 +42,6 @@ ROW_FORMAT=COMPACT;
 
 INSERT INTO `configuration` VALUES ('Network', 'DEFAULT', 'NetworkManager', 'allow.networks.multiline', 'false', 'Allow networks to use multiline.', 'false', null, 'Global', 1); 
 
--- alter table user_ip_address  add multiline_label varchar(100) not null comment 'the multiline label', add is_default_static_nat int(1) not null default 0 comment 'is default the static nat'; 
-
--- alter table portable_ip_address add multiline_label varchar(100) not null comment 'the multiline label'; 
-
--- alter table vlan add multiline_label varchar(100) not null comment 'the multiline label'; 
-
--- alter table portable_ip_range add multiline_label varchar(100) not null comment 'the multiline label'; 
-
--- new rule --
 alter table user_ip_address  add multiline_label varchar(100) comment 'the multiline label', add is_default_static_nat int(1) not null default 0 comment 'is default the static nat'; 
 
 alter table portable_ip_address add multiline_label varchar(100) comment 'the multiline label'; 
@@ -59,40 +50,18 @@ alter table vlan add multiline_label varchar(100) comment 'the multiline label';
 
 alter table portable_ip_range add multiline_label varchar(100) comment 'the multiline label'; 
 
+update user_ip_address set multiline_label=(SELECT label from multiline where is_default=1 limit 1) where multiline_label='' or multiline_label is null; 
 
-create Trigger update_multiline_label_trigger
-after insert 
-on multiline 
-for each row 
-begin 
-if (SELECT count(1) from user_ip_address where multiline_label='' or multiline_label is null)>0 
-then   
-update user_ip_address set multiline_label=(SELECT label from multiline where is_default=1 limit 1) where 
-multiline_label='' or multiline_label is null; 
-end if; 
-if   
-(SELECT count(1) from vlan where multiline_label='' or multiline_label is null)>0 
-then 
-update vlan set multiline_label=(SELECT label from multiline where is_default=1 limit 1) where 
-multiline_label='' or multiline_label is null; 
-end if; 
-if   
-(SELECT count(1) from portable_ip_range where multiline_label='' or multiline_label is null)>0 
-then   
-update portable_ip_range set multiline_label=(SELECT label from multiline where is_default=1 limit 1) where 
-multiline_label='' or multiline_label is null; 
-end if; 
-if (SELECT count(1) from portable_ip_address where multiline_label='' or multiline_label is null)>0 
-then 
-update portable_ip_address set multiline_label=(SELECT label from multiline where is_default=1 limit 1) 
-where multiline_label='' or multiline_label is null; 
-end if; 
-end; 
+update vlan set multiline_label=(SELECT label from multiline where is_default=1 limit 1) where multiline_label='' or multiline_label is null; 
 
-INSERT INTO `multiline` VALUES ('id',uuid(), 'ctcc', '电信', 1, '27.192.0.0/11,39.64.0.0/11,112.224.0.0/11,120.0.0.0/12,113.224.0.0/12,114.240.0.0/12,115.48.0.0/12,42.224.0.0/12,182.112.0.0/12,123.112.0.0/12,175.160.0.0/12,119.176.0.0/12,110.240.0.0/12,111.192.0.0/12,120.80.0.0/13,171.120.0.0/13,175.16.0.0/13,119.48.0.0/13,221.216.0.0/13,113.0.0.0/13,117.8.0.0/13,125.40.0.0/13,123.152.0.0/13,123.128.0.0/13,123.8.0.0/13,101.64.0.0/13,121.16.0.0/13,112.88.0.0/13,112.80.0.0/13,119.112.0.0/13,220.200.0.0/13,60.16.0.0/13,1.24.0.0/13,27.40.0.0/13,42.176.0.0/13,222.136.0.0/13,27.8.0.0/13,122.136.0.0/13,1.56.0.0/13,60.0.0.0/13,220.248.0.0/14,42.84.0.0/14'); 
+update portable_ip_range set multiline_label=(SELECT label from multiline where is_default=1 limit 1) where multiline_label='' or multiline_label is null;
 
-INSERT INTO `multiline` VALUES ('id',uuid(), 'cucc', '联通', 0, '10.204.10.0/24,27.192.0.0/11,39.64.0.0/11,112.224.0.0/11,120.0.0.0/12,113.224.0.0/12,114.240.0.0/12,115.48.0.0/12,42.224.0.0/12,182.112.0.0/12,123.112.0.0/12,175.160.0.0/12,119.176.0.0/12,110.240.0.0/12,111.192.0.0/12,120.80.0.0/13,171.120.0.0/13,175.16.0.0/13,119.48.0.0/13,221.216.0.0/13,113.0.0.0/13,117.8.0.0/13,125.40.0.0/13,123.152.0.0/13,123.128.0.0/13,123.8.0.0/13,101.64.0.0/13,121.16.0.0/13,112.88.0.0/13,112.80.0.0/13,119.112.0.0/13,220.200.0.0/13,60.16.0.0/13,1.24.0.0/13,27.40.0.0/13,42.176.0.0/13,222.136.0.0/13,27.8.0.0/13,122.136.0.0/13,1.56.0.0/13,60.0.0.0/13,220.248.0.0/14,42.84.0.0/14'); 
+update portable_ip_address set multiline_label=(SELECT label from multiline where is_default=1 limit 1) where multiline_label='' or multiline_label is null;
 
+
+INSERT INTO `multiline` VALUES ('id',uuid(), 'ctcc', 'dianxin', 1, '27.192.0.0/11,39.64.0.0/11,112.224.0.0/11,120.0.0.0/12,113.224.0.0/12,114.240.0.0/12,115.48.0.0/12,42.224.0.0/12,182.112.0.0/12,123.112.0.0/12,175.160.0.0/12,119.176.0.0/12,110.240.0.0/12,111.192.0.0/12,120.80.0.0/13,171.120.0.0/13,175.16.0.0/13,119.48.0.0/13,221.216.0.0/13,113.0.0.0/13,117.8.0.0/13,125.40.0.0/13,123.152.0.0/13,123.128.0.0/13,123.8.0.0/13,101.64.0.0/13,121.16.0.0/13,112.88.0.0/13,112.80.0.0/13,119.112.0.0/13,220.200.0.0/13,60.16.0.0/13,1.24.0.0/13,27.40.0.0/13,42.176.0.0/13,222.136.0.0/13,27.8.0.0/13,122.136.0.0/13,1.56.0.0/13,60.0.0.0/13,220.248.0.0/14,42.84.0.0/14'); 
+
+INSERT INTO `multiline` VALUES ('id',uuid(), 'cucc', 'liantong', 0, '10.204.10.0/24,27.192.0.0/11,39.64.0.0/11,112.224.0.0/11,120.0.0.0/12,113.224.0.0/12,114.240.0.0/12,115.48.0.0/12,42.224.0.0/12,182.112.0.0/12,123.112.0.0/12,175.160.0.0/12,119.176.0.0/12,110.240.0.0/12,111.192.0.0/12,120.80.0.0/13,171.120.0.0/13,175.16.0.0/13,119.48.0.0/13,221.216.0.0/13,113.0.0.0/13,117.8.0.0/13,125.40.0.0/13,123.152.0.0/13,123.128.0.0/13,123.8.0.0/13,101.64.0.0/13,121.16.0.0/13,112.88.0.0/13,112.80.0.0/13,119.112.0.0/13,220.200.0.0/13,60.16.0.0/13,1.24.0.0/13,27.40.0.0/13,42.176.0.0/13,222.136.0.0/13,27.8.0.0/13,122.136.0.0/13,1.56.0.0/13,60.0.0.0/13,220.248.0.0/14,42.84.0.0/14'); 
 
 
 -- bandwidth
@@ -170,7 +139,7 @@ CREATE TABLE `cloud`.`bandwidth_ip_port_map` (
 INSERT INTO `configuration` VALUES ('Network', 'DEFAULT', 'management-server', 'network.bandwidth.traffic.id.maximum', '9999', 'The bandwidth traffic rule id max number can be use for any one of the virtual router, now only support the max number can up to 9999.', '9999', null, 'Global', 1);
 
 
--- shared network with public servic
+-- shared network with public service
 
 alter table `data_center` add `is_public_service_in_sg_enabled` tinyint NOT NULL DEFAULT 0 COMMENT '1: enabled, 0: not';
 
