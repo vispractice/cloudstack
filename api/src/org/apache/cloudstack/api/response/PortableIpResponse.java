@@ -27,6 +27,7 @@ import org.apache.cloudstack.api.EntityReference;
 import com.cloud.network.IpAddress;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
+
 import org.apache.cloudstack.region.PortableIp;
 import org.apache.cloudstack.region.PortableIpRange;
 
@@ -63,6 +64,9 @@ public class PortableIpResponse extends BaseResponse {
 
     @SerializedName(ApiConstants.STATE) @Param(description="State of the ip address. Can be: Allocatin, Allocated and Releasing")
     private String state;
+    
+    @SerializedName(ApiConstants.MULTILINE_LABEL) @Param(description="the multiline label")
+    private String multilineLabel;
 
     public void setRegionId(Integer regionId) {
         this.regionId = regionId;
@@ -103,4 +107,14 @@ public class PortableIpResponse extends BaseResponse {
     public void setState(String state) {
         this.state = state;
     }
+
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
+    
+    
 }

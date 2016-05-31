@@ -247,4 +247,10 @@ public class PublicIp implements PublicIpAddress {
 		return _addr.getMultilineLabel();
 	}
 
+	@Override
+	public Boolean getIsDefaultStaticNat() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

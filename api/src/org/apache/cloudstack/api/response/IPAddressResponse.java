@@ -117,6 +117,12 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
 
     @SerializedName(ApiConstants.IS_PORTABLE) @Param(description = "is public IP portable across the zones")
     private Boolean isPortable;
+    
+    @SerializedName(ApiConstants.MULTILINE_LABEL) @Param(description = "the multiline label")
+    private String multilineLabel;
+    
+    @SerializedName(ApiConstants.IS_DEFAULT_STATIC) @Param(description = "the multiline label")
+    private Boolean isDefaultStaticNat;
 
 /*
     @SerializedName(ApiConstants.JOB_ID) @Param(description="shows the current pending asynchronous job ID. This tag is not returned if no current pending jobs are acting on the volume")
@@ -254,4 +260,22 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
     public void setPortable(Boolean portable) {
         this.isPortable = portable;
     }
+
+	public String getMultilineLabel() {
+		return multilineLabel;
+	}
+
+	public void setMultilineLabel(String multilineLabel) {
+		this.multilineLabel = multilineLabel;
+	}
+
+	public Boolean getIsDefaultStaticNat() {
+		return isDefaultStaticNat;
+	}
+
+	public void setIsDefaultStaticNat(Boolean isDefaultStaticNat) {
+		this.isDefaultStaticNat = isDefaultStaticNat;
+	}
+    
+    
 }

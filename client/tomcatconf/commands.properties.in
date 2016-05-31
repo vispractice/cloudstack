@@ -728,3 +728,6 @@ updateBandwidthRule=15
 listBandwidthRules=15
 assignToBandwidthRule=15
 RemoveFromBandwidthRuleCmd=15
+
+#### multiline commands
+listMultiline=1

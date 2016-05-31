@@ -149,11 +149,15 @@
                 ipObj.issystem == true) {
                 return [];
             }
-            
+			
+            if (ipObj.isdefaultstaticnat || !ipObj.isstaticnat) {
+				disallowedActions.push('setDefaultStaticNAT');
+			}
+			
             if (ipObj.issourcenat) { //sourceNAT IP doesn't support staticNAT
                 disallowedActions.push('enableStaticNAT');
                 disallowedActions.push('disableStaticNAT');
-				//support deleted soureNAT ip
+				//update by hai.li support deleted soureNAT ip
                 //disallowedActions.push('remove');
             } else { //non-sourceNAT IP supports staticNAT
             	 if (ipObj.isstaticnat) {
@@ -1953,12 +1957,16 @@
                                 'Allocated': 'on',
                                 'Released': 'off'
                             }
+                        }, 
+						multilinelabel: {
+                            label: 'line'
+							//label: 'label.multiline'
                         }
                     },
                     actions: {
                         add: {
                             label: 'label.acquire.new.ip',
-                            addRow: 'true',
+                            addRow: 'true',	
                             preFilter: function(args) {
                                 var zoneObj;
                                 var dataObj = {};
@@ -2051,6 +2059,7 @@
                                 		success: function(json) {
                                 		    var items = json.listregionsresponse.region;	
                                 		    if(items != null) {
+												args.$form.find('.form-item[rel=ismultiline]').css('display', 'inline-block');
                                 		    	for(var i = 0; i < items.length; i++) {
                                 		    		var region = items[0];  
                                 		    		if(region.name == 'Local') {
@@ -2084,6 +2093,26 @@
                                             });
                                         },
                                         isHidden: true
+                                    },
+									ismultiline: {
+                                        //label: 'label.multiline',
+										label: 'line',
+                                        select: function(args) {                                                    
+											$.ajax({
+												url: createURL('listMultiline'),
+												success: function(json) {
+													args.response.success({
+														data: $.map(json.listmultilineresponse.multilines, function(result) {
+															return {
+																id: result.multilinelabel,
+																description: result.name
+															};
+														})
+													});
+												}
+											});
+										},
+										isHidden: true
                                     }
                                 }
                             },
@@ -2094,7 +2123,12 @@
                             			isportable: args.data.isportable
                             		});                            	
                             	}
-                            	                            	
+                            	if (args.$form.find('.form-item[rel=ismultiline]').css("display") != "none") {
+                            		$.extend(dataObj, {
+										multilineLabel : args.data.ismultiline
+                            		});                            	
+                            	}
+								
                                 if ('vpc' in args.context) { //from VPC section
                                     $.extend(dataObj, {
                                         vpcid: args.context.vpc[0].id
@@ -2624,6 +2658,60 @@
                                 notification: {
                                     poll: pollAsyncJobResult
                                 }
+                            },
+							setDefaultStaticNAT: {
+                                label: 'setDefault.staticNAT',
+								//label: 'label.action.setDefault.static.NAT',
+                                action: function(args) {
+                                    $.ajax({
+                                        url: createURL('updateStaticNat'),
+                                        data: {
+                                            ipaddressid: args.context.ipAddresses[0].id,
+											isdefaultstaticnat : true
+                                        },
+                                        dataType: 'json',
+                                        async: true,
+                                        success: function(data) {
+                                            args.response.success({
+                                                _custom: {
+                                                    jobId: data.updateStaticNatresponse.jobid,
+                                                    getUpdatedItem: function() {
+                                                        return {
+                                                            //isstaticnat: false,
+                                                            //virtualmachinedisplayname: ""
+															isdefaultstaticnat: false
+                                                        };
+                                                    },
+                                                    getActionFilter: function() {
+                                                        return function(args) {
+                                                            return ['setDefaultStaticNAT'];
+                                                        };
+                                                    },
+                                                    onComplete: function(args, _custom) {
+                                                        //if (_custom.$detailView.is(':visible')) {
+                                                            //ipChangeNotice();
+                                                        //}
+                                                    }
+                                                }
+                                            });
+                                        },
+                                        error: function(data) {
+                                            args.response.error(parseXMLHttpResponse(data));
+                                        }
+                                    });
+                                },
+                                messages: {
+                                    confirm: function(args) {
+                                        return 'Please make sure you really set the default static NAT.';
+                                    },
+                                    notification: function(args) {
+                                        //return 'label.action.setDefault.static.NAT';
+										return 'setDefault.staticNAT'; 
+                                    }
+                                },
+                                notification: {
+                                    poll: pollAsyncJobResult
+                                }
                             }
                         },
                         tabs: {
@@ -2705,7 +2793,11 @@
                                     },
                                     vlanname: {
                                         label: 'label.vlan'
-                                    }
+                                    },
+									isdefaultstaticnat: {
+                                        label: 'isDefault.StaticNat',
+										converter: cloudStack.converters.toBooleanText
+                                    } 
                                 }],
 
                                 tags: cloudStack.api.tags({

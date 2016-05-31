@@ -90,6 +90,8 @@ import org.apache.cloudstack.api.command.admin.internallb.ListInternalLBVMsCmd;
 import org.apache.cloudstack.api.command.admin.internallb.ListInternalLoadBalancerElementsCmd;
 import org.apache.cloudstack.api.command.admin.internallb.StartInternalLBVMCmd;
 import org.apache.cloudstack.api.command.admin.internallb.StopInternalLBVMCmd;
+import org.apache.cloudstack.api.command.admin.multiline.ListMultilineCmd;
+import org.apache.cloudstack.api.command.admin.multiline.Multiline;
 import org.apache.cloudstack.api.command.admin.network.AddNetworkDeviceCmd;
 import org.apache.cloudstack.api.command.admin.network.AddNetworkServiceProviderCmd;
 import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
@@ -311,7 +313,7 @@ import org.apache.cloudstack.api.command.user.nat.DeleteIpForwardingRuleCmd;
 import org.apache.cloudstack.api.command.user.nat.DisableStaticNatCmd;
 import org.apache.cloudstack.api.command.user.nat.EnableStaticNatCmd;
 import org.apache.cloudstack.api.command.user.nat.ListIpForwardingRulesCmd;
-import org.apache.cloudstack.api.command.user.nat.updateStaticNatCmd;
+import org.apache.cloudstack.api.command.user.nat.UpdateStaticNatCmd;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkACLCmd;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkACLListCmd;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkCmd;
@@ -536,6 +538,8 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.IPAddressVO;
 import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.LoadBalancerVO;
+import com.cloud.network.dao.MultilineDao;
+import com.cloud.network.dao.MultilineVO;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkVO;
 import com.cloud.org.Cluster;
@@ -744,6 +748,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     @Inject
     DeploymentPlanningManager _dpMgr;
 
+    @Inject
+    MultilineDao _multilineDao;
+    
     LockMasterListener _lockMasterListener;
 
     private final ScheduledExecutorService _eventExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EventChecker"));
@@ -2931,7 +2938,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(RemoveCertFromLoadBalancerCmd.class);
         cmdList.add(GenerateAlertCmd.class);
         cmdList.add(GetVMUserDataCmd.class);
-        cmdList.add(updateStaticNatCmd.class);
+        cmdList.add(UpdateStaticNatCmd.class);
+        cmdList.add(ListMultilineCmd.class);
         //andrew ling add bandwidth part
         cmdList.add(AddBandwidthCmd.class);
         cmdList.add(DeleteBandwidthCmd.class);
@@ -3986,5 +3994,39 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     public void setLockMasterListener(LockMasterListener lockMasterListener) {
         _lockMasterListener = lockMasterListener;
+    }
+    
+    @Override
+    public Pair<List<? extends Multiline>, Integer> searchForMultiline(ListMultilineCmd cmd) {
+    	
+         Account caller = CallContext.current().getCallingAccount();
+         String label = cmd.getMultilineLabel();
+         Object keyword = cmd.getKeyword();
+         boolean listAll = cmd.listAll();
+         Long id = cmd.getId();
+
+         Filter searchFilter = new Filter(MultilineVO.class, "isDefault", false, cmd.getStartIndex(), cmd.getPageSizeVal());
+        
+         SearchBuilder<MultilineVO> sb = _multilineDao.createSearchBuilder();
+         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
+         sb.and("label", sb.entity().getLabel(), SearchCriteria.Op.EQ);
+         sb.and("isDefault", sb.entity().getIsDefault(), SearchCriteria.Op.EQ);
+         
+         SearchCriteria<MultilineVO> sc = sb.create();
+         if(label != null && !label.isEmpty()){
+        	 sc.setParameters("label",label);
+         }
+         
+        String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+     	if(isMultiline != null && !isMultiline.equalsIgnoreCase("true")){
+     		sc.setParameters("isDefault", Boolean.TRUE);
+     	}
+        if(!listAll){
+        	 sc.setParameters("isDefault", Boolean.TRUE);
+        }
+         
+        Pair<List<MultilineVO>, Integer> result = _multilineDao.searchAndCount(sc, searchFilter);
+        return new Pair<List<? extends Multiline>, Integer>(result.first(), result.second());
     }
 }

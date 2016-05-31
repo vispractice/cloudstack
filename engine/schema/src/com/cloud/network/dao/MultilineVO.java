@@ -24,6 +24,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.apache.cloudstack.api.InternalIdentity;
+import org.apache.cloudstack.api.command.admin.multiline.Multiline;
 
 /**
  * @author add by hai.li
@@ -33,7 +34,7 @@ import org.apache.cloudstack.api.InternalIdentity;
  */
 @Entity
 @Table(name=("multiline"))
-public class MultilineVO implements InternalIdentity{
+public class MultilineVO implements InternalIdentity, Multiline{
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name="id")

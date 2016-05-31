@@ -362,7 +362,7 @@ public class IPAddressVO implements IpAddress {
 	public void setMultilineLabel(String multilineLabel) {
 		this.multilineLabel = multilineLabel;
 	}
-
+	@Override
 	public Boolean getIsDefaultStaticNat() {
 		return isDefaultStaticNat;
 	}

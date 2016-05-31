@@ -27,7 +27,7 @@ import com.google.gson.annotations.SerializedName;
 @EntityReference(value=Vlan.class)
 @SuppressWarnings("unused")
 public class VlanIpRangeResponse extends BaseResponse implements ControlledEntityResponse{
-    @SerializedName(ApiConstants.ID) @Param(description="the ID of the VLAN IP range")
+    @SerializedName(ApiConstants.ID) @Param(description="the ID of the multiline")
     private String id;
 
     @SerializedName("forvirtualnetwork") @Param(description="the virtual network for the VLAN IP range")

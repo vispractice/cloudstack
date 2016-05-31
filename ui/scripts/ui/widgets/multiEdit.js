@@ -231,8 +231,18 @@
                         var $button = $('<div>').addClass('button add-vm custom-action');
 
                         $td.data('multi-custom-data', data[fieldName]);
-                        $button.html(data && data[fieldName] && data[fieldName]['_buttonLabel'] ?
-                            _l(data[fieldName]['_buttonLabel']) : _l(field.custom.buttonLabel));
+                        //$button.html(data && data[fieldName] && data[fieldName]['_buttonLabel'] ?
+                            //_l(data[fieldName]['_buttonLabel']) : _l(field.custom.buttonLabel));
+						//update by hai.li 2015.09.17 add multiline
+						if(data && data[fieldName] && data[fieldName]['_buttonMultiline']){
+                           $button.html(data[fieldName]['_buttonMultiline']);
+                        } else {
+                           $button.html(_l(field.custom.buttonLabel));
+                        }
+                        if(data && data[fieldName] && data[fieldName]['_buttonLabel']){
+                           $button.html(_l(data[fieldName]['_buttonLabel']));
+                        } 
+						
                         $button.click(function() {
                             if ($td.hasClass('disabled')) return false;
 
