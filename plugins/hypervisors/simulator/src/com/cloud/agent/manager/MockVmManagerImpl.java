@@ -77,7 +77,8 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine.State;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
-
+import java.util.UUID;
+import com.cloud.network.VirtualNetworkApplianceService;
 import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
@@ -567,7 +568,9 @@ public class MockVmManagerImpl extends ManagerBase implements MockVmManager {
 
     @Override
     public GetDomRVersionAnswer getDomRVersion(GetDomRVersionCmd cmd) {
-        return new GetDomRVersionAnswer(cmd, null, null, null);
+	String template_version = "CloudStack Release "+ VirtualNetworkApplianceService._minVRVersion.toString();
+        return new GetDomRVersionAnswer(cmd, null, template_version, UUID.randomUUID().toString());
+//        return new GetDomRVersionAnswer(cmd, null, null, null);
     }
 
     @Override
