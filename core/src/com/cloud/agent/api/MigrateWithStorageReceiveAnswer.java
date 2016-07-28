@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,16 +15,21 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.agent.api;
 
+import java.util.List;
 import java.util.Map;
-import com.cloud.agent.api.to.VolumeTO;
+
 import com.cloud.agent.api.to.NicTO;
+import com.cloud.agent.api.to.VolumeTO;
+import com.cloud.utils.Pair;
 
 public class MigrateWithStorageReceiveAnswer extends Answer {
 
-    Map<VolumeTO, Object> volumeToSr;
-    Map<NicTO, Object> nicToNetwork;
+    List<Pair<VolumeTO, Object>> volumeToSr;
+    List<Pair<NicTO, Object>> nicToNetwork;
     Map<String, String> token;
 
     public MigrateWithStorageReceiveAnswer(MigrateWithStorageReceiveCommand cmd, Exception ex) {
@@ -33,19 +39,19 @@ public class MigrateWithStorageReceiveAnswer extends Answer {
         token = null;
     }
 
-    public MigrateWithStorageReceiveAnswer(MigrateWithStorageReceiveCommand cmd, Map<VolumeTO, Object> volumeToSr,
-            Map<NicTO, Object> nicToNetwork, Map<String, String> token) {
+    public MigrateWithStorageReceiveAnswer(MigrateWithStorageReceiveCommand cmd, List<Pair<VolumeTO, Object>> volumeToSr, List<Pair<NicTO, Object>> nicToNetwork,
+            Map<String, String> token) {
         super(cmd, true, null);
         this.volumeToSr = volumeToSr;
         this.nicToNetwork = nicToNetwork;
         this.token = token;
     }
 
-    public Map<VolumeTO, Object> getVolumeToSr() {
+    public List<Pair<VolumeTO, Object>> getVolumeToSr() {
         return volumeToSr;
     }
 
-    public Map<NicTO, Object> getNicToNetwork() {
+    public List<Pair<NicTO, Object>> getNicToNetwork() {
         return nicToNetwork;
     }
 

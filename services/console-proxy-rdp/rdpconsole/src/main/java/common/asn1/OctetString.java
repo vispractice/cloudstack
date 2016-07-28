@@ -24,7 +24,7 @@ public class OctetString extends Tag {
 
     public OctetString(String name) {
         super(name);
-        this.tagType = OCTET_STRING;
+        tagType = OCTET_STRING;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class OctetString extends Tag {
     @Override
     public Tag copyFrom(Tag tag) {
         super.copyFrom(tag);
-        this.value = ((OctetString)tag).value;
+        value = ((OctetString)tag).value;
         return this;
     }
 

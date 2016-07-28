@@ -22,38 +22,38 @@ import common.asn1.Tag;
 /**
  * The NegoData structure contains the SPNEGO messages, as specified in
  * [MS-SPNG] section 2.
- * 
+ *
  * <pre>
  * NegoData ::= SEQUENCE OF SEQUENCE {
  *   negoToken     [0] OCTET STRING
  * }
  * </pre>
- * 
+ *
  * If we write NegoItem as
- * 
+ *
  * <pre>
  * NegoItem ::= SEQUENCE {
  *   negoToken     [0] OCTET STRING
  * }
  * </pre>
- * 
+ *
  * then NegoData can be written as
- * 
+ *
  * <pre>
  * NegoData ::= SEQUENCE OF NegoItem
  * </pre>
- * 
+ *
  * <ul>
  * <li>negoToken: One or more SPNEGO tokens, as specified in [MS-SPNG].
  * </ul>
- * 
+ *
  * @see http://msdn.microsoft.com/en-us/library/cc226781.aspx
  */
 public class NegoData extends SequenceOf {
 
     public NegoData(String name) {
         super(name);
-        this.type = new NegoItem("NegoItem");
+        type = new NegoItem("NegoItem");
     }
 
     @Override

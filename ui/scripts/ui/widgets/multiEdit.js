@@ -90,7 +90,7 @@
                 if (isHidden) {
                     return true;
                 }
-                
+
                 var $td = $('<td>').addClass(fieldName).appendTo($tr);
                 var $input, val;
                 var $addButton = $multi.find('form .button.add-vm:not(.custom-action)').clone();
@@ -104,7 +104,7 @@
                         $(data).each(function() {
                             var item = this;
                             var $itemRow = _medit.multiItem.itemRow(item, options.itemActions, multiRule, $tbody);
-
+                            $itemRow.data('json-obj', item);
                             $itemRow.appendTo($tbody);
                             newItemRows.push($itemRow);
 
@@ -196,11 +196,21 @@
                     } else if (field.addButton && !options.noSelect) {
                         if (options.multipleAdd) {
                             $addButton.click(function() {
+                                var context = $.extend(true, {}, options.context);
+
                                 if ($td.hasClass('disabled')) return false;
+
+                                var $subItems = $td.closest('.data-item').find('.expandable-listing tr');
+
+                                if ($subItems.size()) {
+                                    context.subItemData = $subItems.map(function() {
+                                        return $(this).data('json-obj');
+                                    });
+                                }
 
                                 _medit.vmList($multi,
                                     options.listView,
-                                    options.context,
+                                    context,
                                     options.multipleAdd, _l('label.add.vms'),
                                     addItemAction, {
                                         multiRule: multiRule
@@ -278,9 +288,6 @@
                     $td.addClass('blank');
                 }
 
-                // Align width to main header
-                _medit.refreshItemWidths($multi);
-                
                 if (data._hideFields &&
                     $.inArray(fieldName, data._hideFields) > -1) {
                     $td.addClass('disabled');
@@ -437,7 +444,7 @@
 
                             cloudStack.dialog.createForm({
                                 form: {
-                                    title: 'Edit rule',
+                                    title: 'label.edit.rule',
                                     desc: '',
                                     fields: editableFields
                                 },
@@ -529,7 +536,7 @@
 
             instances.listView.actions = {
                 select: {
-                    label: 'Select instance',
+                    label: 'label.select.instance',
                     type: isMultipleAdd ? 'checkbox' : 'radio',
                     action: {
                         uiCustom: function(args) {
@@ -712,6 +719,7 @@
 
             itemRow: function(item, itemActions, multiRule, $tbody) {
                 var $tr = $('<tr>');
+
                 var itemName = multiRule._itemName ? item[multiRule._itemName] : item.name;
                 var $itemName = $('<span>').html(_s(itemName));
 
@@ -725,6 +733,14 @@
                         }
                     });
                 });
+
+
+                var itemIp = multiRule._itemIp ? item[multiRule._itemIp] : null;
+                if (itemIp != null) {
+                     var $itemIp = $('<span>').html(_s(itemIp));
+                     $tr.append($('<td>').addClass('state').appendTo($tr).append($itemIp));
+                }
+
 
                 var itemState = item._itemState ? item._itemState : item.state;
 
@@ -820,6 +836,8 @@
                 $(data).each(function() {
                     var field = this;
                     var $tr = _medit.multiItem.itemRow(field, itemActions, multiRule, $tbody).appendTo($tbody);
+
+                    $tr.data('json-obj', field);
 
                     cloudStack.evenOdd($tbody, 'tr', {
                         even: function($elem) {
@@ -937,7 +955,7 @@
                     response: {
                         success: function(args) {
                             $(args.data).each(function() {
-                                $('<option>').val(this.name).html(_s(this.description))
+                                $('<option>').val(this.name).html(_l(_s(this.description)))
                                     .appendTo($select);
                             });
                             _medit.refreshItemWidths($multi);
@@ -980,6 +998,10 @@
                             .addClass('disallowSpecialCharacters')
                         .attr('disabled', field.isDisabled ? 'disabled' : false)
                         .appendTo($td);
+
+                    if (field.validation) {
+                        $td.find('input').first().data("validation-settings",  field.validation );
+                    }
 
                     if (field.isDisabled) $input.hide();
                     if (field.defaultValue) {
@@ -1232,6 +1254,11 @@
 
         $multiForm.validate();
 
+        var inputs = $multiForm.find('input');
+        $.each(inputs, function() {
+            if ($(this).data && $(this).data('validation-settings'))
+                $(this).rules('add', $(this).data('validation-settings'));
+        });
         return this;
     };
 

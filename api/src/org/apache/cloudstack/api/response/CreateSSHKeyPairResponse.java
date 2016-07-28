@@ -16,15 +16,17 @@
 // under the License.
 package org.apache.cloudstack.api.response;
 
-import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
+import com.cloud.serializer.Param;
 
 public class CreateSSHKeyPairResponse extends SSHKeyPairResponse {
 
-    @SerializedName("privatekey") @Param(description="Private key")
+    @SerializedName("privatekey")
+    @Param(description = "Private key", isSensitive = true)
     private String privateKey;
 
-    public CreateSSHKeyPairResponse() {}
+    public CreateSSHKeyPairResponse() {
+    }
 
     public CreateSSHKeyPairResponse(String name, String fingerprint, String privateKey) {
         super(name, fingerprint);

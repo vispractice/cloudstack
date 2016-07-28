@@ -18,10 +18,12 @@
  */
 package org.apache.cloudstack.storage.cache.allocator;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObjectInStore;
@@ -30,10 +32,9 @@ import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine;
 import org.apache.cloudstack.engine.subsystem.api.storage.Scope;
 import org.apache.cloudstack.storage.datastore.ObjectInDataStoreManager;
+import org.apache.cloudstack.storage.image.datastore.ImageStoreProviderManager;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
+import com.cloud.server.StatsCollector;
 import com.cloud.storage.ScopeType;
 
 @Component
@@ -42,7 +43,11 @@ public class StorageCacheRandomAllocator implements StorageCacheAllocator {
     @Inject
     DataStoreManager dataStoreMgr;
     @Inject
-    ObjectInDataStoreManager objectInStoreMgr;    
+    ObjectInDataStoreManager objectInStoreMgr;
+    @Inject
+    ImageStoreProviderManager imageStoreMgr;
+    @Inject
+    StatsCollector statsCollector;
 
     @Override
     public DataStore getCacheStore(Scope scope) {
@@ -52,13 +57,12 @@ public class StorageCacheRandomAllocator implements StorageCacheAllocator {
         }
 
         List<DataStore> cacheStores = dataStoreMgr.getImageCacheStores(scope);
-        if (cacheStores.size() <= 0) {
+        if ((cacheStores == null) || (cacheStores.size() <= 0)) {
             s_logger.debug("Can't find staging storage in zone: " + scope.getScopeId());
             return null;
         }
 
-        Collections.shuffle(cacheStores);
-        return cacheStores.get(0);
+        return imageStoreMgr.getImageStore(cacheStores);
     }
 
     @Override
@@ -73,23 +77,17 @@ public class StorageCacheRandomAllocator implements StorageCacheAllocator {
             s_logger.debug("Can't find staging storage in zone: " + scope.getScopeId());
             return null;
         }
-        
+
         // if there are multiple cache stores, we give priority to the one where data is already there
         if (cacheStores.size() > 1) {
             for (DataStore store : cacheStores) {
                 DataObjectInStore obj = objectInStoreMgr.findObject(data, store);
-                if (obj != null && obj.getState() == ObjectInDataStoreStateMachine.State.Ready) {
+                if (obj != null && obj.getState() == ObjectInDataStoreStateMachine.State.Ready && statsCollector.imageStoreHasEnoughCapacity(store)) {
                     s_logger.debug("pick the cache store " + store.getId() + " where data is already there");
                     return store;
                 }
             }
-
-            // otherwise, just random pick one
-            Collections.shuffle(cacheStores);
         }
-        return cacheStores.get(0);        
-
+        return imageStoreMgr.getImageStore(cacheStores);
     }
-    
-    
 }

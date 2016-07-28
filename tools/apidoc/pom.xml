@@ -17,7 +17,7 @@
     <parent>
         <groupId>org.apache.cloudstack</groupId>
         <artifactId>cloud-tools</artifactId>
-        <version>4.3.3</version>
+        <version>4.8.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <properties>
@@ -25,6 +25,20 @@
         <client.config.jars>${client.config.base}/lib</client.config.jars>
         <client.config.conf>${client.config.base}/classes</client.config.conf>
     </properties>
+
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.cloudstack</groupId>
+        <artifactId>cloud-server</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.cloudstack</groupId>
+        <artifactId>cloud-client-ui</artifactId>
+        <version>${project.version}</version>
+	<type>pom</type>
+      </dependency>
+    </dependencies>
 
     <build>
         <defaultGoal>install</defaultGoal>

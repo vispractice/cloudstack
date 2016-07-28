@@ -92,6 +92,9 @@ known_categories = {
     'NetworkACL': 'Network ACL',
     'Network': 'Network',
     'CiscoNexus': 'Network',
+    'OpenDaylight': 'Network',
+    'createServiceInstance': 'Network',
+    'addGloboDnsHost': 'Network',
     'Vpn': 'VPN',
     'Limit': 'Limit',
     'ResourceCount': 'Limit',
@@ -108,8 +111,15 @@ known_categories = {
     'Hypervisor': 'Hypervisor',
     'Alert': 'Alert',
     'Event': 'Event',
-    'login': 'Login',
-    'logout': 'Logout',
+    'login': 'Authentication',
+    'logout': 'Authentication',
+    'saml': 'Authentication',
+    'getSPMetadata': 'Authentication',
+    'listIdps': 'Authentication',
+    'authorizeSamlSso': 'Authentication',
+    'listSamlAuthorization': 'Authentication',
+    'quota': 'Quota',
+    'emailTemplate': 'Quota',
     'Capacity': 'System Capacity',
     'NetworkDevice': 'Network Device',
     'ExternalLoadBalancer': 'Ext Load Balancer',
@@ -132,7 +142,9 @@ known_categories = {
     'StaticRoute': 'VPC',
     'Tags': 'Resource tags',
     'NiciraNvpDevice': 'Nicira NVP',
-    'BigSwitchVnsDevice': 'BigSwitch VNS',
+    'BrocadeVcsDevice': 'Brocade VCS',
+    'BigSwitchBcfDevice': 'BigSwitch BCF',
+	'NuageVsp': 'Nuage VSP',
     'AutoScale': 'AutoScale',
     'Counter': 'AutoScale',
     'Condition': 'AutoScale',
@@ -141,6 +153,7 @@ known_categories = {
     'Detail': 'Resource metadata',
     'addIpToNic': 'Nic',
     'removeIpFromNic': 'Nic',
+    'updateVmNicIp': 'Nic',
     'listNics':'Nic',
 	'AffinityGroup': 'Affinity Group',
     'addImageStore': 'Image Store',
@@ -160,6 +173,8 @@ known_categories = {
     'Ucs' : 'UCS',
     'CacheStores' : 'Cache Stores',
     'CacheStore' : 'Cache Store',
+    'IAM' : 'IAM',
+    'OvsElement' : 'Ovs Element',
     'StratosphereSsp' : ' Stratosphere SSP'
     }
 
@@ -168,7 +183,7 @@ categories = {}
 
 
 def choose_category(fn):
-    for k, v in known_categories.iteritems():
+    for k, v in known_categories.items():
         if k in fn:
             return v
     raise Exception('Need to add a category for %s to %s:known_categories' %
@@ -189,7 +204,8 @@ for f in sys.argv:
     if dirname.startswith('./'):
         dirname = dirname[2:]
     try:
-        dom = minidom.parse(file(f))
+        with open(f) as data:
+            dom = minidom.parse(data)
         name = dom.getElementsByTagName('name')[0].firstChild.data
         isAsync = dom.getElementsByTagName('isAsync')[0].firstChild.data
         category = choose_category(fn)
@@ -201,10 +217,10 @@ for f in sys.argv:
             'async': isAsync == 'true',
             'user': dirname_to_user[dirname],
             })
-    except ExpatError, e:
+    except ExpatError as e:
         pass
-    except IndexError, e:
-        print fn
+    except IndexError as e:
+        print(fn)
 
 
 def xml_for(command):
@@ -218,7 +234,7 @@ def xml_for(command):
 
 
 def write_xml(out, user):
-    with file(out, 'w') as f:
+    with open(out, 'w') as f:
         cat_strings = []
 
         for category in categories.keys():
@@ -235,8 +251,8 @@ def write_xml(out, user):
         i = 0
         for _1, category, all_strings in cat_strings:
             if i == 0:
-                print >>f, '<div class="apismallsections">'
-            print >>f, '''<div class="apismallbullet_box">
+                f.write('<div class="apismallsections">\n')
+            f.write('''<div class="apismallbullet_box">
 <h5>%(category)s</h5>
 <ul>
 <xsl:for-each select="commands/command">
@@ -245,14 +261,14 @@ def write_xml(out, user):
 </ul>
 </div>
 
-''' % locals()
+''' % locals())
             if i == 3:
-                print >>f, '</div>'
+                f.write('</div>\n')
                 i = 0
             else:
                 i += 1
         if i != 0:
-            print >>f, '</div>'
+            f.write('</div>\n')
 
 
 def java_for(command, user):
@@ -278,8 +294,8 @@ def java_for_user(user):
 
 
 def write_java(out):
-    with file(out, 'w') as f:
-        print >>f, '''/* Generated using gen_toc.py.  Do not edit. */
+    with open(out, 'w') as f:
+        f.write('''/* Generated using gen_toc.py.  Do not edit. */
 
 import java.util.HashSet;
 import java.util.Set;
@@ -290,14 +306,15 @@ public class XmlToHtmlConverterData {
 	Set<String> domainAdminCommandNames = new HashSet<String>();
 	Set<String> userCommandNames = new HashSet<String>();
 
-'''
-        print >>f, java_for_user(REGULAR_USER)
-        print >>f, java_for_user(ROOT_ADMIN)
-        print >>f, java_for_user(DOMAIN_ADMIN)
+''')
+        f.write(java_for_user(REGULAR_USER) + "\n");
+        f.write(java_for_user(ROOT_ADMIN) + "\n")
+        f.write(java_for_user(DOMAIN_ADMIN) + "\n")
 
-        print >>f, '''
+        f.write('''
 }
-'''
+
+''')
 
 
 write_xml('generatetocforuser_include.xsl', REGULAR_USER)

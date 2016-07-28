@@ -30,11 +30,12 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import org.apache.log4j.Logger;
+
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.log4j.Logger;
 
 import com.cloud.configuration.Config;
 import com.cloud.storage.JavaStorageLayer;
@@ -44,8 +45,10 @@ import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
+import com.cloud.vm.dao.NicDao;
+import com.cloud.vm.dao.VMInstanceDao;
 
-@Local(value = { HypervManager.class })
+@Local(value = {HypervManager.class})
 public class HypervManagerImpl implements HypervManager {
     public static final Logger s_logger = Logger.getLogger(HypervManagerImpl.class);
 
@@ -61,6 +64,9 @@ public class HypervManagerImpl implements HypervManager {
 
     @Inject ConfigurationDao _configDao;
     @Inject DataStoreManager _dataStoreMgr;
+    @Inject VMInstanceDao _vminstanceDao;
+    @Inject NicDao _nicDao;
+    int _routerExtraPublicNics = 2;
 
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -74,7 +80,7 @@ public class HypervManagerImpl implements HypervManager {
             _storage = new JavaStorageLayer();
             _storage.configure("StorageLayer", params);
         }
-
+        _routerExtraPublicNics = NumbersUtil.parseInt(_configDao.getValue(Config.RouterExtraPublicNics.key()), 2);
         return true;
     }
 
@@ -150,11 +156,11 @@ public class HypervManagerImpl implements HypervManager {
 
         GlobalLock lock = GlobalLock.getInternLock("prepare.systemvm");
         try {
-            if(lock.lock(3600)) {
+            if (lock.lock(3600)) {
                 try {
                     File patchFolder = new File(mountPoint + "/systemvm");
-                    if(!patchFolder.exists()) {
-                        if(!patchFolder.mkdirs()) {
+                    if (!patchFolder.exists()) {
+                        if (!patchFolder.mkdirs()) {
                             String msg = "Unable to create systemvm folder on secondary storage. location: " + patchFolder.toString();
                             s_logger.error(msg);
                             throw new CloudRuntimeException(msg);
@@ -163,12 +169,12 @@ public class HypervManagerImpl implements HypervManager {
 
                     File srcIso = getSystemVMPatchIsoFile();
                     File destIso = new File(mountPoint + "/systemvm/" + getSystemVMIsoFileNameOnDatastore());
-                    if(!destIso.exists()) {
+                    if (!destIso.exists()) {
                         s_logger.info("Copy System VM patch ISO file to secondary storage. source ISO: " +
-                                srcIso.getAbsolutePath() + ", destination: " + destIso.getAbsolutePath());
+                            srcIso.getAbsolutePath() + ", destination: " + destIso.getAbsolutePath());
                         try {
                             FileUtil.copyfile(srcIso, destIso);
-                        } catch(IOException e) {
+                        } catch (IOException e) {
                             s_logger.error("Unexpected exception ", e);
 
                             String msg = "Unable to copy systemvm ISO on secondary storage. src location: " + srcIso.toString() + ", dest location: " + destIso;
@@ -176,7 +182,7 @@ public class HypervManagerImpl implements HypervManager {
                             throw new CloudRuntimeException(msg);
                         }
                     } else {
-                        if(s_logger.isTraceEnabled()) {
+                        if (s_logger.isTraceEnabled()) {
                             s_logger.trace("SystemVM ISO file " + destIso.getPath() + " already exists");
                         }
                     }
@@ -191,9 +197,9 @@ public class HypervManagerImpl implements HypervManager {
 
     private String getMountPoint(String storageUrl) {
         String mountPoint = null;
-        synchronized(_storageMounts) {
+        synchronized (_storageMounts) {
             mountPoint = _storageMounts.get(storageUrl);
-            if(mountPoint != null) {
+            if (mountPoint != null) {
                 return mountPoint;
             }
 
@@ -206,8 +212,8 @@ public class HypervManagerImpl implements HypervManager {
             }
 
             mountPoint = mount(File.separator + File.separator + uri.getHost() + uri.getPath(), getMountParent(),
-                    uri.getScheme(), uri.getQuery());
-            if(mountPoint == null) {
+                uri.getScheme(), uri.getQuery());
+            if (mountPoint == null) {
                 s_logger.error("Unable to create mount point for " + storageUrl);
                 return "/mnt/sec";
             }
@@ -296,12 +302,12 @@ public class HypervManagerImpl implements HypervManager {
             isoFile = new File(url.getPath());
         }
 
-        if(isoFile == null || !isoFile.exists()) {
+        if (isoFile == null || !isoFile.exists()) {
             isoFile = new File("/usr/share/cloudstack-common/vms/systemvm.iso");
         }
 
-        assert(isoFile != null);
-        if(!isoFile.exists()) {
+        assert (isoFile != null);
+        if (!isoFile.exists()) {
             s_logger.error("Unable to locate systemvm.iso in your setup at " + isoFile.toString());
         }
         return isoFile;
@@ -332,8 +338,8 @@ public class HypervManagerImpl implements HypervManager {
 
         // cleanup left-over NFS mounts from previous session
         String[] mounts = _storage.listFiles(parent + File.separator + String.valueOf(mshostId) + ".*");
-        if(mounts != null && mounts.length > 0) {
-            for(String mountPoint : mounts) {
+        if (mounts != null && mounts.length > 0) {
+            for (String mountPoint : mounts) {
                 s_logger.info("umount NFS mount from previous session: " + mountPoint);
 
                 String result = null;
@@ -353,21 +359,27 @@ public class HypervManagerImpl implements HypervManager {
 
     private void shutdownCleanup() {
         s_logger.info("Cleanup mounted mount points used in current session");
+        synchronized (_storageMounts) {
+             for (String mountPoint : _storageMounts.values()) {
+                s_logger.info("umount NFS mount: " + mountPoint);
 
-        for(String mountPoint : _storageMounts.values()) {
-            s_logger.info("umount NFS mount: " + mountPoint);
-
-            String result = null;
-            Script command = new Script(true, "umount", _timeout, s_logger);
-            command.add(mountPoint);
-            result = command.execute();
-            if (result != null) {
-                s_logger.warn("Unable to umount " + mountPoint + " due to " + result);
-            }
-            File file = new File(mountPoint);
-            if (file.exists()) {
-                file.delete();
+                String result = null;
+                Script command = new Script(true, "umount", _timeout, s_logger);
+                command.add(mountPoint);
+                result = command.execute();
+                if (result != null) {
+                    s_logger.warn("Unable to umount " + mountPoint + " due to " + result);
+                }
+                File file = new File(mountPoint);
+                if (file.exists()) {
+                    file.delete();
+                }
             }
         }
+    }
+
+    @Override
+    public int getRouterExtraPublicNics() {
+        return _routerExtraPublicNics;
     }
 }

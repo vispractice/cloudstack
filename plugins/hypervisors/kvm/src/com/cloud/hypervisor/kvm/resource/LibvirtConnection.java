@@ -28,28 +28,32 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 
 public class LibvirtConnection {
     private static final Logger s_logger = Logger.getLogger(LibvirtConnection.class);
-    static private Map<String, Connect> _connections = new HashMap<String, Connect>();
+    static private Map<String, Connect> s_connections = new HashMap<String, Connect>();
 
-    static private Connect _connection;
-    static private String _hypervisorURI;
+    static private Connect s_connection;
+    static private String s_hypervisorURI;
 
     static public Connect getConnection() throws LibvirtException {
-        return getConnection(_hypervisorURI);
+        return getConnection(s_hypervisorURI);
     }
 
     static public Connect getConnection(String hypervisorURI) throws LibvirtException {
-        Connect conn = _connections.get(hypervisorURI);
+        s_logger.debug("Looking for libvirtd connection at: " + hypervisorURI);
+        Connect conn = s_connections.get(hypervisorURI);
 
         if (conn == null) {
+            s_logger.info("No existing libvirtd connection found. Opening a new one");
             conn = new Connect(hypervisorURI, false);
-            _connections.put(hypervisorURI, conn);
+            s_logger.debug("Successfully connected to libvirt at: " + hypervisorURI);
+            s_connections.put(hypervisorURI, conn);
         } else {
             try {
                 conn.getVersion();
             } catch (LibvirtException e) {
-                s_logger.debug("Connection with libvirtd is broken, due to " + e.getMessage());
+                s_logger.error("Connection with libvirtd is broken: " + e.getMessage());
+                s_logger.debug("Opening a new libvirtd connection to: " + hypervisorURI);
                 conn = new Connect(hypervisorURI, false);
-                _connections.put(hypervisorURI, conn);
+                s_connections.put(hypervisorURI, conn);
             }
         }
 
@@ -57,7 +61,7 @@ public class LibvirtConnection {
     }
 
     static public Connect getConnectionByVmName(String vmName) throws LibvirtException {
-        HypervisorType[] hypervisors = new HypervisorType[] { HypervisorType.KVM, Hypervisor.HypervisorType.LXC };
+        HypervisorType[] hypervisors = new HypervisorType[] {HypervisorType.KVM, Hypervisor.HypervisorType.LXC};
 
         for (HypervisorType hypervisor : hypervisors) {
             try {
@@ -66,11 +70,11 @@ public class LibvirtConnection {
                     return conn;
                 }
             } catch (Exception e) {
-                s_logger.debug("can't find connection: " + hypervisor.toString() + ", for vm: " + vmName + ", continue");
+                s_logger.debug("Can not find " + hypervisor.toString() + " connection for Instance: " + vmName + ", continuing.");
             }
         }
 
-        s_logger.debug("can't find which hypervisor the vm used , then use the default hypervisor");
+        s_logger.warn("Can not find a connection for Instance " + vmName + ". Assuming the default connection.");
         // return the default connection
         return getConnection();
     }
@@ -80,7 +84,7 @@ public class LibvirtConnection {
     }
 
     static void initialize(String hypervisorURI) {
-        _hypervisorURI = hypervisorURI;
+        s_hypervisorURI = hypervisorURI;
     }
 
     static String getHypervisorURI(String hypervisorType) {

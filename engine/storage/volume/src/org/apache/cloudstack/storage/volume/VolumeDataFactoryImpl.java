@@ -77,7 +77,7 @@ public class VolumeDataFactoryImpl implements VolumeDataFactory {
 
     @Override
     public VolumeInfo getVolume(long volumeId) {
-        VolumeVO volumeVO = volumeDao.findById(volumeId);
+        VolumeVO volumeVO = volumeDao.findByIdIncludingRemoved(volumeId);
         if (volumeVO == null) {
             return null;
         }
@@ -99,7 +99,7 @@ public class VolumeDataFactoryImpl implements VolumeDataFactory {
     @Override
     public VolumeInfo getVolume(DataObject volume, DataStore store) {
         VolumeInfo vol = getVolume(volume.getId(), store);
-        vol.addPayload(((VolumeInfo) volume).getpayload());
+        vol.addPayload(((VolumeInfo)volume).getpayload());
         return vol;
     }
 

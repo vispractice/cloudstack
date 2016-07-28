@@ -44,6 +44,8 @@
 
     <bean class="org.apache.cloudstack.networkoffering.ChildTestConfiguration" />
     <bean id="UservmDetailsDaoImpl" class="com.cloud.vm.dao.UserVmDetailsDaoImpl" />
+    <bean id="hostGpuGroupsDaoImpl" class="com.cloud.gpu.dao.HostGpuGroupsDaoImpl" />
+    <bean id="vGPUTypesDaoImpl" class="com.cloud.gpu.dao.VGPUTypesDaoImpl" />
     <bean id="usageEventDaoImpl" class="com.cloud.event.dao.UsageEventDaoImpl" />
     <bean id="usageEventDetailsDaoImpl" class="com.cloud.event.dao.UsageEventDetailsDaoImpl" />
     <bean id="storagePoolHostDaoImpl" class="com.cloud.storage.dao.StoragePoolHostDaoImpl" />
@@ -54,4 +56,6 @@
 	<bean id="BandwidthOfferingDaoImpl" class="com.cloud.network.dao.BandwidthOfferingDaoImpl"/>
     <bean id="BandwidthRulesDaoImpl" class="com.cloud.network.dao.BandwidthRulesDaoImpl"/>
     <bean id="BandwidthIPPortMapDaoImpl" class="com.cloud.network.dao.BandwidthIPPortMapDaoImpl"/>
+    <bean id="userIpAddressDetailsDao" class="org.apache.cloudstack.resourcedetail.dao.UserIpAddressDetailsDaoImpl" />
+    
 </beans>

@@ -71,17 +71,17 @@ public class MockSource extends FakeSource {
 
         Element mockSource = new MockSource("source") {
             {
-                this.bufs = new ByteBuffer[] {new ByteBuffer(new byte[] {1, 1, 2, 3, 4, 5}), new ByteBuffer(new byte[] {2, 1, 2, 3, 4}),
+                bufs = new ByteBuffer[] {new ByteBuffer(new byte[] {1, 1, 2, 3, 4, 5}), new ByteBuffer(new byte[] {2, 1, 2, 3, 4}),
                         new ByteBuffer(new byte[] {3, 1, 2, 3}), new ByteBuffer(new byte[] {4, 1, 2}), new ByteBuffer(new byte[] {5, 1})};
-                this.verbose = true;
-                this.delay = 100;
+                verbose = true;
+                delay = 100;
                 // this.numBuffers = this.bufs.length;
             }
         };
 
         Element fakeSink = new FakeSink("sink") {
             {
-                this.verbose = true;
+                verbose = true;
             }
         };
 

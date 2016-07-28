@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.storage.dao;
 
-import javax.ejb.Local;
 
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.ConfigKey.Scope;
@@ -25,8 +24,6 @@ import org.apache.cloudstack.resourcedetail.ResourceDetailsDaoBase;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailVO;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailsDao;
 
-
-@Local(value = StoragePoolDetailsDao.class)
 public class StoragePoolDetailsDaoImpl extends ResourceDetailsDaoBase<StoragePoolDetailVO> implements StoragePoolDetailsDao, ScopedConfigStorage {
 
     public StoragePoolDetailsDaoImpl() {
@@ -44,7 +41,7 @@ public class StoragePoolDetailsDaoImpl extends ResourceDetailsDaoBase<StoragePoo
     }
 
     @Override
-    public void addDetail(long resourceId, String key, String value) {
-        super.addDetail(new StoragePoolDetailVO(resourceId, key, value));
+    public void addDetail(long resourceId, String key, String value, boolean display) {
+        super.addDetail(new StoragePoolDetailVO(resourceId, key, value, display));
     }
 }

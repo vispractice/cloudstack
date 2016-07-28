@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
@@ -53,7 +52,6 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.ssh.SSHCmdHelper;
 
-@Local(value = Discoverer.class)
 public class OvmDiscoverer extends DiscovererBase implements Discoverer, ResourceStateAdapter {
     private static final Logger s_logger = Logger.getLogger(OvmDiscoverer.class);
     protected String _publicNetworkDevice;
@@ -93,8 +91,8 @@ public class OvmDiscoverer extends DiscovererBase implements Discoverer, Resourc
     }
 
     @Override
-    public Map<? extends ServerResource, Map<String, String>> find(long dcId, Long podId, Long clusterId, URI url, String username, String password, List<String> hostTags)
-        throws DiscoveryException {
+    public Map<? extends ServerResource, Map<String, String>>
+        find(long dcId, Long podId, Long clusterId, URI url, String username, String password, List<String> hostTags) throws DiscoveryException {
         Connection conn = null;
 
         if (!url.getScheme().equals("http")) {
@@ -153,7 +151,8 @@ public class OvmDiscoverer extends DiscovererBase implements Discoverer, Resourc
             sshConnection.connect(null, 60000, 60000);
             sshConnection = SSHCmdHelper.acquireAuthorizedConnection(hostIp, username, password);
             if (sshConnection == null) {
-                throw new DiscoveryException(String.format("Cannot connect to ovm host(IP=%1$s, username=%2$s, password=%3$s, discover failed", hostIp, username, password));
+                throw new DiscoveryException(String.format("Cannot connect to ovm host(IP=%1$s, username=%2$s, password=%3$s, discover failed", hostIp, username,
+                    password));
             }
 
             if (!SSHCmdHelper.sshExecuteCmd(sshConnection, "[ -f '/etc/ovs-agent/agent.ini' ]")) {

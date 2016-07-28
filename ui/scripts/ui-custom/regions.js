@@ -36,10 +36,6 @@
 
                             $li.data('region-data', region);
 
-                            /* e.g.
-							region.endpoint	== "http://localhost:8080/client/"
-							document.location.href == "http://localhost:8080/client/#"
-							*/
                             if (document.location.href.indexOf(region.endpoint) != -1) {
                                 currentRegion = region;
                                 $li.addClass('active');
@@ -72,7 +68,7 @@
         )
             .hide();
         var $regionSwitcherButton = $('<div>').addClass('region-switcher')
-            .attr('title', 'Select region')
+            .attr('title', _l('label.select.region'))
             .append(
                 $('<span>').addClass('icon').html('&nbsp;'),
                 $('<span>').addClass('title').html('')

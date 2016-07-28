@@ -23,10 +23,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import com.cloud.utils.exception.CloudRuntimeException;
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -35,6 +31,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.TemplateInfo;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.storage.image.store.TemplateObject;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.storage.DataStoreRole;
 import com.cloud.storage.VMTemplateStoragePoolVO;
@@ -120,12 +118,12 @@ public class TemplateDataFactoryImpl implements TemplateDataFactory {
 
     @Override
     public TemplateInfo getTemplate(DataObject obj, DataStore store) {
-        TemplateObject tmpObj = (TemplateObject) this.getTemplate(obj.getId(), store);
+        TemplateObject tmpObj = (TemplateObject)this.getTemplate(obj.getId(), store);
         // carry over url set in passed in data object, for copyTemplate case
         // where url is generated on demand and not persisted in DB.
         // need to think of a more generic way to pass these runtime information
         // carried through DataObject post 4.2
-        TemplateObject origTmpl = (TemplateObject) obj;
+        TemplateObject origTmpl = (TemplateObject)obj;
         tmpObj.setUrl(origTmpl.getUrl());
         return tmpObj;
     }

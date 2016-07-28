@@ -31,7 +31,7 @@ import org.apache.cloudstack.api.ResourceDetail;
 @Table(name = "snapshot_details")
 public class SnapshotDetailsVO implements ResourceDetail {
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private long id;
 
@@ -44,14 +44,17 @@ public class SnapshotDetailsVO implements ResourceDetail {
     @Column(name = "value")
     String value;
 
-    public SnapshotDetailsVO() {
+    @Column(name = "display")
+    private boolean display = true;
 
+    public SnapshotDetailsVO() {
     }
 
-    public SnapshotDetailsVO(Long resourceId, String name, String value) {
+    public SnapshotDetailsVO(Long resourceId, String name, String value, boolean display) {
         this.resourceId = resourceId;
         this.name = name;
         this.value = value;
+        this.display = display;
     }
 
     @Override
@@ -71,7 +74,7 @@ public class SnapshotDetailsVO implements ResourceDetail {
 
     @Override
     public boolean isDisplay() {
-        return false;
+        return display;
     }
 
     @Override

@@ -16,6 +16,11 @@
 // under the License.
 package com.cloud.vpc.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+
 import com.cloud.network.Network;
 import com.cloud.network.Network.GuestType;
 import com.cloud.network.Networks.TrafficType;
@@ -26,21 +31,20 @@ import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 
-import javax.ejb.Local;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-@Local(value = NetworkDao.class)
 @DB()
-public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implements NetworkDao{
+public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implements NetworkDao {
 
     /* (non-Javadoc)
      * @see com.cloud.network.dao.NetworkDao#listByOwner(long)
      */
     @Override
-    public List<NetworkVO> listByOwner(long ownerId) {
+    public List<NetworkVO> listByOwner(final long ownerId) {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<NetworkVO> listByGuestType(GuestType type) {
         return null;
     }
 
@@ -48,7 +52,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listBy(long, long, long)
      */
     @Override
-    public List<NetworkVO> listBy(long accountId, long offeringId, long dataCenterId) {
+    public List<NetworkVO> listBy(final long accountId, final long offeringId, final long dataCenterId) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -57,7 +61,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listBy(long, long, java.lang.String, boolean)
      */
     @Override
-    public List<NetworkVO> listBy(long accountId, long dataCenterId, String cidr, boolean skipVpc) {
+    public List<NetworkVO> listBy(final long accountId, final long dataCenterId, final String cidr, final boolean skipVpc) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -66,7 +70,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listByZoneAndGuestType(long, long, com.cloud.network.Network.GuestType, java.lang.Boolean)
      */
     @Override
-    public List<NetworkVO> listByZoneAndGuestType(long accountId, long dataCenterId, GuestType type, Boolean isSystem) {
+    public List<NetworkVO> listByZoneAndGuestType(final long accountId, final long dataCenterId, final GuestType type, final Boolean isSystem) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -75,7 +79,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#persist(com.cloud.network.NetworkVO, boolean, java.util.Map)
      */
     @Override
-    public NetworkVO persist(NetworkVO network, boolean gc, Map<String, String> serviceProviderMap) {
+    public NetworkVO persist(final NetworkVO network, final boolean gc, final Map<String, String> serviceProviderMap) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -93,7 +97,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#getNetworksForOffering(long, long, long)
      */
     @Override
-    public List<NetworkVO> getNetworksForOffering(long offeringId, long dataCenterId, long accountId) {
+    public List<NetworkVO> getNetworksForOffering(final long offeringId, final long dataCenterId, final long accountId) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -102,7 +106,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#getNextAvailableMacAddress(long)
      */
     @Override
-    public String getNextAvailableMacAddress(long networkConfigId) {
+    public String getNextAvailableMacAddress(final long networkConfigId) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -111,7 +115,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listBy(long, long)
      */
     @Override
-    public List<NetworkVO> listBy(long accountId, long networkId) {
+    public List<NetworkVO> listBy(final long accountId, final long networkId) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -120,7 +124,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#countByZoneAndUri(long, java.lang.String)
      */
     @Override
-    public long countByZoneAndUri(long zoneId, String broadcastUri) {
+    public long countByZoneAndUri(final long zoneId, final String broadcastUri) {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -129,7 +133,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#countByZoneUriAndGuestType(long, java.lang.String, com.cloud.network.Network.GuestType)
      */
     @Override
-    public long countByZoneUriAndGuestType(long zoneId, String broadcastUri, GuestType guestType) {
+    public long countByZoneUriAndGuestType(final long zoneId, final String broadcastUri, final GuestType guestType) {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -138,7 +142,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listByZone(long)
      */
     @Override
-    public List<NetworkVO> listByZone(long zoneId) {
+    public List<NetworkVO> listByZone(final long zoneId) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -147,16 +151,16 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#changeActiveNicsBy(long, int)
      */
     @Override
-    public void changeActiveNicsBy(long networkId, int nicsCount) {
+    public void changeActiveNicsBy(final long networkId, final int nicsCount) {
         // TODO Auto-generated method stub
-        
+
     }
 
     /* (non-Javadoc)
      * @see com.cloud.network.dao.NetworkDao#getActiveNicsIn(long)
      */
     @Override
-    public int getActiveNicsIn(long networkId) {
+    public int getActiveNicsIn(final long networkId) {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -174,16 +178,16 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#clearCheckForGc(long)
      */
     @Override
-    public void clearCheckForGc(long networkId) {
+    public void clearCheckForGc(final long networkId) {
         // TODO Auto-generated method stub
-        
+
     }
 
     /* (non-Javadoc)
      * @see com.cloud.network.dao.NetworkDao#listByZoneSecurityGroup(java.lang.Long)
      */
     @Override
-    public List<NetworkVO> listByZoneSecurityGroup(Long zoneId) {
+    public List<NetworkVO> listByZoneSecurityGroup(final Long zoneId) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -192,16 +196,16 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#addDomainToNetwork(long, long, java.lang.Boolean)
      */
     @Override
-    public void addDomainToNetwork(long networkId, long domainId, Boolean subdomainAccess) {
+    public void addDomainToNetwork(final long networkId, final long domainId, final Boolean subdomainAccess) {
         // TODO Auto-generated method stub
-        
+
     }
 
     /* (non-Javadoc)
      * @see com.cloud.network.dao.NetworkDao#listByPhysicalNetwork(long)
      */
     @Override
-    public List<NetworkVO> listByPhysicalNetwork(long physicalNetworkId) {
+    public List<NetworkVO> listByPhysicalNetwork(final long physicalNetworkId) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -219,7 +223,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listByPhysicalNetworkTrafficType(long, com.cloud.network.Networks.TrafficType)
      */
     @Override
-    public List<NetworkVO> listByPhysicalNetworkTrafficType(long physicalNetworkId, TrafficType trafficType) {
+    public List<NetworkVO> listByPhysicalNetworkTrafficType(final long physicalNetworkId, final TrafficType trafficType) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -228,7 +232,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listBy(long, long, com.cloud.network.Network.GuestType, com.cloud.network.Networks.TrafficType)
      */
     @Override
-    public List<NetworkVO> listBy(long accountId, long dataCenterId, GuestType type, TrafficType trafficType) {
+    public List<NetworkVO> listBy(final long accountId, final long dataCenterId, final GuestType type, final TrafficType trafficType) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -237,7 +241,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listByPhysicalNetworkAndProvider(long, java.lang.String)
      */
     @Override
-    public List<NetworkVO> listByPhysicalNetworkAndProvider(long physicalNetworkId, String providerName) {
+    public List<NetworkVO> listByPhysicalNetworkAndProvider(final long physicalNetworkId, final String providerName) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -246,16 +250,16 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#persistNetworkServiceProviders(long, java.util.Map)
      */
     @Override
-    public void persistNetworkServiceProviders(long networkId, Map<String, String> serviceProviderMap) {
+    public void persistNetworkServiceProviders(final long networkId, final Map<String, String> serviceProviderMap) {
         // TODO Auto-generated method stub
-        
+
     }
 
     /* (non-Javadoc)
      * @see com.cloud.network.dao.NetworkDao#update(java.lang.Long, com.cloud.network.NetworkVO, java.util.Map)
      */
     @Override
-    public boolean update(Long networkId, NetworkVO network, Map<String, String> serviceProviderMap) {
+    public boolean update(final Long networkId, final NetworkVO network, final Map<String, String> serviceProviderMap) {
         // TODO Auto-generated method stub
         return false;
     }
@@ -264,7 +268,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listByZoneAndTrafficType(long, com.cloud.network.Networks.TrafficType)
      */
     @Override
-    public List<NetworkVO> listByZoneAndTrafficType(long zoneId, TrafficType trafficType) {
+    public List<NetworkVO> listByZoneAndTrafficType(final long zoneId, final TrafficType trafficType) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -273,16 +277,16 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#setCheckForGc(long)
      */
     @Override
-    public void setCheckForGc(long networkId) {
+    public void setCheckForGc(final long networkId) {
         // TODO Auto-generated method stub
-        
+
     }
 
     /* (non-Javadoc)
      * @see com.cloud.network.dao.NetworkDao#getNetworkCountByNetworkOffId(long)
      */
     @Override
-    public int getNetworkCountByNetworkOffId(long networkOfferingId) {
+    public int getNetworkCountByNetworkOffId(final long networkOfferingId) {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -291,7 +295,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#countNetworksUserCanCreate(long)
      */
     @Override
-    public long countNetworksUserCanCreate(long ownerId) {
+    public long countNetworksUserCanCreate(final long ownerId) {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -300,7 +304,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listSourceNATEnabledNetworks(long, long, com.cloud.network.Network.GuestType)
      */
     @Override
-    public List<NetworkVO> listSourceNATEnabledNetworks(long accountId, long dataCenterId, GuestType type) {
+    public List<NetworkVO> listSourceNATEnabledNetworks(final long accountId, final long dataCenterId, final GuestType type) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -309,7 +313,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#getNetworkCountByVpcId(long)
      */
     @Override
-    public int getNetworkCountByVpcId(long vpcId) {
+    public int getNetworkCountByVpcId(final long vpcId) {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -318,8 +322,8 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listByVpc(long)
      */
     @Override
-    public List<NetworkVO> listByVpc(long vpcId) {
-        List<NetworkVO> networks = new ArrayList<NetworkVO>();
+    public List<NetworkVO> listByVpc(final long vpcId) {
+        final List<NetworkVO> networks = new ArrayList<NetworkVO>();
         networks.add(new NetworkVO());
         return networks;
     }
@@ -328,7 +332,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#getPrivateNetwork(java.lang.String, java.lang.String, long, long)
      */
     @Override
-    public NetworkVO getPrivateNetwork(String broadcastUri, String cidr, long accountId, long zoneId, Long netofferid) {
+    public NetworkVO getPrivateNetwork(final String broadcastUri, final String cidr, final long accountId, final long zoneId, final Long netofferid) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -337,13 +341,13 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#countVpcNetworks(long)
      */
     @Override
-    public long countVpcNetworks(long vpcId) {
+    public long countVpcNetworks(final long vpcId) {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public boolean updateState(Network.State currentState, Network.Event event, Network.State nextState, Network vo, Object data) {
+    public boolean updateState(final Network.State currentState, final Network.Event event, final Network.State nextState, final Network vo, final Object data) {
         return true;
     }
 
@@ -351,7 +355,7 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
      * @see com.cloud.network.dao.NetworkDao#listNetworksByAccount(long, long, com.cloud.network.Network.GuestType, boolean)
      */
     @Override
-    public List<NetworkVO> listNetworksByAccount(long accountId, long zoneId, GuestType type, boolean isSystem) {
+    public List<NetworkVO> listNetworksByAccount(final long accountId, final long zoneId, final GuestType type, final boolean isSystem) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -363,13 +367,18 @@ public class MockNetworkDaoImpl extends GenericDaoBase<NetworkVO, Long> implemen
     }
 
     @Override
-    public List<NetworkVO> listByAclId(long aclId) {
+    public List<NetworkVO> listVpcNetworks() {
+        // TODO Auto-generated method stub
         return null;
     }
 
-    
     @Override
-    public int getNonSystemNetworkCountByVpcId(long vpcId) {
+    public List<NetworkVO> listByAclId(final long aclId) {
+        return null;
+    }
+
+    @Override
+    public int getNonSystemNetworkCountByVpcId(final long vpcId) {
         return 0;
     }
 }

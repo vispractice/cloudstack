@@ -32,7 +32,8 @@ import com.cloud.event.EventTypes;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 
-@APICommand(name = "deleteNetworkACL", description="Deletes a Network ACL", responseObject=SuccessResponse.class)
+@APICommand(name = "deleteNetworkACL", description = "Deletes a network ACL", responseObject = SuccessResponse.class,
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteNetworkACLCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(DeleteNetworkACLCmd.class.getName());
     private static final String s_name = "deletenetworkaclresponse";
@@ -41,8 +42,7 @@ public class DeleteNetworkACLCmd extends BaseAsyncCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = NetworkACLItemResponse.class,
-            required=true, description="the ID of the network ACL")
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = NetworkACLItemResponse.class, required = true, description = "the ID of the network ACL")
     private Long id;
 
     /////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ public class DeleteNetworkACLCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        return  ("Deleting Network ACL id=" + id);
+        return ("Deleting Network ACL ID=" + id);
     }
 
     @Override
@@ -79,16 +79,15 @@ public class DeleteNetworkACLCmd extends BaseAsyncCmd {
 
     @Override
     public void execute() throws ResourceUnavailableException {
-        CallContext.current().setEventDetails("Network ACL Item Id: " + id);
+        CallContext.current().setEventDetails("Network ACL item ID: " + id);
         boolean result = _networkACLService.revokeNetworkACLItem(id);
 
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
         } else {
-            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete network ACL Item");
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete network ACL item");
         }
     }
 
 }
-

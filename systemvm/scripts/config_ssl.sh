@@ -24,6 +24,7 @@ help() {
    printf " -k path of private key\n"
    printf " -p path of certificate of public key\n"
    printf " -t path of certificate chain\n"
+   printf " -u path of root ca certificate \n"
 }
 
 
@@ -36,6 +37,7 @@ config_httpd_conf() {
   echo "  DocumentRoot /var/www/html/" >> /etc/httpd/conf/httpd.conf
   echo "  ServerName $srvr" >> /etc/httpd/conf/httpd.conf
   echo "  SSLEngine on" >>  /etc/httpd/conf/httpd.conf
+  echo "  SSLProtocol all -SSLv2 -SSLv3" >>  /etc/httpd/conf/httpd.conf
   echo "  SSLCertificateFile /etc/httpd/ssl/certs/realhostip.crt" >>  /etc/httpd/conf/httpd.conf
   echo "  SSLCertificateKeyFile /etc/httpd/ssl/keys/realhostip.key" >> /etc/httpd/conf/httpd.conf
   echo "</VirtualHost>" >> /etc/httpd/conf/httpd.conf
@@ -53,6 +55,35 @@ config_apache2_conf() {
   sed -i -e "s/NameVirtualHost .*:80/NameVirtualHost $ip:80/g" /etc/apache2/ports.conf
   sed -i  's/ssl-cert-snakeoil.key/cert_apache.key/' /etc/apache2/sites-available/default-ssl
   sed -i  's/ssl-cert-snakeoil.pem/cert_apache.crt/' /etc/apache2/sites-available/default-ssl
+  sed -i  's/SSLProtocol.*$/SSLProtocol all -SSLv2 -SSLv3/' /etc/apache2/sites-available/default-ssl
+  if [ -f /etc/ssl/certs/cert_apache_chain.crt ]
+  then
+    sed -i -e "s/#SSLCertificateChainFile.*/SSLCertificateChainFile \/etc\/ssl\/certs\/cert_apache_chain.crt/" /etc/apache2/sites-available/default-ssl
+  fi
+
+  SSL_FILE="/etc/apache2/sites-available/default-ssl"
+  PATTERN="RewriteRule ^\/upload\/(.*)"
+  CORS_PATTERN="Header set Access-Control-Allow-Origin"
+  if [ -f $SSL_FILE ]; then
+    if grep -q "$PATTERN" $SSL_FILE ; then
+      echo "rewrite rules already exist in file $SSL_FILE"
+    else
+        echo "adding rewrite rules to file: $SSL_FILE"
+        sed -i -e "s/<\/VirtualHost>/RewriteEngine On \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/RewriteCond %{HTTPS} =on \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/RewriteCond %{REQUEST_METHOD} =POST \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/RewriteRule ^\/upload\/(.*) http:\/\/127.0.0.1:8210\/upload?uuid=\$1 [P,L] \n&/" $SSL_FILE
+    fi
+    if grep -q "$CORS_PATTERN" $SSL_FILE ; then
+      echo "cors rules already exist in file $SSL_FILE"
+    else
+        echo "adding cors rules to file: $SSL_FILE"
+        sed -i -e "s/<\/VirtualHost>/Header always set Access-Control-Allow-Origin \"*\" \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/Header always set Access-Control-Allow-Methods \"POST, OPTIONS\" \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/Header always set Access-Control-Allow-Headers \"x-requested-with, Content-Type, origin, authorization, accept, client-security-token, x-signature, x-metadata, x-expires\" \n&/" $SSL_FILE
+    fi
+  fi
+
 }
 
 copy_certs() {
@@ -88,12 +119,13 @@ cccflag=
 customPrivKey=$(dirname $0)/certs/realhostip.key
 customPrivCert=$(dirname $0)/certs/realhostip.crt
 customCertChain=
+customCACert=
 publicIp=
 hostName=
 keyStore=$(dirname $0)/certs/realhostip.keystore
 aliasName="CPVMCertificate"
 storepass="vmops.com"
-while getopts 'i:h:k:p:t:c' OPTION
+while getopts 'i:h:k:p:t:u:c' OPTION
 do
   case $OPTION in
      c) cflag=1
@@ -106,6 +138,9 @@ do
         ;;
      t) cccflag=1
         customCertChain="$OPTARG"
+        ;;
+     u) ccacflag=1
+        customCACert="$OPTARG"
         ;;
      i) publicIp="$OPTARG"
         ;;
@@ -165,10 +200,10 @@ then
   exit 2
 fi
 
-if [ -f "$customPrivCert" ]
+if [ -f "$customCACert" ]
 then
   keytool -delete -alias $aliasName -keystore $keyStore -storepass $storepass -noprompt
-  keytool -import -alias $aliasName -keystore $keyStore -storepass $storepass -noprompt -file $customPrivCert
+  keytool -import -alias $aliasName -keystore $keyStore -storepass $storepass -noprompt -file $customCACert
 fi
 
 if [ -d /etc/apache2 ]

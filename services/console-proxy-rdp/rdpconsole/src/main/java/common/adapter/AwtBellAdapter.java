@@ -48,6 +48,7 @@ public class AwtBellAdapter extends BaseElement {
         Toolkit.getDefaultToolkit().beep();
     }
 
+    @Override
     public String toString() {
         return "Bell(" + id + ")";
     }
@@ -60,9 +61,9 @@ public class AwtBellAdapter extends BaseElement {
 
         Element source = new FakeSource("source") {
             {
-                this.incommingBufLength = 0;
-                this.delay = 1000;
-                this.numBuffers = 3;
+                incommingBufLength = 0;
+                delay = 1000;
+                numBuffers = 3;
             }
         };
 

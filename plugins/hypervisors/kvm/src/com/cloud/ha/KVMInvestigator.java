@@ -30,11 +30,9 @@ import com.cloud.resource.ResourceManager;
 import com.cloud.utils.component.AdapterBase;
 import org.apache.log4j.Logger;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 import java.util.List;
 
-@Local(value=Investigator.class)
 public class KVMInvestigator extends AdapterBase implements Investigator {
     private final static Logger s_logger = Logger.getLogger(KVMInvestigator.class);
     @Inject
@@ -43,36 +41,66 @@ public class KVMInvestigator extends AdapterBase implements Investigator {
     AgentManager _agentMgr;
     @Inject
     ResourceManager _resourceMgr;
+
     @Override
-    public Boolean isVmAlive(com.cloud.vm.VirtualMachine vm, Host host) {
+    public boolean isVmAlive(com.cloud.vm.VirtualMachine vm, Host host) throws UnknownVM {
         Status status = isAgentAlive(host);
         if (status == null) {
-            return null;
+            throw new UnknownVM();
         }
-        return status == Status.Up ? true : null;
+        if (status == Status.Up) {
+            return true;
+        } else {
+            throw new UnknownVM();
+        }
     }
 
     @Override
     public Status isAgentAlive(Host agent) {
-        if (agent.getHypervisorType() != Hypervisor.HypervisorType.KVM) {
+        if (agent.getHypervisorType() != Hypervisor.HypervisorType.KVM && agent.getHypervisorType() != Hypervisor.HypervisorType.LXC) {
             return null;
         }
+        Status hostStatus = null;
+        Status neighbourStatus = null;
         CheckOnHostCommand cmd = new CheckOnHostCommand(agent);
+
+        try {
+            Answer answer = _agentMgr.easySend(agent.getId(), cmd);
+            if (answer != null) {
+                hostStatus = answer.getResult() ? Status.Down : Status.Up;
+            }
+        } catch (Exception e) {
+            s_logger.debug("Failed to send command to host: " + agent.getId());
+        }
+        if (hostStatus == null) {
+            hostStatus = Status.Disconnected;
+        }
+
         List<HostVO> neighbors = _resourceMgr.listHostsInClusterByStatus(agent.getClusterId(), Status.Up);
         for (HostVO neighbor : neighbors) {
-            if (neighbor.getId() == agent.getId() || neighbor.getHypervisorType() != Hypervisor.HypervisorType.KVM) {
+            if (neighbor.getId() == agent.getId() || (neighbor.getHypervisorType() != Hypervisor.HypervisorType.KVM && neighbor.getHypervisorType() != Hypervisor.HypervisorType.LXC)) {
                 continue;
             }
+            s_logger.debug("Investigating host:" + agent.getId() + " via neighbouring host:" + neighbor.getId());
             try {
                 Answer answer = _agentMgr.easySend(neighbor.getId(), cmd);
                 if (answer != null) {
-                    return answer.getResult() ? Status.Down : Status.Up;
+                    neighbourStatus = answer.getResult() ? Status.Down : Status.Up;
+                    s_logger.debug("Neighbouring host:" + neighbor.getId() + " returned status:" + neighbourStatus + " for the investigated host:" + agent.getId());
+                    if (neighbourStatus == Status.Up) {
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 s_logger.debug("Failed to send command to host: " + neighbor.getId());
             }
         }
-
-        return null;
+        if (neighbourStatus == Status.Up && (hostStatus == Status.Disconnected || hostStatus == Status.Down)) {
+            hostStatus = Status.Disconnected;
+        }
+        if (neighbourStatus == Status.Down && (hostStatus == Status.Disconnected || hostStatus == Status.Down)) {
+            hostStatus = Status.Down;
+        }
+        return hostStatus;
     }
 }

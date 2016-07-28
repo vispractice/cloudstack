@@ -72,7 +72,7 @@ public class NtlmState implements NtlmConstants {
 
     public byte[] responseKeyNT;
 
-    public byte[] ntProofStr;
+    public byte[] ntProofStr1;
 
     public String domain;
 
@@ -101,7 +101,7 @@ public class NtlmState implements NtlmConstants {
 
     public byte[] ntChallengeResponse;
 
-    public byte[] nt_proof_str;
+    public byte[] ntProofStr2;
 
     public byte[] randomSessionKey;
 
@@ -131,7 +131,7 @@ public class NtlmState implements NtlmConstants {
 
     /**
      * A 4-byte sequence number.
-     * 
+     *
      * In the case of connection-oriented authentication, the SeqNum parameter
      * MUST start at 0 and is incremented by one for each message sent. The
      * receiver expects the first received message to have SeqNum equal to 0, and
@@ -229,8 +229,8 @@ public class NtlmState implements NtlmConstants {
                     + new ByteBuffer(actual).toPlainHexString() + ".");
     }
 
-    public byte[] computeNtProofStr(byte[] ntlm_v2_hash, byte[] data) {
-        return CryptoAlgos.HMAC_MD5(ntlm_v2_hash, data);
+    public byte[] computeNtProofStr(byte[] ntlmV2Hash, byte[] data) {
+        return CryptoAlgos.HMAC_MD5(ntlmV2Hash, data);
     }
 
     public void testComputeNtProofStr() {
@@ -270,8 +270,8 @@ public class NtlmState implements NtlmConstants {
                     + new ByteBuffer(actual).toPlainHexString() + ".");
     }
 
-    public byte[] computeSessionBaseKey(byte[] ntlm_v2_hash, byte[] nt_proof_str) {
-        return CryptoAlgos.HMAC_MD5(ntlm_v2_hash, nt_proof_str);
+    public byte[] computeSessionBaseKey(byte[] ntlmV2Hash, byte[] ntProofStr) {
+        return CryptoAlgos.HMAC_MD5(ntlmV2Hash, ntProofStr);
     }
 
     public void testComputeSessionBaseKey() {
@@ -395,11 +395,11 @@ public class NtlmState implements NtlmConstants {
         byte[] bufBytes = buf.toByteArray();
         buf.unref();
 
-        nt_proof_str = computeNtProofStr(ntlm_v2_hash, CryptoAlgos.concatenationOf(serverChallenge, bufBytes));
+        ntProofStr2 = computeNtProofStr(ntlm_v2_hash, CryptoAlgos.concatenationOf(serverChallenge, bufBytes));
 
-        ntChallengeResponse = CryptoAlgos.concatenationOf(nt_proof_str, bufBytes);
+        ntChallengeResponse = CryptoAlgos.concatenationOf(ntProofStr2, bufBytes);
 
-        sessionBaseKey = computeSessionBaseKey(ntlm_v2_hash, nt_proof_str);
+        sessionBaseKey = computeSessionBaseKey(ntlm_v2_hash, ntProofStr2);
 
         return ntChallengeResponse;
     }
@@ -697,7 +697,7 @@ public class NtlmState implements NtlmConstants {
 
     public byte[] ntlm_EncryptMessage(byte[] message) {
         byte[] versionBytes = new byte[] {0x01, 0x00, 0x00, 0x00}; // 0x00000001
-                                                                   // LE
+        // LE
         byte[] seqNumBytes = new byte[] {(byte)(sendSeqNum & 0xff), (byte)((sendSeqNum >> 8) & 0xff), (byte)((sendSeqNum >> 16) & 0xff),
                 (byte)((sendSeqNum >> 24) & 0xff)};
 
@@ -784,7 +784,7 @@ public class NtlmState implements NtlmConstants {
     public byte[] ntlm_DecryptMessage(byte[] wrappedMssage) {
 
         byte[] versionBytes = new byte[] {0x01, 0x00, 0x00, 0x00}; // 0x00000001
-                                                                   // LE
+        // LE
         byte[] seqNumBytes = new byte[] {(byte)(recvSeqNum & 0xff), (byte)((recvSeqNum >> 8) & 0xff), (byte)((recvSeqNum >> 16) & 0xff),
                 (byte)((recvSeqNum >> 24) & 0xff)};
 

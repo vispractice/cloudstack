@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,6 +15,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package org.apache.cloudstack.api.agent.test;
 
 import static org.junit.Assert.assertFalse;
@@ -31,19 +34,19 @@ public class AnswerTest {
 
     @Test
     public void testExecuteInSequence() {
-        boolean b = a.executeInSequence();
+        final boolean b = a.executeInSequence();
         assertFalse(b);
     }
 
     @Test
     public void testGetResult() {
-        boolean b = a.getResult();
+        final boolean b = a.getResult();
         assertTrue(b);
     }
 
     @Test
     public void testGetDetails() {
-        String d = a.getDetails();
+        final String d = a.getDetails();
         assertTrue(d.equals("details"));
     }
 
@@ -57,8 +60,7 @@ public class AnswerTest {
         assertFalse(b);
 
         String d = usa.getDetails();
-        assertTrue(d.equals("Unsupported command issued:" + acc.toString()
-                + ".  Are you sure you got the right type of server?"));
+        assertTrue(d.contains("Unsupported command issued: " + acc.toString() + ".  Are you sure you got the right type of server?"));
 
         usa = Answer.createUnsupportedVersionAnswer(acc);
         b = usa.executeInSequence();

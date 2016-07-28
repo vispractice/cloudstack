@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
-
 # used as a proxy to call script inside virtual router 
 
 #set -x
@@ -55,12 +53,3 @@ else
    ssh -p 3922 -q -o StrictHostKeyChecking=no -i $cert root@$domRIp "/opt/cloud/bin/$script $*"
 fi
 exit $?
-
-
-
-
-
-
-
-
-

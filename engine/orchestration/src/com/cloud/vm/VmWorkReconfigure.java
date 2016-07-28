@@ -18,10 +18,10 @@ package com.cloud.vm;
 
 
 public class VmWorkReconfigure extends VmWork {
-	private static final long serialVersionUID = -4517030323758086615L;
+    private static final long serialVersionUID = -4517030323758086615L;
 
     Long newServiceOfferingId;
-	boolean sameHost;
+    boolean sameHost;
 
     public VmWorkReconfigure(long userId, long accountId, long vmId, String handlerName,
             Long newServiceOfferingId, boolean sameHost) {
@@ -29,7 +29,7 @@ public class VmWorkReconfigure extends VmWork {
         super(userId, accountId, vmId, handlerName);
 
         this.newServiceOfferingId = newServiceOfferingId;
-    	this.sameHost = sameHost;
+        this.sameHost = sameHost;
     }
 
     public Long getNewServiceOfferingId() {
@@ -37,6 +37,6 @@ public class VmWorkReconfigure extends VmWork {
     }
 
     public boolean isSameHost() {
-    	return sameHost;
+        return sameHost;
     }
 }

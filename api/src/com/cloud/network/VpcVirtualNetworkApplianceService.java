@@ -24,7 +24,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.vm.VirtualMachineProfile;
 
-public interface VpcVirtualNetworkApplianceService extends VirtualNetworkApplianceService{
+public interface VpcVirtualNetworkApplianceService extends VirtualNetworkApplianceService {
 
     /**
      * @param router
@@ -36,7 +36,7 @@ public interface VpcVirtualNetworkApplianceService extends VirtualNetworkApplian
      * @throws ResourceUnavailableException
      * @throws InsufficientCapacityException
      */
-    boolean addVpcRouterToGuestNetwork(VirtualRouter router, Network network, boolean isRedundant, Map<VirtualMachineProfile.Param, Object> params)
+    boolean addVpcRouterToGuestNetwork(VirtualRouter router, Network network, Map<VirtualMachineProfile.Param, Object> params)
             throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException;
 
     /**
@@ -47,7 +47,6 @@ public interface VpcVirtualNetworkApplianceService extends VirtualNetworkApplian
      * @throws ConcurrentOperationException
      * @throws ResourceUnavailableException
      */
-    boolean removeVpcRouterFromGuestNetwork(VirtualRouter router, Network network, boolean isRedundant)
-            throws ConcurrentOperationException, ResourceUnavailableException;
+    boolean removeVpcRouterFromGuestNetwork(VirtualRouter router, Network network) throws ConcurrentOperationException, ResourceUnavailableException;
 
 }

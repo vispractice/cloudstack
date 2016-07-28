@@ -27,11 +27,13 @@ import com.cloud.utils.db.GenericDao;
 
 public interface ResourceTagJoinDao extends GenericDao<ResourceTagJoinVO, Long> {
 
-    ResourceTagResponse newResourceTagResponse(ResourceTagJoinVO uvo, boolean keyValueOnly );
+    ResourceTagResponse newResourceTagResponse(ResourceTagJoinVO uvo, boolean keyValueOnly);
 
     ResourceTagJoinVO newResourceTagView(ResourceTag vr);
 
     List<ResourceTagJoinVO> searchByIds(Long... ids);
-    
+
     List<ResourceTagJoinVO> listBy(String resourceUUID, ResourceObjectType resourceType);
+
+    ResourceTagJoinVO searchById(Long id);
 }

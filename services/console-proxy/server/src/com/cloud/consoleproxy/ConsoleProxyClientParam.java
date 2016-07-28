@@ -17,7 +17,7 @@
 package com.cloud.consoleproxy;
 
 /**
- * 
+ *
  * Data object to store parameter info needed by client to connect to its host
  */
 public class ConsoleProxyClientParam {
@@ -32,6 +32,7 @@ public class ConsoleProxyClientParam {
     private String clientTunnelSession;
     private String locale;
     private String ajaxSessionId;
+
     private String hypervHost;
     private String username;
     private String password;

@@ -19,6 +19,7 @@ package com.cloud.network.addr;
 import java.util.Date;
 
 import com.cloud.dc.VlanVO;
+import com.cloud.network.IpAddress;
 import com.cloud.network.PublicIpAddress;
 import com.cloud.network.dao.IPAddressVO;
 import com.cloud.utils.net.Ip;
@@ -39,9 +40,9 @@ public class PublicIp implements PublicIpAddress {
     }
 
     public static PublicIp createFromAddrAndVlan(IPAddressVO addr, VlanVO vlan) {
-    	return new PublicIp(addr, vlan, NetUtils.createSequenceBasedMacAddress(addr.getMacAddress()));
+        return new PublicIp(addr, vlan, NetUtils.createSequenceBasedMacAddress(addr.getMacAddress()));
     }
-    
+
     @Override
     public Ip getAddress() {
         return _addr.getAddress();
@@ -160,7 +161,6 @@ public class PublicIp implements PublicIpAddress {
         return _addr.getId();
     }
 
-
     @Override
     public String getUuid() {
         return _addr.getUuid();
@@ -176,26 +176,26 @@ public class PublicIp implements PublicIpAddress {
         return _vlan.getPhysicalNetworkId();
     }
 
-	@Override
-	public void setState(State state) {
-		_addr.setState(state);
-	}
+    @Override
+    public void setState(State state) {
+        _addr.setState(state);
+    }
 
-	@Override
-	public Long getAllocatedToAccountId() {
-		return _addr.getAllocatedToAccountId();
-	}
+    @Override
+    public Long getAllocatedToAccountId() {
+        return _addr.getAllocatedToAccountId();
+    }
 
-	@Override
-	public Long getAllocatedInDomainId() {
-		return _addr.getAllocatedInDomainId();
-	}
+    @Override
+    public Long getAllocatedInDomainId() {
+        return _addr.getAllocatedInDomainId();
+    }
 
-	@Override
+    @Override
     public boolean getSystem() {
         return _addr.getSystem();
     }
-	
+
     @Override
     public Long getVpcId() {
        return _addr.getVpcId();
@@ -253,4 +253,23 @@ public class PublicIp implements PublicIpAddress {
 		return null;
 	}
 
+    @Override
+    public boolean isDisplay() {
+        return _addr.isDisplay();
+    }
+
+    @Override
+    public Date getRemoved() {
+        return _addr.getRemoved();
+    }
+
+    @Override
+    public Date getCreated() {
+        return _addr.getCreated();
+    }
+
+    @Override
+    public Class<?> getEntityType() {
+        return IpAddress.class;
+    }
 }

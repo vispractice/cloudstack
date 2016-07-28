@@ -5,7 +5,7 @@
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
@@ -30,98 +30,63 @@ import com.cloud.network.router.VirtualRouter;
 /**
  */
 @Entity
-@Table(name="domain_router")
-@PrimaryKeyJoinColumn(name="id")
-@DiscriminatorValue(value="DomainRouter")
+@Table(name = "domain_router")
+@PrimaryKeyJoinColumn(name = "id")
+@DiscriminatorValue(value = "DomainRouter")
 public class DomainRouterVO extends VMInstanceVO implements VirtualRouter {
-    @Column(name="element_id")
+    @Column(name = "element_id")
     private long elementId;
 
-    @Column(name="public_ip_address")
+    @Column(name = "public_ip_address")
     private String publicIpAddress;
 
-    @Column(name="public_mac_address")
+    @Column(name = "public_mac_address")
     private String publicMacAddress;
 
-    @Column(name="public_netmask")
+    @Column(name = "public_netmask")
     private String publicNetmask;
 
-    @Column(name="is_redundant_router")
+    @Column(name = "is_redundant_router")
     boolean isRedundantRouter;
 
-    @Column(name="priority")
-    int priority;
-
-    @Column(name="is_priority_bumpup")
-    boolean isPriorityBumpUp;
-
-    @Column(name="redundant_state")
+    @Column(name = "redundant_state")
     @Enumerated(EnumType.STRING)
     private RedundantState redundantState;
 
-    @Column(name="stop_pending")
+    @Column(name = "stop_pending")
     boolean stopPending;
 
-    @Column(name="role")
+    @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Role role = Role.VIRTUAL_ROUTER;
 
-    @Column(name="template_version")
+    @Column(name = "template_version")
     private String templateVersion;
 
-    @Column(name="scripts_version")
+    @Column(name = "scripts_version")
     private String scriptsVersion;
 
-    @Column(name="vpc_id")
+    @Column(name = "vpc_id")
     private Long vpcId;
 
-    public DomainRouterVO(long id,
-            long serviceOfferingId,
-            long elementId,
-            String name,
-            long templateId,
-            HypervisorType hypervisorType,
-            long guestOSId,
-            long domainId,
-            long accountId,
-            boolean isRedundantRouter,
-            int priority,
-            boolean isPriorityBumpUp,
-            RedundantState redundantState,
-            boolean haEnabled,
-            boolean stopPending, Long vpcId) {
-        super(id, serviceOfferingId, name, name, Type.DomainRouter, templateId, hypervisorType, guestOSId, domainId, accountId, haEnabled);
+    public DomainRouterVO(final long id, final long serviceOfferingId, final long elementId, final String name, final long templateId, final HypervisorType hypervisorType, final long guestOSId, final long domainId,
+            final long accountId, final long userId, final boolean isRedundantRouter, final RedundantState redundantState, final boolean haEnabled, final boolean stopPending,
+            final Long vpcId) {
+        super(id, serviceOfferingId, name, name, Type.DomainRouter, templateId, hypervisorType, guestOSId, domainId, accountId, userId, haEnabled);
         this.elementId = elementId;
         this.isRedundantRouter = isRedundantRouter;
-        this.priority = priority;
         this.redundantState = redundantState;
-        this.isPriorityBumpUp = isPriorityBumpUp;
         this.stopPending = stopPending;
         this.vpcId = vpcId;
     }
 
-    public DomainRouterVO(long id,
-            long serviceOfferingId,
-            long elementId,
-            String name,
-            long templateId,
-            HypervisorType hypervisorType,
-            long guestOSId,
-            long domainId,
-            long accountId,
-            boolean isRedundantRouter,
-            int priority,
-            boolean isPriorityBumpUp,
-            RedundantState redundantState,
-            boolean haEnabled,
-            boolean stopPending,
-            VirtualMachine.Type vmType, Long vpcId) {
-        super(id, serviceOfferingId, name, name, vmType, templateId, hypervisorType, guestOSId, domainId, accountId, haEnabled);
+    public DomainRouterVO(final long id, final long serviceOfferingId, final long elementId, final String name, final long templateId, final HypervisorType hypervisorType, final long guestOSId, final long domainId,
+            final long accountId, final long userId, final boolean isRedundantRouter, final RedundantState redundantState, final boolean haEnabled, final boolean stopPending,
+            final Type vmType, final Long vpcId) {
+        super(id, serviceOfferingId, name, name, vmType, templateId, hypervisorType, guestOSId, domainId, accountId, userId, haEnabled);
         this.elementId = elementId;
         this.isRedundantRouter = isRedundantRouter;
-        this.priority = priority;
         this.redundantState = redundantState;
-        this.isPriorityBumpUp = isPriorityBumpUp;
         this.stopPending = stopPending;
         this.vpcId = vpcId;
     }
@@ -130,15 +95,15 @@ public class DomainRouterVO extends VMInstanceVO implements VirtualRouter {
         return elementId;
     }
 
-    public void setPublicIpAddress(String publicIpAddress) {
+    public void setPublicIpAddress(final String publicIpAddress) {
         this.publicIpAddress = publicIpAddress;
     }
 
-    public void setPublicMacAddress(String publicMacAddress) {
+    public void setPublicMacAddress(final String publicMacAddress) {
         this.publicMacAddress = publicMacAddress;
     }
 
-    public void setPublicNetmask(String publicNetmask) {
+    public void setPublicNetmask(final String publicNetmask) {
         this.publicNetmask = publicNetmask;
     }
 
@@ -169,16 +134,16 @@ public class DomainRouterVO extends VMInstanceVO implements VirtualRouter {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(final Role role) {
         this.role = role;
     }
 
     @Override
     public boolean getIsRedundantRouter() {
-        return this.isRedundantRouter;
+        return isRedundantRouter;
     }
 
-    public void setIsRedundantRouter(boolean isRedundantRouter) {
+    public void setIsRedundantRouter(final boolean isRedundantRouter) {
         this.isRedundantRouter = isRedundantRouter;
     }
 
@@ -187,54 +152,39 @@ public class DomainRouterVO extends VMInstanceVO implements VirtualRouter {
         return serviceOfferingId;
     }
 
-    public int getPriority() {
-        return this.priority;
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
-
     @Override
     public RedundantState getRedundantState() {
-        return this.redundantState;
+        return redundantState;
     }
 
-    public void setRedundantState(RedundantState redundantState) {
+    public void setRedundantState(final RedundantState redundantState) {
         this.redundantState = redundantState;
-    }
-
-    public boolean getIsPriorityBumpUp() {
-        return this.isPriorityBumpUp;
-    }
-
-    public void setIsPriorityBumpUp(boolean isPriorityBumpUp) {
-        this.isPriorityBumpUp = isPriorityBumpUp;
     }
 
     @Override
     public boolean isStopPending() {
-        return this.stopPending;
+        return stopPending;
     }
 
     @Override
-    public void setStopPending(boolean stopPending) {
+    public void setStopPending(final boolean stopPending) {
         this.stopPending = stopPending;
     }
 
+    @Override
     public String getTemplateVersion() {
-        return this.templateVersion;
+        return templateVersion;
     }
 
-    public void setTemplateVersion(String templateVersion) {
+    public void setTemplateVersion(final String templateVersion) {
         this.templateVersion = templateVersion;
     }
 
     public String getScriptsVersion() {
-        return this.scriptsVersion;
+        return scriptsVersion;
     }
 
-    public void setScriptsVersion(String scriptsVersion) {
+    public void setScriptsVersion(final String scriptsVersion) {
         this.scriptsVersion = scriptsVersion;
     }
 

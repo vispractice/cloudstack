@@ -18,7 +18,6 @@ package com.cloud.network.as.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -29,17 +28,16 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Func;
 
 @Component
-@Local(value = { AutoScaleVmGroupDao.class })
-public class AutoScaleVmGroupDaoImpl extends GenericDaoBase<AutoScaleVmGroupVO, Long>  implements AutoScaleVmGroupDao {
+public class AutoScaleVmGroupDaoImpl extends GenericDaoBase<AutoScaleVmGroupVO, Long> implements AutoScaleVmGroupDao {
 
     @Override
     public List<AutoScaleVmGroupVO> listByAll(Long loadBalancerId, Long profileId) {
         SearchCriteria<AutoScaleVmGroupVO> sc = createSearchCriteria();
 
-        if(loadBalancerId != null)
+        if (loadBalancerId != null)
             sc.addAnd("loadBalancerId", SearchCriteria.Op.EQ, loadBalancerId);
 
-        if(profileId != null)
+        if (profileId != null)
             sc.addAnd("profileId", SearchCriteria.Op.EQ, profileId);
 
         return listBy(sc);

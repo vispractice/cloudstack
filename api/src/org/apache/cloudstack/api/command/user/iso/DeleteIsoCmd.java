@@ -16,6 +16,8 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.iso;
 
+import org.apache.log4j.Logger;
+
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandJobType;
 import org.apache.cloudstack.api.ApiConstants;
@@ -28,29 +30,28 @@ import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
 
-import org.apache.log4j.Logger;
-
 import com.cloud.event.EventTypes;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 
-@APICommand(name = "deleteIso", description="Deletes an ISO file.", responseObject=SuccessResponse.class)
+@APICommand(name = "deleteIso", description = "Deletes an ISO file.", responseObject = SuccessResponse.class,
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteIsoCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(DeleteIsoCmd.class.getName());
-    private static final String s_name = "deleteisosresponse";
+    private static final String s_name = "deleteisoresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = TemplateResponse.class,
-            required=true, description="the ID of the ISO file")
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = TemplateResponse.class, required = true, description = "the ID of the ISO file")
     private Long id;
 
-    @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.UUID, entityType = ZoneResponse.class,
-            description="the ID of the zone of the ISO file. If not specified, the ISO will be deleted from all the zones")
+    @Parameter(name = ApiConstants.ZONE_ID,
+               type = CommandType.UUID,
+               entityType = ZoneResponse.class,
+               description = "the ID of the zone of the ISO file. If not specified, the ISO will be deleted from all the zones")
     private Long zoneId;
-
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -94,26 +95,28 @@ public class DeleteIsoCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        return "Deleting iso " + getId();
+        return "Deleting ISO " + getId();
     }
 
+    @Override
     public ApiCommandJobType getInstanceType() {
         return ApiCommandJobType.Iso;
     }
 
+    @Override
     public Long getInstanceId() {
         return getId();
     }
 
     @Override
-    public void execute(){
-        CallContext.current().setEventDetails("ISO Id: "+getId());
+    public void execute() {
+        CallContext.current().setEventDetails("ISO Id: " + getId());
         boolean result = _templateService.deleteIso(this);
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
-            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete iso");
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete ISO");
         }
     }
 }

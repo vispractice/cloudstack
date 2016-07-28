@@ -19,33 +19,33 @@ package org.apache.cloudstack.api.command.user.ssh;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseListProjectAndAccountResourcesCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.SSHKeyPairResponse;
-import org.apache.log4j.Logger;
 
 import com.cloud.user.SSHKeyPair;
 import com.cloud.utils.Pair;
 
-@APICommand(name = "listSSHKeyPairs", description="List registered keypairs", responseObject=SSHKeyPairResponse.class)
+@APICommand(name = "listSSHKeyPairs", description = "List registered keypairs", responseObject = SSHKeyPairResponse.class, entityType = {SSHKeyPair.class},
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSSHKeyPairsCmd extends BaseListProjectAndAccountResourcesCmd {
     public static final Logger s_logger = Logger.getLogger(ListSSHKeyPairsCmd.class.getName());
     private static final String s_name = "listsshkeypairsresponse";
-
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.NAME, type=CommandType.STRING, description="A key pair name to look for")
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "A key pair name to look for")
     private String name;
 
-    @Parameter(name="fingerprint", type=CommandType.STRING, description="A public key fingerprint to look for")
+    @Parameter(name = "fingerprint", type = CommandType.STRING, description = "A public key fingerprint to look for")
     private String fingerprint;
-
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -59,7 +59,6 @@ public class ListSSHKeyPairsCmd extends BaseListProjectAndAccountResourcesCmd {
         return fingerprint;
     }
 
-
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -69,7 +68,7 @@ public class ListSSHKeyPairsCmd extends BaseListProjectAndAccountResourcesCmd {
         Pair<List<? extends SSHKeyPair>, Integer> resultList = _mgr.listSSHKeyPairs(this);
         List<SSHKeyPairResponse> responses = new ArrayList<SSHKeyPairResponse>();
         for (SSHKeyPair result : resultList.first()) {
-            SSHKeyPairResponse r = new SSHKeyPairResponse(result.getName(), result.getFingerprint());
+            SSHKeyPairResponse r = _responseGenerator.createSSHKeyPairResponse(result, false);
             r.setObjectName("sshkeypair");
             responses.add(r);
         }
@@ -77,7 +76,7 @@ public class ListSSHKeyPairsCmd extends BaseListProjectAndAccountResourcesCmd {
         ListResponse<SSHKeyPairResponse> response = new ListResponse<SSHKeyPairResponse>();
         response.setResponses(responses, resultList.second());
         response.setResponseName(getCommandName());
-        this.setResponseObject(response);
+        setResponseObject(response);
     }
 
     @Override

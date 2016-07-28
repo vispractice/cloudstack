@@ -106,54 +106,54 @@ public class AsyncCallbackDispatcher<T, R> implements AsyncCompletionCallback {
         return null;
     }
 
-	public AsyncCallbackDispatcher<T, R> setCallback(Object useless) {
-		return this;
-	}
+    public AsyncCallbackDispatcher<T, R> setCallback(Object useless) {
+        return this;
+    }
 
-	public AsyncCallbackDispatcher<T, R> setContext(Object context) {
-		_contextObject = context;
-		return this;
-	}
+    public AsyncCallbackDispatcher<T, R> setContext(Object context) {
+        _contextObject = context;
+        return this;
+    }
 
-	@SuppressWarnings("unchecked")
-	public <P> P getContext() {
-		return (P)_contextObject;
-	}
+    @SuppressWarnings("unchecked")
+    public <P> P getContext() {
+        return (P)_contextObject;
+    }
 
-	@Override
-	public void complete(Object resultObject) {
-		_resultObject = resultObject;
-		_driver.performCompletionCallback(this);
-	}
+    @Override
+    public void complete(Object resultObject) {
+        _resultObject = resultObject;
+        _driver.performCompletionCallback(this);
+    }
 
-	@SuppressWarnings("unchecked")
-	public R getResult() {
-		return (R)_resultObject;
-	}
+    @SuppressWarnings("unchecked")
+    public R getResult() {
+        return (R)_resultObject;
+    }
 
-	// for internal use
-	Object getTargetObject() {
-		return _targetObject;
-	}
+    // for internal use
+    Object getTargetObject() {
+        return _targetObject;
+    }
 
-	public static <P, R> AsyncCallbackDispatcher<P, R> create(P target)  {
-		return new AsyncCallbackDispatcher<P, R>(target);
-	}
+    public static <P, R> AsyncCallbackDispatcher<P, R> create(P target) {
+        return new AsyncCallbackDispatcher<P, R>(target);
+    }
 
-	public static boolean dispatch(Object target, AsyncCallbackDispatcher callback) {
-		assert(callback != null);
-		assert(target != null);
+    public static boolean dispatch(Object target, AsyncCallbackDispatcher callback) {
+        assert (callback != null);
+        assert (target != null);
 
-		try {
-			callback.getCallbackMethod().invoke(target, callback, callback.getContext());
-		} catch (IllegalArgumentException e) {
-			throw new RuntimeException("IllegalArgumentException when invoking RPC callback for command: " + callback.getCallbackMethod().getName());
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException("IllegalAccessException when invoking RPC callback for command: " + callback.getCallbackMethod().getName());
-		} catch (InvocationTargetException e) {
-			throw new RuntimeException("InvocationTargetException when invoking RPC callback for command: " + callback.getCallbackMethod().getName(), e);
-		}
+        try {
+            callback.getCallbackMethod().invoke(target, callback, callback.getContext());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("IllegalArgumentException when invoking RPC callback for command: " + callback.getCallbackMethod().getName());
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("IllegalAccessException when invoking RPC callback for command: " + callback.getCallbackMethod().getName());
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException("InvocationTargetException when invoking RPC callback for command: " + callback.getCallbackMethod().getName(), e);
+        }
 
-		return true;
-	}
+        return true;
+    }
 }

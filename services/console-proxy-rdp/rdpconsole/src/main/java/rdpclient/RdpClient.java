@@ -32,7 +32,7 @@ import rdpclient.rdp.ClientConfirmActivePDU;
 import rdpclient.rdp.ClientFastPathPDU;
 import rdpclient.rdp.ClientInfoPDU;
 import rdpclient.rdp.ClientMCSAttachUserRequest;
-import rdpclient.rdp.ClientMCSChannelJoinRequest_ServerMCSChannelConfirmPDUs;
+import rdpclient.rdp.ClientMCSChannelJoinRequestServerMCSChannelConfirmPDUs;
 import rdpclient.rdp.ClientMCSConnectInitial;
 import rdpclient.rdp.ClientMCSErectDomainRequest;
 import rdpclient.rdp.ClientTpkt;
@@ -73,7 +73,7 @@ public class RdpClient extends PipelineImpl {
 
     /**
      * Create new RDP or HyperV cli
-     * 
+     *
      * @param id
      *          id of this element
      * @param userName
@@ -107,13 +107,13 @@ public class RdpClient extends PipelineImpl {
 
     /**
      * Assemble connection sequence and main pipeline.
-     * 
+     *
      * Connection sequence for RDP w/o NLA: cookie(TPKT) SSL x224(TPKT)
      * main(FastPath).
-     * 
+     *
      * Connection sequence for RDP w NLA: cookie(TPKT) SSL credssp x224(TPKT)
      * main(FastPath).
-     * 
+     *
      * Connection sequence for HyperV w NLA: pcb SSL credssp cookie(TPKT)
      * x224(TPKT) main(FastPath).
      */
@@ -171,7 +171,7 @@ public class RdpClient extends PipelineImpl {
 
                     new ClientNtlmsspUserCredentials("client_ntlmssp_finish", ntlmState)
 
-            );
+                    );
         }
 
         add(new ClientX224ConnectionRequestPDU("client_connection_req", userName, protocol), new ServerX224ConnectionConfirmPDU("server_connection_conf"),
@@ -183,7 +183,7 @@ public class RdpClient extends PipelineImpl {
 
                 new ClientMCSAttachUserRequest("client_atach_user"), new ServerMCSAttachUserConfirmPDU("server_atach_user_confirm", state),
 
-                new ClientMCSChannelJoinRequest_ServerMCSChannelConfirmPDUs("client_channel_join_rdprdr", channelsToJoin, state),
+                new ClientMCSChannelJoinRequestServerMCSChannelConfirmPDUs("client_channel_join_rdprdr", channelsToJoin, state),
 
                 new ClientInfoPDU("client_info_req", userName),
 
@@ -201,7 +201,7 @@ public class RdpClient extends PipelineImpl {
 
                 new ClientX224DataPDU("client_x224_data_ot")
 
-        );
+                );
 
         // If HyperV VM ID is set, then insert element which will send VM ID as
         // first packet of connection, before other packets
@@ -230,7 +230,7 @@ public class RdpClient extends PipelineImpl {
                     "client_initial_conference_create");
 
             for (String element : new String[] {"pcb", "client_ntlmssp_nego", "server_ntlmssp_challenge", "client_ntlmssp_auth", "server_ntlmssp_confirm",
-                    "client_ntlmssp_finish"}) {
+            "client_ntlmssp_finish"}) {
                 link(element + " >otout", element + "< OUT");
 
             }
@@ -261,7 +261,7 @@ public class RdpClient extends PipelineImpl {
                         "client_initial_conference_create");
 
                 for (String element : new String[] {"client_ntlmssp_nego", "server_ntlmssp_challenge", "client_ntlmssp_auth", "server_ntlmssp_confirm",
-                        "client_ntlmssp_finish"}) {
+                "client_ntlmssp_finish"}) {
                     link(element + " >otout", element + "< OUT");
 
                 }
@@ -293,7 +293,7 @@ public class RdpClient extends PipelineImpl {
 
                 "server_valid_client"
 
-        );
+                );
 
         // Chain for direct handshake responses (without involving of queue)
         link("client_x224_data_ot", "client_tpkt_ot", "client_tpkt_ot< OUT");
@@ -322,7 +322,7 @@ public class RdpClient extends PipelineImpl {
                 // Slow path: MultiChannel Support
                 new ServerMCSPDU("server_mcs")
 
-        );
+                );
 
         // Last element of handshake sequence will wake up queue and and socket
         // output pull loop, which will switch links, between socket output and

@@ -34,7 +34,7 @@ public class AlgorithmIdentifier extends Sequence {
 
     public AlgorithmIdentifier(String name) {
         super(name);
-        this.tags = new Tag[] {algorithm, parameters};
+        tags = new Tag[] {algorithm, parameters};
     }
 
 }

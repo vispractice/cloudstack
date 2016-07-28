@@ -16,28 +16,37 @@
 // under the License.
 package com.cloud.user.dao;
 
-import javax.ejb.Local;
-
-import org.springframework.stereotype.Component;
-
 import com.cloud.user.UserAccount;
 import com.cloud.user.UserAccountVO;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
-@Local(value={UserAccountDao.class})
 public class UserAccountDaoImpl extends GenericDaoBase<UserAccountVO, Long> implements UserAccountDao {
-	
-	protected final SearchBuilder<UserAccountVO> userAccountSearch;
-	
+
+    protected final SearchBuilder<UserAccountVO> userAccountSearch;
+
     public UserAccountDaoImpl() {
-    	userAccountSearch = createSearchBuilder();
-    	userAccountSearch.and("apiKey", userAccountSearch.entity().getApiKey(), SearchCriteria.Op.EQ);
+        userAccountSearch = createSearchBuilder();
+        userAccountSearch.and("apiKey", userAccountSearch.entity().getApiKey(), SearchCriteria.Op.EQ);
         userAccountSearch.done();
     }
-	
+
+    @Override
+    public List<UserAccountVO> getAllUsersByNameAndEntity(String username, String entity) {
+        if (username == null) {
+            return null;
+        }
+        SearchCriteria<UserAccountVO> sc = createSearchCriteria();
+        sc.addAnd("username", SearchCriteria.Op.EQ, username);
+        sc.addAnd("externalEntity", SearchCriteria.Op.EQ, entity);
+        return listBy(sc);
+    }
+
     @Override
     public UserAccount getUserAccount(String username, Long domainId) {
         if ((username == null) || (domainId == null)) {
@@ -59,11 +68,11 @@ public class UserAccountDaoImpl extends GenericDaoBase<UserAccountVO, Long> impl
         return false;
     }
 
-	@Override
-	public UserAccount getUserByApiKey(String apiKey) {
-		SearchCriteria<UserAccountVO> sc = userAccountSearch.create();
-		sc.setParameters("apiKey",apiKey);
-		return findOneBy(sc);
-	}
-	
+    @Override
+    public UserAccount getUserByApiKey(String apiKey) {
+        SearchCriteria<UserAccountVO> sc = userAccountSearch.create();
+        sc.setParameters("apiKey", apiKey);
+        return findOneBy(sc);
+    }
+
 }

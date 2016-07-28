@@ -16,10 +16,31 @@
 // under the License.
 package com.cloud.agent.manager;
 
+import java.io.File;
+import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.inject.Inject;
+import javax.naming.ConfigurationException;
+
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+import org.apache.cloudstack.storage.command.DeleteCommand;
+import org.apache.cloudstack.storage.command.DownloadCommand;
+import org.apache.cloudstack.storage.command.DownloadProgressCommand;
+import org.apache.cloudstack.storage.command.UploadStatusAnswer;
+import org.apache.cloudstack.storage.command.UploadStatusAnswer.UploadStatus;
+import org.apache.cloudstack.storage.command.UploadStatusCommand;
+
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.AttachIsoCommand;
-import com.cloud.agent.api.AttachVolumeAnswer;
-import com.cloud.agent.api.AttachVolumeCommand;
 import com.cloud.agent.api.BackupSnapshotAnswer;
 import com.cloud.agent.api.BackupSnapshotCommand;
 import com.cloud.agent.api.ComputeChecksumCommand;
@@ -53,6 +74,7 @@ import com.cloud.agent.api.storage.ListVolumeCommand;
 import com.cloud.agent.api.storage.PrimaryStorageDownloadAnswer;
 import com.cloud.agent.api.storage.PrimaryStorageDownloadCommand;
 import com.cloud.agent.api.to.DataStoreTO;
+import com.cloud.agent.api.to.NfsTO;
 import com.cloud.agent.api.to.StorageFilerTO;
 import com.cloud.agent.api.to.VolumeTO;
 import com.cloud.simulator.MockHost;
@@ -71,39 +93,14 @@ import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.VMTemplateStorageResourceAssoc;
 import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
-import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.template.TemplateProp;
-import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.DiskProfile;
-import com.cloud.vm.VirtualMachine.State;
-
-import org.apache.cloudstack.storage.command.DeleteCommand;
-import org.apache.cloudstack.storage.command.DownloadCommand;
-import org.apache.cloudstack.storage.command.DownloadProgressCommand;
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-import com.cloud.agent.api.to.NfsTO;
-
-import javax.ejb.Local;
-import javax.inject.Inject;
-import javax.naming.ConfigurationException;
-import java.io.File;
-import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @Component
-@Local(value = { MockStorageManager.class })
 public class MockStorageManagerImpl extends ManagerBase implements MockStorageManager {
     private static final Logger s_logger = Logger.getLogger(MockStorageManagerImpl.class);
     @Inject
@@ -148,8 +145,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
 
     @Override
     public PrimaryStorageDownloadAnswer primaryStorageDownload(PrimaryStorageDownloadCommand cmd) {
-        MockVolumeVO template = findVolumeFromSecondary(cmd.getUrl(), cmd.getSecondaryStorageUrl(),
-                MockVolumeType.TEMPLATE);
+        MockVolumeVO template = findVolumeFromSecondary(cmd.getUrl(), cmd.getSecondaryStorageUrl(), MockVolumeType.TEMPLATE);
         if (template == null) {
             return new PrimaryStorageDownloadAnswer("Can't find primary storage");
         }
@@ -238,49 +234,18 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn.close();
         }
 
-        VolumeTO volumeTo = new VolumeTO(cmd.getVolumeId(), dskch.getType(), sf.getType(), sf.getUuid(),
-                volume.getName(), storagePool.getMountPoint(), volume.getPath(), volume.getSize(), null);
+        VolumeTO volumeTo =
+            new VolumeTO(cmd.getVolumeId(), dskch.getType(), sf.getType(), sf.getUuid(), volume.getName(), storagePool.getMountPoint(), volume.getPath(),
+                volume.getSize(), null);
 
         return new CreateAnswer(cmd, volumeTo);
-    }
-
-    @Override
-    public AttachVolumeAnswer AttachVolume(AttachVolumeCommand cmd) {
-        TransactionLegacy txn = TransactionLegacy.open(TransactionLegacy.SIMULATOR_DB);
-        try {
-            txn.start();
-            String poolid = cmd.getPoolUuid();
-            String volumeName = cmd.getVolumeName();
-            MockVolumeVO volume = _mockVolumeDao.findByStoragePathAndType(cmd.getVolumePath());
-            if (volume == null) {
-                return new AttachVolumeAnswer(cmd, "Can't find volume:" + volumeName + "on pool:" + poolid);
-            }
-
-            String vmName = cmd.getVmName();
-            MockVMVO vm = _mockVMDao.findByVmName(vmName);
-            if (vm == null) {
-                return new AttachVolumeAnswer(cmd, "can't vm :" + vmName);
-            }
-            txn.commit();
-
-            return new AttachVolumeAnswer(cmd, cmd.getDeviceId(), cmd.getVolumePath());
-        } catch (Exception ex) {
-            txn.rollback();
-            throw new CloudRuntimeException("Error when attaching volume " + cmd.getVolumeName() + " to VM "
-                    + cmd.getVmName(), ex);
-        } finally {
-            txn.close();
-            txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
-            txn.close();
-        }
     }
 
     @Override
     public Answer AttachIso(AttachIsoCommand cmd) {
         MockVolumeVO iso = findVolumeFromSecondary(cmd.getIsoPath(), cmd.getStoreUrl(), MockVolumeType.ISO);
         if (iso == null) {
-            return new Answer(cmd, false, "Failed to find the iso: " + cmd.getIsoPath() + "on secondary storage "
-                    + cmd.getStoreUrl());
+            return new Answer(cmd, false, "Failed to find the iso: " + cmd.getIsoPath() + "on secondary storage " + cmd.getStoreUrl());
         }
 
         String vmName = cmd.getVmName();
@@ -291,11 +256,11 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             vm = _mockVMDao.findByVmName(vmName);
             txn.commit();
             if (vm == null) {
-                return new Answer(cmd, false, "can't vm :" + vmName);
+                return new Answer(cmd, false, "can't find vm :" + vmName);
             }
         } catch (Exception ex) {
             txn.rollback();
-            throw new CloudRuntimeException("Error when attaching iso to vm " + vm.getName(), ex);
+            throw new CloudRuntimeException("Error when attaching iso to vm " + vmName, ex);
         } finally {
             txn.close();
             txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
@@ -337,7 +302,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             if (storagePool == null) {
                 storagePool = new MockStoragePoolVO();
                 storagePool.setUuid(sf.getUuid());
-                storagePool.setMountPoint("/mnt/" + sf.getUuid() + File.separator);
+                storagePool.setMountPoint("/mnt/" + sf.getUuid());
 
                 Long size = DEFAULT_HOST_STORAGE_SIZE;
                 String path = sf.getPath();
@@ -364,7 +329,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
             txn.close();
         }
-        return new ModifyStoragePoolAnswer(cmd, storagePool.getCapacity(), 0, new HashMap<String, TemplateProp>());
+        return new ModifyStoragePoolAnswer(cmd, storagePool.getCapacity(), storagePool.getCapacity(), new HashMap<String, TemplateProp>());
     }
 
     @Override
@@ -378,7 +343,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             if (storagePool == null) {
                 storagePool = new MockStoragePoolVO();
                 storagePool.setUuid(sf.getUuid());
-                storagePool.setMountPoint("/mnt/" + sf.getUuid() + File.separator);
+                storagePool.setMountPoint("/mnt/" + sf.getUuid());
 
                 Long size = DEFAULT_HOST_STORAGE_SIZE;
                 String path = sf.getPath();
@@ -453,13 +418,12 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
         txn = TransactionLegacy.open(TransactionLegacy.SIMULATOR_DB);
         try {
             txn.start();
-            List<MockVolumeVO> volumes = _mockVolumeDao.findByStorageIdAndType(storage.getId(),
-                    MockVolumeType.VOLUME);
+            List<MockVolumeVO> volumes = _mockVolumeDao.findByStorageIdAndType(storage.getId(), MockVolumeType.VOLUME);
 
             Map<Long, TemplateProp> templateInfos = new HashMap<Long, TemplateProp>();
             for (MockVolumeVO volume : volumes) {
-                templateInfos.put(volume.getId(), new TemplateProp(volume.getName(), volume.getPath()
-                        .replaceAll(storage.getMountPoint(), ""), volume.getSize(), volume.getSize(), true, false));
+                templateInfos.put(volume.getId(),
+                    new TemplateProp(volume.getName(), volume.getPath().replaceAll(storage.getMountPoint(), ""), volume.getSize(), volume.getSize(), true, false));
             }
             txn.commit();
             return new ListVolumeAnswer(cmd.getSecUrl(), templateInfos);
@@ -476,24 +440,23 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
     @Override
     public Answer ListTemplates(ListTemplateCommand cmd) {
         DataStoreTO store = cmd.getDataStore();
-        if ( !(store instanceof NfsTO )){
+        if (!(store instanceof NfsTO)) {
             return new Answer(cmd, false, "Unsupported image data store: " + store);
         }
 
         MockSecStorageVO storage = null;
-        String nfsUrl = ((NfsTO) store).getUrl();
+        String nfsUrl = ((NfsTO)store).getUrl();
 
         TransactionLegacy txn = TransactionLegacy.open(TransactionLegacy.SIMULATOR_DB);
         storage = _mockSecStorageDao.findByUrl(nfsUrl);
         try {
             txn.start();
-            List<MockVolumeVO> templates = _mockVolumeDao.findByStorageIdAndType(storage.getId(),
-                    MockVolumeType.TEMPLATE);
+            List<MockVolumeVO> templates = _mockVolumeDao.findByStorageIdAndType(storage.getId(), MockVolumeType.TEMPLATE);
 
             Map<String, TemplateProp> templateInfos = new HashMap<String, TemplateProp>();
             for (MockVolumeVO template : templates) {
-                templateInfos.put(template.getName(), new TemplateProp(template.getName(), template.getPath()
-                        .replaceAll(storage.getMountPoint(), ""), template.getSize(), template.getSize(), true, false));
+                templateInfos.put(template.getName(), new TemplateProp(template.getName(), template.getPath().replaceAll(storage.getMountPoint(), ""),
+                    template.getSize(), template.getSize(), true, false));
             }
             return new ListTemplateAnswer(nfsUrl, templateInfos);
         } catch (Exception ex) {
@@ -515,13 +478,10 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             if (volume != null) {
                 _mockVolumeDao.remove(volume.getId());
             }
-
             if (cmd.getVmName() != null) {
                 MockVm vm = _mockVMDao.findByVmName(cmd.getVmName());
-                vm.setState(State.Expunging);
                 if (vm != null) {
-                    MockVMVO vmVo = _mockVMDao.createForUpdate(vm.getId());
-                    _mockVMDao.update(vm.getId(), vmVo);
+                    _mockVMDao.remove(vm.getId());
                 }
             }
             txn.commit();
@@ -544,8 +504,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn.start();
             ssvo = _mockSecStorageDao.findByUrl(cmd.getSecUrl());
             if (ssvo == null) {
-                return new DownloadAnswer("can't find secondary storage",
-                        VMTemplateStorageResourceAssoc.Status.DOWNLOAD_ERROR);
+                return new DownloadAnswer("can't find secondary storage", VMTemplateStorageResourceAssoc.Status.DOWNLOAD_ERROR);
             }
             txn.commit();
         } catch (Exception ex) {
@@ -577,8 +536,8 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
             txn.close();
         }
-        return new DownloadAnswer(String.valueOf(volume.getId()), 0, "Downloading", Status.DOWNLOAD_IN_PROGRESS,
-                cmd.getName(), cmd.getName(), volume.getSize(), volume.getSize(), null);
+        return new DownloadAnswer(String.valueOf(volume.getId()), 0, "Downloading", Status.DOWNLOAD_IN_PROGRESS, cmd.getName(), cmd.getName(), volume.getSize(),
+            volume.getSize(), null);
     }
 
     @Override
@@ -601,15 +560,13 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
                 volume.setStatus(Status.DOWNLOADED);
                 _mockVolumeDao.update(volume.getId(), volume);
                 txn.commit();
-                return new DownloadAnswer(cmd.getJobId(), 100, cmd,
-                        com.cloud.storage.VMTemplateStorageResourceAssoc.Status.DOWNLOADED, volume.getPath(),
-                        volume.getName());
+                return new DownloadAnswer(cmd.getJobId(), 100, cmd, com.cloud.storage.VMTemplateStorageResourceAssoc.Status.DOWNLOADED, volume.getPath(),
+                    volume.getName());
             } else {
                 _mockVolumeDao.update(volume.getId(), volume);
                 txn.commit();
-                return new DownloadAnswer(cmd.getJobId(), (int) (pct * 100.0), cmd,
-                        com.cloud.storage.VMTemplateStorageResourceAssoc.Status.DOWNLOAD_IN_PROGRESS, volume.getPath(),
-                        volume.getName());
+                return new DownloadAnswer(cmd.getJobId(), (int)(pct * 100.0), cmd, com.cloud.storage.VMTemplateStorageResourceAssoc.Status.DOWNLOAD_IN_PROGRESS,
+                    volume.getPath(), volume.getName());
             }
         } catch (Exception ex) {
             txn.rollback();
@@ -722,8 +679,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn.start();
             volume = _mockVolumeDao.findByStoragePathAndType(cmd.getVolumePath());
             if (volume == null) {
-                return new BackupSnapshotAnswer(cmd, false, "Can't find base volume: " + cmd.getVolumePath(), null,
-                        true);
+                return new BackupSnapshotAnswer(cmd, false, "Can't find base volume: " + cmd.getVolumePath(), null, true);
             }
             String snapshotPath = cmd.getSnapshotUuid();
             snapshot = _mockVolumeDao.findByStoragePathAndType(snapshotPath);
@@ -780,14 +736,12 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn.start();
             backSnapshot = _mockVolumeDao.findByName(cmd.getSnapshotUuid());
             if (backSnapshot == null) {
-                return new CreateVolumeFromSnapshotAnswer(cmd, false, "can't find the backupsnapshot: "
-                        + cmd.getSnapshotUuid(), null);
+                return new CreateVolumeFromSnapshotAnswer(cmd, false, "can't find the backupsnapshot: " + cmd.getSnapshotUuid(), null);
             }
 
             primary = _mockStoragePoolDao.findByUuid(cmd.getPrimaryStoragePoolNameLabel());
             if (primary == null) {
-                return new CreateVolumeFromSnapshotAnswer(cmd, false, "can't find the primary storage: "
-                        + cmd.getPrimaryStoragePoolNameLabel(), null);
+                return new CreateVolumeFromSnapshotAnswer(cmd, false, "can't find the primary storage: " + cmd.getPrimaryStoragePoolNameLabel(), null);
             }
             txn.commit();
         } catch (Exception ex) {
@@ -825,7 +779,6 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
         return new CreateVolumeFromSnapshotAnswer(cmd, true, null, volume.getPath());
     }
 
-
     @Override
     public Answer Delete(DeleteCommand cmd) {
         TransactionLegacy txn = TransactionLegacy.open(TransactionLegacy.SIMULATOR_DB);
@@ -847,9 +800,6 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
         }
         return new Answer(cmd);
     }
-
-
-
 
     @Override
     public Answer SecStorageVMSetup(SecStorageVMSetupCommand cmd) {
@@ -903,7 +853,6 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
 
                 storage.setMountPoint(dir);
 
-
                 storage = _mockSecStorageDao.persist(storage);
 
                 // preinstall default templates into secondary storage
@@ -916,7 +865,6 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
                 template.setType(MockVolumeType.TEMPLATE);
                 template.setStatus(Status.DOWNLOADED);
                 template = _mockVolumeDao.persist(template);
-
 
                 template = new MockVolumeVO();
                 template.setName("simulator-Centos");
@@ -961,7 +909,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             String uuid = UUID.randomUUID().toString();
             storagePool = new MockStoragePoolVO();
             storagePool.setUuid(uuid);
-            storagePool.setMountPoint("/mnt/" + uuid + File.separator);
+            storagePool.setMountPoint("/mnt/" + uuid);
             storagePool.setCapacity(DEFAULT_HOST_STORAGE_SIZE);
             storagePool.setHostGuid(hostGuid);
             storagePool.setStorageType(StoragePoolType.Filesystem);
@@ -979,8 +927,8 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
                 txn.close();
             }
         }
-        return new StoragePoolInfo(storagePool.getUuid(), host.getPrivateIpAddress(), storagePool.getMountPoint(),
-                storagePool.getMountPoint(), storagePool.getPoolType(), storagePool.getCapacity(), 0);
+        return new StoragePoolInfo(storagePool.getUuid(), host.getPrivateIpAddress(), storagePool.getMountPoint(), storagePool.getMountPoint(),
+            storagePool.getPoolType(), storagePool.getCapacity(), storagePool.getCapacity());
     }
 
     @Override
@@ -1020,7 +968,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             String uuid = UUID.randomUUID().toString();
             storagePool = new MockStoragePoolVO();
             storagePool.setUuid(uuid);
-            storagePool.setMountPoint("/mnt/" + uuid + File.separator);
+            storagePool.setMountPoint("/mnt/" + uuid);
             storagePool.setCapacity(storageSize);
             storagePool.setHostGuid(hostGuid);
             storagePool.setStorageType(StoragePoolType.Filesystem);
@@ -1038,8 +986,8 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
                 txn.close();
             }
         }
-        return new StoragePoolInfo(storagePool.getUuid(), host.getPrivateIpAddress(), storagePool.getMountPoint(),
-                storagePool.getMountPoint(), storagePool.getPoolType(), storagePool.getCapacity(), 0);
+        return new StoragePoolInfo(storagePool.getUuid(), host.getPrivateIpAddress(), storagePool.getMountPoint(), storagePool.getMountPoint(),
+            storagePool.getPoolType(), storagePool.getCapacity(), 0);
     }
 
     @Override
@@ -1092,8 +1040,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn.close();
         }
 
-        return new CreatePrivateTemplateAnswer(cmd, true, "", template.getName(), template.getSize(),
-                template.getSize(), template.getName(), ImageFormat.QCOW2);
+        return new CreatePrivateTemplateAnswer(cmd, true, "", template.getName(), template.getSize(), template.getSize(), template.getName(), ImageFormat.QCOW2);
     }
 
     @Override
@@ -1162,16 +1109,14 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn.commit();
         } catch (Exception ex) {
             txn.rollback();
-            throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when persisting template "
-                    + template.getName(), ex);
+            throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when persisting template " + template.getName(), ex);
         } finally {
             txn.close();
             txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
             txn.close();
         }
 
-        return new CreatePrivateTemplateAnswer(cmd, true, "", template.getName(), template.getSize(),
-                template.getSize(), template.getName(), ImageFormat.QCOW2);
+        return new CreatePrivateTemplateAnswer(cmd, true, "", template.getName(), template.getSize(), template.getSize(), template.getName(), ImageFormat.QCOW2);
     }
 
     @Override
@@ -1189,8 +1134,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn.commit();
         } catch (Exception ex) {
             txn.rollback();
-            throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when accessing secondary at "
-                    + cmd.getSecondaryStorageURL(), ex);
+            throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when accessing secondary at " + cmd.getSecondaryStorageURL(), ex);
         } finally {
             txn.close();
             txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
@@ -1207,8 +1151,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn.commit();
         } catch (Exception ex) {
             txn.rollback();
-            throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when accessing primary at "
-                    + cmd.getPool(), ex);
+            throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when accessing primary at " + cmd.getPool(), ex);
         } finally {
             txn.close();
             txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
@@ -1226,8 +1169,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             txn.commit();
         } catch (Exception ex) {
             txn.rollback();
-            throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when accessing volume at "
-                    + cmd.getVolumePath(), ex);
+            throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when accessing volume at " + cmd.getVolumePath(), ex);
         } finally {
             txn.close();
             txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
@@ -1250,8 +1192,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
                 txn.commit();
             } catch (Exception ex) {
                 txn.rollback();
-                throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when persisting volume "
-                        + vol.getName(), ex);
+                throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when persisting volume " + vol.getName(), ex);
             } finally {
                 txn.close();
                 txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
@@ -1273,8 +1214,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
                 txn.commit();
             } catch (Exception ex) {
                 txn.rollback();
-                throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when persisting volume "
-                        + vol.getName(), ex);
+                throw new CloudRuntimeException("Encountered " + ex.getMessage() + " when persisting volume " + vol.getName(), ex);
             } finally {
                 txn.close();
                 txn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
@@ -1282,5 +1222,10 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
             }
             return new CopyVolumeAnswer(cmd, true, null, primaryStorage.getMountPoint(), vol.getPath());
         }
+    }
+
+    @Override
+    public UploadStatusAnswer getUploadStatus(UploadStatusCommand cmd) {
+        return new UploadStatusAnswer(cmd, UploadStatus.COMPLETED);
     }
 }

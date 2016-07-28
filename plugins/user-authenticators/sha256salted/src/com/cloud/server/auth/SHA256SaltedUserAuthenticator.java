@@ -22,19 +22,19 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Map;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.bouncycastle.util.encoders.Base64;
 
 import com.cloud.user.UserAccount;
 import com.cloud.user.dao.UserAccountDao;
 import com.cloud.utils.Pair;
+import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@Local(value = {UserAuthenticator.class})
-public class SHA256SaltedUserAuthenticator extends DefaultUserAuthenticator {
+public class SHA256SaltedUserAuthenticator extends AdapterBase implements UserAuthenticator {
     public static final Logger s_logger = Logger.getLogger(SHA256SaltedUserAuthenticator.class);
     private static final String s_defaultPassword = "000000000000000000000000000=";
     private static final String s_defaultSalt = "0000000000000000000000000000000=";
@@ -50,6 +50,12 @@ public class SHA256SaltedUserAuthenticator extends DefaultUserAuthenticator {
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Retrieving user: " + username);
         }
+
+        if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
+            s_logger.debug("Username or Password cannot be empty");
+            return new Pair<Boolean, ActionOnFailedAuthentication>(false, null);
+        }
+
         boolean realUser = true;
         UserAccount user = _userAccountDao.getUserAccount(username, domainId);
         if (user == null) {

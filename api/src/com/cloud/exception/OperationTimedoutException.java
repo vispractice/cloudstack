@@ -65,6 +65,6 @@ public class OperationTimedoutException extends CloudException {
     }
 
     public boolean isActive() {
-    	return _isActive;
+        return _isActive;
     }
 }

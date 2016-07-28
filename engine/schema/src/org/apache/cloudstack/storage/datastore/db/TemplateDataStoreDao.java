@@ -25,11 +25,12 @@ import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreState
 import com.cloud.storage.DataStoreRole;
 import com.cloud.storage.VMTemplateStorageResourceAssoc;
 import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
+import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.utils.db.GenericDao;
 import com.cloud.utils.fsm.StateDao;
 
 public interface TemplateDataStoreDao extends GenericDao<TemplateDataStoreVO, Long>,
-StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Event, DataObjectInStore> {
+        StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Event, DataObjectInStore> {
 
     List<TemplateDataStoreVO> listByStoreId(long id);
 
@@ -45,14 +46,11 @@ StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Even
 
     List<TemplateDataStoreVO> listByTemplateStoreStatus(long templateId, long storeId, State... states);
 
-    List<TemplateDataStoreVO> listByTemplateStoreDownloadStatus(long templateId, long storeId,
-            VMTemplateStorageResourceAssoc.Status... status);
+    List<TemplateDataStoreVO> listByTemplateStoreDownloadStatus(long templateId, long storeId, VMTemplateStorageResourceAssoc.Status... status);
 
-    List<TemplateDataStoreVO> listByTemplateZoneDownloadStatus(long templateId, Long zoneId,
-            VMTemplateStorageResourceAssoc.Status... status);
+    List<TemplateDataStoreVO> listByTemplateZoneDownloadStatus(long templateId, Long zoneId, VMTemplateStorageResourceAssoc.Status... status);
 
-    TemplateDataStoreVO findByTemplateZoneDownloadStatus(long templateId, Long zoneId,
-            VMTemplateStorageResourceAssoc.Status... status);
+    TemplateDataStoreVO findByTemplateZoneDownloadStatus(long templateId, Long zoneId, VMTemplateStorageResourceAssoc.Status... status);
 
     TemplateDataStoreVO findByTemplateZoneStagingDownloadStatus(long templateId, Long zoneId, Status... status);
 
@@ -77,4 +75,12 @@ StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Even
     List<TemplateDataStoreVO> listOnCache(long templateId);
 
     void updateStoreRoleToCachce(long storeId);
+
+    List<TemplateDataStoreVO> listTemplateDownloadUrls();
+
+    void removeByTemplateStore(long templateId, long imageStoreId);
+
+    void expireDnldUrlsForZone(Long dcId);
+
+    List<TemplateDataStoreVO> listByTemplateState(VirtualMachineTemplate.State... states);
 }

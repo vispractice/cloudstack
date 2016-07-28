@@ -23,6 +23,7 @@ import com.cloud.utils.component.Adapter;
 
 /**
  * which UserAuthenticator to user in components.xml.
+ *
  */
 public interface UserAuthenticator extends Adapter {
     public enum ActionOnFailedAuthentication {

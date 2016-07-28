@@ -21,6 +21,7 @@ import java.util.Date;
 import org.apache.cloudstack.api.InternalIdentity;
 
 public interface UserAccount extends InternalIdentity {
+    @Override
     long getId();
 
     String getUsername();
@@ -60,4 +61,10 @@ public interface UserAccount extends InternalIdentity {
     boolean isRegistered();
 
     int getLoginAttempts();
+
+    public User.Source getSource();
+
+    public String getExternalEntity();
+
+    public void setExternalEntity(String entity);
 }

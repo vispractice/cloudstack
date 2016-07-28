@@ -16,11 +16,10 @@
 // under the License.
 package vncclient.vnc;
 
-import common.ScreenDescription;
-
 import streamer.BaseElement;
 import streamer.ByteBuffer;
 import streamer.Link;
+import common.ScreenDescription;
 
 public class RGB888LE32PixelFormatRequest extends BaseElement {
     protected int bitsPerPixel = 32;

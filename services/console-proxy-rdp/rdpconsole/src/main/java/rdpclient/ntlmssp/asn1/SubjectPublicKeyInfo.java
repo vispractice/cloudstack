@@ -29,7 +29,7 @@ public class SubjectPublicKeyInfo extends Sequence {
 
     public SubjectPublicKeyInfo(String name) {
         super(name);
-        this.tags = new Tag[] {algorithm, subjectPublicKey};
+        tags = new Tag[] {algorithm, subjectPublicKey};
     }
 
 }

@@ -16,20 +16,17 @@
 // under the License.
 package org.apache.cloudstack.network.dao;
 
-import javax.ejb.Local;
 
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 
-@Local(SspTenantDao.class)
-public class SspTenantDaoImpl extends GenericDaoBase<SspTenantVO, Long>
-        implements SspTenantDao {
+public class SspTenantDaoImpl extends GenericDaoBase<SspTenantVO, Long> implements SspTenantDao {
 
     private final SearchBuilder<SspTenantVO> zoneSearch;
 
-    public SspTenantDaoImpl(){
+    public SspTenantDaoImpl() {
         zoneSearch = createSearchBuilder();
         zoneSearch.and("zoneId", zoneSearch.entity().getZoneId(), Op.EQ);
         zoneSearch.done();
@@ -40,7 +37,7 @@ public class SspTenantDaoImpl extends GenericDaoBase<SspTenantVO, Long>
         SearchCriteria<SspTenantVO> sc = zoneSearch.create();
         sc.setParameters("zoneId", zoneId);
         SspTenantVO ret = findOneBy(sc);
-        if(ret != null){
+        if (ret != null) {
             return ret.getUuid();
         }
         return null;

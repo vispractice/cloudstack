@@ -28,6 +28,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.cloud.network.Networks.AddressFormat;
 import com.cloud.network.Networks.Mode;
@@ -48,13 +49,13 @@ public class NicVO implements Nic {
     Long instanceId;
 
     @Column(name = "ip4_address")
-    String ip4Address;
+    String iPv4Address;
 
     @Column(name = "ip6_address")
-    String ip6Address;
+    String iPv6Address;
 
     @Column(name = "netmask")
-    String netmask;
+    String iPv4Netmask;
 
     @Column(name = "isolation_uri")
     URI isolationUri;
@@ -66,7 +67,7 @@ public class NicVO implements Nic {
     URI broadcastUri;
 
     @Column(name = "gateway")
-    String gateway;
+    String iPv4Gateway;
 
     @Column(name = "mac_address")
     String macAddress;
@@ -98,10 +99,10 @@ public class NicVO implements Nic {
     boolean defaultNic;
 
     @Column(name = "ip6_gateway")
-    String ip6Gateway;
+    String iPv6Gateway;
 
     @Column(name = "ip6_cidr")
-    String ip6Cidr;
+    String iPv6Cidr;
 
     @Column(name = "strategy")
     @Enumerated(value = EnumType.STRING)
@@ -116,12 +117,18 @@ public class NicVO implements Nic {
 
     @Column(name = GenericDao.CREATED_COLUMN)
     Date created;
-    
+
     @Column(name = "uuid")
     String uuid = UUID.randomUUID().toString();
 
     @Column(name = "secondary_ip")
     boolean secondaryIp;
+
+    @Transient
+    transient String nsxLogicalSwitchUuid;
+
+    @Transient
+    transient String nsxLogicalSwitchPortUuid;
 
     public NicVO(String reserver, Long instanceId, long configurationId, VirtualMachine.Type vmType) {
         this.reserver = reserver;
@@ -132,12 +139,12 @@ public class NicVO implements Nic {
     }
 
     @Override
-    public String getIp4Address() {
-        return ip4Address;
+    public String getIPv4Address() {
+        return iPv4Address;
     }
 
-    public void setIp4Address(String address) {
-        ip4Address = address;
+    public void setIPv4Address(String address) {
+        iPv4Address = address;
     }
 
     @Override
@@ -164,26 +171,26 @@ public class NicVO implements Nic {
     }
 
     @Override
-    public String getIp6Address() {
-        return ip6Address;
+    public String getIPv6Address() {
+        return iPv6Address;
     }
 
-    public void setIp6Address(String ip6Address) {
-        this.ip6Address = ip6Address;
-    }
-
-    @Override
-    public String getNetmask() {
-        return netmask;
+    public void setIPv6Address(String ip6Address) {
+        this.iPv6Address = ip6Address;
     }
 
     @Override
-    public String getGateway() {
-        return gateway;
+    public String getIPv4Netmask() {
+        return iPv4Netmask;
     }
 
-    public void setGateway(String gateway) {
-        this.gateway = gateway;
+    @Override
+    public String getIPv4Gateway() {
+        return iPv4Gateway;
+    }
+
+    public void setIPv4Gateway(String gateway) {
+        this.iPv4Gateway = gateway;
     }
 
     @Override
@@ -195,8 +202,8 @@ public class NicVO implements Nic {
         this.addressFormat = format;
     }
 
-    public void setNetmask(String netmask) {
-        this.netmask = netmask;
+    public void setIPv4Netmask(String netmask) {
+        this.iPv4Netmask = netmask;
     }
 
     @Override
@@ -316,41 +323,50 @@ public class NicVO implements Nic {
 
     @Override
     public String toString() {
-        return new StringBuilder("Nic[").append(id).append("-").append(instanceId).append("-").append(reservationId).append("-").append(ip4Address).append("]").toString();
+        return new StringBuilder("Nic[").append(id)
+            .append("-")
+            .append(instanceId)
+            .append("-")
+            .append(reservationId)
+            .append("-")
+            .append(iPv4Address)
+            .append("]")
+            .toString();
     }
 
     @Override
     public VirtualMachine.Type getVmType() {
         return vmType;
     }
-    
+
     @Override
     public String getUuid() {
-    	return this.uuid;
+        return this.uuid;
     }
-    
+
     public void setUuid(String uuid) {
-    	this.uuid = uuid;
+        this.uuid = uuid;
     }
 
     @Override
-	public String getIp6Gateway() {
-		return ip6Gateway;
-	}
+    public String getIPv6Gateway() {
+        return iPv6Gateway;
+    }
 
-	public void setIp6Gateway(String ip6Gateway) {
-		this.ip6Gateway = ip6Gateway;
-	}
+    public void setIPv6Gateway(String ip6Gateway) {
+        this.iPv6Gateway = ip6Gateway;
+    }
 
     @Override
-	public String getIp6Cidr() {
-		return ip6Cidr;
-	}
+    public String getIPv6Cidr() {
+        return iPv6Cidr;
+    }
 
-	public void setIp6Cidr(String ip6Cidr) {
-		this.ip6Cidr = ip6Cidr;
-	}
+    public void setIPv6Cidr(String ip6Cidr) {
+        this.iPv6Cidr = ip6Cidr;
+    }
 
+    @Override
     public boolean getSecondaryIp() {
         return secondaryIp;
     }
@@ -361,5 +377,21 @@ public class NicVO implements Nic {
 
     public void setVmType(VirtualMachine.Type vmType) {
         this.vmType = vmType;
+    }
+
+    public String getNsxLogicalSwitchUuid() {
+        return nsxLogicalSwitchUuid;
+    }
+
+    public void setNsxLogicalSwitchUuid(String nsxLogicalSwitchUuid) {
+        this.nsxLogicalSwitchUuid = nsxLogicalSwitchUuid;
+    }
+
+    public String getNsxLogicalSwitchPortUuid() {
+        return nsxLogicalSwitchPortUuid;
+    }
+
+    public void setNsxLogicalSwitchPortUuid(String nsxLogicalSwitchPortUuid) {
+        this.nsxLogicalSwitchPortUuid = nsxLogicalSwitchPortUuid;
     }
 }

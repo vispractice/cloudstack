@@ -30,8 +30,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.StandardMBean;
 
-import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.log4j.Logger;
+
+import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 
 import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -40,7 +41,7 @@ import com.cloud.utils.mgmt.JmxUtil;
 /**
  * ConnectionConcierge keeps stand alone database connections alive.  This is
  * needs someone to keep that database connection from being garbage collected
- * 
+ *
  */
 public class ConnectionConcierge {
 
@@ -141,26 +142,17 @@ public class ConnectionConcierge {
         }
 
         protected String testValidity(String name, Connection conn) {
-            PreparedStatement pstmt = null;
-            try {
-                if (conn != null) {
-                    synchronized (conn) {
-                        pstmt = conn.prepareStatement("SELECT 1");
+            if (conn != null) {
+                synchronized (conn) {
+                    try (PreparedStatement pstmt = conn.prepareStatement("SELECT 1");) {
                         pstmt.executeQuery();
-                    }
-                }
-                return null;
-            } catch (Throwable th) {
-                s_logger.error("Unable to keep the db connection for " + name, th);
-                return th.toString();
-            } finally {
-                if (pstmt != null) {
-                    try {
-                        pstmt.close();
-                    } catch (SQLException e) {
+                    } catch (Throwable th) {
+                        s_logger.error("Unable to keep the db connection for " + name, th);
+                        return th.toString();
                     }
                 }
             }
+            return null;
         }
 
         @Override
@@ -194,7 +186,7 @@ public class ConnectionConcierge {
             if (_executor != null) {
                 try {
                     _executor.shutdown();
-                } catch(Exception e) {
+                } catch (Exception e) {
                     s_logger.error("Unable to shutdown executor", e);
                 }
             }

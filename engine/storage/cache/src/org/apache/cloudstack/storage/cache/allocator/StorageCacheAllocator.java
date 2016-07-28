@@ -24,6 +24,6 @@ import org.apache.cloudstack.engine.subsystem.api.storage.Scope;
 
 public interface StorageCacheAllocator {
     DataStore getCacheStore(Scope scope);
-    
+
     DataStore getCacheStore(DataObject data, Scope scope);
 }

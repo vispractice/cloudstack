@@ -17,7 +17,6 @@
 
 package com.cloud.network.as.dao;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -28,7 +27,6 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
-@Local(value = ConditionDao.class)
 public class ConditionDaoImpl extends GenericDaoBase<ConditionVO, Long> implements ConditionDao {
     final SearchBuilder<ConditionVO> AllFieldsSearch;
 
@@ -46,6 +44,7 @@ public class ConditionDaoImpl extends GenericDaoBase<ConditionVO, Long> implemen
         return findOneBy(sc);
     }
 
+    @Override
     public int removeByAccountId(long accountId) {
         SearchCriteria<ConditionVO> sc = createSearchCriteria();
 

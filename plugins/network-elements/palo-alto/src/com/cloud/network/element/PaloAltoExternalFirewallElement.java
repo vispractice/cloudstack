@@ -11,7 +11,7 @@
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the 
+// KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
 package com.cloud.network.element;
@@ -22,12 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.apache.cloudstack.api.response.ExternalFirewallResponse;
-import org.apache.cloudstack.network.ExternalNetworkDeviceManager.NetworkDevice;
 import org.apache.log4j.Logger;
+
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.apache.cloudstack.network.ExternalNetworkDeviceManager.NetworkDevice;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.commands.AddPaloAltoFirewallCmd;
@@ -38,10 +38,8 @@ import com.cloud.api.commands.ListPaloAltoFirewallsCmd;
 import com.cloud.api.response.PaloAltoFirewallResponse;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
-import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
@@ -50,7 +48,6 @@ import com.cloud.exception.InsufficientNetworkCapacityException;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.host.Host;
-import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.network.ExternalFirewallDeviceManagerImpl;
@@ -64,6 +61,7 @@ import com.cloud.network.PhysicalNetworkServiceProvider;
 import com.cloud.network.PublicIpAddress;
 import com.cloud.network.dao.ExternalFirewallDeviceDao;
 import com.cloud.network.dao.ExternalFirewallDeviceVO;
+import com.cloud.network.dao.ExternalFirewallDeviceVO.FirewallDeviceState;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkExternalFirewallDao;
 import com.cloud.network.dao.NetworkExternalFirewallVO;
@@ -71,7 +69,6 @@ import com.cloud.network.dao.NetworkServiceMapDao;
 import com.cloud.network.dao.NetworkVO;
 import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.dao.PhysicalNetworkVO;
-import com.cloud.network.dao.ExternalFirewallDeviceVO.FirewallDeviceState;
 import com.cloud.network.resource.PaloAltoResource;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.PortForwardingRule;
@@ -83,14 +80,10 @@ import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
-import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;
 
-@Local(value = {NetworkElement.class, FirewallServiceProvider.class, 
-        PortForwardingServiceProvider.class, IpDeployer.class, 
-        SourceNatServiceProvider.class})
 public class PaloAltoExternalFirewallElement extends ExternalFirewallDeviceManagerImpl implements SourceNatServiceProvider, FirewallServiceProvider,
-PortForwardingServiceProvider, IpDeployer, PaloAltoFirewallElementService, StaticNatServiceProvider {
+        PortForwardingServiceProvider, IpDeployer, PaloAltoFirewallElementService, StaticNatServiceProvider {
 
     private static final Logger s_logger = Logger.getLogger(PaloAltoExternalFirewallElement.class);
 
@@ -148,8 +141,8 @@ PortForwardingServiceProvider, IpDeployer, PaloAltoFirewallElementService, Stati
     }
 
     @Override
-    public boolean implement(Network network, NetworkOffering offering, DeployDestination dest, ReservationContext context) throws ResourceUnavailableException, ConcurrentOperationException,
-    InsufficientNetworkCapacityException {
+    public boolean implement(Network network, NetworkOffering offering, DeployDestination dest, ReservationContext context) throws ResourceUnavailableException,
+        ConcurrentOperationException, InsufficientNetworkCapacityException {
         DataCenter zone = _entityMgr.findById(DataCenter.class, network.getDataCenterId());
 
         // don't have to implement network is Basic zone
@@ -173,8 +166,8 @@ PortForwardingServiceProvider, IpDeployer, PaloAltoFirewallElementService, Stati
     }
 
     @Override
-    public boolean prepare(Network config, NicProfile nic, VirtualMachineProfile vm, DeployDestination dest, ReservationContext context) throws ConcurrentOperationException,
-    InsufficientNetworkCapacityException, ResourceUnavailableException {
+    public boolean prepare(Network config, NicProfile nic, VirtualMachineProfile vm, DeployDestination dest, ReservationContext context)
+        throws ConcurrentOperationException, InsufficientNetworkCapacityException, ResourceUnavailableException {
         return true;
     }
 
@@ -282,7 +275,7 @@ PortForwardingServiceProvider, IpDeployer, PaloAltoFirewallElementService, Stati
 
     @Override
     public boolean shutdownProviderInstances(PhysicalNetworkServiceProvider provider, ReservationContext context) throws ConcurrentOperationException,
-    ResourceUnavailableException {
+        ResourceUnavailableException {
         // TODO Auto-generated method stub
         return true;
     }
@@ -309,9 +302,7 @@ PortForwardingServiceProvider, IpDeployer, PaloAltoFirewallElementService, Stati
         if (!deviceName.equalsIgnoreCase(NetworkDevice.PaloAltoFirewall.getName())) {
             throw new InvalidParameterValueException("Invalid Palo Alto firewall device type");
         }
-
-        return addExternalFirewall(cmd.getPhysicalNetworkId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceName,
-            new PaloAltoResource());
+        return addExternalFirewall(cmd.getPhysicalNetworkId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceName, new PaloAltoResource());
     }
 
     @Override

@@ -147,18 +147,18 @@ public class ServerClipboardCapabilitiesPDU extends BaseElement {
         // System.setProperty("streamer.Pipeline.debug", "true");
 
         /* @formatter:off */
-    byte[] packet = new byte[] {
-        0x07, 0x00,  //  CLIPRDR_HEADER::msgType = CB_CLIP_CAPS (7)
-        0x00, 0x00,  //  CLIPRDR_HEADER::msgFlags = 0
-        0x10, 0x00, 0x00, 0x00,  //  CLIPRDR_HEADER::dataLen = 0x10 = 16 bytes
-        0x01, 0x00,  //  CLIPRDR_CAPS::cCapabilitiesSets = 1
-        0x00, 0x00,  //  CLIPRDR_CAPS::pad1
-        0x01, 0x00,  //  CLIPRDR_CAPS_SET::capabilitySetType = CB_CAPSTYPE_GENERAL (1)
-        0x0c, 0x00,  //  CLIPRDR_CAPS_SET::lengthCapability = 0x0c = 12 bytes
-        0x02, 0x00, 0x00, 0x00,  //  CLIPRDR_GENERAL_CAPABILITY::version = CB_CAPS_VERSION_2 (2)
-        0x0e, 0x00, 0x00, 0x00,  //  CLIPRDR_GENERAL_CAPABILITY::capabilityFlags = 0x0000000e = 0x02 |0x04 |0x08 = CB_USE_LONG_FORMAT_NAMES | CB_STREAM_FILECLIP_ENABLED | CB_FILECLIP_NO_FILE_PATHS
-    };
-    /* @formatter:on */
+        byte[] packet = new byte[] {
+                0x07, 0x00,  //  CLIPRDR_HEADER::msgType = CB_CLIP_CAPS (7)
+                0x00, 0x00,  //  CLIPRDR_HEADER::msgFlags = 0
+                0x10, 0x00, 0x00, 0x00,  //  CLIPRDR_HEADER::dataLen = 0x10 = 16 bytes
+                0x01, 0x00,  //  CLIPRDR_CAPS::cCapabilitiesSets = 1
+                0x00, 0x00,  //  CLIPRDR_CAPS::pad1
+                0x01, 0x00,  //  CLIPRDR_CAPS_SET::capabilitySetType = CB_CAPSTYPE_GENERAL (1)
+                0x0c, 0x00,  //  CLIPRDR_CAPS_SET::lengthCapability = 0x0c = 12 bytes
+                0x02, 0x00, 0x00, 0x00,  //  CLIPRDR_GENERAL_CAPABILITY::version = CB_CAPS_VERSION_2 (2)
+                0x0e, 0x00, 0x00, 0x00,  //  CLIPRDR_GENERAL_CAPABILITY::capabilityFlags = 0x0000000e = 0x02 |0x04 |0x08 = CB_USE_LONG_FORMAT_NAMES | CB_STREAM_FILECLIP_ENABLED | CB_FILECLIP_NO_FILE_PATHS
+        };
+        /* @formatter:on */
 
         MockSource source = new MockSource("source", ByteBuffer.convertByteArraysToByteBuffers(packet));
         Element router = new ServerClipRdrChannelRouter("router");

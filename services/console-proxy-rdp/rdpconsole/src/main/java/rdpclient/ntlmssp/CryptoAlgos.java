@@ -67,17 +67,17 @@ public class CryptoAlgos implements NtlmConstants {
         return result;
     }
 
-    /** Indicates a 32-bit CRC calculated over M. */
-    public static byte[] CRC32(byte[] M) {
+    /** Indicates a 32-bit CRC calculated over m. */
+    public static byte[] CRC32(byte[] m) {
         throw new RuntimeException("FATAL: Not implemented.");
     }
 
     /**
-     * Indicates the encryption of an 8-byte data item D with the 7-byte key K
+     * Indicates the encryption of an 8-byte data item d with the 7-byte key k
      * using the Data Encryption Standard (DES) algorithm in Electronic Codebook
      * (ECB) mode. The result is 8 bytes in length ([FIPS46-2]).
      */
-    public static byte[] DES(byte[] K, byte[] D) {
+    public static byte[] DES(byte[] k, byte[] d) {
         throw new RuntimeException("FATAL: Not implemented.");
     }
 
@@ -85,16 +85,16 @@ public class CryptoAlgos implements NtlmConstants {
      * Indicates the encryption of an 8-byte data item D with the 16-byte key K
      * using the Data Encryption Standard Long (DESL) algorithm. The result is 24
      * bytes in length. DESL(K, D) is computed as follows.
-     * 
+     *
      * <pre>
-     *   ConcatenationOf( DES(K[0..6], D), 
-     *     DES(K[7..13], D), DES(  
+     *   ConcatenationOf( DES(K[0..6], D),
+     *     DES(K[7..13], D), DES(
      *       ConcatenationOf(K[14..15], Z(5)), D));
      * </pre>
-     * 
+     *
      * Note K[] implies a key represented as a character array.
      */
-    public static byte[] DESL(byte[] K, byte[] D) {
+    public static byte[] DESL(byte[] k, byte[] d) {
         throw new RuntimeException("FATAL: Not implemented.");
     }
 
@@ -111,35 +111,35 @@ public class CryptoAlgos implements NtlmConstants {
      * Retrieve the user's LM response key from the server database (directory or
      * local database).
      */
-    public static byte[] LMGETKEY(byte[] U, byte[] D) {
+    public static byte[] LMGETKEY(byte[] u, byte[] d) {
         throw new RuntimeException("FATAL: Not implemented.");
     }
 
     /** Retrieve the user's NT response key from the server database. */
-    public static byte[] NTGETKEY(byte[] U, byte[] D) {
+    public static byte[] NTGETKEY(byte[] u, byte[] d) {
         throw new RuntimeException("FATAL: Not implemented.");
     }
 
     /**
-     * Indicates the encryption of data item M with the key K using the HMAC
+     * Indicates the encryption of data item m with the key k using the HMAC
      * algorithm ([RFC2104]).
      */
-    public static byte[] HMAC(byte[] K, byte[] M) {
+    public static byte[] HMAC(byte[] k, byte[] m) {
         throw new RuntimeException("FATAL: Not implemented.");
     }
 
     /**
      * Indicates the computation of a 16-byte HMAC-keyed MD5 message digest of the
-     * byte string M using the key K.
+     * byte string m using the key k.
      */
-    public static byte[] HMAC_MD5(byte[] K, byte[] M) {
+    public static byte[] HMAC_MD5(byte[] k, byte[] m) {
         try {
             String algorithm = "HMacMD5";
             Mac hashMac = Mac.getInstance(algorithm);
 
-            Key secretKey = new SecretKeySpec(K, 0, K.length, algorithm);
+            Key secretKey = new SecretKeySpec(k, 0, k.length, algorithm);
             hashMac.init(secretKey);
-            return hashMac.doFinal(M);
+            return hashMac.doFinal(m);
         } catch (Exception e) {
             throw new RuntimeException("Cannot calculate HMAC-MD5.", e);
         }
@@ -166,11 +166,11 @@ public class CryptoAlgos implements NtlmConstants {
 
     /**
      * Indicates the computation of an MD4 message digest of the null-terminated
-     * byte string M ([RFC1320]).
+     * byte string m ([RFC1320]).
      */
-    public static byte[] MD4(byte[] M) {
+    public static byte[] MD4(byte[] m) {
         try {
-            return sun.security.provider.MD4.getInstance().digest(M);
+            return sun.security.provider.MD4.getInstance().digest(m);
         } catch (Exception e) {
             throw new RuntimeException("Cannot calculate MD5.", e);
         }
@@ -178,11 +178,11 @@ public class CryptoAlgos implements NtlmConstants {
 
     /**
      * Indicates the computation of an MD5 message digest of the null-terminated
-     * byte string M ([RFC1321]).
+     * byte string m ([RFC1321]).
      */
-    public static byte[] MD5(byte[] M) {
+    public static byte[] MD5(byte[] m) {
         try {
-            return MessageDigest.getInstance("MD5").digest(M);
+            return MessageDigest.getInstance("MD5").digest(m);
         } catch (Exception e) {
             throw new RuntimeException("Cannot calculate MD5.", e);
         }
@@ -192,9 +192,9 @@ public class CryptoAlgos implements NtlmConstants {
      * Indicates the computation of an MD5 message digest of a binary blob
      * ([RFC4121] section 4.1.1.2).
      */
-    public static byte[] MD5_HASH(byte[] M) {
+    public static byte[] MD5_HASH(byte[] m) {
         try {
-            return MessageDigest.getInstance("MD5").digest(M);
+            return MessageDigest.getInstance("MD5").digest(m);
         } catch (Exception e) {
             throw new RuntimeException("Cannot calculate MD5.", e);
         }
@@ -204,17 +204,17 @@ public class CryptoAlgos implements NtlmConstants {
     public static final String NIL = "";
 
     /**
-     * Indicates the computation of an N-byte cryptographic-strength random
+     * Indicates the computation of an n-byte cryptographic-strength random
      * number.
-     * 
+     *
      * Note The NTLM Authentication Protocol does not define the statistical
      * properties of the random number generator. It is left to the discretion of
-     * the implementation to define the strength requirements of the NONCE(N)
+     * the implementation to define the strength requirements of the NONCE(n)
      * operation.
      */
-    public static byte[] NONCE(int N) {
+    public static byte[] NONCE(int n) {
         // Generate random nonce for LMv2 and NTv2 responses
-        byte[] nonce = new byte[N];
+        byte[] nonce = new byte[n];
         SecureRandom random = new SecureRandom();
         random.nextBytes(nonce);
 
@@ -236,28 +236,28 @@ public class CryptoAlgos implements NtlmConstants {
     /**
      * The RC4 Encryption Algorithm. To obtain this stream cipher that is licensed
      * by RSA Data Security, Inc., contact this company.
-     * 
-     * Indicates the encryption of data item D with the current session or message
-     * key state, using the RC4 algorithm. H is the handle to a key state
+     *
+     * Indicates the encryption of data item d with the current session or message
+     * key state, using the RC4 algorithm. h is the handle to a key state
      * structure initialized by RC4INIT.
      */
-    public static byte[] RC4(Cipher H, byte[] D) {
-        return H.update(D);
+    public static byte[] RC4(Cipher h, byte[] d) {
+        return h.update(d);
     }
 
     /**
-     * Indicates the encryption of data item D with the key K using the RC4
+     * Indicates the encryption of data item d with the key k using the RC4
      * algorithm.
-     * 
+     *
      * Note The key sizes for RC4 encryption in NTLM are defined in sections
      * KXKEY, SIGNKEY, and SEALKEY, where they are created.
      */
-    public static byte[] RC4K(byte[] K, byte[] D) {
+    public static byte[] RC4K(byte[] k, byte[] d) {
         try {
             Cipher cipher = Cipher.getInstance("RC4");
-            Key key = new SecretKeySpec(K, "RC4");
+            Key key = new SecretKeySpec(k, "RC4");
             cipher.init(Cipher.ENCRYPT_MODE, key);
-            return cipher.doFinal(D);
+            return cipher.doFinal(d);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -267,7 +267,7 @@ public class CryptoAlgos implements NtlmConstants {
      * Initialization of the RC4 key and handle to a key state structure for the
      * session.
      */
-    public static Cipher RC4Init(byte[] K) {
+    public static Cipher RC4Init(byte[] k) {
         throw new RuntimeException("FATAL: Not implemented.");
     }
 
@@ -275,7 +275,7 @@ public class CryptoAlgos implements NtlmConstants {
      * Produces an encryption key from the session key as defined in sections
      * KXKEY, SIGNKEY, and SEALKEY.
      */
-    public static byte[] SEALKEY(byte[] F, byte[] K, byte[] string1) {
+    public static byte[] SEALKEY(byte[] f, byte[] k, byte[] string1) {
         throw new RuntimeException("FATAL: Not implemented.");
     }
 
@@ -283,7 +283,7 @@ public class CryptoAlgos implements NtlmConstants {
      * Produces a signing key from the session key as defined in sections KXKEY,
      * SIGNKEY, and SEALKEY.
      */
-    public static byte[] SIGNKEY(int flag, byte[] K, byte[] string1) {
+    public static byte[] SIGNKEY(int flag, byte[] k, byte[] string1) {
         throw new RuntimeException("FATAL: Not implemented.");
     }
 
@@ -324,8 +324,8 @@ public class CryptoAlgos implements NtlmConstants {
      * Indicates the creation of a byte array of length N. Each byte in the array
      * is initialized to the value zero.
      */
-    public static byte[] Z(int N) {
-        return new byte[N];
+    public static byte[] Z(int n) {
+        return new byte[n];
     }
 
     public static Cipher initRC4(byte[] key) {

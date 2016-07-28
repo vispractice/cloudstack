@@ -18,8 +18,6 @@ package org.apache.cloudstack.ldap;
 
 import java.util.List;
 
-import javax.naming.NamingException;
-
 import org.apache.cloudstack.api.command.LdapListConfigurationCmd;
 import org.apache.cloudstack.api.response.LdapConfigurationResponse;
 import org.apache.cloudstack.api.response.LdapUserResponse;
@@ -27,33 +25,37 @@ import org.apache.cloudstack.api.response.LdapUserResponse;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.utils.Pair;
 import com.cloud.utils.component.PluggableService;
+import org.apache.cloudstack.api.response.LinkDomainToLdapResponse;
 
 public interface LdapManager extends PluggableService {
 
-	LdapConfigurationResponse addConfiguration(String hostname, int port)
-			throws InvalidParameterValueException;
+    enum LinkType { GROUP, OU;}
 
-	boolean canAuthenticate(String username, String password);
+    LdapConfigurationResponse addConfiguration(String hostname, int port) throws InvalidParameterValueException;
 
-	LdapConfigurationResponse createLdapConfigurationResponse(
-			LdapConfigurationVO configuration);
+    boolean canAuthenticate(String principal, String password);
 
-	LdapUserResponse createLdapUserResponse(LdapUser user);
+    LdapConfigurationResponse createLdapConfigurationResponse(LdapConfigurationVO configuration);
 
-	LdapConfigurationResponse deleteConfiguration(String hostname)
-			throws InvalidParameterValueException;
+    LdapUserResponse createLdapUserResponse(LdapUser user);
 
-	LdapUser getUser(final String username) throws NamingException;
+    LdapConfigurationResponse deleteConfiguration(String hostname) throws InvalidParameterValueException;
 
-	List<LdapUser> getUsers() throws NoLdapUserMatchingQueryException;
+    LdapUser getUser(final String username) throws NoLdapUserMatchingQueryException;
+
+    LdapUser getUser(String username, String type, String name) throws NoLdapUserMatchingQueryException;
+
+    List<LdapUser> getUsers() throws NoLdapUserMatchingQueryException;
 
     List<LdapUser> getUsersInGroup(String groupName) throws NoLdapUserMatchingQueryException;
 
-	boolean isLdapEnabled();
+    boolean isLdapEnabled();
 
-	Pair<List<? extends LdapConfigurationVO>, Integer> listConfigurations(
-			LdapListConfigurationCmd cmd);
+    Pair<List<? extends LdapConfigurationVO>, Integer> listConfigurations(LdapListConfigurationCmd cmd);
 
-	List<LdapUser> searchUsers(String query)
-			throws NoLdapUserMatchingQueryException;
+    List<LdapUser> searchUsers(String query) throws NoLdapUserMatchingQueryException;
+
+    LinkDomainToLdapResponse linkDomainToLdap(Long domainId, String type, String name, short accountType);
+
+    public LdapTrustMapVO getDomainLinkedToLdap(long domainId);
 }

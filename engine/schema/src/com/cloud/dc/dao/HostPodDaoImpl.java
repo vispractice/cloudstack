@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -38,7 +37,6 @@ import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.TransactionLegacy;
 
 @Component
-@Local(value={HostPodDao.class})
 public class HostPodDaoImpl extends GenericDaoBase<HostPodVO, Long> implements HostPodDao {
     private static final Logger s_logger = Logger.getLogger(HostPodDaoImpl.class);
 
@@ -84,7 +82,7 @@ public class HostPodDaoImpl extends GenericDaoBase<HostPodVO, Long> implements H
     public HashMap<Long, List<Object>> getCurrentPodCidrSubnets(long zoneId, long podIdToSkip) {
         HashMap<Long, List<Object>> currentPodCidrSubnets = new HashMap<Long, List<Object>>();
 
-        String selectSql = "SELECT id, cidr_address, cidr_size FROM host_pod_ref WHERE data_center_id=" + zoneId +" and removed IS NULL";
+        String selectSql = "SELECT id, cidr_address, cidr_size FROM host_pod_ref WHERE data_center_id=" + zoneId + " and removed IS NULL";
         TransactionLegacy txn = TransactionLegacy.currentTxn();
         try {
             PreparedStatement stmt = txn.prepareAutoCloseStatement(selectSql);

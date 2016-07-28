@@ -24,13 +24,24 @@ import org.apache.cloudstack.api.InternalIdentity;
 
 public interface Site2SiteCustomerGateway extends ControlledEntity, Identity, InternalIdentity {
     public String getGatewayIp();
+
     public String getGuestCidrList();
+
     public String getIpsecPsk();
+
     public String getIkePolicy();
+
     public String getEspPolicy();
+
     public Long getIkeLifetime();
+
     public Long getEspLifetime();
+
     public Boolean getDpd();
+
+    public Boolean getEncap();
+
     public Date getRemoved();
+
     String getName();
 }

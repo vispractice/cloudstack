@@ -74,67 +74,67 @@ public class ClientMCSErectDomainRequest extends OneTimeSwitch {
         // System.setProperty("streamer.Pipeline.debug", "true");
 
         /* @formatter:off */
-    byte[] packet = new byte[] {
+        byte[] packet = new byte[] {
 
-        0x03, 0x00, 0x00, 0x0c,  //  TPKT Header (length = 12 bytes)
-        0x02, (byte) 0xf0, (byte) 0x80,  //  X.224 Data TPDU
-        
-        // PER encoded (ALIGNED variant of BASIC-PER) PDU contents:
-        0x04, 0x01, 0x00, 0x01, 0x00,
-         
-        // 0x04:
-        // 0 - --\
-        // 0 -   |
-        // 0 -   | CHOICE: From DomainMCSPDU select erectDomainRequest (1) 
-        // 0 -   | of type ErectDomainRequest
-        // 0 -   |
-        // 1 - --/
-        // 0 - padding
-        // 0 - padding
-        
-        // 0x01:
-        // 0 - --\
-        // 0 -   |
-        // 0 -   |
-        // 0 -   | ErectDomainRequest::subHeight length = 1 byte
-        // 0 -   |
-        // 0 -   |
-        // 0 -   |
-        // 1 - --/
-        
-        // 0x00:
-        // 0 - --\
-        // 0 -   |
-        // 0 -   |
-        // 0 -   | ErectDomainRequest::subHeight = 0
-        // 0 -   |
-        // 0 -   |
-        // 0 -   |
-        // 0 - --/
-        
-        // 0x01:
-        // 0 - --\
-        // 0 -   |
-        // 0 -   |
-        // 0 -   | ErectDomainRequest::subInterval length = 1 byte
-        // 0 -   |
-        // 0 -   |
-        // 0 -   |
-        // 1 - --/
-        
-        // 0x00:
-        // 0 - --\
-        // 0 -   |
-        // 0 -   |
-        // 0 -   | ErectDomainRequest::subInterval = 0
-        // 0 -   |
-        // 0 -   |
-        // 0 -   |
-        // 0 - --/
+                0x03, 0x00, 0x00, 0x0c,  //  TPKT Header (length = 12 bytes)
+                0x02, (byte) 0xf0, (byte) 0x80,  //  X.224 Data TPDU
 
-        
-    };
-    /* @formatter:on */
+                // PER encoded (ALIGNED variant of BASIC-PER) PDU contents:
+                0x04, 0x01, 0x00, 0x01, 0x00,
+
+                // 0x04:
+                // 0 - --\
+                // 0 -   |
+                // 0 -   | CHOICE: From DomainMCSPDU select erectDomainRequest (1)
+                // 0 -   | of type ErectDomainRequest
+                // 0 -   |
+                // 1 - --/
+                // 0 - padding
+                // 0 - padding
+
+                // 0x01:
+                // 0 - --\
+                // 0 -   |
+                // 0 -   |
+                // 0 -   | ErectDomainRequest::subHeight length = 1 byte
+                // 0 -   |
+                // 0 -   |
+                // 0 -   |
+                // 1 - --/
+
+                // 0x00:
+                // 0 - --\
+                // 0 -   |
+                // 0 -   |
+                // 0 -   | ErectDomainRequest::subHeight = 0
+                // 0 -   |
+                // 0 -   |
+                // 0 -   |
+                // 0 - --/
+
+                // 0x01:
+                // 0 - --\
+                // 0 -   |
+                // 0 -   |
+                // 0 -   | ErectDomainRequest::subInterval length = 1 byte
+                // 0 -   |
+                // 0 -   |
+                // 0 -   |
+                // 1 - --/
+
+                // 0x00:
+                // 0 - --\
+                // 0 -   |
+                // 0 -   |
+                // 0 -   | ErectDomainRequest::subInterval = 0
+                // 0 -   |
+                // 0 -   |
+                // 0 -   |
+                // 0 - --/
+
+
+        };
+        /* @formatter:on */
 
         MockSource source = new MockSource("source", ByteBuffer.convertByteArraysToByteBuffers(new byte[] {1, 2, 3}));
         Element todo = new ClientMCSErectDomainRequest("TODO");

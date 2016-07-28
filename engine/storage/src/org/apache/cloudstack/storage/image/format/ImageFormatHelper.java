@@ -31,12 +31,16 @@ public class ImageFormatHelper {
 
     @Inject
     public void setFormats(List<ImageFormat> formats) {
-        ImageFormatHelper.formats = formats;
+        ImageFormatHelper.initFormats(formats);
+    }
+
+    private static synchronized void initFormats(List<ImageFormat> newFormats) {
+        formats = newFormats;
     }
 
     public static ImageFormat getFormat(String format) {
         for (ImageFormat fm : formats) {
-            if (fm.equals(format)) {
+            if (fm.toString().equals(format)) {
                 return fm;
             }
         }

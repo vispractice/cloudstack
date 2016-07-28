@@ -18,8 +18,6 @@ package com.cloud.configuration;
 
 import java.util.List;
 
-import javax.naming.NamingException;
-
 import org.apache.cloudstack.api.command.admin.config.UpdateCfgCmd;
 import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
 import org.apache.cloudstack.api.command.admin.network.DeleteNetworkOfferingCmd;
@@ -53,6 +51,7 @@ import org.apache.cloudstack.region.PortableIpRange;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.Pod;
 import com.cloud.dc.Vlan;
+import com.cloud.domain.Domain;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.InvalidParameterValueException;
@@ -64,6 +63,7 @@ import com.cloud.offering.DiskOffering;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.user.Account;
+import com.cloud.utils.Pair;
 
 public interface ConfigurationService {
 
@@ -230,7 +230,8 @@ public interface ConfigurationService {
      * @throws
      * @return The new Vlan object
      */
-    Vlan createVlanAndPublicIpRange(CreateVlanIpRangeCmd cmd) throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException, ResourceAllocationException;
+    Vlan createVlanAndPublicIpRange(CreateVlanIpRangeCmd cmd) throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException,
+        ResourceAllocationException;
 
     /**
      * Marks the the account with the default zone-id.
@@ -253,11 +254,13 @@ public interface ConfigurationService {
 
     NetworkOffering updateNetworkOffering(UpdateNetworkOfferingCmd cmd);
 
-    List<? extends NetworkOffering> searchForNetworkOfferings(ListNetworkOfferingsCmd cmd);
+    Pair<List<? extends NetworkOffering>, Integer> searchForNetworkOfferings(ListNetworkOfferingsCmd cmd);
 
     boolean deleteNetworkOffering(DeleteNetworkOfferingCmd cmd);
 
     Account getVlanAccount(long vlanId);
+
+    Domain getVlanDomain(long vlanId);
 
     List<? extends NetworkOffering> listNetworkOfferings(TrafficType trafficType, boolean systemOnly);
 
@@ -271,36 +274,35 @@ public interface ConfigurationService {
 
     List<? extends PortableIp> listPortableIps(long id);
     
-    //andrew ling add, bandwidth offering.
-   /**
-    * Create a bandwidth offering through the API
-    *
-    * @param cmd
-    *            the command object that specifies the name,display_text, rate, ceil. for the bandwidth
-    *            offering
-    * @return the newly created bandwidth offering if successful, null otherwise
-    */
-   BandwidthOffering createBandwidthOffering(CreateBandwidthOfferingCmd cmd);
-  
-   /**
-    * Updates a bandwidth offering
-    *
-    * @param bandwidthOfferingId
-    * @param name
-    * @param displayText
-    * @param rate
-    * @param ceil
-    * @return updated service offering
- * @throws ResourceUnavailableException 
-    */
-   BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd ) throws ResourceUnavailableException;
+  //andrew ling add, bandwidth offering.
+    /**
+     * Create a bandwidth offering through the API
+     *
+     * @param cmd
+     *            the command object that specifies the name,display_text, rate, ceil. for the bandwidth
+     *            offering
+     * @return the newly created bandwidth offering if successful, null otherwise
+     */
+    BandwidthOffering createBandwidthOffering(CreateBandwidthOfferingCmd cmd);
+   
+    /**
+     * Updates a bandwidth offering
+     *
+     * @param bandwidthOfferingId
+     * @param name
+     * @param displayText
+     * @param rate
+     * @param ceil
+     * @return updated service offering
+  * @throws ResourceUnavailableException 
+     */
+    BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd ) throws ResourceUnavailableException;
 
-   /**
-    * Deletes a bandwidth offering
-    *
-    * @param serviceOfferingId
-    */
-   boolean deleteBandwidthOffering( DeleteBandwidthOfferingCmd cmd);
-
+    /**
+     * Deletes a bandwidth offering
+     *
+     * @param serviceOfferingId
+     */
+    boolean deleteBandwidthOffering( DeleteBandwidthOfferingCmd cmd);
     
 }

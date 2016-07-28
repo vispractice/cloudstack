@@ -29,20 +29,20 @@ import common.asn1.Tag;
  *   domainHint    [3] OCTET STRING OPTIONAL
  * }
  * </pre>
- * 
+ *
  * <ul>
  * <li>pin: Contains the user's smart card PIN.
- * 
+ *
  * <li>cspData: A TSCspDataDetail structure that contains information about the
  * cryptographic service provider (CSP).
- * 
+ *
  * <li>userHint: Contains the user's account hint.
- * 
+ *
  * <li>domainHint: Contains the user's domain name to which the user's account
  * belongs. This name could be entered by the user when the user is first
  * prompted for the PIN.
  * </ul>
- * 
+ *
  * @see http://msdn.microsoft.com/en-us/library/cc226784.aspx
  */
 public class TSSmartCardCreds extends Sequence {
@@ -79,7 +79,7 @@ public class TSSmartCardCreds extends Sequence {
 
     public TSSmartCardCreds(String name) {
         super(name);
-        this.tags = new Tag[] {pin, cspData, userHint, domainHint};
+        tags = new Tag[] {pin, cspData, userHint, domainHint};
     }
 
     @Override

@@ -16,17 +16,14 @@
 // under the License.
 package org.apache.cloudstack.engine.cloud.entity.api.db.dao;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.Local;
-
-
-import org.apache.cloudstack.engine.cloud.entity.api.db.VMRootDiskTagVO;
 
 import org.springframework.stereotype.Component;
+
+import org.apache.cloudstack.engine.cloud.entity.api.db.VMRootDiskTagVO;
 
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
@@ -34,7 +31,6 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.TransactionLegacy;
 
 @Component
-@Local(value = { VMRootDiskTagDao.class })
 public class VMRootDiskTagDaoImpl extends GenericDaoBase<VMRootDiskTagVO, Long> implements VMRootDiskTagDao {
 
     protected SearchBuilder<VMRootDiskTagVO> VmIdSearch;
@@ -60,9 +56,9 @@ public class VMRootDiskTagDaoImpl extends GenericDaoBase<VMRootDiskTagVO, Long> 
         expunge(sc);
 
         for (String tag : rootDiskTags) {
-            if(tag != null){
+            if (tag != null) {
                 tag = tag.trim();
-                if(tag.length() > 0) {
+                if (tag.length() > 0) {
                     VMRootDiskTagVO vo = new VMRootDiskTagVO(vmId, tag);
                     persist(vo);
                 }
@@ -70,7 +66,6 @@ public class VMRootDiskTagDaoImpl extends GenericDaoBase<VMRootDiskTagVO, Long> 
         }
         txn.commit();
     }
-
 
     @Override
     public List<String> getRootDiskTags(long vmId) {

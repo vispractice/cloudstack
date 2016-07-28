@@ -18,7 +18,6 @@
  */
 package org.apache.cloudstack.storage.test;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,20 +44,25 @@ public class FakePrimaryDataStoreDriver implements PrimaryDataStoreDriver {
     boolean snapshotResult = true;
 
     @Override
-    public Map<String, String> getCapabilities() {
-        return null;
-    }
-
-    @Override
     public ChapInfo getChapInfo(VolumeInfo volumeInfo) {
         return null; // To change body of implemented methods, use File | Settings | File Templates.
     }
 
     @Override
-    public boolean  connectVolumeToHost(VolumeInfo volumeInfo, Host host, DataStore dataStore) { return false; }
+    public boolean grantAccess(DataObject dataObject, Host host, DataStore dataStore) { return false; }
 
     @Override
-    public void disconnectVolumeFromHost(VolumeInfo volumeInfo, Host host, DataStore dataStore) {}
+    public void revokeAccess(DataObject dataObject, Host host, DataStore dataStore) {}
+
+    @Override
+    public long getUsedBytes(StoragePool storagePool) {
+        return 0;
+    }
+
+    @Override
+    public long getUsedIops(StoragePool storagePool) {
+        return 0;
+    }
 
     @Override
     public long getVolumeSizeIncludingHypervisorSnapshotReserve(Volume volume, StoragePool pool) {
@@ -126,5 +130,11 @@ public class FakePrimaryDataStoreDriver implements PrimaryDataStoreDriver {
     @Override
     public void resize(DataObject data, AsyncCompletionCallback<CreateCmdResult> callback) {
         //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Map<String, String> getCapabilities() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

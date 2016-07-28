@@ -58,13 +58,13 @@ public interface NtlmConstants {
 
     /**
      * Attribute type: A 32-bit value indicating server or client configuration.
-     * 
+     *
      * <li>0x00000001: indicates to the client that the account authentication is
      * constrained.
-     * 
+     *
      * <li>0x00000002: indicates that the client is providing message integrity in
      * the MIC field (section 2.2.1.3) in the AUTHENTICATE_MESSAGE.
-     * 
+     *
      * <li>0x00000004: indicates that the client is providing a target SPN
      * generated from an untrusted source.
      **/

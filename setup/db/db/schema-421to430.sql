@@ -111,8 +111,7 @@ CREATE TABLE `cloud`.`async_job_join_map` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 #realhostip changes, before changing table and adding default value
-UPDATE `cloud`.`configuration` SET value = CONCAT("*.",(SELECT `temptable`.`value` FROM (SELECT * FROM `cloud`.`configuration` WHERE `name`="consoleproxy.url.domain") AS `temptable` WHERE `temptable`.`name`="consoleproxy.url.domain")) WHERE `name`="consoleproxy.url.domain";
-UPDATE `cloud`.`configuration` SET `value` = CONCAT("*.",(SELECT `temptable`.`value` FROM (SELECT * FROM `cloud`.`configuration` WHERE `name`="secstorage.ssl.cert.domain") AS `temptable` WHERE `temptable`.`name`="secstorage.ssl.cert.domain")) WHERE `name`="secstorage.ssl.cert.domain";
+UPDATE `cloud`.`configuration` SET value=CONCAT("*.",value) WHERE `name`="consoleproxy.url.domain" OR `name`="secstorage.ssl.cert.domain";
 
 ALTER TABLE `cloud`.`configuration` ADD COLUMN `default_value` VARCHAR(4095) COMMENT 'Default value for a configuration parameter';
 ALTER TABLE `cloud`.`configuration` ADD COLUMN `updated` datetime COMMENT 'Time this was updated by the server. null means this row is obsolete.';
@@ -130,7 +129,7 @@ ALTER TABLE `cloud`.`volumes` ADD COLUMN `hv_ss_reserve` int(32) unsigned DEFAUL
 UPDATE `cloud`.`disk_offering` SET `state`='Inactive' WHERE `removed` IS NOT NULL;
 UPDATE `cloud`.`disk_offering` SET `removed`=NULL;
 
-UPDATE `cloud`.`vm_template` SET `guest_os_id`="142" WHERE `id`="5";
+UPDATE `cloud`.`vm_template` SET `guest_os_id`= "142" WHERE `id` = "5";
 UPDATE `cloud`.`vm_template` SET `state`='Inactive' WHERE `removed` IS NOT NULL;
 UPDATE `cloud`.`vm_template` SET `state`='Active' WHERE `removed` IS NULL;
 UPDATE `cloud`.`vm_template` SET `removed`=NULL;
@@ -832,10 +831,17 @@ CREATE TABLE `cloud`.`network_acl_item_details` (
 
 ALTER TABLE `cloud`.`alert` ADD COLUMN `name` varchar(255) DEFAULT NULL COMMENT 'name of the alert';
 
-UPDATE `cloud`.`hypervisor_capabilities` set max_guests_limit='150' WHERE hypervisor_version='6.1.0';
-UPDATE `cloud`.`hypervisor_capabilities` set max_guests_limit='500' WHERE hypervisor_version='6.2.0';
 UPDATE `cloud`.`hypervisor_capabilities` SET `max_data_volumes_limit`=13 WHERE `hypervisor_type`='Vmware';
 INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(uuid, hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled, max_data_volumes_limit, storage_motion_supported) VALUES (UUID(), 'Hyperv', '6.2', 1024, 0, 64, 0);
+
+ALTER TABLE `cloud`.`external_load_balancer_devices` ADD COLUMN `is_exclusive_gslb_provider` int(1) unsigned NOT NULL DEFAULT 0 COMMENT '1 if load balancer appliance is acting exclusively as gslb service provider in the zone and can not be used for LB';
+
+DELETE FROM `cloud`.`configuration` WHERE `name` IN ("xen.update.url", "update.check.interval", "baremetal_dhcp_devices", "host.updates.enable");
+
+INSERT IGNORE INTO `cloud`.`configuration` VALUES ("Advanced", 'DEFAULT', 'VMSnapshotManager', "vmsnapshot.create.wait", "1800", "In second, timeout for create vm snapshot", NULL, NULL,NULL,0);
+INSERT IGNORE INTO `cloud`.`configuration` VALUES ("Advanced", 'DEFAULT', 'VMSnapshotManager', "vmsnapshot.max", "10", "Maximum vm snapshots for a vm", NULL, NULL,NULL,0);
+
+UPDATE `cloud`.`configuration` SET `component` = 'VMSnapshotManager' WHERE `name` IN ("vmsnapshot.create.wait", "vmsnapshot.max");
 
 CREATE TABLE `cloud`.`s2s_vpn_gateway_details` (
   `id` bigint unsigned NOT NULL auto_increment,
@@ -847,6 +853,9 @@ CREATE TABLE `cloud`.`s2s_vpn_gateway_details` (
   CONSTRAINT `fk_s2s_vpn_gateway_details__s2s_vpn_gateway_id` FOREIGN KEY `fk_s2s_vpn_gateway_details__s2s_vpn_gateway_id`(`s2s_vpn_gateway_id`) REFERENCES `s2s_vpn_gateway`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Hidden', 'DEFAULT', 'management-server', 'hyperv.guest.network.device', null, 'Specify the virtual switch on host for guest network', NULL, NULL, NULL, 0);
+INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Hidden', 'DEFAULT', 'management-server', 'hyperv.private.network.device', null, 'Specify the virtual switch on host for private network', NULL, NULL, NULL, 0);
+INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Hidden', 'DEFAULT', 'management-server', 'hyperv.public.network.device', null, 'Specify the public virtual switch on host for public network', NULL, NULL, NULL, 0);
 
 DELETE FROM `cloud`.`configuration` WHERE `name` IN ("xen.update.url", "update.check.interval", "baremetal_dhcp_devices", "host.updates.enable");
 
@@ -863,12 +872,6 @@ INSERT IGNORE INTO `cloud`.`vm_template` (id, uuid, unique_name, name, public, c
 
 UPDATE `cloud`.`configuration` SET `component` = 'VMSnapshotManager' WHERE `name` IN ("vmsnapshot.create.wait", "vmsnapshot.max");
 
-INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Hidden', 'DEFAULT', 'management-server', 'hyperv.guest.network.device', null, 'Specify the virtual switch on host for guest network', NULL, NULL, NULL, 0);
-INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Hidden', 'DEFAULT', 'management-server', 'hyperv.private.network.device', null, 'Specify the virtual switch on host for private network', NULL, NULL, NULL, 0);
-INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Hidden', 'DEFAULT', 'management-server', 'hyperv.public.network.device', null, 'Specify the public virtual switch on host for public network', NULL, NULL, NULL, 0);
-
-ALTER TABLE `cloud`.`external_load_balancer_devices` ADD COLUMN `is_exclusive_gslb_provider` int(1) unsigned NOT NULL DEFAULT 0 COMMENT '1 if load balancer appliance is acting exclusively as gslb service provider in the zone and can not be used for LB';
-
 CREATE TABLE `cloud`.`s2s_customer_gateway_details` (
   `id` bigint unsigned NOT NULL auto_increment,
   `s2s_customer_gateway_id` bigint unsigned NOT NULL COMMENT 'VPC gateway id',
@@ -878,6 +881,7 @@ CREATE TABLE `cloud`.`s2s_customer_gateway_details` (
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_s2s_customer_gateway_details__s2s_customer_gateway_id` FOREIGN KEY `fk_s2s_customer_gateway_details__s2s_customer_gateway_id`(`s2s_customer_gateway_id`) REFERENCES `s2s_customer_gateway`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 CREATE TABLE `cloud`.`s2s_vpn_connection_details` (
   `id` bigint unsigned NOT NULL auto_increment,
@@ -1095,14 +1099,6 @@ CREATE VIEW `cloud`.`user_vm_view` AS
            left join
         `cloud`.`user_vm_details` `custom_ram_size`  ON (((`custom_ram_size`.`vm_id` = `cloud`.`vm_instance`.`id`) and (`custom_ram_size`.`name` = 'memory')));
 
-
-INSERT IGNORE INTO `cloud`.`configuration`(category, instance, component, name, value, description, default_value) VALUES ('NetworkManager', 'DEFAULT', 'management-server', 'network.router.EnableServiceMonitoring', 'true', 'service monitoring in router enable/disable option, default true', 'true') ON DUPLICATE KEY UPDATE category='NetworkManager';
-
-ALTER TABLE `cloud`.`service_offering_details` CHANGE `display` `display` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'True if the detail can be displayed to the end user';
-UPDATE `cloud`.`service_offering_details` set `display`=1 where id> 0;
-
-ALTER TABLE `cloud`.`disk_offering_details` CHANGE `display_detail` `display_detail` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'True if the detail can be displayed to the end user';
-UPDATE `cloud`.`disk_offering_details` set `display_detail`=1 where id> 0;
 
 INSERT IGNORE INTO `cloud`.`guest_os` (id, uuid, category_id, display_name) VALUES (168, UUID(), 6, 'Windows Server 2012 R2 (64-bit)');
 INSERT IGNORE INTO `cloud`.`guest_os_hypervisor` (hypervisor_type, guest_os_name, guest_os_id) VALUES  ("XenServer", 'Windows Server 2012 R2 (64-bit)', 168);

@@ -27,10 +27,10 @@ import streamer.debug.MockSource;
 
 /**
  * Server response to MCS Attach User request.
- * 
+ *
  * Once the User Channel ID has been extracted, the client MUST send an MCS
  * Channel Join Request PDU for the user channel.
- * 
+ *
  * @see http://msdn.microsoft.com/en-us/library/cc240685.aspx
  */
 public class ServerMCSAttachUserConfirmPDU extends OneTimeSwitch {
@@ -81,7 +81,7 @@ public class ServerMCSAttachUserConfirmPDU extends OneTimeSwitch {
      */
     /**
      * Example.
-     * 
+     *
      * @see http://msdn.microsoft.com/en-us/library/cc240842.aspx
      * @see http://msdn.microsoft.com/en-us/library/cc240500.aspx
      */
@@ -91,8 +91,8 @@ public class ServerMCSAttachUserConfirmPDU extends OneTimeSwitch {
         // System.setProperty("streamer.Pipeline.debug", "true");
 
         byte[] packet = new byte[] {(byte)0x2E, // MCS user confirm (001011..,
-                                                // 0xb), InitiatorPresent: 1
-                                                // (......01, 0x1)
+                // 0xb), InitiatorPresent: 1
+                // (......01, 0x1)
                 (byte)0x00, // RT successfull (0000...., 0x0)
                 // Initiator: 1001+3 = 1004
                 (byte)0x00, (byte)0x03,};

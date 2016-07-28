@@ -28,16 +28,16 @@ import common.asn1.Tag;
  *   password      [2] OCTET STRING
  * }
  * </pre>
- * 
+ *
  * <ul>
  * <li>domainName: Contains the name of the user's account domain, as defined in
  * [MS-GLOS].
- * 
+ *
  * <li>userName: Contains the user's account name.
- * 
+ *
  * <li>Password: Contains the user's account password.
  * </ul>
- * 
+ *
  * @see http://msdn.microsoft.com/en-us/library/cc226783.aspx
  */
 public class TSPasswordCreds extends Sequence {
@@ -65,7 +65,7 @@ public class TSPasswordCreds extends Sequence {
 
     public TSPasswordCreds(String name) {
         super(name);
-        this.tags = new Tag[] {domainName, userName, password};
+        tags = new Tag[] {domainName, userName, password};
     }
 
     @Override

@@ -16,8 +16,6 @@
 // under the License.
 package vncclient.vnc;
 
-import common.ScreenDescription;
-
 import streamer.BaseElement;
 import streamer.ByteBuffer;
 import streamer.Element;
@@ -26,6 +24,7 @@ import streamer.Pipeline;
 import streamer.PipelineImpl;
 import streamer.debug.MockSink;
 import streamer.debug.MockSource;
+import common.ScreenDescription;
 
 public class FrameBufferUpdateRequest extends BaseElement {
     // TODO: use object with fields instead of raw values in map

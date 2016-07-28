@@ -27,7 +27,7 @@ public class Asn1Integer extends Tag {
 
     public Asn1Integer(String name) {
         super(name);
-        this.tagType = INTEGER;
+        tagType = INTEGER;
     }
 
     @Override
@@ -50,7 +50,7 @@ public class Asn1Integer extends Tag {
     @Override
     public Tag copyFrom(Tag tag) {
         super.copyFrom(tag);
-        this.value = ((Asn1Integer)tag).value;
+        value = ((Asn1Integer)tag).value;
         return this;
     }
 

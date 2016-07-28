@@ -1,4 +1,4 @@
-﻿// Licensed to the Apache Software Foundation (ASF) under one
+// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
 // regarding copyright ownership.  The ASF licenses this file
@@ -66,52 +66,6 @@ namespace HypervResource
                     uncPath = @"\\" + uri.Host + uri.LocalPath;
                 }
                 return uncPath;
-            }
-        }
-
-        public string User
-        {
-            get
-            {
-                string user = null;
-                if (uri != null)
-                {
-                    var queryDictionary = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                    user = System.Web.HttpUtility.UrlDecode(queryDictionary["user"]);
-                }
-                return user;
-            }
-        }
-
-        public string Password
-        {
-            get
-            {
-                string password = null;
-                if (uri != null)
-                {
-                    var queryDictionary = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                    password = System.Web.HttpUtility.UrlDecode(queryDictionary["password"]);
-                }
-                return password;
-            }
-        }
-
-        public string Domain
-        {
-            get
-            {
-                string domain = null;
-                if (uri != null)
-                {
-                    var queryDictionary = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                    if (queryDictionary["domain"] != null)
-                    {
-                        domain = System.Web.HttpUtility.UrlDecode(queryDictionary["domain"]);
-                    }
-                    else domain = uri.Host;
-                }
-                return domain;
             }
         }
 
@@ -302,7 +256,7 @@ namespace HypervResource
                 path = Utils.NormalizePath(path);
                 if (Directory.Exists(path))
                 {
-                    string[] choices = choices = Directory.GetFiles(path, volInfo.uuid + ".vhd*");
+                    string[] choices = Directory.GetFiles(path, volInfo.uuid + ".vhd*");
                     if (choices.Length != 1)
                     {
                         String errMsg = "Tried to guess file extension, but cannot find file corresponding to " +
@@ -336,11 +290,11 @@ namespace HypervResource
                     PrimaryDataStoreTO store = this.primaryDataStore;
                     if (store.isLocal)
                     {
-                        fileName = Path.Combine(store.Path, this.uuid);
+                        fileName = Path.Combine(store.Path, this.path);
                     }
                     else
                     {
-                        fileName = @"\\" + store.uri.Host + store.uri.LocalPath + @"\" + this.uuid;
+                        fileName = @"\\" + store.uri.Host + store.uri.LocalPath + @"\" + this.path;
                     }
                     fileName = fileName + '.' + this.format.ToLowerInvariant();
                 }
@@ -457,36 +411,7 @@ namespace HypervResource
                 return uncPath;
             }
         }
-        public string User
-        {
-            get
-            {
-                var queryDictionary = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                return System.Web.HttpUtility.UrlDecode(queryDictionary["user"]);
-            }
-        }
 
-        public string Password
-        {
-            get
-            {
-                var queryDictionary = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                return System.Web.HttpUtility.UrlDecode(queryDictionary["password"]);
-            }
-        }
-
-        public string Domain
-        {
-            get
-            {
-                var queryDictionary = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                if (queryDictionary["domain"] != null)
-                {
-                    return System.Web.HttpUtility.UrlDecode(queryDictionary["domain"]);
-                }
-                else return uri.Host;
-            }
-        }
         public static NFSTO ParseJson(dynamic json)
         {
             NFSTO result = null;
@@ -609,6 +534,7 @@ namespace HypervResource
 
     public struct VolumeInfo
     {
+#pragma warning disable 0414
         public long id;
         public string type;
         public string storagePoolType;
@@ -618,6 +544,7 @@ namespace HypervResource
         public string path;
         long size;
         string chainInfo;
+#pragma warning restore 0414
 
         public VolumeInfo(long id, string type, string poolType, String poolUuid, String name, String mountPoint, String path, long size, String chainInfo)
         {
@@ -635,10 +562,12 @@ namespace HypervResource
 
     public class VmState
     {
+#pragma warning disable 0414
         [JsonProperty("state")]
         public String state;
         [JsonProperty("host")]
         String host;
+#pragma warning restore 0414
         public VmState() { }
         public VmState(String vmState, String host)
         {
@@ -649,6 +578,7 @@ namespace HypervResource
 
     public struct StoragePoolInfo
     {
+#pragma warning disable 0414
         [JsonProperty("uuid")]
         public String uuid;
         [JsonProperty("host")]
@@ -667,6 +597,7 @@ namespace HypervResource
         long availableBytes;
         [JsonProperty("details")]
         Dictionary<String, String> details;
+#pragma warning restore 0414
 
         public StoragePoolInfo(String uuid, String host, String hostPath,
                 String localPath, string poolType, long capacityBytes,
@@ -705,6 +636,31 @@ namespace HypervResource
         public String entityType;
     }
 
+    public class NicDetails
+    {
+        [JsonProperty("macAddress")]
+        public string macaddress;
+        [JsonProperty("vlanid")]
+        public int vlanid;
+        [JsonProperty("state")]
+        public bool state;
+        public NicDetails() { }
+        public NicDetails(String macaddress, int vlanid, int enabledState)
+        {
+            this.macaddress = macaddress;
+            this.vlanid = vlanid;
+            if (enabledState == 2)
+            {
+                this.state = true;
+            }
+            else
+            {
+                this.state = false;
+            }
+
+        }
+    }
+
     /// <summary>
     /// Fully qualified named for a number of types used in CloudStack.  Used to specify the intended type for JSON serialised objects. 
     /// </summary>
@@ -712,8 +668,6 @@ namespace HypervResource
     {
         public const string Answer = "com.cloud.agent.api.Answer";
         public const string AttachIsoCommand = "com.cloud.agent.api.AttachIsoCommand";
-        public const string AttachVolumeAnswer = "com.cloud.agent.api.AttachVolumeAnswer";
-        public const string AttachVolumeCommand = "com.cloud.agent.api.AttachVolumeCommand";
         public const string AnsBackupSnapshotAnswerwer = "com.cloud.agent.api.BackupSnapshotAnswer";
         public const string BackupSnapshotCommand = "com.cloud.agent.api.BackupSnapshotCommand";
         public const string BumpUpPriorityCommand = "com.cloud.agent.api.BumpUpPriorityCommand";
@@ -753,6 +707,10 @@ namespace HypervResource
         public const string GetVmDiskStatsCommand = "com.cloud.agent.api.GetVmDiskStatsCommand";
         public const string GetVmStatsAnswer = "com.cloud.agent.api.GetVmStatsAnswer";
         public const string GetVmStatsCommand = "com.cloud.agent.api.GetVmStatsCommand";
+        public const string GetVmConfigCommand = "com.cloud.agent.api.GetVmConfigCommand";
+        public const string GetVmConfigAnswer = "com.cloud.agent.api.GetVmConfigAnswer";
+        public const string ModifyVmNicConfigCommand = "com.cloud.agent.api.ModifyVmNicConfigCommand";
+        public const string ModifyVmNicConfigAnswer = "com.cloud.agent.api.ModifyVmNicConfigAnswer";
         public const string GetVncPortAnswer = "com.cloud.agent.api.GetVncPortAnswer";
         public const string GetVncPortCommand = "com.cloud.agent.api.GetVncPortCommand";
         public const string HostStatsEntry = "com.cloud.agent.api.HostStatsEntry";
@@ -762,6 +720,8 @@ namespace HypervResource
         public const string ManageSnapshotCommand = "com.cloud.agent.api.ManageSnapshotCommand";
         public const string MigrateAnswer = "com.cloud.agent.api.MigrateAnswer";
         public const string MigrateCommand = "com.cloud.agent.api.MigrateCommand";
+        public const string MigrateWithStorageAnswer = "com.cloud.agent.api.MigrateWithStorageAnswer";
+        public const string MigrateWithStorageCommand = "com.cloud.agent.api.MigrateWithStorageCommand";
         public const string ModifySshKeysCommand = "com.cloud.agent.api.ModifySshKeysCommand";
         public const string ModifyStoragePoolAnswer = "com.cloud.agent.api.ModifyStoragePoolAnswer";
         public const string ModifyStoragePoolCommand = "com.cloud.agent.api.ModifyStoragePoolCommand";
@@ -846,6 +806,8 @@ namespace HypervResource
         public const string CreateCommand = "com.cloud.agent.api.storage.CreateCommand";
         public const string CreatePrivateTemplateAnswer = "com.cloud.agent.api.storage.CreatePrivateTemplateAnswer";
         public const string DestroyCommand = "com.cloud.agent.api.storage.DestroyCommand";
+        public const string MigrateVolumeAnswer = "com.cloud.agent.api.storage.MigrateVolumeAnswer";
+        public const string MigrateVolumeCommand = "com.cloud.agent.api.storage.MigrateVolumeCommand";
         public const string PrimaryStorageDownloadAnswer = "com.cloud.agent.api.storage.PrimaryStorageDownloadAnswer";
         public const string PrimaryStorageDownloadCommand = "com.cloud.agent.api.storage.PrimaryStorageDownloadCommand";
         public const string ResizeVolumeAnswer = "com.cloud.agent.api.storage.ResizeVolumeAnswer";
@@ -911,5 +873,6 @@ namespace HypervResource
         public const string DeleteCommand = "org.apache.cloudstack.storage.command.DeleteCommand";
         public const string DettachAnswer = "org.apache.cloudstack.storage.command.DettachAnswer";
         public const string DettachCommand = "org.apache.cloudstack.storage.command.DettachCommand";
+        public const string HostVmStateReportCommand = "org.apache.cloudstack.HostVmStateReportCommand";
     }
 }

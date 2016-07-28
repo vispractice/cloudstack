@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 
 import javax.naming.ConfigurationException;
 
+import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
 import org.libvirt.LibvirtException;
 
@@ -39,15 +40,14 @@ import com.cloud.utils.script.Script;
 
 public class BridgeVifDriver extends VifDriverBase {
 
-    private static final Logger s_logger = Logger
-            .getLogger(BridgeVifDriver.class);
+    private static final Logger s_logger = Logger.getLogger(BridgeVifDriver.class);
     private int _timeout;
 
-    private static final Object _vnetBridgeMonitor = new Object();
+    private final Object _vnetBridgeMonitor = new Object();
     private String _modifyVlanPath;
     private String _modifyVxlanPath;
     private String bridgeNameSchema;
-    
+    private Long libvirtVersion;
 
     @Override
     public void configure(Map<String, Object> params) throws ConfigurationException {
@@ -62,9 +62,9 @@ public class BridgeVifDriver extends VifDriverBase {
             networkScriptsDir = "scripts/vm/network/vnet";
         }
 
-        bridgeNameSchema = (String) params.get("network.bridge.name.schema");
+        bridgeNameSchema = (String)params.get("network.bridge.name.schema");
 
-        String value = (String) params.get("scripts.timeout");
+        String value = (String)params.get("scripts.timeout");
         _timeout = NumbersUtil.parseInt(value, 30 * 60) * 1000;
 
         _modifyVlanPath = Script.findScript(networkScriptsDir, "modifyvlan.sh");
@@ -75,7 +75,12 @@ public class BridgeVifDriver extends VifDriverBase {
         if (_modifyVxlanPath == null) {
             throw new ConfigurationException("Unable to find modifyvxlan.sh");
         }
-        
+
+        libvirtVersion = (Long) params.get("libvirtVersion");
+        if (libvirtVersion == null) {
+            libvirtVersion = 0L;
+        }
+
         try {
             createControlNetwork();
         } catch (LibvirtException e) {
@@ -84,11 +89,13 @@ public class BridgeVifDriver extends VifDriverBase {
     }
 
     @Override
-    public LibvirtVMDef.InterfaceDef plug(NicTO nic, String guestOsType)
-            throws InternalErrorException, LibvirtException {
+    public LibvirtVMDef.InterfaceDef plug(NicTO nic, String guestOsType, String nicAdapter) throws InternalErrorException, LibvirtException {
 
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("nic=" + nic);
+            if (nicAdapter != null && !nicAdapter.isEmpty()) {
+                s_logger.debug("custom nic adapter=" + nicAdapter);
+            }
         }
 
         LibvirtVMDef.InterfaceDef intf = new LibvirtVMDef.InterfaceDef();
@@ -96,25 +103,28 @@ public class BridgeVifDriver extends VifDriverBase {
         String vNetId = null;
         String protocol = null;
         if (nic.getBroadcastType() == Networks.BroadcastDomainType.Vlan || nic.getBroadcastType() == Networks.BroadcastDomainType.Vxlan) {
-        	vNetId = Networks.BroadcastDomainType.getValue(nic.getBroadcastUri());
-        	protocol = Networks.BroadcastDomainType.getSchemeValue(nic.getBroadcastUri()).scheme();
-        }
-        else if (nic.getBroadcastType() == Networks.BroadcastDomainType.Lswitch) {
+            vNetId = Networks.BroadcastDomainType.getValue(nic.getBroadcastUri());
+            protocol = Networks.BroadcastDomainType.getSchemeValue(nic.getBroadcastUri()).scheme();
+        } else if (nic.getBroadcastType() == Networks.BroadcastDomainType.Lswitch) {
             throw new InternalErrorException("Nicira NVP Logicalswitches are not supported by the BridgeVifDriver");
         }
         String trafficLabel = nic.getName();
+        Integer networkRateKBps = 0;
+        if (libvirtVersion > ((10 * 1000 + 10))) {
+            networkRateKBps = (nic.getNetworkRateMbps() != null && nic.getNetworkRateMbps().intValue() != -1) ? nic.getNetworkRateMbps().intValue() * 128 : 0;
+        }
+
         if (nic.getType() == Networks.TrafficType.Guest) {
-            Integer networkRateKBps = (nic.getNetworkRateMbps() != null && nic.getNetworkRateMbps().intValue() != -1) ? nic.getNetworkRateMbps().intValue() * 128 : 0;
-            if (nic.getBroadcastType() == Networks.BroadcastDomainType.Vlan && !vNetId.equalsIgnoreCase("untagged")
-                || nic.getBroadcastType() == Networks.BroadcastDomainType.Vxlan) {
-                if(trafficLabel != null && !trafficLabel.isEmpty()) {
-                    s_logger.debug("creating a vNet dev and bridge for guest traffic per traffic label " + trafficLabel);
-                    String brName = createVnetBr(vNetId, trafficLabel, protocol);
-                    intf.defBridgeNet(brName, null, nic.getMac(), getGuestNicModel(guestOsType), networkRateKBps);
-                } else {
-                    String brName = createVnetBr(vNetId, "private", protocol);
-                    intf.defBridgeNet(brName, null, nic.getMac(), getGuestNicModel(guestOsType), networkRateKBps);
-                }
+            if ((nic.getBroadcastType() == Networks.BroadcastDomainType.Vlan) && (vNetId != null) && (protocol != null) && (!vNetId.equalsIgnoreCase("untagged")) ||
+                    (nic.getBroadcastType() == Networks.BroadcastDomainType.Vxlan)) {
+                    if (trafficLabel != null && !trafficLabel.isEmpty()) {
+                        s_logger.debug("creating a vNet dev and bridge for guest traffic per traffic label " + trafficLabel);
+                        String brName = createVnetBr(vNetId, trafficLabel, protocol);
+                        intf.defBridgeNet(brName, null, nic.getMac(), getGuestNicModel(guestOsType, nicAdapter), networkRateKBps);
+                    } else {
+                        String brName = createVnetBr(vNetId, "private", protocol);
+                        intf.defBridgeNet(brName, null, nic.getMac(), getGuestNicModel(guestOsType, nicAdapter), networkRateKBps);
+                    }
             } else {
                 String brname = "";
                 if (trafficLabel != null && !trafficLabel.isEmpty()) {
@@ -122,33 +132,34 @@ public class BridgeVifDriver extends VifDriverBase {
                 } else {
                     brname = _bridges.get("guest");
                 }
-                intf.defBridgeNet(brname, null, nic.getMac(), getGuestNicModel(guestOsType), networkRateKBps);
+                intf.defBridgeNet(brname, null, nic.getMac(), getGuestNicModel(guestOsType, nicAdapter), networkRateKBps);
             }
         } else if (nic.getType() == Networks.TrafficType.Control) {
             /* Make sure the network is still there */
             createControlNetwork();
-            intf.defBridgeNet(_bridges.get("linklocal"), null, nic.getMac(), getGuestNicModel(guestOsType));
+            intf.defBridgeNet(_bridges.get("linklocal"), null, nic.getMac(), getGuestNicModel(guestOsType, nicAdapter));
         } else if (nic.getType() == Networks.TrafficType.Public) {
-            Integer networkRateKBps = (nic.getNetworkRateMbps() != null && nic.getNetworkRateMbps().intValue() != -1) ? nic.getNetworkRateMbps().intValue() * 128 : 0;
-            if (nic.getBroadcastType() == Networks.BroadcastDomainType.Vlan
-                    && !vNetId.equalsIgnoreCase("untagged") || nic.getBroadcastType() == Networks.BroadcastDomainType.Vxlan) {
-                if(trafficLabel != null && !trafficLabel.isEmpty()){
+            if ((nic.getBroadcastType() == Networks.BroadcastDomainType.Vlan) && (vNetId != null) && (protocol != null) && (!vNetId.equalsIgnoreCase("untagged")) ||
+                    (nic.getBroadcastType() == Networks.BroadcastDomainType.Vxlan)) {
+                if (trafficLabel != null && !trafficLabel.isEmpty()) {
                     s_logger.debug("creating a vNet dev and bridge for public traffic per traffic label " + trafficLabel);
                     String brName = createVnetBr(vNetId, trafficLabel, protocol);
-                    intf.defBridgeNet(brName, null, nic.getMac(), getGuestNicModel(guestOsType), networkRateKBps);
+                    intf.defBridgeNet(brName, null, nic.getMac(), getGuestNicModel(guestOsType, nicAdapter), networkRateKBps);
                 } else {
                     String brName = createVnetBr(vNetId, "public", protocol);
-                    intf.defBridgeNet(brName, null, nic.getMac(), getGuestNicModel(guestOsType), networkRateKBps);
+                    intf.defBridgeNet(brName, null, nic.getMac(), getGuestNicModel(guestOsType, nicAdapter), networkRateKBps);
                 }
             } else {
-                intf.defBridgeNet(_bridges.get("public"), null, nic.getMac(), getGuestNicModel(guestOsType), networkRateKBps);
+                intf.defBridgeNet(_bridges.get("public"), null, nic.getMac(), getGuestNicModel(guestOsType, nicAdapter), networkRateKBps);
             }
         } else if (nic.getType() == Networks.TrafficType.Management) {
-            intf.defBridgeNet(_bridges.get("private"), null, nic.getMac(), getGuestNicModel(guestOsType));
+            intf.defBridgeNet(_bridges.get("private"), null, nic.getMac(), getGuestNicModel(guestOsType, nicAdapter));
         } else if (nic.getType() == Networks.TrafficType.Storage) {
-            String storageBrName = nic.getName() == null ? _bridges.get("private")
-                    : nic.getName();
-            intf.defBridgeNet(storageBrName, null, nic.getMac(), getGuestNicModel(guestOsType));
+            String storageBrName = nic.getName() == null ? _bridges.get("private") : nic.getName();
+            intf.defBridgeNet(storageBrName, null, nic.getMac(), getGuestNicModel(guestOsType, nicAdapter));
+        }
+        if (nic.getPxeDisable() == true) {
+            intf.setPxeDisable(true);
         }
         return intf;
     }
@@ -159,20 +170,19 @@ public class BridgeVifDriver extends VifDriverBase {
     }
 
     private String setVnetBrName(String pifName, String vnetId) {
-        return "br" + pifName + "-"+ vnetId;
+        return "br" + pifName + "-" + vnetId;
     }
 
     private String setVxnetBrName(String pifName, String vnetId) {
         return "brvx-" + vnetId;
     }
 
-    private String createVnetBr(String vNetId, String pifKey, String protocol)
-            throws InternalErrorException {
+    private String createVnetBr(String vNetId, String pifKey, String protocol) throws InternalErrorException {
         String nic = _pifs.get(pifKey);
         if (nic == null) {
             // if not found in bridge map, maybe traffic label refers to pif already?
             File pif = new File("/sys/class/net/" + pifKey);
-            if (pif.isDirectory()){
+            if (pif.isDirectory()) {
                 nic = pifKey;
             }
         }
@@ -186,12 +196,10 @@ public class BridgeVifDriver extends VifDriverBase {
         return brName;
     }
 
-    
-    private void createVnet(String vnetId, String pif, String brName, String protocol)
-            throws InternalErrorException {
+    private void createVnet(String vnetId, String pif, String brName, String protocol) throws InternalErrorException {
         synchronized (_vnetBridgeMonitor) {
             String script = _modifyVlanPath;
-            if(protocol.equals(Networks.BroadcastDomainType.Vxlan.scheme())) {
+            if (protocol.equals(Networks.BroadcastDomainType.Vxlan.scheme())) {
                 script = _modifyVxlanPath;
             }
             final Script command = new Script(script, _timeout, s_logger);
@@ -202,8 +210,7 @@ public class BridgeVifDriver extends VifDriverBase {
 
             final String result = command.execute();
             if (result != null) {
-                throw new InternalErrorException("Failed to create vnet " + vnetId
-                        + ": " + result);
+                throw new InternalErrorException("Failed to create vnet " + vnetId + ": " + result);
             }
         }
     }
@@ -244,15 +251,14 @@ public class BridgeVifDriver extends VifDriverBase {
                 s_logger.debug("unable to get a vNet ID from name " + brName);
                 return;
             }
-            
+
             String scriptPath = null;
             if (cmdout != null && cmdout.contains("vxlan")) {
-            	scriptPath = _modifyVxlanPath;
-            } else{
-            	scriptPath = _modifyVlanPath;
+                scriptPath = _modifyVxlanPath;
+            } else {
+                scriptPath = _modifyVlanPath;
             }
-            
-            
+
             final Script command = new Script(scriptPath, _timeout, s_logger);
             command.add("-o", "delete");
             command.add("-v", vNetId);
@@ -270,7 +276,7 @@ public class BridgeVifDriver extends VifDriverBase {
         createControlNetwork(_bridges.get("linklocal"));
     }
 
-    private void deleteExitingLinkLocalRouteTable(String linkLocalBr) {
+    private void deleteExistingLinkLocalRouteTable(String linkLocalBr) {
         Script command = new Script("/bin/bash", _timeout);
         command.add("-c");
         command.add("ip route | grep " + NetUtils.getLinkLocalCIDR());
@@ -281,24 +287,27 @@ public class BridgeVifDriver extends VifDriverBase {
             String[] lines = parser.getLines().split("\\n");
             for (String line : lines) {
                 String[] tokens = line.split(" ");
-                if (!tokens[2].equalsIgnoreCase(linkLocalBr)) {
-                    Script.runSimpleBashScript("ip route del " + NetUtils.getLinkLocalCIDR());
+                if (tokens != null && tokens.length < 2) {
+                    continue;
+                }
+                final String device = tokens[2];
+                if (!Strings.isNullOrEmpty(device) && !device.equalsIgnoreCase(linkLocalBr)) {
+                    Script.runSimpleBashScript("ip route del " + NetUtils.getLinkLocalCIDR() + " dev " + tokens[2]);
                 } else {
                     foundLinkLocalBr = true;
                 }
             }
         }
         if (!foundLinkLocalBr) {
-            Script.runSimpleBashScript("ifconfig " + linkLocalBr + " 169.254.0.1;" + "ip route add " +
-                    NetUtils.getLinkLocalCIDR() + " dev " + linkLocalBr + " src " + NetUtils.getLinkLocalGateway());
+            Script.runSimpleBashScript("ip address add 169.254.0.1/16 dev " + linkLocalBr + ";" + "ip route add " + NetUtils.getLinkLocalCIDR() + " dev " + linkLocalBr + " src " +
+                NetUtils.getLinkLocalGateway());
         }
     }
 
     private void createControlNetwork(String privBrName) {
-        deleteExitingLinkLocalRouteTable(privBrName);
+        deleteExistingLinkLocalRouteTable(privBrName);
         if (!isBridgeExists(privBrName)) {
-            Script.runSimpleBashScript("brctl addbr " + privBrName + "; ifconfig " + privBrName + " up; ifconfig " +
-                    privBrName + " 169.254.0.1", _timeout);
+            Script.runSimpleBashScript("brctl addbr " + privBrName + "; ip link set " + privBrName + " up; ip address add 169.254.0.1/16 dev " + privBrName, _timeout);
         }
 
     }

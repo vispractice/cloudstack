@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,6 +15,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.agent.api;
 
 import com.cloud.agent.api.to.StorageFilerTO;
@@ -50,11 +53,9 @@ public class SnapshotCommand extends Command {
      *            is the value of that field If you have better ideas on how to
      *            get it, you are welcome.
      */
-    public SnapshotCommand(StoragePool pool,
-            String secondaryStorageUrl, String snapshotUuid,
-            String snapshotName, Long dcId, Long accountId, Long volumeId) {
-       // this.primaryStoragePoolNameLabel = pool.getUuid();
-        //this.primaryPool = new StorageFilerTO(pool);
+    public SnapshotCommand(final StoragePool pool, final String secondaryStorageUrl, final String snapshotUuid, final String snapshotName, final Long dcId, final Long accountId, final Long volumeId) {
+        primaryStoragePoolNameLabel = pool.getUuid();
+        primaryPool = new StorageFilerTO(pool);
         this.snapshotUuid = snapshotUuid;
         this.secondaryStorageUrl = secondaryStorageUrl;
         this.dcId = dcId;
@@ -111,7 +112,7 @@ public class SnapshotCommand extends Command {
         return volumePath;
     }
 
-    public void setVolumePath(String path) {
+    public void setVolumePath(final String path) {
         volumePath = path;
     }
 

@@ -32,12 +32,18 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
+import org.apache.log4j.Logger;
+
+import org.apache.cloudstack.utils.security.SSLUtils;
+import org.apache.cloudstack.utils.security.SecureSSLSocketFactory;
+
 import streamer.debug.MockServer;
 import streamer.debug.MockServer.Packet;
 import streamer.ssl.SSLState;
 import streamer.ssl.TrustAllX509TrustManager;
 
 public class SocketWrapperImpl extends PipelineImpl implements SocketWrapper {
+    private static final Logger s_logger = Logger.getLogger(SocketWrapperImpl.class);
 
     protected InputStreamSource source;
     protected OutputStreamSink sink;
@@ -45,9 +51,6 @@ public class SocketWrapperImpl extends PipelineImpl implements SocketWrapper {
     protected InetSocketAddress address;
 
     protected SSLSocket sslSocket;
-
-    protected String SSL_VERSION_TO_USE = "TLSv1.2";
-    //protected String SSL_VERSION_TO_USE = "SSLv3";
 
     protected SSLState sslState;
 
@@ -77,7 +80,7 @@ public class SocketWrapperImpl extends PipelineImpl implements SocketWrapper {
      * Connect this socket wrapper to remote server and start main loop on
      * IputStreamSource stdout link, to watch for incoming data, and
      * OutputStreamSink stdin link, to pull for outgoing data.
-     * 
+     *
      * @param address
      * @throws IOException
      */
@@ -133,13 +136,14 @@ public class SocketWrapperImpl extends PipelineImpl implements SocketWrapper {
             // Use most secure implementation of SSL available now.
             // JVM will try to negotiate TLS1.2, then will fallback to TLS1.0, if
             // TLS1.2 is not supported.
-            SSLContext sslContext = SSLContext.getInstance(SSL_VERSION_TO_USE);
+            SSLContext sslContext = SSLUtils.getSSLContext();
 
             // Trust all certificates (FIXME: insecure)
             sslContext.init(null, new TrustManager[] {new TrustAllX509TrustManager(sslState)}, null);
 
-            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+            SSLSocketFactory sslSocketFactory = new SecureSSLSocketFactory(sslContext);
             sslSocket = (SSLSocket)sslSocketFactory.createSocket(socket, address.getHostName(), address.getPort(), true);
+            sslSocket.setEnabledProtocols(SSLUtils.getSupportedProtocols(sslSocket.getEnabledProtocols()));
 
             sslSocket.startHandshake();
 
@@ -173,19 +177,27 @@ public class SocketWrapperImpl extends PipelineImpl implements SocketWrapper {
         try {
             handleEvent(Event.STREAM_CLOSE, Direction.IN);
         } catch (Exception e) {
+            s_logger.info("[ignored]"
+                    + "error sending input close event: " + e.getLocalizedMessage());
         }
         try {
             handleEvent(Event.STREAM_CLOSE, Direction.OUT);
         } catch (Exception e) {
+            s_logger.info("[ignored]"
+                    + "error sending output close event: " + e.getLocalizedMessage());
         }
         try {
             if (sslSocket != null)
                 sslSocket.close();
         } catch (Exception e) {
+            s_logger.info("[ignored]"
+                    + "error closing ssl socket: " + e.getLocalizedMessage());
         }
         try {
             socket.close();
         } catch (Exception e) {
+            s_logger.info("[ignored]"
+                    + "error closing socket: " + e.getLocalizedMessage());
         }
     }
 

@@ -16,6 +16,14 @@
 // under the License.
 package com.cloud.consoleproxy.util;
 
+import org.apache.cloudstack.utils.security.SSLUtils;
+import org.apache.cloudstack.utils.security.SecureSSLSocketFactory;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,14 +38,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
 //
-// This file is originally from XenConsole with modifications 
+// This file is originally from XenConsole with modifications
 //
 
 /**
@@ -49,10 +51,8 @@ public final class RawHTTP {
     private static final Logger s_logger = Logger.getLogger(RawHTTP.class);
 
     private static final Pattern END_PATTERN = Pattern.compile("^\r\n$");
-    private static final Pattern HEADER_PATTERN = Pattern
-            .compile("^([A-Z_a-z0-9-]+):\\s*(.*)\r\n$");
-    private static final Pattern HTTP_PATTERN = Pattern
-            .compile("^HTTP/\\d+\\.\\d+ (\\d*) (.*)\r\n$");
+    private static final Pattern HEADER_PATTERN = Pattern.compile("^([A-Z_a-z0-9-]+):\\s*(.*)\r\n$");
+    private static final Pattern HTTP_PATTERN = Pattern.compile("^HTTP/\\d+\\.\\d+ (\\d*) (.*)\r\n$");
 
     /**
      * @uml.property  name="command"
@@ -110,8 +110,7 @@ public final class RawHTTP {
         return s;
     }
 
-    public RawHTTP(String command, String host, int port, String path,
-            String session, boolean useSSL) {
+    public RawHTTP(String command, String host, int port, String path, String session, boolean useSSL) {
         this.command = command;
         this.host = host;
         this.port = port;
@@ -120,37 +119,49 @@ public final class RawHTTP {
         this.useSSL = useSSL;
     }
 
-    private static final TrustManager[] trustAllCerts = new TrustManager[] { 
-        new X509TrustManager() {
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
+    private static final TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
 
-            public void checkClientTrusted(X509Certificate[] certs, String authType) {
-            }
+        @Override
+        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+        }
 
-            public void checkServerTrusted(X509Certificate[] certs, String authType) {
-            }
-        } 
-    };
+        @Override
+        public void checkServerTrusted(X509Certificate[] certs, String authType) {
+        }
+    }};
 
     private Socket _getSocket() throws IOException {
         if (useSSL) {
-            SSLContext context = getClientSSLContext();
-            if(context == null)
+            SSLContext context = null;
+            try {
+                context = SSLUtils.getSSLContext("SunJSSE");
+            } catch (NoSuchAlgorithmException e) {
+                s_logger.error("Unexpected exception ", e);
+            } catch (NoSuchProviderException e) {
+                s_logger.error("Unexpected exception ", e);
+            }
+
+            if (context == null)
                 throw new IOException("Unable to setup SSL context");
-            
+
             SSLSocket ssl = null;
             try {
                 context.init(null, trustAllCerts, new SecureRandom());
-                SocketFactory factory = context.getSocketFactory();
-                ssl = (SSLSocket) factory.createSocket(host, port);
+                SocketFactory factory = new SecureSSLSocketFactory(context);
+                ssl = (SSLSocket)factory.createSocket(host, port);
+                ssl.setEnabledProtocols(SSLUtils.getSupportedProtocols(ssl.getEnabledProtocols()));
                 /* ssl.setSSLParameters(context.getDefaultSSLParameters()); */
             } catch (IOException e) {
                 s_logger.error("IOException: " + e.getMessage(), e);
                 throw e;
             } catch (KeyManagementException e) {
                 s_logger.error("KeyManagementException: " + e.getMessage(), e);
+            } catch (NoSuchAlgorithmException e) {
+                s_logger.error("NoSuchAlgorithmException: " + e.getMessage(), e);
             }
             return ssl;
         } else {
@@ -188,8 +199,7 @@ public final class RawHTTP {
                     String status_code = m.group(1);
                     String reason_phrase = m.group(2);
                     if (!"200".equals(status_code)) {
-                        throw new IOException("HTTP status " + status_code
-                                + " " + reason_phrase);
+                        throw new IOException("HTTP status " + status_code + " " + reason_phrase);
                     }
                 } else {
                     throw new IOException("Unknown HTTP line " + line);
@@ -209,9 +219,7 @@ public final class RawHTTP {
     }
 
     private String[] makeHeaders() {
-        String[] headers = { String.format("%s %s HTTP/1.0", command, path),
-                String.format("Host: %s", host),
-                String.format("Cookie: session_id=%s", session), "" };
+        String[] headers = {String.format("%s %s HTTP/1.0", command, path), String.format("Host: %s", host), String.format("Cookie: session_id=%s", session), ""};
         return headers;
     }
 
@@ -224,7 +232,7 @@ public final class RawHTTP {
                 if (c == -1) {
                     return result;
                 }
-                result = result + (char) c;
+                result = result + (char)c;
                 if (c == 0x0a /* LF */) {
                     return result;
                 }
@@ -233,17 +241,5 @@ public final class RawHTTP {
                 throw e;
             }
         }
-    }
-    
-    private SSLContext getClientSSLContext() {
-        SSLContext sslContext = null;
-        try {
-            sslContext = SSLContext.getInstance("SSL", "SunJSSE");
-        } catch (NoSuchAlgorithmException e) {
-            s_logger.error("Unexpected exception ", e);
-        } catch (NoSuchProviderException e) {
-            s_logger.error("Unexpected exception ", e);
-        }
-        return sslContext;
     }
 }

@@ -29,68 +29,85 @@ import javax.persistence.Table;
 import com.cloud.utils.db.GenericDao;
 
 @Entity
-@Table(name="vpc")
+@Table(name = "vpc")
 public class VpcVO implements Vpc {
+
     @Id
-    @Column(name="id")
+    @Column(name = "id")
     long id;
-    
-    @Column(name="uuid")
+
+    @Column(name = "uuid")
     private String uuid;
-    
-    @Column(name="name")
+
+    @Column(name = "name")
     private String name;
-    
+
     @Column(name = "display_text")
     String displayText;
 
-    @Column(name="zone_id")
+    @Column(name = "zone_id")
     long zoneId;
 
-    @Column(name="cidr")
+    @Column(name = "cidr")
     private String cidr = null;
-    
-    @Column(name="domain_id")
+
+    @Column(name = "domain_id")
     Long domainId = null;
-    
-    @Column(name="account_id")
+
+    @Column(name = "account_id")
     Long accountId = null;
 
-    @Column(name="state")
-    @Enumerated(value=EnumType.STRING)
+    @Column(name = "state")
+    @Enumerated(value = EnumType.STRING)
     State state;
-    
-    @Column(name="vpc_offering_id")
+
+    @Column(name = "redundant")
+    boolean redundant;
+
+    @Column(name = "vpc_offering_id")
     long vpcOfferingId;
-    
-    @Column(name=GenericDao.REMOVED_COLUMN)
+
+    @Column(name = GenericDao.REMOVED_COLUMN)
     Date removed;
 
-    @Column(name=GenericDao.CREATED_COLUMN)
+    @Column(name = GenericDao.CREATED_COLUMN)
     Date created;
-    
-    @Column(name="network_domain")
+
+    @Column(name = "network_domain")
     String networkDomain;
-    
-    @Column(name="restart_required")
+
+    @Column(name = "restart_required")
     boolean restartRequired = false;
-    
+
+    @Column(name = "display", updatable = true, nullable = false)
+    protected boolean display = true;
+
+    @Column(name="uses_distributed_router")
+    boolean usesDistributedRouter = false;
+
+    @Column(name = "region_level_vpc")
+    boolean regionLevelVpc = false;
+
     public VpcVO() {
-        this.uuid = UUID.randomUUID().toString();
+        uuid = UUID.randomUUID().toString();
     }
-    
-    public VpcVO(long zoneId, String name, String displayText, long accountId, long domainId, long vpcOffId, String cidr,
-            String networkDomain) {
+
+    public VpcVO(final long zoneId, final String name, final String displayText, final long accountId, final long domainId,
+            final long vpcOffId, final String cidr, final String networkDomain, final boolean useDistributedRouter,
+            final boolean regionLevelVpc, final boolean isRedundant) {
         this.zoneId = zoneId;
         this.name = name;
         this.displayText = displayText;
         this.accountId = accountId;
         this.domainId = domainId;
         this.cidr = cidr;
-        this.uuid = UUID.randomUUID().toString();
-        this.state = State.Enabled;
+        uuid = UUID.randomUUID().toString();
+        state = State.Enabled;
         this.networkDomain = networkDomain;
-        this.vpcOfferingId = vpcOffId;
+        vpcOfferingId = vpcOffId;
+        usesDistributedRouter = useDistributedRouter;
+        this.regionLevelVpc = regionLevelVpc;
+        redundant = isRedundant;
     }
 
     @Override
@@ -117,7 +134,7 @@ public class VpcVO implements Vpc {
     public String getCidr() {
         return cidr;
     }
-    
+
     @Override
     public long getDomainId() {
         return domainId;
@@ -133,13 +150,17 @@ public class VpcVO implements Vpc {
         return state;
     }
 
-    public void setState(State state) {
+    public void setState(final State state) {
         this.state = state;
     }
 
     @Override
     public long getVpcOfferingId() {
         return vpcOfferingId;
+    }
+
+    public void setVpcOfferingId(final long vpcOfferingId) {
+        this.vpcOfferingId = vpcOfferingId;
     }
 
     public Date getRemoved() {
@@ -151,17 +172,17 @@ public class VpcVO implements Vpc {
         return displayText;
     }
 
-    public void setName(String name) {
+    public void setName(final String name) {
         this.name = name;
     }
 
-    public void setDisplayText(String displayText) {
+    public void setDisplayText(final String displayText) {
         this.displayText = displayText;
     }
-    
+
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder("[VPC [");
+        final StringBuilder buf = new StringBuilder("[VPC [");
         return buf.append(id).append("-").append(name).append("]").toString();
     }
 
@@ -169,13 +190,51 @@ public class VpcVO implements Vpc {
     public String getNetworkDomain() {
         return networkDomain;
     }
-    
-    public void setRestartRequired(boolean restartRequired) {
+
+    public void setRestartRequired(final boolean restartRequired) {
         this.restartRequired = restartRequired;
     }
 
     @Override
     public boolean isRestartRequired() {
         return restartRequired;
+    }
+
+    public void setUuid(final String uuid) {
+        this.uuid = uuid;
+    }
+
+    @Override
+    public boolean isRegionLevelVpc() {
+        return regionLevelVpc;
+    }
+
+
+    public void setDisplay(final boolean display) {
+        this.display = display;
+    }
+
+    @Override
+    public boolean isDisplay() {
+        return display;
+    }
+
+    @Override
+    public boolean isRedundant() {
+        return redundant;
+    }
+
+    public void setRedundant(final boolean isRedundant) {
+        redundant = isRedundant;
+    }
+
+    @Override
+    public Class<?> getEntityType() {
+        return Vpc.class;
+    }
+
+    @Override
+    public boolean usesDistributedRouter() {
+        return usesDistributedRouter;
     }
 }

@@ -16,6 +16,8 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.vpc;
 
+import org.apache.cloudstack.acl.SecurityChecker.AccessType;
+import org.apache.cloudstack.api.ACL;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
@@ -33,19 +35,24 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.vpc.Vpc;
 import com.cloud.user.Account;
 
-@APICommand(name = "restartVPC", description="Restarts a VPC", responseObject=VpcResponse.class)
-public class RestartVPCCmd extends BaseAsyncCmd{
+@APICommand(name = "restartVPC", description = "Restarts a VPC", responseObject = VpcResponse.class, entityType = {Vpc.class},
+requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
+public class RestartVPCCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(RestartVPCCmd.class.getName());
-    private static final String _name = "restartvpcresponse";
+    private static final String s_name = "restartvpcresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType=VpcResponse.class, required=true,
-            description="the id of the VPC")
+    @ACL(accessType = AccessType.OperateEntry)
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = VpcResponse.class, required = true, description = "the id of the VPC")
     private Long id;
 
+    @Parameter(name = ApiConstants.CLEANUP, type = CommandType.BOOLEAN, required = false, description = "If cleanup old network elements")
+    private Boolean cleanup;
+
+    @Parameter(name = ApiConstants.MAKEREDUNDANTE, type = CommandType.BOOLEAN, required = false, description = "Turn a single VPC into a redundant one.")
+    private Boolean makeredundant;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -55,18 +62,31 @@ public class RestartVPCCmd extends BaseAsyncCmd{
         return id;
     }
 
+    public Boolean getCleanup() {
+        if (cleanup != null) {
+            return cleanup;
+        }
+        return true;
+    }
+
+    public Boolean getMakeredundant() {
+        if (makeredundant != null) {
+            return makeredundant;
+        }
+        return true;
+    }
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
     @Override
     public String getCommandName() {
-        return _name;
+        return s_name;
     }
 
     @Override
     public long getEntityOwnerId() {
-        Vpc vpc = _entityMgr.findById(Vpc.class, getId());
+        final Vpc vpc = _entityMgr.findById(Vpc.class, getId());
         if (vpc != null) {
             return vpc.getAccountId();
         }
@@ -75,22 +95,22 @@ public class RestartVPCCmd extends BaseAsyncCmd{
     }
 
     @Override
-    public void execute(){
+    public void execute() {
         try {
-            boolean result = _vpcService.restartVpc(getId());
+            final boolean result = _vpcService.restartVpc(getId(), getCleanup(), getMakeredundant());
             if (result) {
-                SuccessResponse response = new SuccessResponse(getCommandName());
-                this.setResponseObject(response);
+                final SuccessResponse response = new SuccessResponse(getCommandName());
+                setResponseObject(response);
             } else {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to restart VPC");
             }
-        } catch (ResourceUnavailableException ex) {
+        } catch (final ResourceUnavailableException ex) {
             s_logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
-        } catch (ConcurrentOperationException ex) {
+        } catch (final ConcurrentOperationException ex) {
             s_logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
-        } catch (InsufficientCapacityException ex) {
+        } catch (final InsufficientCapacityException ex) {
             s_logger.info(ex);
             s_logger.trace(ex);
             throw new ServerApiException(ApiErrorCode.INSUFFICIENT_CAPACITY_ERROR, ex.getMessage());

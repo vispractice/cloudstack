@@ -49,5 +49,10 @@ public enum ApiCommandJobType {
     LoadBalancerRule,
     AffinityGroup,
     InternalLbVm,
-    DedicatedGuestVlanRange
+    DedicatedGuestVlanRange,
+    IAMPolicy,
+    IAMGroup,
+    GuestOs,
+    GuestOsMapping,
+    Network
 }

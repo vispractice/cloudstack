@@ -19,7 +19,6 @@ package com.cloud.offerings.dao;
 import java.util.List;
 import java.util.Map;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.persistence.EntityExistsException;
 
@@ -41,7 +40,6 @@ import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.TransactionLegacy;
 
 @Component
-@Local(value = NetworkOfferingDao.class)
 @DB()
 public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Long> implements NetworkOfferingDao {
     final SearchBuilder<NetworkOfferingVO> NameSearch;
@@ -49,7 +47,8 @@ public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Lo
     final SearchBuilder<NetworkOfferingVO> AvailabilitySearch;
     final SearchBuilder<NetworkOfferingVO> AllFieldsSearch;
     private final GenericSearchBuilder<NetworkOfferingVO, Long> UpgradeSearch;
-    @Inject NetworkOfferingDetailsDao _detailsDao;
+    @Inject
+    NetworkOfferingDetailsDao _detailsDao;
 
     protected NetworkOfferingDaoImpl() {
         super();
@@ -155,7 +154,7 @@ public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Lo
         sc.addAnd("trafficType", SearchCriteria.Op.EQ, originalOffering.getTrafficType());
 
         sc.addAnd("state", SearchCriteria.Op.EQ, NetworkOffering.State.Enabled);
-        
+
         //specify Vlan should be the same
         sc.addAnd("specifyVlan", SearchCriteria.Op.EQ, originalOffering.getSpecifyVlan());
 
@@ -170,7 +169,7 @@ public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Lo
         sc.setParameters("state", state);
         return listBy(sc, null);
     }
-    
+
     @Override
     @DB
     public NetworkOfferingVO persist(NetworkOfferingVO off, Map<Detail, String> details) {
@@ -178,14 +177,14 @@ public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Lo
         txn.start();
         //1) persist the offering
         NetworkOfferingVO vo = super.persist(off);
-        
+
         //2) persist the details
         if (details != null && !details.isEmpty()) {
             for (NetworkOffering.Detail detail : details.keySet()) {
                 _detailsDao.persist(new NetworkOfferingDetailsVO(off.getId(), detail, details.get(detail)));
             }
         }
-       
+
         txn.commit();
         return vo;
     }

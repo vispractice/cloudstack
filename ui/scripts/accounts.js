@@ -17,15 +17,14 @@
 (function(cloudStack) {
 
     var domainObjs;
-    var rootDomainId;
 
     cloudStack.sections.accounts = {
         title: 'label.accounts',
         id: 'accounts',
         sectionSelect: {
-            label: 'Select View',
+            label: 'label.select-view',
             preFilter: function() {
-                return ['accounts'];
+                return ['accounts', 'sshkeypairs'];
             }
         },
         sections: {
@@ -92,9 +91,9 @@
                             }
 
                         },
-                                                
+
                         addLdapAccount: {
-                            label: 'Add LDAP Account',
+                            label: 'label.add.ldap.account',
                             isHeader: true,
                             preFilter: function(args) {
                                 //if (isAdmin() && true) { //for testing only
@@ -106,7 +105,7 @@
                             },
                             messages: {
                                 notification: function(args) {
-                                    return 'Add LDAP Account';
+                                    return 'label.add.ldap.account';
                                 }
                             },
                             notification: {
@@ -124,7 +123,7 @@
                                 )
                             }
 
-                        }                        
+                        }
                     },
 
                     dataProvider: function(args) {
@@ -149,10 +148,27 @@
                                 });
                             }
                         });
+
+                        // SAML: Check Append Domain Setting
+                        if (g_idpList) {
+                            $.ajax({
+                                type: 'GET',
+                                url: createURL('listConfigurations&name=saml2.append.idpdomain'),
+                                dataType: 'json',
+                                async: false,
+                                success: function(data, textStatus, xhr) {
+                                    if (data && data.listconfigurationsresponse && data.listconfigurationsresponse.configuration) {
+                                        g_appendIdpDomain = (data.listconfigurationsresponse.configuration[0].value === 'true');
+                                    }
+                                },
+                                error: function(xhr) {
+                                }
+                            });
+                        }
                     },
 
                     detailView: {
-                        name: 'Account details',
+                        name: 'label.account.details',
                         isMaximized: true,
                         viewAll: {
                             path: 'accounts.users',
@@ -406,59 +422,59 @@
                                         data: data,
                                         async: true,
                                         success: function(json) {
-                                            var resourcecounts= json.updateresourcecountresponse.resourcecount;                                               
+                                            var resourcecounts= json.updateresourcecountresponse.resourcecount;
                                             //pop up API response in a dialog box since only updateResourceCount API returns resourcecount (listResourceLimits API does NOT return resourcecount)
                                             var msg = '';
                                             if (resourcecounts != null) {
-                                            	for (var i = 0; i < resourcecounts.length; i++) {                                            		
-                                            		switch (resourcecounts[i].resourcetype) {
-                                            		case '0':
-                                            			msg += 'Instance'; //vmLimit
-                                            			break;
-                                            		case '1':
-                                            			msg += 'Public IP'; //ipLimit
-                                            			break;
-                                            		case '2':
-                                            			msg += 'Volume'; //volumeLimit
-                                            			break;
-                                            		case '3':
-                                            		    msg += 'Snapshot'; //snapshotLimit
-                                            		    break;
-                                            		case '4':
-                                            			msg += 'Template'; //templateLimit
-                                            			break;
-                                            		case '5':                                            			
-                                            			continue; //resourcetype 5 is not in use. so, skip to next item.                                          			
-                                            			break;
-                                            		case '6':
-                                            			msg += 'Network'; //networkLimit
-                                            			break;
-                                            		case '7':
-                                            			msg += 'VPC'; //vpcLimit
-                                            			break;
-                                            		case '8':
-                                            			msg += 'CPU'; //cpuLimit
-                                            			break;
-                                            		case '9':
-                                            			msg += 'Memory'; //memoryLimit
-                                            			break;
-                                            		case '10':
-                                            			msg += 'Primary Storage'; //primaryStorageLimit
-                                            			break;
-                                            		case '11':
-                                            			msg += 'Secondary Storage'; //secondaryStorageLimit
-                                            			break;      
-                                            		}
-                                            		                                      		
-                                            		msg += ' Count: ' + resourcecounts[i].resourcecount + ' <br> ';
-                                            	}
+                                                for (var i = 0; i < resourcecounts.length; i++) {
+                                                    switch (resourcecounts[i].resourcetype) {
+                                                    case '0':
+                                                        msg += 'Instance'; //vmLimit
+                                                        break;
+                                                    case '1':
+                                                        msg += 'Public IP'; //ipLimit
+                                                        break;
+                                                    case '2':
+                                                        msg += 'Volume'; //volumeLimit
+                                                        break;
+                                                    case '3':
+                                                        msg += 'Snapshot'; //snapshotLimit
+                                                        break;
+                                                    case '4':
+                                                        msg += 'Template'; //templateLimit
+                                                        break;
+                                                    case '5':
+                                                        continue; //resourcetype 5 is not in use. so, skip to next item.
+                                                        break;
+                                                    case '6':
+                                                        msg += 'Network'; //networkLimit
+                                                        break;
+                                                    case '7':
+                                                        msg += 'VPC'; //vpcLimit
+                                                        break;
+                                                    case '8':
+                                                        msg += 'CPU'; //cpuLimit
+                                                        break;
+                                                    case '9':
+                                                        msg += 'Memory'; //memoryLimit
+                                                        break;
+                                                    case '10':
+                                                        msg += 'Primary Storage'; //primaryStorageLimit
+                                                        break;
+                                                    case '11':
+                                                        msg += 'Secondary Storage'; //secondaryStorageLimit
+                                                        break;
+                                                    }
+
+                                                    msg += ' Count: ' + resourcecounts[i].resourcecount + ' <br> ';
+                                                }
                                             }
-                                            
-                                            
+
+
                                             cloudStack.dialog.notice({
-                                            	message: msg
-                                            });                                            
-                                            
+                                                message: msg
+                                            });
+
                                             args.response.success();
                                         },
                                         error: function(json) {
@@ -637,13 +653,13 @@
                             }
 
                         },
-                        
+
                         tabFilter: function(args) {
-                        	var hiddenTabs = [];
-                        	if(!isAdmin()) {
-                        		hiddenTabs.push('settings');
-                        	}                        	
-                        	return hiddenTabs;
+                            var hiddenTabs = [];
+                            if(!isAdmin()) {
+                                hiddenTabs.push('settings');
+                            }
+                            return hiddenTabs;
                         },
 
                         tabs: {
@@ -660,7 +676,7 @@
                                     }
                                 }, {
                                     id: {
-                                        label: 'ID'
+                                        label: 'label.id'
                                     },
                                     accounttype: {
                                         label: 'label.role',
@@ -729,7 +745,7 @@
                                         }
                                     },
                                     vpcLimit: {
-                                        label: 'VPC limits',
+                                        label: 'label.VPC.limits',
                                         isEditable: function(context) {
                                             if (context.accounts[0].accounttype == roleTypeUser || context.accounts[0].accounttype == roleTypeDomainAdmin) //updateResourceLimits is only allowed on account whose type is user or domain-admin
                                                 return true;
@@ -880,7 +896,7 @@
 
                             // Granular settings for account
                             settings: {
-                                title: 'Settings',
+                                title: 'label.settings',
                                 custom: cloudStack.uiCustom.granularSettings({
                                     dataProvider: function(args) {
                                         $.ajax({
@@ -1062,6 +1078,68 @@
                                                 data: items
                                             });
                                         }
+                                    },
+                                    samlEnable: {
+                                        label: 'label.saml.enable',
+                                        docID: 'helpSamlEnable',
+                                        isBoolean: true,
+                                        validation: {
+                                            required: false
+                                        },
+                                        isHidden: function (args) {
+                                            if (g_idpList) return false;
+                                            return true;
+                                        }
+                                    },
+                                    samlEntity: {
+                                        label: 'label.saml.entity',
+                                        docID: 'helpSamlEntity',
+                                        validation: {
+                                            required: false
+                                        },
+                                        select: function(args) {
+                                            var samlChecked = false;
+                                            var idpUrl = args.$form.find('select[name=samlEntity]').children(':selected').val();
+                                            var appendDomainToUsername = function() {
+                                                if (!g_appendIdpDomain) {
+                                                    return;
+                                                }
+                                                var username = args.$form.find('input[name=username]').val();
+                                                if (username) {
+                                                    username = username.split('@')[0];
+                                                }
+                                                if (samlChecked) {
+                                                    var link = document.createElement('a');
+                                                    link.setAttribute('href', idpUrl);
+                                                    args.$form.find('input[name=username]').val(username + "@" + link.host.split('.').splice(-2).join('.'));
+                                                } else {
+                                                    args.$form.find('input[name=username]').val(username);
+                                                }
+                                            };
+                                            args.$form.find('select[name=samlEntity]').change(function() {
+                                                idpUrl = $(this).children(':selected').val();
+                                                appendDomainToUsername();
+                                            });
+                                            args.$form.find('input[name=samlEnable]').change(function() {
+                                                samlChecked = $(this).context.checked;
+                                                appendDomainToUsername();
+                                            });
+
+                                            var items = [];
+                                            $(g_idpList).each(function() {
+                                                items.push({
+                                                    id: this.id,
+                                                    description: this.orgName
+                                                });
+                                            });
+                                            args.response.success({
+                                                data: items
+                                            });
+                                        },
+                                        isHidden: function (args) {
+                                            if (g_idpList) return false;
+                                            return true;
+                                        }
                                     }
                                 }
                             },
@@ -1099,12 +1177,30 @@
                                     accounttype: accountObj.accounttype
                                 });
 
+
+                                var authorizeUsersForSamlSSO = function (users, entity) {
+                                    for (var i = 0; i < users.length; i++) {
+                                        $.ajax({
+                                            url: createURL('authorizeSamlSso&enable=true&userid=' + users[i].id + "&entityid=" + entity),
+                                            error: function(XMLHttpResponse) {
+                                                args.response.error(parseXMLHttpResponse(XMLHttpResponse));
+                                            }
+                                        });
+                                    }
+                                    return;
+                                };
+
                                 $.ajax({
                                     url: createURL('createUser'),
                                     type: "POST",
                                     data: data,
                                     success: function(json) {
                                         var item = json.createuserresponse.user;
+                                        if (args.data.samlEnable && args.data.samlEnable === 'on') {
+                                            var entity = args.data.samlEntity;
+                                            if (item && entity)
+                                                authorizeUsersForSamlSSO([item], entity);
+                                        }
                                         args.response.success({
                                             data: item
                                         });
@@ -1125,7 +1221,7 @@
                     },
 
                     detailView: {
-                        name: 'User details',
+                        name: 'label.user.details',
                         isMaximized: true,
                         actions: {
                             edit: {
@@ -1219,6 +1315,102 @@
                                                     });
                                                 }
                                             });
+                                        }
+                                    }
+                                }
+                            },
+
+                            configureSamlAuthorization: {
+                                label: 'label.action.configure.samlauthorization',
+                                messages: {
+                                    notification: function(args) {
+                                        return 'label.action.configure.samlauthorization';
+                                    }
+                                },
+                                action: {
+                                    custom: function(args) {
+                                        var start = args.start;
+                                        var complete = args.complete;
+                                        var context = args.context;
+
+                                        if (g_idpList) {
+                                            $.ajax({
+                                                url: createURL('listSamlAuthorization'),
+                                                data: {
+                                                    userid: context.users[0].id,
+                                                },
+                                                success: function(json) {
+                                                    var authorization = json.listsamlauthorizationsresponse.samlauthorization[0];
+                                                    cloudStack.dialog.createForm({
+                                                        form: {
+                                                            title: 'label.action.configure.samlauthorization',
+                                                            fields: {
+                                                                samlEnable: {
+                                                                    label: 'label.saml.enable',
+                                                                    docID: 'helpSamlEnable',
+                                                                    isBoolean: true,
+                                                                    isChecked: authorization.status,
+                                                                    validation: {
+                                                                        required: false
+                                                                    }
+                                                                },
+                                                                samlEntity: {
+                                                                    label: 'label.saml.entity',
+                                                                    docID: 'helpSamlEntity',
+                                                                    validation: {
+                                                                        required: false
+                                                                    },
+                                                                    select: function(args) {
+                                                                        var items = [];
+                                                                        $(g_idpList).each(function() {
+                                                                            items.push({
+                                                                                id: this.id,
+                                                                                description: this.orgName
+                                                                            });
+                                                                        });
+                                                                        args.response.success({
+                                                                            data: items
+                                                                        });
+                                                                        args.$select.change(function() {
+                                                                            $('select[name="samlEntity"] option[value="' + authorization.idpid  + '"]').attr("selected", "selected");
+                                                                        });
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        after: function(args) {
+                                                            start();
+                                                            var enableSaml = false;
+                                                            var idpId = '';
+                                                            if (args.data.hasOwnProperty('samlEnable')) {
+                                                                enableSaml = (args.data.samlEnable === 'on');
+                                                            }
+                                                            if (args.data.hasOwnProperty('samlEntity')) {
+                                                                idpId = args.data.samlEntity;
+                                                            }
+                                                            $.ajax({
+                                                                url: createURL('authorizeSamlSso'),
+                                                                data: {
+                                                                    userid: context.users[0].id,
+                                                                    enable: enableSaml,
+                                                                    entityid: idpId
+                                                                },
+                                                                type: "POST",
+                                                                success: function(json) {
+                                                                    complete();
+                                                                },
+                                                                error: function(json) {
+                                                                    complete({ error: parseXMLHttpResponse(json) });
+                                                                }
+                                                            });
+                                                        }
+                                                    });
+                                                },
+                                                error: function(json) {
+                                                    complete({ error: parseXMLHttpResponse(json) });
+                                                }
+                                            });
+
                                         }
                                     }
                                 }
@@ -1370,16 +1562,10 @@
                                     }
                                 }, {
                                     id: {
-                                        label: 'ID'
+                                        label: 'label.id'
                                     },
                                     state: {
                                         label: 'label.state'
-                                    },
-                                    apikey: {
-                                        label: 'label.api.key'
-                                    },
-                                    secretkey: {
-                                        label: 'label.secret.key'
                                     },
                                     account: {
                                         label: 'label.account.name'
@@ -1392,6 +1578,14 @@
                                     },
                                     domain: {
                                         label: 'label.domain'
+                                    },
+                                    apikey: {
+                                        label: 'label.api.key',
+                                        isCopyPaste: true
+                                    },
+                                    secretkey: {
+                                        label: 'label.secret.key',
+                                        isCopyPaste: true
                                     },
                                     email: {
                                         label: 'label.email',
@@ -1467,6 +1661,287 @@
                         }
                     }
                 }
+            },
+            sshkeypairs: {
+                type: 'select',
+                id: 'sshkeypairs',
+                title: 'label.ssh.key.pairs',
+                listView: {
+                    name: 'sshkeypairs',
+                    fields: {
+                        name: {
+                            label: 'label.name'
+                        },
+                        domain: {
+                           label: 'label.domain'
+                        },
+                        account: {
+                           label: 'label.account'
+                        },
+                        privatekey: {
+                            label: 'label.private.key',
+                            span: false
+                        }
+                    },
+                    dataProvider: function(args) {
+                        var data = {
+//                            domainid: g_domainid,
+//                            account: g_account
+                        };
+
+                        listViewDataProvider(args, data);
+
+                        $.ajax({
+                            url: createURL('listSSHKeyPairs'),
+                            data: data,
+                            success: function(json) {
+                                var items = json.listsshkeypairsresponse.sshkeypair;
+                                args.response.success({
+                                    data: items
+                                });
+                            }
+                        });
+                    },
+                    actions: {
+                        add: {
+                            label: 'label.create.ssh.key.pair',
+
+                            preFilter: function(args) {
+                                return true;
+                            },
+
+                            messages: {
+                                notification: function(args) {
+                                    return _l('message.desc.created.ssh.key.pair');
+                                }
+                            },
+
+                            createForm: {
+                                title: 'label.create.ssh.key.pair',
+                                desc: 'message.desc.create.ssh.key.pair',
+                                fields: {
+                                    name: {
+                                        label: 'label.name',
+                                        validation: {
+                                            required: true
+                                        }
+                                    },
+                                    publickey: {
+                                        label: 'label.public.key'
+                                    },
+                                    domain: {
+                                        label: 'label.domain',
+                                        isHidden: function(args) {
+                                            if (isAdmin() || isDomainAdmin())
+                                                return false;
+                                            else
+                                                return true;
+                                        },
+                                        select: function(args) {
+                                            if (isAdmin() || isDomainAdmin()) {
+                                                $.ajax({
+                                                    url: createURL("listDomains&listAll=true"),
+                                                    success: function(json) {
+                                                        var items = [];
+                                                        items.push({
+                                                            id: "",
+                                                            description: ""
+                                                        });
+                                                        var domainObjs = json.listdomainsresponse.domain;
+                                                        $(domainObjs).each(function() {
+                                                            items.push({
+                                                                id: this.id,
+                                                                description: this.path
+                                                            });
+                                                        });
+                                                        items.sort(function(a, b) {
+                                                            return a.description.localeCompare(b.description);
+                                                        });
+                                                        args.response.success({
+                                                            data: items
+                                                        });
+                                                    }
+                                                });
+                                                args.$select.change(function() {
+                                                    var $form = $(this).closest('form');
+                                                    if ($(this).val() == "") {
+                                                        $form.find('.form-item[rel=account]').hide();
+                                                    } else {
+                                                        $form.find('.form-item[rel=account]').css('display', 'inline-block');
+                                                    }
+                                                });
+                                            } else {
+                                                var items = [];
+                                                items.push({
+                                                    id: "",
+                                                    description: ""
+                                                });
+                                                args.response.success({
+                                                    data: items
+                                                });
+                                            }
+                                        }
+                                    },
+                                    account: {
+                                        label: 'label.account',
+                                        isHidden: function(args) {
+                                            if (isAdmin() || isDomainAdmin())
+                                                return false;
+                                            else
+                                                return true;
+                                        }
+                                    }
+                                }
+                            },
+
+                            action: function(args) {
+
+                                var data = {
+                                    name: args.data.name
+                                };
+
+                                if (args.data.domain != null && args.data.domain.length > 0) {
+                                    $.extend(data, {
+                                        domainid: args.data.domain
+                                    });
+                                    if (args.data.account != null && args.data.account.length > 0) {
+                                        $.extend(data, {
+                                            account: args.data.account
+                                        });
+                                    }
+                                }
+
+                                if (args.data.publickey != null && args.data.publickey.length > 0) {
+                                    $.extend(data, {
+                                        publickey: args.data.publickey
+                                    });
+                                    $.ajax({
+                                        url: createURL('registerSSHKeyPair'),
+                                        data: data,
+                                        type: "POST",
+                                        success: function(json) {
+                                            var item = json.registersshkeypairresponse.keypair;
+                                            args.response.success({
+                                                data: item
+                                            });
+                                        },
+                                        error: function(XMLHttpResponse) {
+                                            var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                                            args.response.error(errorMsg);
+                                        }
+                                    });
+                                } else {
+                                    $.ajax({
+                                        url: createURL('createSSHKeyPair'),
+                                        data: data,
+                                        success: function(json) {
+                                            var item = json.createsshkeypairresponse.keypair;
+                                            args.response.success({
+                                                data: item
+                                            });
+                                        },
+                                        error: function(XMLHttpResponse) {
+                                            var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                                            args.response.error(errorMsg);
+                                        }
+                                    });
+                                }
+                            },
+
+                            notification: {
+                                poll: function(args) {
+                                    args.complete();
+                                }
+                            }
+                        }
+                    },
+
+                    detailView: {
+                        name: 'label.ssh.key.pair.details',
+                        isMaximized: true,
+                        viewAll: {
+                            label: 'label.instances',
+                            path: 'instances'
+                        },
+                        actions: {
+                            remove: {
+                                label: 'label.remove.ssh.key.pair',
+                                messages: {
+                                    confirm: function(args) {
+                                        return _l('message.please.confirm.remove.ssh.key.pair');
+                                    },
+                                    notification: function(args) {
+                                        return _l('message.removed.ssh.key.pair');
+                                    }
+                                },
+                                action: function(args) {
+                                    var data = {
+                                        name: args.context.sshkeypairs[0].name
+                                    };
+                                    if (!args.context.projects) {
+                                        $.extend(data, {
+                                            domainid: args.context.sshkeypairs[0].domainid,
+                                            account: args.context.sshkeypairs[0].account,
+                                        });
+                                    }
+                                    $.ajax({
+                                        url: createURL('deleteSSHKeyPair'),
+                                        data: data,
+                                        success: function(json) {
+                                            args.response.success();
+                                            $(window).trigger('cloudStack.fullRefresh');
+                                        }
+                                    });
+                                }
+                            }
+                        },
+                        tabs: {
+                            details: {
+                                title: 'label.details',
+
+                                fields: [{
+                                    name: {
+                                        label: 'label.name',
+                                        isEditable: true,
+                                        validation: {
+                                            required: true
+                                        }
+                                    }
+                                }, {
+                                    domain: {
+                                        label: 'label.domain'
+                                    },
+                                    account: {
+                                        label: 'label.account'
+                                    },
+                                    privatekey: {
+                                        label: 'label.private.key',
+                                        span: false
+                                    },
+                                    fingerprint: {
+                                        label: 'label.fingerprint'
+                                    }
+                                }],
+
+                                dataProvider: function(args) {
+                                    var data = {
+                                        name: args.context.sshkeypairs[0].name
+                                    };
+                                    $.ajax({
+                                        url: createURL('listSSHKeyPairs&listAll=true'),
+                                        data: data,
+                                        success: function(json) {
+                                            args.response.success({
+                                                actionFilter: sshkeypairActionfilter,
+                                                data: json.listsshkeypairsresponse.sshkeypair[0]
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     };
@@ -1519,6 +1994,9 @@
             allowedActions.push("edit");
             allowedActions.push("changePassword");
             allowedActions.push("generateKeys");
+            if (g_idpList) {
+                allowedActions.push("configureSamlAuthorization");
+            }
             if (!(jsonObj.domain == "ROOT" && jsonObj.account == "admin" && jsonObj.accounttype == 1)) { //if not system-generated default admin account user
                 if (jsonObj.state == "enabled")
                     allowedActions.push("disable");
@@ -1526,21 +2004,31 @@
                     allowedActions.push("enable");
                 allowedActions.push("remove");
             }
-        } else {
-            if (isSelfOrChildDomainUser(jsonObj.username, jsonObj.accounttype, jsonObj.domainid, jsonObj.iscallerchilddomain)) {
-                if (isDomainAdmin() && jsonObj.username != g_username) {
-                    allowedActions.push("edit");
-                    if (jsonObj.state == "enabled")
-                        allowedActions.push("disable");
-                    if (jsonObj.state == "disabled")
-                        allowedActions.push("enable");
-                    allowedActions.push("remove");
-                }
+        } else { //domain-admin, regular-user
+            if (jsonObj.username == g_username) { //selected user is self
                 allowedActions.push("changePassword");
                 allowedActions.push("generateKeys");
+            } else if (isDomainAdmin()) { //if selected user is not self, and the current login is domain-admin
+                allowedActions.push("edit");
+                if (jsonObj.state == "enabled")
+                    allowedActions.push("disable");
+                if (jsonObj.state == "disabled")
+                    allowedActions.push("enable");
+                allowedActions.push("remove");
+
+                allowedActions.push("changePassword");
+                allowedActions.push("generateKeys");
+                if (g_idpList) {
+                    allowedActions.push("configureSamlAuthorization");
+                }
             }
         }
         return allowedActions;
     }
 
+    var sshkeypairActionfilter = function(args) {
+        var allowedActions = [];
+        allowedActions.push("remove");
+        return allowedActions;
+    }
 })(cloudStack);

@@ -24,21 +24,36 @@
   <parent>
     <groupId>org.apache.cloudstack</groupId>
     <artifactId>cloudstack</artifactId>
-    <version>4.3.3</version>
+    <version>4.8.1-SNAPSHOT</version>
   </parent>
   <build>
     <defaultGoal>install</defaultGoal>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>cloudstack-checkstyle</id>
+              <phase>none</phase>
+              <inherited>false</inherited>
+            </execution>
+          </executions>
+      </plugin>
+    </plugins>
   </build>
   <modules>
     <module>ipc</module>
     <module>rest</module>
     <module>events</module>
     <module>jobs</module>
+    <module>quota</module>
     <module>cluster</module>
     <module>db</module>
     <module>config</module>
     <module>managed-context</module>
     <module>spring/lifecycle</module>
     <module>spring/module</module>
+	<module>security</module>
   </modules>
 </project>

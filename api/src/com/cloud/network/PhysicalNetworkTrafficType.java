@@ -37,6 +37,8 @@ public interface PhysicalNetworkTrafficType extends InternalIdentity, Identity {
     String getVmwareNetworkLabel();
 
     String getSimulatorNetworkLabel();
-    
+
     String getHypervNetworkLabel();
+
+    String getOvm3NetworkLabel();
 }

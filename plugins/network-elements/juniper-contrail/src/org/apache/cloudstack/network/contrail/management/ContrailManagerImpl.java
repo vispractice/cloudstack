@@ -17,6 +17,8 @@
 
 package org.apache.cloudstack.network.contrail.management;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,13 +26,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
-import javax.ejb.Local;
 
 import net.juniper.contrail.api.ApiConnector;
 import net.juniper.contrail.api.ApiConnectorFactory;
@@ -39,30 +41,24 @@ import net.juniper.contrail.api.ObjectReference;
 import net.juniper.contrail.api.types.FloatingIp;
 import net.juniper.contrail.api.types.FloatingIpPool;
 import net.juniper.contrail.api.types.NetworkPolicy;
-import net.juniper.contrail.api.types.Project;
 import net.juniper.contrail.api.types.VirtualNetwork;
 
 import org.apache.cloudstack.network.contrail.model.FloatingIpModel;
 import org.apache.cloudstack.network.contrail.model.FloatingIpPoolModel;
 import org.apache.cloudstack.network.contrail.model.ModelController;
 import org.apache.cloudstack.network.contrail.model.VirtualNetworkModel;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
 
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.configuration.ConfigurationService;
-import com.cloud.server.ConfigurationServer;
-import com.cloud.server.ConfigurationServerImpl;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.VlanDao;
 import com.cloud.domain.Domain;
 import com.cloud.domain.DomainVO;
 import com.cloud.domain.dao.DomainDao;
-import com.cloud.projects.ProjectVO;
-import com.cloud.user.dao.AccountDao;
-import com.cloud.user.Account;
 import com.cloud.network.Network;
 import com.cloud.network.Network.Provider;
 import com.cloud.network.Network.Service;
@@ -75,52 +71,77 @@ import com.cloud.network.dao.NetworkVO;
 import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderDao;
 import com.cloud.network.dao.PhysicalNetworkVO;
+import com.cloud.network.vpc.NetworkACLVO;
+import com.cloud.network.vpc.VpcOffering;
+import com.cloud.network.vpc.VpcOfferingVO;
+import com.cloud.network.vpc.VpcProvisioningService;
+import com.cloud.network.vpc.VpcVO;
+import com.cloud.network.vpc.dao.NetworkACLDao;
+import com.cloud.network.vpc.dao.VpcDao;
+import com.cloud.network.vpc.dao.VpcOfferingDao;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.NetworkOffering.Availability;
 import com.cloud.offerings.NetworkOfferingVO;
 import com.cloud.offerings.dao.NetworkOfferingDao;
-import com.cloud.network.vpc.dao.NetworkACLDao;
-import com.cloud.network.vpc.NetworkACLVO;
+import com.cloud.projects.ProjectVO;
 import com.cloud.projects.dao.ProjectDao;
-import com.cloud.utils.component.ComponentLifecycle;
+import com.cloud.server.ConfigurationServer;
+import com.cloud.user.Account;
+import com.cloud.user.dao.AccountDao;
+import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
-import com.google.common.collect.ImmutableList;
-
-import java.util.Properties;
-
-import com.cloud.utils.PropertiesUtil;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.google.common.collect.ImmutableList;
 
-import java.io.File;
-import java.io.FileInputStream;
-
-@Local(value = { ContrailManager.class})
 public class ContrailManagerImpl extends ManagerBase implements ContrailManager {
-    @Inject public ConfigurationService _configService;
-    @Inject ConfigurationServer _configServer;
-    @Inject NetworkOfferingDao _networkOfferingDao;
-
-    @Inject DomainDao _domainDao;
-    @Inject NetworkDao _networksDao;
-    @Inject VMInstanceDao _vmInstanceDao;
-    @Inject ProjectDao _projectDao;
-    @Inject AccountDao _accountDao;
-    @Inject DataCenterDao _dcDao;
-    @Inject PhysicalNetworkDao _physicalNetworkDao;
-    @Inject PhysicalNetworkServiceProviderDao _physProviderDao;
-    @Inject NicDao _nicDao;
-    @Inject ServerDBSync  _dbSync;
-    @Inject ServerEventHandler  _eventHandler;    
-    @Inject IPAddressDao _ipAddressDao;
-    @Inject VlanDao _vlanDao;
-    @Inject UserVmDao _vmDao;
-    @Inject NetworkACLDao _networkAclDao;
+    @Inject
+    public ConfigurationService _configService;
+    @Inject
+    ConfigurationServer _configServer;
+    @Inject
+    NetworkOfferingDao _networkOfferingDao;
+    @Inject
+    DomainDao _domainDao;
+    @Inject
+    NetworkDao _networksDao;
+    @Inject
+    VMInstanceDao _vmInstanceDao;
+    @Inject
+    ProjectDao _projectDao;
+    @Inject
+    AccountDao _accountDao;
+    @Inject
+    DataCenterDao _dcDao;
+    @Inject
+    PhysicalNetworkDao _physicalNetworkDao;
+    @Inject
+    PhysicalNetworkServiceProviderDao _physProviderDao;
+    @Inject
+    NicDao _nicDao;
+    @Inject
+    ServerDBSync _dbSync;
+    @Inject
+    ServerEventHandler _eventHandler;
+    @Inject
+    IPAddressDao _ipAddressDao;
+    @Inject
+    VlanDao _vlanDao;
+    @Inject
+    UserVmDao _vmDao;
+    @Inject
+    VpcOfferingDao _vpcOffDao;
+    @Inject
+    VpcProvisioningService _vpcProvSvc;
+    @Inject
+    VpcDao _vpcDao;
+    @Inject
+    NetworkACLDao _networkAclDao;
 
     private static final Logger s_logger = Logger.getLogger(ContrailManager.class);
 
@@ -129,18 +150,24 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
     private NetworkOffering _offering;
     private NetworkOffering _routerOffering;
     private NetworkOffering _routerPublicOffering;
+    private NetworkOffering _vpcRouterOffering;
+    private VpcOffering _vpcOffering;
+
     private Timer _dbSyncTimer;
-    private int   _dbSyncInterval = DB_SYNC_INTERVAL_DEFAULT;
+    private int _dbSyncInterval = DB_SYNC_INTERVAL_DEFAULT;
     private final String configuration = "contrail.properties";
-    private ModelDatabase _database;
+    private final ModelDatabase _database;
     private ModelController _controller;
-    
+
     ContrailManagerImpl() {
         _database = new ModelDatabase();
     }
 
     @Override
     public boolean start() {
+        if (_api == null) {
+            return true;
+        }
         /* Start background task */
         _dbSyncTimer = new Timer("DBSyncTimer");
         try {
@@ -151,18 +178,22 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         }
         return true;
     }
+
     @Override
     public boolean stop() {
-         _dbSyncTimer.cancel();
-         return true;
+        if (_dbSyncTimer != null) {
+            _dbSyncTimer.cancel();
+        }
+        return true;
     }
-    
+
+    @Override
     public ModelDatabase getDatabase() {
         return _database;
     }
 
-    private NetworkOffering LocatePublicNetworkOffering(String offeringName, 
-                                           String offeringDisplayText, Provider provider) {
+    private NetworkOffering locatePublicNetworkOffering(String offeringName,
+            String offeringDisplayText, Provider provider) {
         List<? extends NetworkOffering> offerList = _configService.listNetworkOfferings(TrafficType.Public, false);
         for (NetworkOffering offer: offerList) {
             if (offer.getName().equals(offeringName)) {
@@ -196,10 +227,10 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         return _networkOfferingDao.findById(id);
     }
 
-    private NetworkOffering LocateNetworkOffering(String offeringName, 
-                                           String offeringDisplayText, Provider provider) {
+    private NetworkOffering locateNetworkOffering(String offeringName,
+            String offeringDisplayText, Provider provider) {
         List<? extends NetworkOffering> offerList = _configService.listNetworkOfferings(TrafficType.Guest, false);
-        for (NetworkOffering offer: offerList) {
+        for (NetworkOffering offer : offerList) {
             if (offer.getName().equals(offeringName)) {
                 if (offer.getState() != NetworkOffering.State.Enabled) {
                     return EnableNetworkOffering(offer.getId());
@@ -210,50 +241,96 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         Map<Service, Set<Provider>> serviceProviderMap = new HashMap<Service, Set<Provider>>();
         Set<Provider> providerSet = new HashSet<Provider>();
         providerSet.add(provider);
-        final Service[] services = {
-                Service.Connectivity,
-                Service.Dhcp,
-                Service.NetworkACL,
-                Service.StaticNat,
-                Service.SourceNat
-        };
-        for (Service svc: services) {
+        final Service[] services = {Service.Connectivity, Service.Dhcp, Service.NetworkACL, Service.StaticNat, Service.SourceNat, Service.Lb};
+        for (Service svc : services) {
+            if (svc == Service.Lb) {
+                if(offeringName.equals(vpcRouterOfferingName)) {
+                    Set<Provider> lbProviderSet = new HashSet<Provider>();
+                    lbProviderSet.add(Provider.InternalLbVm);
+                    serviceProviderMap.put(svc, lbProviderSet);
+                }
+                continue;
+            }
             serviceProviderMap.put(svc, providerSet);
         }
-        ConfigurationManager configMgr = (ConfigurationManager) _configService;
-        NetworkOfferingVO voffer = configMgr.createNetworkOffering(offeringName, offeringDisplayText,
-                TrafficType.Guest, null, false, Availability.Optional, null, serviceProviderMap, true,
-                Network.GuestType.Isolated, false, null, false, null, false, true, null, true, null, false);
+        ConfigurationManager configMgr = (ConfigurationManager)_configService;
+        NetworkOfferingVO voffer =
+                configMgr.createNetworkOffering(offeringName, offeringDisplayText, TrafficType.Guest, null, false, Availability.Optional, null, serviceProviderMap, true,
+                        Network.GuestType.Isolated, false, null, false, null, false, true, null, true, null, false);
 
         voffer.setState(NetworkOffering.State.Enabled);
+        if (offeringName.equals(vpcRouterOfferingName)) {
+            voffer.setInternalLb(true);
+        }
         long id = voffer.getId();
         _networkOfferingDao.update(id, voffer);
         return _networkOfferingDao.findById(id);
+    }
+
+    private VpcOffering locateVpcOffering() {
+        VpcOffering vpcOffer = _vpcOffDao.findByUniqueName(juniperVPCOfferingName);
+        if (vpcOffer != null) {
+            if (((VpcOfferingVO)vpcOffer).getState() == VpcOffering.State.Enabled) {
+                return vpcOffer;
+            }
+            ((VpcOfferingVO)vpcOffer).setState(VpcOffering.State.Enabled);
+            long id = vpcOffer.getId();
+            _vpcOffDao.update(id, (VpcOfferingVO)vpcOffer);
+            return vpcOffer;
+        }
+        Map<String, List<String>> serviceProviderMap = new HashMap<String, List<String>>();
+        List<String> providerSet = new ArrayList<String>();
+        providerSet.add(Provider.JuniperContrailVpcRouter.getName());
+        final List<String> services = new ArrayList<String>();
+        services.add(Service.Connectivity.getName());
+        services.add(Service.Dhcp.getName());
+        services.add(Service.NetworkACL.getName());
+        services.add(Service.StaticNat.getName());
+        services.add(Service.SourceNat.getName());
+        services.add(Service.Gateway.getName());
+        services.add(Service.Lb.getName());
+
+        for (String svc: services) {
+            if (svc.equals(Service.Lb.getName())) {
+                List<String> lbProviderSet = new ArrayList<String>();
+                lbProviderSet.add(Provider.InternalLbVm.getName());
+                serviceProviderMap.put(svc, lbProviderSet);
+                continue;
+            }
+            serviceProviderMap.put(svc, providerSet);
+        }
+        vpcOffer = _vpcProvSvc.createVpcOffering(juniperVPCOfferingName, juniperVPCOfferingDisplayText, services, serviceProviderMap, null, null);
+        ((VpcOfferingVO)vpcOffer).setState(VpcOffering.State.Enabled);
+        long id = vpcOffer.getId();
+        _vpcOffDao.update(id, (VpcOfferingVO)vpcOffer);
+        return _vpcOffDao.findById(id);
     }
 
     private NetworkOffering EnableNetworkOffering(long id) {
         NetworkOfferingVO offering = _networkOfferingDao.createForUpdate(id);
         offering.setState(NetworkOffering.State.Enabled);
         _networkOfferingDao.update(id, offering);
-        return _networkOfferingDao.findById(id);                
+        return _networkOfferingDao.findById(id);
     }
 
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
 
         File configFile = PropertiesUtil.findConfigFile(configuration);
+        FileInputStream fileStream = null;
         try {
             String hostname = null;
             int port = 0;
             if (configFile == null) {
-                hostname = "localhost";
-                port = 8082;
+                return false;
             } else {
                 final Properties configProps = new Properties();
-                configProps.load(new FileInputStream(configFile));
+                fileStream = new FileInputStream(configFile);
+                configProps.load(fileStream);
+
                 String value = configProps.getProperty("management.db_sync_interval");
                 if (value != null) {
-                    _dbSyncInterval = Integer.valueOf(value);
+                    _dbSyncInterval = Integer.parseInt(value);
                 }
                 hostname = configProps.getProperty("api.hostname");
                 String portStr = configProps.getProperty("api.port");
@@ -269,14 +346,24 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
             s_logger.debug("Exception in configure: " + ex);
             ex.printStackTrace();
             throw new ConfigurationException();
+        } finally {
+            IOUtils.closeQuietly(fileStream);
         }
 
         _controller = new ModelController(this, _api, _vmDao, _networksDao, _nicDao, _vlanDao, _ipAddressDao);
-
-        _routerOffering = LocateNetworkOffering(routerOfferingName, routerOfferingDisplayText, 
-                                                                  Provider.JuniperContrailRouter);
-        _routerPublicOffering = LocatePublicNetworkOffering(routerPublicOfferingName, routerPublicOfferingDisplayText, 
-                                                                  Provider.JuniperContrailRouter);
+        try {
+            _routerOffering = locateNetworkOffering(routerOfferingName, routerOfferingDisplayText,
+                    Provider.JuniperContrailRouter);
+            _routerPublicOffering = locatePublicNetworkOffering(routerPublicOfferingName, routerPublicOfferingDisplayText,
+                    Provider.JuniperContrailRouter);
+            _vpcRouterOffering = locateNetworkOffering(vpcRouterOfferingName, vpcRouterOfferingDisplayText,
+                    Provider.JuniperContrailVpcRouter);
+            _vpcOffering = locateVpcOffering();
+        }catch (Exception ex) {
+            s_logger.debug("Exception in locating network offerings: " + ex);
+            ex.printStackTrace();
+            throw new ConfigurationException();
+        }
 
         _eventHandler.subscribe();
 
@@ -296,8 +383,18 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
     }
 
     @Override
-    public String getPhysicalNetworkName(PhysicalNetworkVO phys_net) {
-        String physname = phys_net.getName();
+    public NetworkOffering getVpcRouterOffering() {
+        return _vpcRouterOffering;
+    }
+
+    @Override
+    public VpcOffering getVpcOffering() {
+        return _vpcOffering;
+    }
+
+    @Override
+    public String getPhysicalNetworkName(PhysicalNetworkVO physNet) {
+        String physname = physNet.getName();
         physname = physname.replaceAll("\\s", "").replace("_", "");
         return physname;
     }
@@ -358,7 +455,7 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
     @Override
     public String getDefaultPublicNetworkFQN() {
         String name = VNC_ROOT_DOMAIN + ":" + VNC_DEFAULT_PROJECT + ":" + "__default_Public__";
-        return name; 
+        return name;
     }
 
     private ProjectVO getProject(long accountId) {
@@ -377,21 +474,20 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         }
         DomainVO domain = _domainDao.findById(domainId);
         if (domain.getId() != Domain.ROOT_DOMAIN) {
-            net.juniper.contrail.api.types.Domain vncDomain = (net.juniper.contrail.api.types.Domain)
-                    _api.findById(net.juniper.contrail.api.types.Domain.class, domain.getUuid());
+            net.juniper.contrail.api.types.Domain vncDomain =
+                    (net.juniper.contrail.api.types.Domain)_api.findById(net.juniper.contrail.api.types.Domain.class, domain.getUuid());
             return _api.findByName(net.juniper.contrail.api.types.Project.class, vncDomain, VNC_DEFAULT_PROJECT);
         }
         return null;
     }
-    
+
     @Override
     public net.juniper.contrail.api.types.Project getVncProject(long domainId, long accountId) throws IOException {
         String projectId = getProjectId(domainId, accountId);
         if (projectId == null) {
             return getDefaultVncProject();
         }
-        return (net.juniper.contrail.api.types.Project)
-                _api.findById(net.juniper.contrail.api.types.Project.class, projectId);
+        return (net.juniper.contrail.api.types.Project)_api.findById(net.juniper.contrail.api.types.Project.class, projectId);
     }
 
     @Override
@@ -409,12 +505,11 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         return fqname + getCanonicalName(net);
     }
 
+    @Override
     public void findInfrastructureNetworks(PhysicalNetworkVO phys, List<NetworkVO> dbList) {
-        final TrafficType[] ttypes = {
-                TrafficType.Control,    // maps to __link_local__
+        final TrafficType[] ttypes = {TrafficType.Control,    // maps to __link_local__
                 TrafficType.Management, // maps to ip-fabric
-                TrafficType.Public,
-                TrafficType.Storage        // maps to ip-fabric
+                TrafficType.Public, TrafficType.Storage        // maps to ip-fabric
         };
 
         for (int i = 0; i < ttypes.length; i++) {
@@ -425,13 +520,14 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
 
     }
 
-    public void syncNetworkDB(short syncMode) throws Exception {
+    @Override
+    public void syncNetworkDB(short syncMode) throws IOException {
         if (_dbSync.syncAll(syncMode) == ServerDBSync.SYNC_STATE_OUT_OF_SYNC) {
-             if (syncMode == DBSyncGeneric.SYNC_MODE_CHECK) {
+            if (syncMode == DBSyncGeneric.SYNC_MODE_CHECK) {
                 s_logger.info("# Cloudstack DB & VNC are out of sync #");
-             } else {
-                s_logger.info("# Cloudstack DB & VNC were out of sync, performed re-sync operation #"); 
-             }
+            } else {
+                s_logger.info("# Cloudstack DB & VNC were out of sync, performed re-sync operation #");
+            }
         } else {
             s_logger.info("# Cloudstack DB & VNC are in sync #");
         }
@@ -439,6 +535,7 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
 
     public class DBSyncTask extends TimerTask {
         private short _syncMode = DBSyncGeneric.SYNC_MODE_UPDATE;
+
         @Override
         public void run() {
             try {
@@ -449,23 +546,24 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
             } catch (Exception ex) {
                 s_logger.debug(ex);
                 s_logger.info("Unable to sync network db");
-                //resync will be done after _dbSyncInterval seconds since _syncMode is still set to SYNC_MODE_UPDATE
             }
         }
     }
-
 
     @Override
     public boolean isManagedPhysicalNetwork(Network network) {
         List<PhysicalNetworkVO> net_list = _physicalNetworkDao.listByZone(network.getDataCenterId());
         for (PhysicalNetworkVO phys : net_list) {
-            if(_physProviderDao.findByServiceProvider(phys.getId(), Network.Provider.JuniperContrailRouter.getName()) != null) {
+            if(_physProviderDao.findByServiceProvider(phys.getId(), Provider.JuniperContrailRouter.getName()) != null ||
+                    _physProviderDao.findByServiceProvider(phys.getId(), Provider.JuniperContrailVpcRouter.getName()) != null ||
+                    _physProviderDao.findByServiceProvider(phys.getId(), Provider.InternalLbVm.getName()) != null) {
                 return true;
-            }  
+            }
         }
         return false;
     }
 
+    @Override
     public String findVirtualNetworkId(Network net) throws IOException {
         if (net.getTrafficType() == TrafficType.Guest) {
             return net.getUuid();
@@ -490,11 +588,11 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         SearchCriteria<NetworkVO> sc = searchBuilder.create();
         if (types == null || types.isEmpty()) {
             types = new ArrayList<TrafficType>();
-            types.add(TrafficType.Control);    
+            types.add(TrafficType.Control);
             types.add(TrafficType.Management);
             types.add(TrafficType.Public);
             types.add(TrafficType.Storage);
-        } 
+        }
         sc.setParameters("trafficType", types.toArray());
         List<NetworkVO> dbNets = _networksDao.search(sc, null);
         if (dbNets == null) {
@@ -520,20 +618,19 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
                         if (net.getTrafficType() == type) {
                             if (!dbNets.contains(net)) {
                                 dbNets.add(net);
-                            } 
+                            }
                             break;
                         }
                     }
                 }
             }
         }
-        return dbNets; 
+        return dbNets;
     }
 
     @Override
     public VirtualNetwork findDefaultVirtualNetwork(TrafficType trafficType) throws IOException {
-        if (trafficType == TrafficType.Guest ||
-                trafficType == TrafficType.Public) {
+        if (trafficType == TrafficType.Guest || trafficType == TrafficType.Public) {
             return null;
         }
         String netname = VNC_ROOT_DOMAIN + ":" + VNC_DEFAULT_PROJECT + ":";
@@ -544,9 +641,9 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         }
         return (VirtualNetwork)_api.findByFQN(VirtualNetwork.class, netname);
     }
-    
+
     /*
-     * Returns list of networks managed by Juniper VRouter filtered by traffic types 
+     * Returns list of networks managed by Juniper VRouter filtered by traffic types
      */
     @Override
     public List<NetworkVO> findManagedNetworks(List<TrafficType> types) {
@@ -558,17 +655,18 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         SearchCriteria<NetworkVO> sc = searchBuilder.create();
         List<Long> offerings = new ArrayList<Long>();
         offerings.add(getRouterOffering().getId());
+        offerings.add(getVpcRouterOffering().getId());
         offerings.add(getPublicRouterOffering().getId());
         sc.setParameters("networkOfferingId", offerings.toArray());
 
         if (types == null || types.isEmpty()) {
             types = new ArrayList<TrafficType>();
-            types.add(TrafficType.Control);    
+            types.add(TrafficType.Control);
             types.add(TrafficType.Management);
             types.add(TrafficType.Public);
             types.add(TrafficType.Storage);
-            types.add(TrafficType.Guest);            
-        } 
+            types.add(TrafficType.Guest);
+        }
         sc.setParameters("trafficType", types.toArray());
 
         List<NetworkVO> dbNets = _networksDao.search(sc, null);
@@ -579,19 +677,21 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
 
         List<PhysicalNetworkVO> phys_list = _physicalNetworkDao.listAll();
         final String provider = Network.Provider.JuniperContrailRouter.getName();
-        for (Iterator<PhysicalNetworkVO> iter = phys_list.iterator(); iter.hasNext(); ) {
+        final String vpcProvider = Provider.JuniperContrailVpcRouter.getName();
+        for (Iterator<PhysicalNetworkVO> iter = phys_list.iterator(); iter.hasNext();) {
             PhysicalNetworkVO phys = iter.next();
-            if (_physProviderDao.findByServiceProvider(phys.getId(), provider) != null) {
+            if (_physProviderDao.findByServiceProvider(phys.getId(), provider) != null ||
+                    _physProviderDao.findByServiceProvider(phys.getId(), vpcProvider) != null) {
                 List<NetworkVO> infraNets = new ArrayList<NetworkVO>();
                 findInfrastructureNetworks(phys, infraNets);
-                for (NetworkVO net:infraNets) {
+                for (NetworkVO net : infraNets) {
                     if (types == null || types.isEmpty()) {
                         if (!dbNets.contains(net)) {
                             dbNets.add(net);
                         }
                         continue;
                     }
-                    for(TrafficType type:types) {
+                    for (TrafficType type : types) {
                         if (net.getTrafficType() == type) {
                             if (!dbNets.contains(net)) {
                                 dbNets.add(net);
@@ -602,17 +702,58 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
                 }
             }
         }
-        return dbNets; 
+        return dbNets;
+    }
+
+    @Override
+    public List<VpcVO> findManagedVpcs() {
+        SearchBuilder<VpcVO> searchBuilder = _vpcDao.createSearchBuilder();
+        searchBuilder.and("vpcOffering", searchBuilder.entity().getVpcOfferingId(), Op.EQ);
+        SearchCriteria<VpcVO> sc = searchBuilder.create();
+        sc.setParameters("vpcOffering", getVpcOffering().getId());
+        List<VpcVO> vpcs = _vpcDao.search(sc, null);
+        if (vpcs == null || vpcs.size() == 0) {
+            s_logger.debug("no vpcs found");
+            return null;
+        }
+        return vpcs;
     }
 
     @Override
     public List<NetworkACLVO> findManagedACLs() {
-        /* contrail vpc is not yet implemented */
-        return null;
+        List<VpcVO> vpcs = findManagedVpcs();
+        if (vpcs == null || vpcs.isEmpty()) {
+            return null;
+        }
+        List<Long> vpcIds = new ArrayList<Long>();
+        /* default-allow, default-deny ACLs will be under vpcId '0', so include it*/
+        vpcIds.add((long)0);
+        for (VpcVO vpc:vpcs) {
+            vpcIds.add(vpc.getId());
+        }
+        SearchBuilder<NetworkACLVO> searchBuilder = _networkAclDao.createSearchBuilder();
+        searchBuilder.and("vpcId", searchBuilder.entity().getVpcId(), Op.IN);
+        SearchCriteria<NetworkACLVO> sc = searchBuilder.create();
+        sc.setParameters("vpcId", vpcIds.toArray());
+        List<NetworkACLVO> acls = _networkAclDao.search(sc, null);
+        if (acls == null || acls.size() == 0) {
+            s_logger.debug("no acls found");
+            return null;
+        }
+        /* only return if acl is associated to any network */
+        List<NetworkACLVO> jnprAcls = new ArrayList<NetworkACLVO>();
+        for (NetworkACLVO acl:acls) {
+            List<NetworkVO> nets = _networksDao.listByAclId(acl.getId());
+            if (nets == null || nets.isEmpty()) {
+                continue;
+            }
+            jnprAcls.add(acl);
+        }
+        return jnprAcls;
     }
 
     /*
-     * Returns list of public ip addresses managed by Juniper VRouter 
+     * Returns list of public ip addresses managed by Juniper VRouter
      */
     @Override
     public List<IPAddressVO> findManagedPublicIps() {
@@ -631,7 +772,7 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         searchBuilder.and("associatedWithVmId", searchBuilder.entity().getAssociatedWithVmId(), Op.NNULL);
 
         List<Long> netIds = new ArrayList<Long>();
-        for (NetworkVO net:dbNets) {
+        for (NetworkVO net : dbNets) {
             netIds.add(net.getId());
         }
 
@@ -644,20 +785,20 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         if (publicIps == null) {
             s_logger.debug("no public ips");
             return null;
-        } 
+        }
 
         return publicIps;
     }
-    
+
     private void initializeDefaultVirtualNetworkModels() {
         List<TrafficType> types = new ArrayList<TrafficType>();
         types.add(TrafficType.Management);
-        types.add(TrafficType.Storage); 
-        types.add(TrafficType.Control); 
+        types.add(TrafficType.Storage);
+        types.add(TrafficType.Control);
 
         List<NetworkVO> dbNets = findManagedNetworks(types);
-        for (NetworkVO net:dbNets) {
-            
+        for (NetworkVO net : dbNets) {
+
             VirtualNetworkModel vnModel = getDatabase().lookupVirtualNetwork(null, getCanonicalName(net), net.getTrafficType());
             if (vnModel == null) {
                 vnModel = new VirtualNetworkModel(net, null, getCanonicalName(net), net.getTrafficType());
@@ -700,8 +841,7 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
 
     @Override
     public boolean isSystemDefaultNetwork(NetworkVO net) {
-        if (net.getTrafficType() == TrafficType.Management || net.getTrafficType() == TrafficType.Storage
-                || net.getTrafficType() == TrafficType.Control) {
+        if (net.getTrafficType() == TrafficType.Management || net.getTrafficType() == TrafficType.Storage || net.getTrafficType() == TrafficType.Control) {
             return true;
         }
         return false;
@@ -717,8 +857,7 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
 
     @Override
     public boolean isSystemRootDomain(DomainVO domain) {
-        if (domain.getId() == Domain.ROOT_DOMAIN || domain.getName().compareTo("ROOT") == 0 ||
-                domain.getParent() == null) {
+        if (domain.getId() == Domain.ROOT_DOMAIN || domain.getName().compareTo("ROOT") == 0 || domain.getParent() == null) {
             return true;
         }
         return false;
@@ -738,16 +877,16 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
     }
 
     @Override
-    public String getVifNameByVmName(String vm_name, Integer device_id) {
-        String vif_name = vm_name + "-" + device_id.toString();
+    public String getVifNameByVmName(String vmName, Integer deviceId) {
+        String vif_name = vmName + "-" + deviceId.toString();
         return vif_name;
     }
 
     @Override
-    public String getVifNameByVmUuid(String vm_uuid, Integer device_id) {
-        VMInstanceVO vm = _vmInstanceDao.findByUuid(vm_uuid);   
+    public String getVifNameByVmUuid(String vmUuid, Integer deviceId) {
+        VMInstanceVO vm = _vmInstanceDao.findByUuid(vmUuid);
         if (vm != null) {
-            return vm.getInstanceName() + "-" + device_id.toString();
+            return vm.getInstanceName() + "-" + deviceId.toString();
         }
         return null;
     }
@@ -762,6 +901,7 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         return _api;
     }
 
+    @Override
     public VirtualNetworkModel lookupPublicNetworkModel() {
         List<TrafficType> types = new ArrayList<TrafficType>();
         types.add(TrafficType.Public);
@@ -769,12 +909,13 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         if (dbNets == null) {
             return null;
         }
-        NetworkVO network = dbNets.get(0);
-        VirtualNetworkModel vnModel = getDatabase().lookupVirtualNetwork(network.getUuid(), getCanonicalName(network), TrafficType.Public);
+        NetworkVO net = dbNets.get(0);
+
+        VirtualNetworkModel vnModel = getDatabase().lookupVirtualNetwork(net.getUuid(), getCanonicalName(net), TrafficType.Public);
         if (vnModel == null) {
-            vnModel = new VirtualNetworkModel(network, network.getUuid(),
-                        getCanonicalName(network), network.getTrafficType());
-            vnModel.setProperties(getModelController(), network);
+            vnModel = new VirtualNetworkModel(net, net.getUuid(),
+                    getCanonicalName(net), net.getTrafficType());
+            vnModel.setProperties(getModelController(), net);
         }
         try {
             if (!vnModel.verify(getModelController())) {
@@ -787,6 +928,7 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         return vnModel;
     }
 
+    @Override
     public boolean createFloatingIp(PublicIpAddress ip) {
         VirtualNetworkModel vnModel = lookupPublicNetworkModel();
         assert vnModel != null : "public network vn model is null";
@@ -822,6 +964,7 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         return true;
     }
 
+    @Override
     public boolean deleteFloatingIp(PublicIpAddress ip) {
         VirtualNetworkModel vnModel = lookupPublicNetworkModel();
         assert vnModel != null : "public network model is null";
@@ -844,7 +987,7 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
                 }
             }
         }
-        return true;        
+        return true;
     }
 
     @SuppressWarnings("unchecked")
@@ -863,15 +1006,15 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         List<ObjectReference<ApiPropertyBase>> ips = fipPool.getFloatingIps();
         if (ips != null) {
             try {
-                return (List<FloatingIp>) _api.getObjects(FloatingIp.class, ips);
-            } catch(IOException ex) {
+                return (List<FloatingIp>)_api.getObjects(FloatingIp.class, ips);
+            } catch (IOException ex) {
                 s_logger.debug(ex);
                 return null;
             }
         }
         return null;
     }
-    
+
     @Override
     public boolean isSystemDefaultNetworkPolicy(NetworkPolicy policy) {
         if (policy.getName().equals("default-network-policy")) {
@@ -879,5 +1022,4 @@ public class ContrailManagerImpl extends ManagerBase implements ContrailManager 
         }
         return false;
     }
-
 }

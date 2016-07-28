@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,18 +15,22 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.agent.api;
 
-import java.util.Map;
+import java.util.List;
+
+import com.cloud.agent.api.to.StorageFilerTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.agent.api.to.VolumeTO;
-import com.cloud.agent.api.to.StorageFilerTO;
+import com.cloud.utils.Pair;
 
 public class MigrateWithStorageReceiveCommand extends Command {
     VirtualMachineTO vm;
-    Map<VolumeTO, StorageFilerTO> volumeToFiler;
+    List<Pair<VolumeTO, StorageFilerTO>> volumeToFiler;
 
-    public MigrateWithStorageReceiveCommand(VirtualMachineTO vm, Map<VolumeTO, StorageFilerTO> volumeToFiler) {
+    public MigrateWithStorageReceiveCommand(VirtualMachineTO vm, List<Pair<VolumeTO, StorageFilerTO>> volumeToFiler) {
         this.vm = vm;
         this.volumeToFiler = volumeToFiler;
     }
@@ -34,7 +39,7 @@ public class MigrateWithStorageReceiveCommand extends Command {
         return vm;
     }
 
-    public Map<VolumeTO, StorageFilerTO> getVolumeToFiler() {
+    public List<Pair<VolumeTO, StorageFilerTO>> getVolumeToFiler() {
         return volumeToFiler;
     }
 

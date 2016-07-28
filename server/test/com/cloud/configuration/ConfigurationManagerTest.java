@@ -30,15 +30,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
-import junit.framework.Assert;
-
+import com.cloud.user.User;
 import org.apache.log4j.Logger;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.apache.cloudstack.api.command.admin.vlan.DedicatePublicIpRangeCmd;
 import org.apache.cloudstack.api.command.admin.vlan.ReleasePublicIpRangeCmd;
@@ -47,29 +49,45 @@ import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationSe
 
 import com.cloud.configuration.Resource.ResourceType;
 import com.cloud.dc.AccountVlanMapVO;
+import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenter.NetworkType;
 import com.cloud.dc.DataCenterVO;
+import com.cloud.dc.HostPodVO;
 import com.cloud.dc.Vlan;
 import com.cloud.dc.VlanVO;
 import com.cloud.dc.dao.AccountVlanMapDao;
+import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
+import com.cloud.dc.dao.DataCenterIpAddressDao;
+import com.cloud.dc.dao.DomainVlanMapDao;
+import com.cloud.dc.dao.HostPodDao;
 import com.cloud.dc.dao.VlanDao;
 import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.host.HostVO;
+import com.cloud.host.dao.HostDao;
 import com.cloud.network.IpAddressManager;
+import com.cloud.network.Network;
+import com.cloud.network.NetworkModel;
 import com.cloud.network.Network.Capability;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.IPAddressVO;
+import com.cloud.network.dao.PhysicalNetworkDao;
+import com.cloud.network.dao.PhysicalNetworkVO;
 import com.cloud.projects.ProjectManager;
+import com.cloud.storage.VolumeVO;
+import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountVO;
 import com.cloud.user.ResourceLimitService;
 import com.cloud.user.UserVO;
 import com.cloud.user.dao.AccountDao;
-import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionLegacy;
+import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.Ip;
+import com.cloud.vm.VMInstanceVO;
+import com.cloud.vm.dao.VMInstanceDao;
 
 public class ConfigurationManagerTest {
 
@@ -83,20 +101,53 @@ public class ConfigurationManagerTest {
     ReleasePublicIpRangeCmd releasePublicIpRangesCmd = new ReleasePublicIpRangeCmdExtn();
     Class<?> _releasePublicIpRangeClass = releasePublicIpRangesCmd.getClass().getSuperclass();
 
-    @Mock AccountManager _accountMgr;
-    @Mock ProjectManager _projectMgr;
-    @Mock ResourceLimitService _resourceLimitMgr;
-    @Mock NetworkOrchestrationService _networkMgr;
-    @Mock AccountDao _accountDao;
-    @Mock VlanDao _vlanDao;
-    @Mock AccountVlanMapDao _accountVlanMapDao;
-    @Mock IPAddressDao _publicIpAddressDao;
-    @Mock DataCenterDao _zoneDao;
-    @Mock FirewallRulesDao _firewallDao;
+    @Mock
+    AccountManager _accountMgr;
+    @Mock
+    ProjectManager _projectMgr;
+    @Mock
+    ResourceLimitService _resourceLimitMgr;
+    @Mock
+    NetworkOrchestrationService _networkMgr;
+    @Mock
+    AccountDao _accountDao;
+    @Mock
+    VlanDao _vlanDao;
+    @Mock
+    AccountVlanMapDao _accountVlanMapDao;
+    @Mock
+    DomainVlanMapDao _domainVlanMapDao;
+    @Mock
+    IPAddressDao _publicIpAddressDao;
+    @Mock
+    DataCenterDao _zoneDao;
+    @Mock
+    FirewallRulesDao _firewallDao;
     @Mock
     IpAddressManager _ipAddrMgr;
+    @Mock
+    NetworkModel _networkModel;
+    @Mock
+    DataCenterIpAddressDao _privateIpAddressDao;
+    @Mock
+    VolumeDao _volumeDao;
+    @Mock
+    HostDao _hostDao;
+    @Mock
+    VMInstanceDao _vmInstanceDao;
+    @Mock
+    ClusterDao _clusterDao;
+    @Mock
+    HostPodDao _podDao;
+    @Mock
+    PhysicalNetworkDao _physicalNetworkDao;
 
-    VlanVO vlan = new VlanVO(Vlan.VlanType.VirtualNetwork, "vlantag", "vlangateway","vlannetmask", 1L, "iprange", 1L, 1L, null, null, null);
+    VlanVO vlan = new VlanVO(Vlan.VlanType.VirtualNetwork, "vlantag", "vlangateway", "vlannetmask", 1L, "iprange", 1L, 1L, null, null, null);
+
+    @Mock
+    Network network;
+    @Mock
+    Account account;
 
     @Before
     public void setup() throws Exception {
@@ -108,23 +159,32 @@ public class ConfigurationManagerTest {
         configurationMgr._accountDao = _accountDao;
         configurationMgr._vlanDao = _vlanDao;
         configurationMgr._accountVlanMapDao = _accountVlanMapDao;
+        configurationMgr._domainVlanMapDao = _domainVlanMapDao;
         configurationMgr._publicIpAddressDao = _publicIpAddressDao;
         configurationMgr._zoneDao = _zoneDao;
         configurationMgr._firewallDao = _firewallDao;
         configurationMgr._ipAddrMgr = _ipAddrMgr;
+        configurationMgr._networkModel = _networkModel;
+        configurationMgr._privateIpAddressDao = _privateIpAddressDao;
+        configurationMgr._volumeDao = _volumeDao;
+        configurationMgr._hostDao = _hostDao;
+        configurationMgr._vmInstanceDao = _vmInstanceDao;
+        configurationMgr._clusterDao = _clusterDao;
+        configurationMgr._podDao = _podDao;
+        configurationMgr._physicalNetworkDao = _physicalNetworkDao;
 
-        Account account = new AccountVO("testaccount", 1, "networkdomain", (short) 0, UUID.randomUUID().toString());
+
+        Account account = new AccountVO("testaccount", 1, "networkdomain", (short)0, UUID.randomUUID().toString());
         when(configurationMgr._accountMgr.getAccount(anyLong())).thenReturn(account);
         when(configurationMgr._accountDao.findActiveAccount(anyString(), anyLong())).thenReturn(account);
         when(configurationMgr._accountMgr.getActiveAccountById(anyLong())).thenReturn(account);
 
-        UserVO user = new UserVO(1, "testuser", "password", "firstname", "lastName", "email", "timezone", UUID.randomUUID().toString());
+        UserVO user = new UserVO(1, "testuser", "password", "firstname", "lastName", "email", "timezone", UUID.randomUUID().toString(), User.Source.UNKNOWN);
         CallContext.register(user, account);
 
         when(configurationMgr._publicIpAddressDao.countIPs(anyLong(), anyLong(), anyBoolean())).thenReturn(1);
 
-        doNothing().when(configurationMgr._resourceLimitMgr).checkResourceLimit(any(Account.class),
-                any(ResourceType.class), anyLong());
+        doNothing().when(configurationMgr._resourceLimitMgr).checkResourceLimit(any(Account.class), any(ResourceType.class), anyLong());
 
         when(configurationMgr._accountVlanMapDao.persist(any(AccountVlanMapVO.class))).thenReturn(new AccountVlanMapVO());
 
@@ -170,14 +230,14 @@ public class ConfigurationManagerTest {
          * TEST 2: given invalid public ip range DedicatePublicIpRange should fail
          */
         runDedicatePublicIpRangeInvalidRange();
-         /*
-         * TEST 3: given public IP range that is already dedicated to a different account DedicatePublicIpRange should fail
-         */
+        /*
+        * TEST 3: given public IP range that is already dedicated to a different account DedicatePublicIpRange should fail
+        */
         runDedicatePublicIpRangeDedicatedRange();
 
-         /*
-         * TEST 4: given zone is of type Basic DedicatePublicIpRange should fail
-         */
+        /*
+        * TEST 4: given zone is of type Basic DedicatePublicIpRange should fail
+        */
         runDedicatePublicIpRangeInvalidZone();
 
         /*
@@ -219,8 +279,9 @@ public class ConfigurationManagerTest {
 
         when(configurationMgr._accountVlanMapDao.listAccountVlanMapsByAccount(anyLong())).thenReturn(null);
 
-        DataCenterVO dc = new DataCenterVO(UUID.randomUUID().toString(), "test", "8.8.8.8", null, "10.0.0.1", null,  "10.0.0.1/24",
-                null, null, NetworkType.Advanced, null, null, true,  true, null, null);
+        DataCenterVO dc =
+            new DataCenterVO(UUID.randomUUID().toString(), "test", "8.8.8.8", null, "10.0.0.1", null, "10.0.0.1/24", null, null, NetworkType.Advanced, null, null, true,
+                true, null, null);
         when(configurationMgr._zoneDao.findById(anyLong())).thenReturn(dc);
 
         List<IPAddressVO> ipAddressList = new ArrayList<IPAddressVO>();
@@ -262,8 +323,9 @@ public class ConfigurationManagerTest {
         accountVlanMaps.add(accountVlanMap);
         when(configurationMgr._accountVlanMapDao.listAccountVlanMapsByVlan(anyLong())).thenReturn(accountVlanMaps);
 
-        DataCenterVO dc = new DataCenterVO(UUID.randomUUID().toString(), "test", "8.8.8.8", null, "10.0.0.1", null,  "10.0.0.1/24",
-                null, null, NetworkType.Advanced, null, null, true,  true, null, null);
+        DataCenterVO dc =
+            new DataCenterVO(UUID.randomUUID().toString(), "test", "8.8.8.8", null, "10.0.0.1", null, "10.0.0.1/24", null, null, NetworkType.Advanced, null, null, true,
+                true, null, null);
         when(configurationMgr._zoneDao.findById(anyLong())).thenReturn(dc);
 
         List<IPAddressVO> ipAddressList = new ArrayList<IPAddressVO>();
@@ -288,8 +350,9 @@ public class ConfigurationManagerTest {
         when(configurationMgr._accountVlanMapDao.listAccountVlanMapsByVlan(anyLong())).thenReturn(null);
 
         // public ip range belongs to zone of type basic
-        DataCenterVO dc = new DataCenterVO(UUID.randomUUID().toString(), "test", "8.8.8.8", null, "10.0.0.1", null,  "10.0.0.1/24",
-                null, null, NetworkType.Basic, null, null, true,  true, null, null);
+        DataCenterVO dc =
+            new DataCenterVO(UUID.randomUUID().toString(), "test", "8.8.8.8", null, "10.0.0.1", null, "10.0.0.1/24", null, null, NetworkType.Basic, null, null, true,
+                true, null, null);
         when(configurationMgr._zoneDao.findById(anyLong())).thenReturn(dc);
 
         List<IPAddressVO> ipAddressList = new ArrayList<IPAddressVO>();
@@ -313,8 +376,9 @@ public class ConfigurationManagerTest {
 
         when(configurationMgr._accountVlanMapDao.listAccountVlanMapsByAccount(anyLong())).thenReturn(null);
 
-        DataCenterVO dc = new DataCenterVO(UUID.randomUUID().toString(), "test", "8.8.8.8", null, "10.0.0.1", null,  "10.0.0.1/24",
-                null, null, NetworkType.Advanced, null, null, true,  true, null, null);
+        DataCenterVO dc =
+            new DataCenterVO(UUID.randomUUID().toString(), "test", "8.8.8.8", null, "10.0.0.1", null, "10.0.0.1/24", null, null, NetworkType.Advanced, null, null, true,
+                true, null, null);
         when(configurationMgr._zoneDao.findById(anyLong())).thenReturn(dc);
 
         // one of the ip addresses of the range is allocated to different account
@@ -410,10 +474,11 @@ public class ConfigurationManagerTest {
         when(configurationMgr._vlanDao.findById(anyLong())).thenReturn(vlan);
 
         when(configurationMgr._accountVlanMapDao.listAccountVlanMapsByVlan(anyLong())).thenReturn(null);
+        when(configurationMgr._domainVlanMapDao.listDomainVlanMapsByVlan(anyLong())).thenReturn(null);
         try {
             configurationMgr.releasePublicIpRange(releasePublicIpRangesCmd);
         } catch (Exception e) {
-            Assert.assertTrue(e.getMessage().contains("as it not dedicated to any account"));
+            Assert.assertTrue(e.getMessage().contains("as it not dedicated to any domain and any account"));
         } finally {
             txn.close("runReleaseNonDedicatedPublicIpRange");
         }
@@ -434,12 +499,11 @@ public class ConfigurationManagerTest {
         boolean caught = false;
         try {
             configurationMgr.validateStaticNatServiceCapablities(staticNatServiceCapabilityMap);
-        }
-        catch (InvalidParameterValueException e) {
-            Assert.assertTrue(e.getMessage(),e.getMessage().contains("(frue and talse)"));
+        } catch (InvalidParameterValueException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("(frue and talse)"));
             caught = true;
         }
-        Assert.assertTrue("should not be accepted",caught);
+        Assert.assertTrue("should not be accepted", caught);
     }
 
     @Test
@@ -450,6 +514,7 @@ public class ConfigurationManagerTest {
 
         configurationMgr.validateStaticNatServiceCapablities(staticNatServiceCapabilityMap);
     }
+
     @Test
     public void validateFTStaticNatServiceCapablitiesTest() {
         Map<Capability, String> staticNatServiceCapabilityMap = new HashMap<Capability, String>();
@@ -458,6 +523,7 @@ public class ConfigurationManagerTest {
 
         configurationMgr.validateStaticNatServiceCapablities(staticNatServiceCapabilityMap);
     }
+
     @Test
     public void validateTFStaticNatServiceCapablitiesTest() {
         Map<Capability, String> staticNatServiceCapabilityMap = new HashMap<Capability, String>();
@@ -467,14 +533,16 @@ public class ConfigurationManagerTest {
         boolean caught = false;
         try {
             configurationMgr.validateStaticNatServiceCapablities(staticNatServiceCapabilityMap);
-        }
-        catch (InvalidParameterValueException e) {
-            Assert.assertTrue(e.getMessage(),e.getMessage().contains("Capability " + Capability.AssociatePublicIP.getName()
-                        + " can only be set when capability " + Capability.ElasticIp.getName() + " is true"));
+        } catch (InvalidParameterValueException e) {
+            Assert.assertTrue(
+                e.getMessage(),
+                e.getMessage().contains(
+                    "Capability " + Capability.AssociatePublicIP.getName() + " can only be set when capability " + Capability.ElasticIp.getName() + " is true"));
             caught = true;
         }
-        Assert.assertTrue("should not be accepted",caught);
+        Assert.assertTrue("should not be accepted", caught);
     }
+
     @Test
     public void validateFFStaticNatServiceCapablitiesTest() {
         Map<Capability, String> staticNatServiceCapabilityMap = new HashMap<Capability, String>();
@@ -496,5 +564,231 @@ public class ConfigurationManagerTest {
         public long getEntityOwnerId() {
             return 1;
         }
+    }
+
+    @Test
+    public void checkIfPodIsDeletableSuccessTest() {
+        HostPodVO hostPodVO = Mockito.mock(HostPodVO.class);
+        Mockito.when(hostPodVO.getDataCenterId()).thenReturn(new Random().nextLong());
+        Mockito.when(_podDao.findById(anyLong())).thenReturn(hostPodVO);
+
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_volumeDao.findByPod(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_hostDao.findByPodId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_vmInstanceDao.listByPodId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_clusterDao.listByPodId(anyLong())).thenReturn(new ArrayList<ClusterVO>());
+
+        configurationMgr.checkIfPodIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfPodIsDeletableFailureOnPrivateIpAddressTest() {
+        HostPodVO hostPodVO = Mockito.mock(HostPodVO.class);
+        Mockito.when(hostPodVO.getDataCenterId()).thenReturn(new Random().nextLong());
+        Mockito.when(_podDao.findById(anyLong())).thenReturn(hostPodVO);
+
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyLong(), anyBoolean())).thenReturn(1);
+        Mockito.when(_volumeDao.findByPod(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_hostDao.findByPodId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_vmInstanceDao.listByPodId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_clusterDao.listByPodId(anyLong())).thenReturn(new ArrayList<ClusterVO>());
+
+        configurationMgr.checkIfPodIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfPodIsDeletableFailureOnVolumeTest() {
+        HostPodVO hostPodVO = Mockito.mock(HostPodVO.class);
+        Mockito.when(hostPodVO.getDataCenterId()).thenReturn(new Random().nextLong());
+        Mockito.when(_podDao.findById(anyLong())).thenReturn(hostPodVO);
+
+        VolumeVO volumeVO = Mockito.mock(VolumeVO.class);
+        ArrayList<VolumeVO> arrayList = new ArrayList<VolumeVO>();
+        arrayList.add(volumeVO);
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_volumeDao.findByPod(anyLong())).thenReturn(arrayList);
+        Mockito.when(_hostDao.findByPodId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_vmInstanceDao.listByPodId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_clusterDao.listByPodId(anyLong())).thenReturn(new ArrayList<ClusterVO>());
+
+        configurationMgr.checkIfPodIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfPodIsDeletableFailureOnHostTest() {
+        HostPodVO hostPodVO = Mockito.mock(HostPodVO.class);
+        Mockito.when(hostPodVO.getDataCenterId()).thenReturn(new Random().nextLong());
+        Mockito.when(_podDao.findById(anyLong())).thenReturn(hostPodVO);
+
+        HostVO hostVO = Mockito.mock(HostVO.class);
+        ArrayList<HostVO> arrayList = new ArrayList<HostVO>();
+        arrayList.add(hostVO);
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_volumeDao.findByPod(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_hostDao.findByPodId(anyLong())).thenReturn(arrayList);
+        Mockito.when(_vmInstanceDao.listByPodId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_clusterDao.listByPodId(anyLong())).thenReturn(new ArrayList<ClusterVO>());
+
+        configurationMgr.checkIfPodIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfPodIsDeletableFailureOnVmInstanceTest() {
+        HostPodVO hostPodVO = Mockito.mock(HostPodVO.class);
+        Mockito.when(hostPodVO.getDataCenterId()).thenReturn(new Random().nextLong());
+        Mockito.when(_podDao.findById(anyLong())).thenReturn(hostPodVO);
+
+        VMInstanceVO vMInstanceVO = Mockito.mock(VMInstanceVO.class);
+        ArrayList<VMInstanceVO> arrayList = new ArrayList<VMInstanceVO>();
+        arrayList.add(vMInstanceVO);
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_volumeDao.findByPod(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_hostDao.findByPodId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_vmInstanceDao.listByPodId(anyLong())).thenReturn(arrayList);
+        Mockito.when(_clusterDao.listByPodId(anyLong())).thenReturn(new ArrayList<ClusterVO>());
+
+        configurationMgr.checkIfPodIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfPodIsDeletableFailureOnClusterTest() {
+        HostPodVO hostPodVO = Mockito.mock(HostPodVO.class);
+        Mockito.when(hostPodVO.getDataCenterId()).thenReturn(new Random().nextLong());
+        Mockito.when(_podDao.findById(anyLong())).thenReturn(hostPodVO);
+
+        ClusterVO clusterVO = Mockito.mock(ClusterVO.class);
+        ArrayList<ClusterVO> arrayList = new ArrayList<ClusterVO>();
+        arrayList.add(clusterVO);
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_volumeDao.findByPod(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_hostDao.findByPodId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_vmInstanceDao.listByPodId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_clusterDao.listByPodId(anyLong())).thenReturn(arrayList);
+
+        configurationMgr.checkIfPodIsDeletable(new Random().nextLong());
+    }
+
+    @Test
+    public void checkIfZoneIsDeletableSuccessTest() {
+        Mockito.when(_hostDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_podDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostPodVO>());
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_publicIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_vmInstanceDao.listByZoneId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_volumeDao.findByDc(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_physicalNetworkDao.listByZone(anyLong())).thenReturn(new ArrayList<PhysicalNetworkVO>());
+
+        configurationMgr.checkIfZoneIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfZoneIsDeletableFailureOnHostTest() {
+        HostVO hostVO = Mockito.mock(HostVO.class);
+        ArrayList<HostVO> arrayList = new ArrayList<HostVO>();
+        arrayList.add(hostVO);
+
+        Mockito.when(_hostDao.listByDataCenterId(anyLong())).thenReturn(arrayList);
+        Mockito.when(_podDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostPodVO>());
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_publicIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_vmInstanceDao.listByZoneId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_volumeDao.findByDc(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_physicalNetworkDao.listByZone(anyLong())).thenReturn(new ArrayList<PhysicalNetworkVO>());
+
+        configurationMgr.checkIfZoneIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfZoneIsDeletableFailureOnPodTest() {
+        HostPodVO hostPodVO = Mockito.mock(HostPodVO.class);
+        ArrayList<HostPodVO> arrayList = new ArrayList<HostPodVO>();
+        arrayList.add(hostPodVO);
+
+        Mockito.when(_hostDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_podDao.listByDataCenterId(anyLong())).thenReturn(arrayList);
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_publicIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_vmInstanceDao.listByZoneId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_volumeDao.findByDc(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_physicalNetworkDao.listByZone(anyLong())).thenReturn(new ArrayList<PhysicalNetworkVO>());
+
+        configurationMgr.checkIfZoneIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfZoneIsDeletableFailureOnPrivateIpAddressTest() {
+        Mockito.when(_hostDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_podDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostPodVO>());
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(1);
+        Mockito.when(_publicIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_vmInstanceDao.listByZoneId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_volumeDao.findByDc(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_physicalNetworkDao.listByZone(anyLong())).thenReturn(new ArrayList<PhysicalNetworkVO>());
+
+        configurationMgr.checkIfZoneIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfZoneIsDeletableFailureOnPublicIpAddressTest() {
+        Mockito.when(_hostDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_podDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostPodVO>());
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_publicIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(1);
+        Mockito.when(_vmInstanceDao.listByZoneId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_volumeDao.findByDc(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_physicalNetworkDao.listByZone(anyLong())).thenReturn(new ArrayList<PhysicalNetworkVO>());
+
+        configurationMgr.checkIfZoneIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfZoneIsDeletableFailureOnVmInstanceTest() {
+        VMInstanceVO vMInstanceVO = Mockito.mock(VMInstanceVO.class);
+        ArrayList<VMInstanceVO> arrayList = new ArrayList<VMInstanceVO>();
+        arrayList.add(vMInstanceVO);
+
+        Mockito.when(_hostDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_podDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostPodVO>());
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_publicIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_vmInstanceDao.listByZoneId(anyLong())).thenReturn(arrayList);
+        Mockito.when(_volumeDao.findByDc(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_physicalNetworkDao.listByZone(anyLong())).thenReturn(new ArrayList<PhysicalNetworkVO>());
+
+        configurationMgr.checkIfZoneIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfZoneIsDeletableFailureOnVolumeTest() {
+        VolumeVO volumeVO = Mockito.mock(VolumeVO.class);
+        ArrayList<VolumeVO> arrayList = new ArrayList<VolumeVO>();
+        arrayList.add(volumeVO);
+
+        Mockito.when(_hostDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_podDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostPodVO>());
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_publicIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_vmInstanceDao.listByZoneId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_volumeDao.findByDc(anyLong())).thenReturn(arrayList);
+        Mockito.when(_physicalNetworkDao.listByZone(anyLong())).thenReturn(new ArrayList<PhysicalNetworkVO>());
+
+        configurationMgr.checkIfZoneIsDeletable(new Random().nextLong());
+    }
+
+    @Test(expected = CloudRuntimeException.class)
+    public void checkIfZoneIsDeletableFailureOnPhysicalNetworkTest() {
+        PhysicalNetworkVO physicalNetworkVO = Mockito.mock(PhysicalNetworkVO.class);
+        ArrayList<PhysicalNetworkVO> arrayList = new ArrayList<PhysicalNetworkVO>();
+        arrayList.add(physicalNetworkVO);
+
+        Mockito.when(_hostDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostVO>());
+        Mockito.when(_podDao.listByDataCenterId(anyLong())).thenReturn(new ArrayList<HostPodVO>());
+        Mockito.when(_privateIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_publicIpAddressDao.countIPs(anyLong(), anyBoolean())).thenReturn(0);
+        Mockito.when(_vmInstanceDao.listByZoneId(anyLong())).thenReturn(new ArrayList<VMInstanceVO>());
+        Mockito.when(_volumeDao.findByDc(anyLong())).thenReturn(new ArrayList<VolumeVO>());
+        Mockito.when(_physicalNetworkDao.listByZone(anyLong())).thenReturn(arrayList);
+
+        configurationMgr.checkIfZoneIsDeletable(new Random().nextLong());
     }
 }

@@ -16,24 +16,26 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.iso;
 
+import org.apache.log4j.Logger;
+
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
+import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.user.vm.DeployVMCmd;
 import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.context.CallContext;
 
-import org.apache.log4j.Logger;
-
 import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.uservm.UserVm;
 
-@APICommand(name = "attachIso", description="Attaches an ISO to a virtual machine.", responseObject=UserVmResponse.class)
+@APICommand(name = "attachIso", description = "Attaches an ISO to a virtual machine.", responseObject = UserVmResponse.class, responseView = ResponseView.Restricted,
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class AttachIsoCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(AttachIsoCmd.class.getName());
 
@@ -43,14 +45,13 @@ public class AttachIsoCmd extends BaseAsyncCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = TemplateResponse.class,
-            required=true, description="the ID of the ISO file")
-    private Long id;
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = TemplateResponse.class,
+            required = true, description = "the ID of the ISO file")
+    protected Long id;
 
-    @Parameter(name=ApiConstants.VIRTUAL_MACHINE_ID, type=CommandType.UUID, entityType = UserVmResponse.class,
-            required=true, description="the ID of the virtual machine")
-    private Long virtualMachineId;
-
+    @Parameter(name = ApiConstants.VIRTUAL_MACHINE_ID, type = CommandType.UUID, entityType = UserVmResponse.class,
+            required = true, description = "the ID of the virtual machine")
+    protected Long virtualMachineId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -63,7 +64,6 @@ public class AttachIsoCmd extends BaseAsyncCmd {
     public Long getVirtualMachineId() {
         return virtualMachineId;
     }
-
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
@@ -78,7 +78,7 @@ public class AttachIsoCmd extends BaseAsyncCmd {
     public long getEntityOwnerId() {
         UserVm vm = _entityMgr.findById(UserVm.class, getVirtualMachineId());
         if (vm == null) {
-            throw new InvalidParameterValueException("Unable to find virtual machine by id " + getVirtualMachineId());
+            throw new InvalidParameterValueException("Unable to find virtual machine by ID " + getVirtualMachineId());
         }
 
         return vm.getAccountId();
@@ -91,24 +91,24 @@ public class AttachIsoCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        return  "attaching ISO: " + getId() + " to vm: " + getVirtualMachineId();
+        return  "attaching ISO: " + getId() + " to VM: " + getVirtualMachineId();
     }
 
     @Override
-    public void execute(){
-        CallContext.current().setEventDetails("Vm Id: " +getVirtualMachineId()+ " ISO Id: "+getId());
+    public void execute() {
+        CallContext.current().setEventDetails("Vm Id: " + getVirtualMachineId() + " ISO ID: " + getId());
         boolean result = _templateService.attachIso(id, virtualMachineId);
         if (result) {
             UserVm userVm = _responseGenerator.findUserVmById(virtualMachineId);
             if (userVm != null) {
-                UserVmResponse response = _responseGenerator.createUserVmResponse("virtualmachine", userVm).get(0);
+                UserVmResponse response = _responseGenerator.createUserVmResponse(ResponseView.Restricted, "virtualmachine", userVm).get(0);
                 response.setResponseName(DeployVMCmd.getResultObjectName());
-                this.setResponseObject(response);
+                setResponseObject(response);
             } else {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to attach iso");
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to attach ISO");
             }
         } else {
-            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to attach iso");
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to attach ISO");
         }
     }
 }

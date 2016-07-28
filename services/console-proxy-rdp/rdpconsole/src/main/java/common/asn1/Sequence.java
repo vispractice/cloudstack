@@ -22,7 +22,7 @@ import streamer.ByteBuffer;
 
 /**
  * One or more elements of different types.
- * 
+ *
  * Only prefixed tags are supported.
  */
 public class Sequence extends Tag {
@@ -31,9 +31,9 @@ public class Sequence extends Tag {
 
     public Sequence(String name) {
         super(name);
-        this.tagType = SEQUENCE;
+        tagType = SEQUENCE;
         // Sequence and SequenceOf are always encoded as constructed
-        this.constructed = true;
+        constructed = true;
     }
 
     @Override
@@ -120,11 +120,11 @@ public class Sequence extends Tag {
     public Tag copyFrom(Tag tag) {
         super.copyFrom(tag);
 
-        if (this.tags.length != ((Sequence)tag).tags.length)
+        if (tags.length != ((Sequence)tag).tags.length)
             throw new RuntimeException("Incompatible sequences. This: " + this + ", another: " + tag + ".");
 
         for (int i = 0; i < tags.length; i++) {
-            this.tags[i].copyFrom(((Sequence)tag).tags[i]);
+            tags[i].copyFrom(((Sequence)tag).tags[i]);
         }
 
         return this;

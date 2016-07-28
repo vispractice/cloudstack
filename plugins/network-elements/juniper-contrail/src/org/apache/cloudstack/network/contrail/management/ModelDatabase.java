@@ -32,7 +32,7 @@ public class ModelDatabase {
     TreeSet<VirtualMachineModel> _vmTable;
     TreeSet<VirtualNetworkModel> _vnTable;
     TreeSet<NetworkPolicyModel> _policyTable;
-    
+
     public ModelDatabase() {
         initDb();
     }
@@ -43,11 +43,11 @@ public class ModelDatabase {
         _vnTable = new TreeSet<VirtualNetworkModel>(new ModelObjectBase.UuidComparator());
         _policyTable = new TreeSet<NetworkPolicyModel>(new ModelObjectBase.UuidComparator());
     }
-    
+
     public TreeSet<ServiceInstanceModel> getServiceInstances() {
         return _serviceInstanceTable;
     }
-    
+
     public ServiceInstanceModel lookupServiceInstance(String fqn) {
         ServiceInstanceModel siKey = new ServiceInstanceModel(fqn);
         ServiceInstanceModel current = _serviceInstanceTable.ceiling(siKey);
@@ -56,11 +56,11 @@ public class ModelDatabase {
         }
         return null;
     }
-    
+
     public TreeSet<VirtualMachineModel> getVirtualMachines() {
         return _vmTable;
     }
-    
+
     public VirtualMachineModel lookupVirtualMachine(String uuid) {
         VirtualMachineModel vmKey = new VirtualMachineModel(null, uuid);
         VirtualMachineModel current = _vmTable.ceiling(vmKey);
@@ -69,23 +69,22 @@ public class ModelDatabase {
         }
         return null;
     }
-    
+
     public TreeSet<VirtualNetworkModel> getVirtualNetworks() {
         return _vnTable;
     }
-    
+
     public VirtualNetworkModel lookupVirtualNetwork(String uuid, String name, TrafficType ttype) {
         VirtualNetworkModel vnKey = new VirtualNetworkModel(null, uuid, name, ttype);
         VirtualNetworkModel current = _vnTable.ceiling(vnKey);
         if (current != null) {
-            if (ttype == TrafficType.Management || ttype == TrafficType.Storage
-                    || ttype == TrafficType.Control) {
+            if (ttype == TrafficType.Management || ttype == TrafficType.Storage || ttype == TrafficType.Control) {
                 if (current.getName().equals(name)) {
                     return current;
                 }
             } else if (current.getUuid().equals(uuid)) {
                 return current;
-            } 
+            }
         }
         return null;
     }

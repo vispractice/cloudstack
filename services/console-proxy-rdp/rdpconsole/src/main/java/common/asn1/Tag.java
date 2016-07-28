@@ -185,7 +185,7 @@ public abstract class Tag implements Asn1Constants {
     /**
      * Calculate length of payload only, without tag prefix, tag type, and
      * lengths.
-     * 
+     *
      * @return
      */
     public abstract long calculateLengthOfValuePayload();
@@ -225,7 +225,7 @@ public abstract class Tag implements Asn1Constants {
     /**
      * Read required tag, i.e. we are 100% sure that byte buffer will contain this
      * tag, or exception will be thrown otherwise.
-     * 
+     *
      * @param buf
      *          buffer with tag data
      */
@@ -285,7 +285,7 @@ public abstract class Tag implements Asn1Constants {
 
     /**
      * Check are tag type and flags valid for this tag with or without tag prefix.
-     * 
+     *
      * @param explicit
      *          if true, then value is wrapped in tag prefix
      */
@@ -293,7 +293,7 @@ public abstract class Tag implements Asn1Constants {
         if (explicit)
             return typeAndFlags.tagClass == tagClass && typeAndFlags.constructed && typeAndFlags.typeOrTagNumber == tagNumber;
         else
-            return typeAndFlags.tagClass == UNIVERSAL_CLASS && !typeAndFlags.constructed && typeAndFlags.typeOrTagNumber == this.tagType;
+            return typeAndFlags.tagClass == UNIVERSAL_CLASS && !typeAndFlags.constructed && typeAndFlags.typeOrTagNumber == tagType;
     }
 
     @Override
@@ -419,7 +419,7 @@ public abstract class Tag implements Asn1Constants {
     /**
      * Read tag value only, i.e. it prefix is already read, when value type is
      * already read.
-     * 
+     *
      * @param buf
      *          buffer with tag data
      */
@@ -427,7 +427,7 @@ public abstract class Tag implements Asn1Constants {
 
     /**
      * Create deep copy of this tag with given suffix appended to name.
-     * 
+     *
      * @param suffix
      *          suffix to add to tag name, or empty string
      * @return deep copy of this tag
@@ -436,7 +436,7 @@ public abstract class Tag implements Asn1Constants {
 
     /**
      * Create deep copy of this tag for array or set.
-     * 
+     *
      * @param index
      *          index of element in array or set
      * @return deep copy of this tag
@@ -447,15 +447,15 @@ public abstract class Tag implements Asn1Constants {
 
     /**
      * Copy tag values from an other tag, except name.
-     * 
+     *
      * @return this
      */
     public Tag copyFrom(Tag tag) {
-        this.constructed = tag.constructed;
-        this.explicit = tag.explicit;
-        this.optional = tag.optional;
-        this.tagClass = tag.tagClass;
-        this.tagNumber = tag.tagNumber;
+        constructed = tag.constructed;
+        explicit = tag.explicit;
+        optional = tag.optional;
+        tagClass = tag.tagClass;
+        tagNumber = tag.tagNumber;
         return this;
     }
 

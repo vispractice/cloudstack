@@ -19,20 +19,17 @@ package org.apache.cloudstack.affinity.dao;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.Local;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.ControlledEntity;
-import org.apache.cloudstack.affinity.AffinityGroup;
 import org.apache.cloudstack.affinity.AffinityGroupDomainMapVO;
 import org.apache.cloudstack.affinity.AffinityGroupVO;
 
 import com.cloud.utils.db.GenericDaoBase;
+import com.cloud.utils.db.JoinBuilder.JoinType;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.db.JoinBuilder.JoinType;
 
-@Local(value = { AffinityGroupDao.class })
 public class AffinityGroupDaoImpl extends GenericDaoBase<AffinityGroupVO, Long> implements AffinityGroupDao {
     private SearchBuilder<AffinityGroupVO> AccountIdSearch;
     private SearchBuilder<AffinityGroupVO> AccountIdNameSearch;
@@ -69,8 +66,8 @@ public class AffinityGroupDaoImpl extends GenericDaoBase<AffinityGroupVO, Long> 
         DomainLevelNameSearch = createSearchBuilder();
         DomainLevelNameSearch.and("name", DomainLevelNameSearch.entity().getName(), SearchCriteria.Op.EQ);
         DomainLevelNameSearch.and("aclType", DomainLevelNameSearch.entity().getAclType(), SearchCriteria.Op.EQ);
-        DomainLevelNameSearch.join("domainMapSearch", domainMapSearch, domainMapSearch.entity().getAffinityGroupId(),
-                DomainLevelNameSearch.entity().getId(), JoinType.INNER);
+        DomainLevelNameSearch.join("domainMapSearch", domainMapSearch, domainMapSearch.entity().getAffinityGroupId(), DomainLevelNameSearch.entity().getId(),
+            JoinType.INNER);
         DomainLevelNameSearch.done();
 
         AccountIdTypeSearch = createSearchBuilder();
@@ -82,9 +79,8 @@ public class AffinityGroupDaoImpl extends GenericDaoBase<AffinityGroupVO, Long> 
         DomainLevelTypeSearch = createSearchBuilder();
         DomainLevelTypeSearch.and("type", DomainLevelTypeSearch.entity().getType(), SearchCriteria.Op.EQ);
         DomainLevelTypeSearch.and("aclType", DomainLevelTypeSearch.entity().getAclType(), SearchCriteria.Op.EQ);
-        DomainLevelTypeSearch.join("domainTypeSearch", domainTypeSearch,
-                domainTypeSearch.entity().getAffinityGroupId(),
-                DomainLevelTypeSearch.entity().getId(), JoinType.INNER);
+        DomainLevelTypeSearch.join("domainTypeSearch", domainTypeSearch, domainTypeSearch.entity().getAffinityGroupId(), DomainLevelTypeSearch.entity().getId(),
+            JoinType.INNER);
         DomainLevelTypeSearch.done();
     }
 
@@ -110,33 +106,34 @@ public class AffinityGroupDaoImpl extends GenericDaoBase<AffinityGroupVO, Long> 
         return ((AffinityGroups != null) && !AffinityGroups.isEmpty());
     }
 
-	@Override
+    @Override
     public AffinityGroupVO findByAccountAndName(Long accountId, String name) {
         SearchCriteria<AffinityGroupVO> sc = AccountIdNameSearch.create();
-		sc.setParameters("accountId", accountId);
-		sc.setParameters("name", name);
+        sc.setParameters("accountId", accountId);
+        sc.setParameters("name", name);
 
-		return findOneIncludingRemovedBy(sc);
-	}
-
-	@Override
-    public List<AffinityGroupVO> findByAccountAndNames(Long accountId, String... names) {
-        SearchCriteria<AffinityGroupVO> sc = AccountIdNamesSearch.create();
-		sc.setParameters("accountId", accountId);
-
-		sc.setParameters("groupNames", (Object [])names);
-
-		return listBy(sc);
-	}
-	@Override
-	public int removeByAccountId(long accountId) {
-        SearchCriteria<AffinityGroupVO> sc = AccountIdSearch.create();
-	    sc.setParameters("accountId", accountId);
-	    return expunge(sc);
-	}
+        return findOneIncludingRemovedBy(sc);
+    }
 
     @Override
-    public AffinityGroup findDomainLevelGroupByName(Long domainId, String affinityGroupName) {
+    public List<AffinityGroupVO> findByAccountAndNames(Long accountId, String... names) {
+        SearchCriteria<AffinityGroupVO> sc = AccountIdNamesSearch.create();
+        sc.setParameters("accountId", accountId);
+
+        sc.setParameters("groupNames", (Object[])names);
+
+        return listBy(sc);
+    }
+
+    @Override
+    public int removeByAccountId(long accountId) {
+        SearchCriteria<AffinityGroupVO> sc = AccountIdSearch.create();
+        sc.setParameters("accountId", accountId);
+        return expunge(sc);
+    }
+
+    @Override
+    public AffinityGroupVO findDomainLevelGroupByName(Long domainId, String affinityGroupName) {
         SearchCriteria<AffinityGroupVO> sc = DomainLevelNameSearch.create();
         sc.setParameters("aclType", ControlledEntity.ACLType.Domain);
         sc.setParameters("name", affinityGroupName);
@@ -145,7 +142,7 @@ public class AffinityGroupDaoImpl extends GenericDaoBase<AffinityGroupVO, Long> 
     }
 
     @Override
-    public AffinityGroup findByAccountAndType(Long accountId, String type) {
+    public AffinityGroupVO findByAccountAndType(Long accountId, String type) {
         SearchCriteria<AffinityGroupVO> sc = AccountIdTypeSearch.create();
         sc.setParameters("accountId", accountId);
         sc.setParameters("type", type);
@@ -154,7 +151,7 @@ public class AffinityGroupDaoImpl extends GenericDaoBase<AffinityGroupVO, Long> 
     }
 
     @Override
-    public AffinityGroup findDomainLevelGroupByType(Long domainId, String type) {
+    public AffinityGroupVO findDomainLevelGroupByType(Long domainId, String type) {
         SearchCriteria<AffinityGroupVO> sc = DomainLevelTypeSearch.create();
         sc.setParameters("aclType", ControlledEntity.ACLType.Domain);
         sc.setParameters("type", type);

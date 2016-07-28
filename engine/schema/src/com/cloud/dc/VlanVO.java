@@ -16,6 +16,9 @@
 // under the License.
 package com.cloud.dc;
 
+import com.cloud.utils.db.GenericDao;
+
+import java.util.Date;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -27,59 +30,63 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.apache.cloudstack.api.Identity;
-import org.apache.cloudstack.api.InternalIdentity;
-
 @Entity
-@Table(name="vlan")
+@Table(name = "vlan")
 public class VlanVO implements Vlan {
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="id")
-	Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    Long id;
 
-	@Column(name="vlan_id")
-	String vlanTag;
+    @Column(name = "vlan_id")
+    String vlanTag;
 
-	@Column(name="vlan_gateway")
-	String vlanGateway;
+    @Column(name = "vlan_gateway")
+    String vlanGateway;
 
-	@Column(name="vlan_netmask")
-	String vlanNetmask;
+    @Column(name = "vlan_netmask")
+    String vlanNetmask;
 
-	@Column(name="ip6_gateway")
-	String ip6Gateway;
+    @Column(name = "ip6_gateway")
+    String ip6Gateway;
 
-	@Column(name="ip6_cidr")
-	String ip6Cidr;
+    @Column(name = "ip6_cidr")
+    String ip6Cidr;
 
-	@Column(name="data_center_id")
-	long dataCenterId;
+    @Column(name = "data_center_id")
+    long dataCenterId;
 
-	@Column(name="description")
-	String ipRange;
+    @Column(name = "description")
+    String ipRange;
 
-	@Column(name="ip6_range")
-	String ip6Range;
-	
-    @Column(name="network_id")
+    @Column(name = "ip6_range")
+    String ip6Range;
+
+    @Column(name = "network_id")
     Long networkId;
 
-    @Column(name="physical_network_id")
+    @Column(name = "physical_network_id")
     Long physicalNetworkId;
 
-	@Column(name="vlan_type")
-	@Enumerated(EnumType.STRING)
-	VlanType vlanType;
+    @Column(name = "vlan_type")
+    @Enumerated(EnumType.STRING)
+    VlanType vlanType;
 
-    @Column(name="uuid")
+    @Column(name = "uuid")
     String uuid;
     
     @Column(name="multiline_label")
     String multilineLabel;
     
-	public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId, String ip6Gateway, String ip6Cidr, String ip6Range) {
+    @Column(name= GenericDao.REMOVED_COLUMN)
+    private Date removed;
+
+    @Column(name = GenericDao.CREATED_COLUMN)
+    private Date created;
+    
+	public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId,
+			String ip6Gateway, String ip6Cidr, String ip6Range) {
 		this.vlanType = vlanType;
 		this.vlanTag = vlanTag;
 		this.vlanGateway = vlanGateway;
@@ -116,42 +123,42 @@ public class VlanVO implements Vlan {
 
 	@Override
     public long getId() {
-		return id;
-	}
+        return id;
+    }
 
-	@Override
+    @Override
     public String getVlanTag() {
-		return vlanTag;
-	}
+        return vlanTag;
+    }
 
-	@Override
+    @Override
     public String getVlanGateway() {
-		return vlanGateway;
-	}
+        return vlanGateway;
+    }
 
-	@Override
+    @Override
     public String getVlanNetmask() {
         return vlanNetmask;
     }
 
-	@Override
+    @Override
     public long getDataCenterId() {
-		return dataCenterId;
-	}
+        return dataCenterId;
+    }
 
     public void setDataCenterId(long dcId) {
         this.dataCenterId = dcId;
     }
 
-	@Override
+    @Override
     public String getIpRange() {
-		return ipRange;
-	}
+        return ipRange;
+    }
 
-	@Override
+    @Override
     public VlanType getVlanType() {
-		return vlanType;
-	}
+        return vlanType;
+    }
 
     @Override
     public Long getNetworkId() {
@@ -164,12 +171,23 @@ public class VlanVO implements Vlan {
 
     @Override
     public String getUuid() {
-    	return this.uuid;
+        return this.uuid;
     }
 
     public void setUuid(String uuid) {
-    	this.uuid = uuid;
+        this.uuid = uuid;
     }
+
+    @Override
+    public Date getRemoved() {
+        return removed;
+    }
+
+    @Override
+    public Date getCreated() {
+        return created;
+    }
+
     @Override
     public Long getPhysicalNetworkId() {
         return physicalNetworkId;
@@ -180,42 +198,58 @@ public class VlanVO implements Vlan {
     }
 
     transient String toString;
+
     @Override
     public String toString() {
         if (toString == null) {
-            toString = new StringBuilder("Vlan[").append(vlanTag).append("|").append(vlanGateway).append("|").append(vlanNetmask).
-                    append("|").append(ip6Gateway).append("|").append(ip6Cidr).append("|").append(ipRange).append("|").
-                    append("|").append(ip6Range).append(networkId).append("]").toString();
+            toString =
+                new StringBuilder("Vlan[").append(vlanTag)
+                    .append("|")
+                    .append(vlanGateway)
+                    .append("|")
+                    .append(vlanNetmask)
+                    .append("|")
+                    .append(ip6Gateway)
+                    .append("|")
+                    .append(ip6Cidr)
+                    .append("|")
+                    .append(ipRange)
+                    .append("|")
+                    .append("|")
+                    .append(ip6Range)
+                    .append(networkId)
+                    .append("]")
+                    .toString();
         }
         return toString;
     }
-    
-    @Override
-	public String getIp6Gateway() {
-		return ip6Gateway;
-	}
-
-	public void setIp6Gateway(String ip6Gateway) {
-		this.ip6Gateway = ip6Gateway;
-	}
 
     @Override
-	public String getIp6Cidr() {
-		return ip6Cidr;
-	}
+    public String getIp6Gateway() {
+        return ip6Gateway;
+    }
 
-	public void setIp6Cidr(String ip6Cidr) {
-		this.ip6Cidr = ip6Cidr;
-	}
+    public void setIp6Gateway(String ip6Gateway) {
+        this.ip6Gateway = ip6Gateway;
+    }
 
-	@Override
-	public String getIp6Range() {
-		return ip6Range;
-	}
+    @Override
+    public String getIp6Cidr() {
+        return ip6Cidr;
+    }
 
-	public void setIp6Range(String ip6Range) {
-		this.ip6Range = ip6Range;
-	}
+    public void setIp6Cidr(String ip6Cidr) {
+        this.ip6Cidr = ip6Cidr;
+    }
+
+    @Override
+    public String getIp6Range() {
+        return ip6Range;
+    }
+
+    public void setIp6Range(String ip6Range) {
+        this.ip6Range = ip6Range;
+    }
 
     public void setIpRange(String ipRange) {
         this.ip6Range = ipRange;

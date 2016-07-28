@@ -24,24 +24,24 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import com.cloud.event.dao.UsageEventDao;
-import com.cloud.event.dao.UsageEventDetailsDao;
-import com.cloud.vm.dao.UserVmDetailsDao;
 import junit.framework.TestCase;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
+import org.apache.cloudstack.resourcedetail.dao.UserIpAddressDetailsDao;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.cloud.configuration.ConfigurationManager;
+import com.cloud.event.dao.UsageEventDao;
+import com.cloud.event.dao.UsageEventDetailsDao;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.network.Network;
 import com.cloud.network.Network.Provider;
@@ -57,11 +57,11 @@ import com.cloud.user.AccountManager;
 import com.cloud.user.AccountVO;
 import com.cloud.user.UserVO;
 import com.cloud.utils.component.ComponentContext;
+import com.cloud.vm.dao.UserVmDetailsDao;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations="classpath:/createNetworkOffering.xml")
-
-public class CreateNetworkOfferingTest extends TestCase{
+@ContextConfiguration(locations = "classpath:/createNetworkOffering.xml")
+public class CreateNetworkOfferingTest extends TestCase {
     
 //    @Inject
 //    ConfigurationManager configMgr;
@@ -71,13 +71,13 @@ public class CreateNetworkOfferingTest extends TestCase{
     
     @Inject
     NetworkOfferingDao offDao;
-    
+
     @Inject
     NetworkOfferingServiceMapDao mapDao;
-    
+
     @Inject
     AccountManager accountMgr;
-    
+
     @Inject
     VpcManager vpcMgr;
 
@@ -89,6 +89,9 @@ public class CreateNetworkOfferingTest extends TestCase{
 
     @Inject
     UsageEventDetailsDao usageEventDetailsDao;
+
+    @Inject
+    UserIpAddressDetailsDao userIpAddressDetailsDao;
 
     @Override
     @Before
@@ -120,8 +123,8 @@ public class CreateNetworkOfferingTest extends TestCase{
 //                null, false, null, true, false, null, false, null, true);
 //        assertNotNull("Shared network offering with specifyVlan=true failed to create ", off);
     }
-    
-    @Test
+
+    @Test(expected=InvalidParameterValueException.class)
     public void createSharedNtwkOffWithNoVlan() {
 //        try {
 //            NetworkOfferingVO off = configMgr.createNetworkOffering("shared", "shared", TrafficType.Guest, null, false,
@@ -131,7 +134,7 @@ public class CreateNetworkOfferingTest extends TestCase{
 //        } catch (InvalidParameterValueException ex) {
 //        }
     }
-    
+
     @Test
     public void createSharedNtwkOffWithSpecifyIpRanges() {
 //        NetworkOfferingVO off = configMgr.createNetworkOffering("shared", "shared", TrafficType.Guest, null, true,
@@ -140,8 +143,8 @@ public class CreateNetworkOfferingTest extends TestCase{
 //        
 //        assertNotNull("Shared network offering with specifyIpRanges=true failed to create ", off);
     }
-    
-    @Test
+
+    @Test(expected=InvalidParameterValueException.class)
     public void createSharedNtwkOffWithoutSpecifyIpRanges() {
 //        try {
 //            NetworkOfferingVO off = configMgr.createNetworkOffering("shared", "shared", TrafficType.Guest, null, true,
@@ -165,7 +168,7 @@ public class CreateNetworkOfferingTest extends TestCase{
 //        
 //        assertNotNull("Isolated network offering with specifyIpRanges=false failed to create ", off);
     }
-    
+
     @Test
     public void createIsolatedNtwkOffWithVlan() {
 //        Map<Service, Set<Provider>> serviceProviderMap = new HashMap<Network.Service, Set<Network.Provider>>();
@@ -177,8 +180,8 @@ public class CreateNetworkOfferingTest extends TestCase{
 //                null, false, null, false, false, null, false, null, true);
 //        assertNotNull("Isolated network offering with specifyVlan=true wasn't created", off);
     }
-    
-    @Test
+
+    @Test(expected=InvalidParameterValueException.class)
     public void createIsolatedNtwkOffWithSpecifyIpRangesAndSourceNat() {
 //        try {
 //            Map<Service, Set<Provider>> serviceProviderMap = new HashMap<Network.Service, Set<Network.Provider>>();
@@ -192,7 +195,7 @@ public class CreateNetworkOfferingTest extends TestCase{
 //        } catch (InvalidParameterValueException ex) {
 //        }
     }
-    
+
     @Test
     public void createIsolatedNtwkOffWithSpecifyIpRangesAndNoSourceNat() {
 //        Map<Service, Set<Provider>> serviceProviderMap = new HashMap<Network.Service, Set<Network.Provider>>();
@@ -201,7 +204,6 @@ public class CreateNetworkOfferingTest extends TestCase{
 //                Availability.Optional, 200, serviceProviderMap, false, Network.GuestType.Isolated, false,
 //                null, false, null, true, false, null, false, null, true);
 //        assertNotNull("Isolated network offering with specifyIpRanges=true and with no sourceNatService, failed to create", off);
-        
     }
 
     @Test

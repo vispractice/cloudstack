@@ -18,7 +18,6 @@ package com.cloud.network.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -29,9 +28,7 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
-@Local(value=CiscoAsa1000vDao.class)
-public class CiscoAsa1000vDaoImpl extends GenericDaoBase<CiscoAsa1000vDeviceVO, Long>
-        implements CiscoAsa1000vDao {
+public class CiscoAsa1000vDaoImpl extends GenericDaoBase<CiscoAsa1000vDeviceVO, Long> implements CiscoAsa1000vDao {
 
     protected final SearchBuilder<CiscoAsa1000vDeviceVO> physicalNetworkIdSearch;
     protected final SearchBuilder<CiscoAsa1000vDeviceVO> managementIpSearch;

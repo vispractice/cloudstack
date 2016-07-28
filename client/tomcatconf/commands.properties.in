@@ -18,6 +18,19 @@
 ### bitmap of permissions at the end of each classname, 1 = ADMIN, 2 = RESOURCE_DOMAIN_ADMIN, 4 = DOMAIN_ADMIN, 8 = USER
 ### Please standardize naming conventions to camel-case (even for acronyms).
 
+### CloudStack authentication commands
+login=15
+logout=15
+
+### SAML SSO/SLO commands
+samlSso=15
+samlSlo=15
+getSPMetadata=15
+listIdps=15
+authorizeSamlSso=7
+listSamlAuthorization=7
+listAndSwitchSamlAccount=15
+
 ### Account commands
 createAccount=7
 deleteAccount=7
@@ -32,7 +45,7 @@ markDefaultZoneForAccount=1
 createUser=7
 deleteUser=7
 updateUser=15
-listUsers=7
+listUsers=15
 lockUser=7
 disableUser=7
 enableUser=7
@@ -70,8 +83,8 @@ scaleVirtualMachine=15
 assignVirtualMachine=7
 migrateVirtualMachine=1
 migrateVirtualMachineWithVolume=1
-recoverVirtualMachine=7
-expungeVirtualMachine=7
+recoverVirtualMachine=15
+expungeVirtualMachine=15
 getVirtualMachineUserData=15
 
 #### snapshot commands
@@ -79,6 +92,7 @@ createSnapshot=15
 listSnapshots=15
 deleteSnapshot=15
 createSnapshotPolicy=15
+updateSnapshotPolicy=15
 deleteSnapshotPolicies=15
 listSnapshotPolicies=15
 revertSnapshot=15
@@ -110,17 +124,26 @@ extractIso=15
 #### guest OS commands
 listOsTypes=15
 listOsCategories=15
+addGuestOs=1
+updateGuestOs=1
+removeGuestOs=1
+
+#### guest OS mapping commands
+listGuestOsMapping=1
+addGuestOsMapping=1
+updateGuestOsMapping=1
+removeGuestOsMapping=1
 
 #### service offering commands
-createServiceOffering=1
-deleteServiceOffering=1
-updateServiceOffering=1
+createServiceOffering=7
+deleteServiceOffering=7
+updateServiceOffering=7
 listServiceOfferings=15
 
 #### disk offering commands
-createDiskOffering=1
-updateDiskOffering=1
-deleteDiskOffering=1
+createDiskOffering=7
+updateDiskOffering=7
+deleteDiskOffering=7
 listDiskOfferings=15
 
 #### vlan commands
@@ -137,6 +160,7 @@ listDedicatedGuestVlanRanges=1
 associateIpAddress=15
 disassociateIpAddress=15
 listPublicIpAddresses=15
+updateIpAddress=15
 
 #### firewall commands
 listPortForwardingRules=15
@@ -158,11 +182,13 @@ deleteLoadBalancerRule=15
 removeFromLoadBalancerRule=15
 assignToLoadBalancerRule=15
 createLBStickinessPolicy=15
+updateLBStickinessPolicy=15
 deleteLBStickinessPolicy=15
 listLoadBalancerRules=15
 listLBStickinessPolicies=15
 listLBHealthCheckPolicies=15
 createLBHealthCheckPolicy=15
+updateLBHealthCheckPolicy=15
 deleteLBHealthCheckPolicy=15
 listLoadBalancerRuleInstances=15
 updateLoadBalancerRule=15
@@ -257,12 +283,9 @@ listCapacity=3
 addSwift=1
 listSwifts=1
 
-#### s3 commands
-addS3=1
-listS3s=1
-
 #### image store commands
 addImageStore=1
+addImageStoreS3=1
 listImageStores=1
 deleteImageStore=1
 createSecondaryStagingStore=1
@@ -281,6 +304,7 @@ deleteHost=3
 prepareHostForMaintenance=1
 cancelHostMaintenance=1
 listHosts=3
+listHostTags=7
 findHostsForMigration=1
 addSecondaryStorage=1
 updateHostPassword=1
@@ -317,6 +341,7 @@ listAsyncJobs=15
 #### storage pools commands
 listStoragePools=3
 listStorageProviders=3
+listStorageTags=7
 createStoragePool=1
 updateStoragePool=1
 deleteStoragePool=1
@@ -350,6 +375,8 @@ listHypervisors=15
 createRemoteAccessVpn=15
 deleteRemoteAccessVpn=15
 listRemoteAccessVpns=15
+updateRemoteAccessVpn=15
+
 
 addVpnUser=15
 removeVpnUser=15
@@ -376,6 +403,7 @@ updateDefaultNicForVirtualMachine=15
 ####
 addIpToNic=15
 removeIpFromNic=15
+updateVmNicIp=15
 listNics=15
 
 #### SSH key pair commands
@@ -402,11 +430,13 @@ deleteProjectInvitation=15
 createFirewallRule=15
 deleteFirewallRule=15
 listFirewallRules=15
+updateFirewallRule=15
 
 ####
 createEgressFirewallRule=15
 deleteEgressFirewallRule=15
 listEgressFirewallRules=15
+updateEgressFirewallRule=15
 
 #### hypervisor capabilities commands
 updateHypervisorCapabilities=1
@@ -470,6 +500,7 @@ createNetworkACLList=15
 deleteNetworkACLList=15
 replaceNetworkACLList=15
 listNetworkACLLists=15
+updateNetworkACLList=15
 
 
 #### Static route commands
@@ -499,16 +530,24 @@ resetVpnConnection=15
 listVpnCustomerGateways=15
 listVpnGateways=15
 listVpnConnections=15
+updateVpnConnection=15
+updateVpnGateway=15
 
 #### router commands
 createVirtualRouterElement=7
 configureVirtualRouterElement=7
 listVirtualRouterElements=7
 
+#### ovs commands
+createOvsElement=7
+configureOvsElement=7
+listOvsElements=7
+
 #### usage commands
 generateUsageRecords=1
 listUsageRecords=7
 listUsageTypes=1
+removeRawUsageRecords=1
 
 #### traffic monitor commands
 addTrafficMonitor=1
@@ -583,20 +622,37 @@ listNiciraNvpDeviceNetworks=1
 # Not implemented (yet)
 #configureNiciraNvpDevice=1
 
-#### bigswitch vns commands
+#### brocade vcs commands
 
-addBigSwitchVnsDevice=1
-deleteBigSwitchVnsDevice=1
-listBigSwitchVnsDevices=1
+addBrocadeVcsDevice=1
+deleteBrocadeVcsDevice=1
+listBrocadeVcsDevices=1
+listBrocadeVcsDeviceNetworks=1
+
+#### bigswitch bcf commands
+
+addBigSwitchBcfDevice=1
+deleteBigSwitchBcfDevice=1
+listBigSwitchBcfDevices=1
 
 #### stratosphere ssp commands
 
 addStratosphereSsp=1
 deleteStratoshereSsp=1
 
+#### nuage vsp commands
+
+addNuageVspDevice=1
+updateNuageVspDevice=1
+deleteNuageVspDevice=1
+listNuageVspDevices=1
+issueNuageVspResourceRequest=15
+
 #### host simulator commands
 
 configureSimulator=1
+querySimulatorMock=1
+cleanupSimulatorMock=1
 
 #### api discovery commands
 
@@ -606,6 +662,12 @@ listApis=15
 
 getApiLimit=15
 resetApiLimit=1
+
+#### API SolidFire Service Command
+getSolidFireAccountId=15
+getSolidFireVolumeSize=15
+getSolidFireVolumeAccessGroupId=15
+getSolidFireVolumeIscsiName=15
 
 #### Region commands
 addRegion=1
@@ -634,23 +696,23 @@ addBaremetalPxePingServer=1
 addBaremetalDhcp=1
 listBaremetalDhcp=1
 listBaremetalPxeServers=1
+addBaremetalRct=1
+deleteBaremetalRct=1
+listBaremetalRct=1
 
 #### UCS commands
 addUcsManager=1
 listUcsManagers=1
 listUcsProfiles=1
 listUcsBlades=1
-listUcsTemplates=1
 associateUcsProfileToBlade=1
-deleteUcsManager=1
-disassociateUcsProfileFromBlade=1
-refreshUcsBlades=1
-instantiateUcsTemplateAndAssocaciateToBlade=1
+removedeleteUcsManager=1
 
 #### New Load Balancer commands
 createLoadBalancer=15
 listLoadBalancers=15
 deleteLoadBalancer=15
+updateLoadBalancer=15
 
 #Internal Load Balancer Element commands
 configureInternalLoadBalancerElement=7
@@ -709,6 +771,8 @@ deleteLdapConfiguration=3
 listLdapUsers=3
 ldapCreateAccount=3
 importLdapUsers=3
+linkDomainToLdap=3
+
 
 #### juniper-contrail commands
 createServiceInstance=1
@@ -731,3 +795,27 @@ RemoveFromBandwidthRuleCmd=15
 
 #### multiline commands
 listMultiline=1
+
+### OpenDaylight plugin commands
+addOpenDaylightController=1
+deleteOpenDaylightController=1
+listOpenDaylightControllers=1
+
+### GloboDNS commands
+addGloboDnsHost=1
+
+### volume/template post upload
+getUploadParamsForVolume=15
+getUploadParamsForTemplate=15
+
+### Quota Service
+quotaStatement=15
+quotaBalance=15
+quotaSummary=15
+quotaUpdate=1
+quotaTariffList=15
+quotaTariffUpdate=1
+quotaCredits=1
+quotaEmailTemplateList=1
+quotaEmailTemplateUpdate=1
+quotaIsEnabled=15

@@ -11,7 +11,7 @@
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the 
+// KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
 package com.cloud.network.element;
@@ -24,25 +24,22 @@ import com.cloud.api.commands.DeletePaloAltoFirewallCmd;
 import com.cloud.api.commands.ListPaloAltoFirewallNetworksCmd;
 import com.cloud.api.commands.ListPaloAltoFirewallsCmd;
 import com.cloud.api.response.PaloAltoFirewallResponse;
-import com.cloud.host.Host;
 import com.cloud.network.Network;
 import com.cloud.network.dao.ExternalFirewallDeviceVO;
-
-import org.apache.cloudstack.api.response.ExternalFirewallResponse;
 import com.cloud.utils.component.PluggableService;
 
-public interface PaloAltoFirewallElementService  extends PluggableService {
+public interface PaloAltoFirewallElementService extends PluggableService {
 
     /**
      * adds a Palo Alto firewall device in to a physical network
-     * @param AddPaloAltoFirewallCmd 
+     * @param AddPaloAltoFirewallCmd
      * @return ExternalFirewallDeviceVO object for the firewall added
      */
     public ExternalFirewallDeviceVO addPaloAltoFirewall(AddPaloAltoFirewallCmd cmd);
 
     /**
      * removes Palo Alto firewall device from a physical network
-     * @param DeletePaloAltoFirewallCmd 
+     * @param DeletePaloAltoFirewallCmd
      * @return true if firewall device successfully deleted
      */
     public boolean deletePaloAltoFirewall(DeletePaloAltoFirewallCmd cmd);
@@ -69,5 +66,4 @@ public interface PaloAltoFirewallElementService  extends PluggableService {
     public List<? extends Network> listNetworks(ListPaloAltoFirewallNetworksCmd cmd);
 
     public PaloAltoFirewallResponse createPaloAltoFirewallResponse(ExternalFirewallDeviceVO fwDeviceVO);
-    
 }

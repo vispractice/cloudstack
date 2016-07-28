@@ -22,15 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
 import com.cloud.configuration.Config;
-import com.cloud.deploy.DeploymentPlanner.PlannerResourceUsage;
-import com.cloud.deploy.dao.PlannerHostReservationDao;
 import com.cloud.exception.InsufficientServerCapacityException;
 import com.cloud.host.HostVO;
 import com.cloud.resource.ResourceManager;
@@ -40,12 +37,9 @@ import com.cloud.service.dao.ServiceOfferingDetailsDao;
 import com.cloud.user.Account;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.NumbersUtil;
-import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VMInstanceVO;
-import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;
 
-@Local(value=DeploymentPlanner.class)
 public class ImplicitDedicationPlanner extends FirstFitPlanner implements DeploymentClusterPlanner {
 
     private static final Logger s_logger = Logger.getLogger(ImplicitDedicationPlanner.class);
@@ -62,13 +56,12 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
         super.configure(name, params);
-        capacityReleaseInterval = NumbersUtil.parseInt(_configDao.getValue(Config.CapacitySkipcountingHours.key()), 3600);
+        capacityReleaseInterval = NumbersUtil.parseInt(configDao.getValue(Config.CapacitySkipcountingHours.key()), 3600);
         return true;
     }
 
     @Override
-    public List<Long> orderClusters(VirtualMachineProfile vmProfile,
-            DeploymentPlan plan, ExcludeList avoid) throws InsufficientServerCapacityException {
+    public List<Long> orderClusters(VirtualMachineProfile vmProfile, DeploymentPlan plan, ExcludeList avoid) throws InsufficientServerCapacityException {
         List<Long> clusterList = super.orderClusters(vmProfile, plan, avoid);
         Set<Long> hostsToAvoid = avoid.getHostsToAvoid();
         Account account = vmProfile.getOwner();
@@ -116,8 +109,7 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
         // Hosts running vms of other accounts created by ab implicit planner in strict mode should always be avoided.
         avoid.addHostList(hostRunningStrictImplicitVmsOfOtherAccounts);
 
-        if (!hostRunningVmsOfAccount.isEmpty() && (hostsToAvoid == null ||
-                !hostsToAvoid.containsAll(hostRunningVmsOfAccount))) {
+        if (!hostRunningVmsOfAccount.isEmpty() && (hostsToAvoid == null || !hostsToAvoid.containsAll(hostRunningVmsOfAccount))) {
             // Check if any of hosts that are running implicit dedicated vms are available (not in avoid list).
             // If so, we'll try and use these hosts.
             avoid.addHostList(emptyHosts);
@@ -143,13 +135,12 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
     }
 
     private List<VMInstanceVO> getVmsOnHost(long hostId) {
-        List<VMInstanceVO> vms =  _vmInstanceDao.listUpByHostId(hostId);
-        List<VMInstanceVO> vmsByLastHostId = _vmInstanceDao.listByLastHostId(hostId);
+        List<VMInstanceVO> vms = vmInstanceDao.listUpByHostId(hostId);
+        List<VMInstanceVO> vmsByLastHostId = vmInstanceDao.listByLastHostId(hostId);
         if (vmsByLastHostId.size() > 0) {
             // check if any VMs are within skip.counting.hours, if yes we have to consider the host.
             for (VMInstanceVO stoppedVM : vmsByLastHostId) {
-                long secondsSinceLastUpdate = (DateUtil.currentGMTTime().getTime() - stoppedVM.getUpdateTime()
-                        .getTime()) / 1000;
+                long secondsSinceLastUpdate = (DateUtil.currentGMTTime().getTime() - stoppedVM.getUpdateTime().getTime()) / 1000;
                 if (secondsSinceLastUpdate < capacityReleaseInterval) {
                     vms.add(stoppedVM);
                 }
@@ -166,17 +157,16 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
 
         for (VMInstanceVO vm : allVmsOnHost) {
             if (vm.getAccountId() != accountId) {
-                s_logger.info("Host " + vm.getHostId() + " found to be unsuitable for implicit dedication as it is " +
-                        "running instances of another account");
+                s_logger.info("Host " + vm.getHostId() + " found to be unsuitable for implicit dedication as it is " + "running instances of another account");
                 suitable = false;
                 break;
             } else {
                 if (!isImplicitPlannerUsedByOffering(vm.getServiceOfferingId())) {
                     s_logger.info("Host " + vm.getHostId() + " found to be unsuitable for implicit dedication as it " +
-                            "is running instances of this account which haven't been created using implicit dedication.");
+                        "is running instances of this account which haven't been created using implicit dedication.");
                     suitable = false;
                     break;
-            }
+                }
             }
         }
         return suitable;
@@ -188,13 +178,11 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
             return false;
         for (VMInstanceVO vm : allVmsOnHost) {
             if (!isImplicitPlannerUsedByOffering(vm.getServiceOfferingId())) {
-                s_logger.info("Host " + vm.getHostId() + " found to be running a vm created by a planner other" +
-                        " than implicit.");
+                s_logger.info("Host " + vm.getHostId() + " found to be running a vm created by a planner other" + " than implicit.");
                 createdByImplicitStrict = false;
                 break;
             } else if (isServiceOfferingUsingPlannerInPreferredMode(vm.getServiceOfferingId())) {
-                s_logger.info("Host " + vm.getHostId() + " found to be running a vm created by an implicit planner" +
-                        " in preferred mode.");
+                s_logger.info("Host " + vm.getHostId() + " found to be running a vm created by an implicit planner" + " in preferred mode.");
                 createdByImplicitStrict = false;
                 break;
             }
@@ -210,7 +198,7 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
         } else {
             String plannerName = offering.getDeploymentPlanner();
             if (plannerName == null) {
-                plannerName = _globalDeploymentPlanner;
+                plannerName = globalDeploymentPlanner;
             }
 
             if (plannerName != null && this.getName().equals(plannerName)) {
@@ -251,16 +239,14 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
     }
 
     @Override
-    public PlannerResourceUsage getResourceUsage(VirtualMachineProfile vmProfile,
-            DeploymentPlan plan, ExcludeList avoid) throws InsufficientServerCapacityException {
+    public PlannerResourceUsage getResourceUsage(VirtualMachineProfile vmProfile, DeploymentPlan plan, ExcludeList avoid) throws InsufficientServerCapacityException {
         // Check if strict or preferred mode should be used.
         boolean preferred = isServiceOfferingUsingPlannerInPreferredMode(vmProfile.getServiceOfferingId());
 
         // If service offering in strict mode return resource usage as Dedicated
         if (!preferred) {
             return PlannerResourceUsage.Dedicated;
-        }
-        else {
+        } else {
             // service offering is in implicit mode.
             // find is it possible to deploy in dedicated mode,
             // if its possible return dedicated else return shared.
@@ -310,8 +296,7 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
             // planner in strict mode should always be avoided.
             avoid.addHostList(hostRunningStrictImplicitVmsOfOtherAccounts);
 
-            if (!hostRunningVmsOfAccount.isEmpty()
-                    && (hostsToAvoid == null || !hostsToAvoid.containsAll(hostRunningVmsOfAccount))) {
+            if (!hostRunningVmsOfAccount.isEmpty() && (hostsToAvoid == null || !hostsToAvoid.containsAll(hostRunningVmsOfAccount))) {
                 // Check if any of hosts that are running implicit dedicated vms are available (not in avoid list).
                 // If so, we'll try and use these hosts. We can deploy in Dedicated mode
                 return PlannerResourceUsage.Dedicated;
@@ -320,8 +305,6 @@ public class ImplicitDedicationPlanner extends FirstFitPlanner implements Deploy
                 // Empty hosts can contain hosts which are not having user vms but system vms are running.
                 // But the host where system vms are running is marked as shared and still be part of empty Hosts.
                 // The scenario will fail where actual Empty hosts and uservms not running host.
-                return PlannerResourceUsage.Dedicated;
-            } else if (!preferred) {
                 return PlannerResourceUsage.Dedicated;
             } else {
                 if (!allOtherHosts.isEmpty() && (hostsToAvoid == null || !hostsToAvoid.containsAll(allOtherHosts))) {

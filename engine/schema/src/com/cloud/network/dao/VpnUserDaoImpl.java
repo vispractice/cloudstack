@@ -18,7 +18,6 @@ package com.cloud.network.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -31,24 +30,22 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Func;
 
 @Component
-@Local(value={VpnUserDao.class})
 public class VpnUserDaoImpl extends GenericDaoBase<VpnUserVO, Long> implements VpnUserDao {
     private final SearchBuilder<VpnUserVO> AccountSearch;
     private final SearchBuilder<VpnUserVO> AccountNameSearch;
     private final GenericSearchBuilder<VpnUserVO, Long> VpnUserCount;
-
 
     protected VpnUserDaoImpl() {
 
         AccountSearch = createSearchBuilder();
         AccountSearch.and("accountId", AccountSearch.entity().getAccountId(), SearchCriteria.Op.EQ);
         AccountSearch.done();
-        
+
         AccountNameSearch = createSearchBuilder();
         AccountNameSearch.and("accountId", AccountNameSearch.entity().getAccountId(), SearchCriteria.Op.EQ);
         AccountNameSearch.and("username", AccountNameSearch.entity().getUsername(), SearchCriteria.Op.EQ);
         AccountNameSearch.done();
-        
+
         VpnUserCount = createSearchBuilder(Long.class);
         VpnUserCount.and("accountId", VpnUserCount.entity().getAccountId(), SearchCriteria.Op.EQ);
         VpnUserCount.and("state", VpnUserCount.entity().getState(), SearchCriteria.Op.NEQ);
@@ -63,25 +60,25 @@ public class VpnUserDaoImpl extends GenericDaoBase<VpnUserVO, Long> implements V
         return listBy(sc);
     }
 
-	@Override
-	public VpnUserVO findByAccountAndUsername(Long accountId, String userName) {
-		SearchCriteria<VpnUserVO> sc = AccountNameSearch.create();
+    @Override
+    public VpnUserVO findByAccountAndUsername(Long accountId, String userName) {
+        SearchCriteria<VpnUserVO> sc = AccountNameSearch.create();
         sc.setParameters("accountId", accountId);
         sc.setParameters("username", userName);
 
         return findOneBy(sc);
-	}
+    }
 
-	@Override
-	public long getVpnUserCount(Long accountId) {
-		SearchCriteria<Long> sc = VpnUserCount.create();
-		sc.setParameters("accountId", accountId);
-		sc.setParameters("state", State.Revoke);
-		List<Long> rs = customSearch(sc, null);
-		if (rs.size() == 0) {
+    @Override
+    public long getVpnUserCount(Long accountId) {
+        SearchCriteria<Long> sc = VpnUserCount.create();
+        sc.setParameters("accountId", accountId);
+        sc.setParameters("state", State.Revoke);
+        List<Long> rs = customSearch(sc, null);
+        if (rs.size() == 0) {
             return 0;
         }
-        
+
         return rs.get(0);
-	}
+    }
 }

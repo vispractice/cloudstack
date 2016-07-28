@@ -18,103 +18,103 @@ package com.cloud.servlet;
 
 // To maintain independency of console proxy project, we duplicate this class from console proxy project
 public class ConsoleProxyClientParam {
-	private String clientHostAddress;
-	private int clientHostPort;
-	private String clientHostPassword;
-	private String clientTag;
-	private String ticket;
-	private String locale;
-	private String clientTunnelUrl;
-	private String clientTunnelSession;
-	
+    private String clientHostAddress;
+    private int clientHostPort;
+    private String clientHostPassword;
+    private String clientTag;
+    private String ticket;
+    private String locale;
+    private String clientTunnelUrl;
+    private String clientTunnelSession;
+
     private String hypervHost;
 
-	private String ajaxSessionId;
+    private String ajaxSessionId;
     private String username;
     private String password;
-	
-	public ConsoleProxyClientParam() {
-		clientHostPort = 0;
-	}
 
-	public String getClientHostAddress() {
-		return clientHostAddress;
-	}
+    public ConsoleProxyClientParam() {
+        clientHostPort = 0;
+    }
 
-	public void setClientHostAddress(String clientHostAddress) {
-		this.clientHostAddress = clientHostAddress;
-	}
+    public String getClientHostAddress() {
+        return clientHostAddress;
+    }
 
-	public int getClientHostPort() {
-		return clientHostPort;
-	}
+    public void setClientHostAddress(String clientHostAddress) {
+        this.clientHostAddress = clientHostAddress;
+    }
 
-	public void setClientHostPort(int clientHostPort) {
-		this.clientHostPort = clientHostPort;
-	}
+    public int getClientHostPort() {
+        return clientHostPort;
+    }
 
-	public String getClientHostPassword() {
-		return clientHostPassword;
-	}
+    public void setClientHostPort(int clientHostPort) {
+        this.clientHostPort = clientHostPort;
+    }
 
-	public void setClientHostPassword(String clientHostPassword) {
-		this.clientHostPassword = clientHostPassword;
-	}
+    public String getClientHostPassword() {
+        return clientHostPassword;
+    }
 
-	public String getClientTag() {
-		return clientTag;
-	}
+    public void setClientHostPassword(String clientHostPassword) {
+        this.clientHostPassword = clientHostPassword;
+    }
 
-	public void setClientTag(String clientTag) {
-		this.clientTag = clientTag;
-	}
+    public String getClientTag() {
+        return clientTag;
+    }
 
-	public String getTicket() {
-		return ticket;
-	}
+    public void setClientTag(String clientTag) {
+        this.clientTag = clientTag;
+    }
 
-	public void setTicket(String ticket) {
-		this.ticket = ticket;
-	}
-	
-	public String getClientTunnelUrl() {
-		return clientTunnelUrl;
-	}
+    public String getTicket() {
+        return ticket;
+    }
 
-	public void setClientTunnelUrl(String clientTunnelUrl) {
-		this.clientTunnelUrl = clientTunnelUrl;
-	}
+    public void setTicket(String ticket) {
+        this.ticket = ticket;
+    }
 
-	public String getClientTunnelSession() {
-		return clientTunnelSession;
-	}
+    public String getClientTunnelUrl() {
+        return clientTunnelUrl;
+    }
 
-	public void setClientTunnelSession(String clientTunnelSession) {
-		this.clientTunnelSession = clientTunnelSession;
-	}
-	
-	public String getAjaxSessionId() {
-		return ajaxSessionId;
-	}
-	
-	public void setAjaxSessionId(String ajaxSessionId) {
-		this.ajaxSessionId = ajaxSessionId;
-	}
+    public void setClientTunnelUrl(String clientTunnelUrl) {
+        this.clientTunnelUrl = clientTunnelUrl;
+    }
 
-	public String getLocale() {
-		return locale;
-	}
+    public String getClientTunnelSession() {
+        return clientTunnelSession;
+    }
 
-	public void setLocale(String locale) {
-		this.locale = locale;
-	}
+    public void setClientTunnelSession(String clientTunnelSession) {
+        this.clientTunnelSession = clientTunnelSession;
+    }
 
-	public String getClientMapKey() {
-		if(clientTag != null && !clientTag.isEmpty())
-			return clientTag;
-		
-		return clientHostAddress + ":" + clientHostPort;
-	}
+    public String getAjaxSessionId() {
+        return ajaxSessionId;
+    }
+
+    public void setAjaxSessionId(String ajaxSessionId) {
+        this.ajaxSessionId = ajaxSessionId;
+    }
+
+    public String getLocale() {
+        return locale;
+    }
+
+    public void setLocale(String locale) {
+        this.locale = locale;
+    }
+
+    public String getClientMapKey() {
+        if (clientTag != null && !clientTag.isEmpty())
+            return clientTag;
+
+        return clientHostAddress + ":" + clientHostPort;
+    }
 
     public void setHypervHost(String host) {
         hypervHost = host;

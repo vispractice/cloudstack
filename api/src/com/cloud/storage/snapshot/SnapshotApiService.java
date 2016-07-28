@@ -24,12 +24,12 @@ import org.apache.cloudstack.api.command.user.snapshot.ListSnapshotPoliciesCmd;
 import org.apache.cloudstack.api.command.user.snapshot.ListSnapshotsCmd;
 
 import com.cloud.api.commands.ListRecurringSnapshotScheduleCmd;
-import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.storage.Snapshot;
 import com.cloud.storage.Volume;
 import com.cloud.user.Account;
 import com.cloud.utils.Pair;
+import org.apache.cloudstack.api.command.user.snapshot.UpdateSnapshotPolicyCmd;
 
 public interface SnapshotApiService {
 
@@ -39,7 +39,6 @@ public interface SnapshotApiService {
      * @param cmd
      *            the command containing the search criteria (order by, limit, etc.)
      * @return list of snapshots
-     * @throws PermissionDeniedException
      */
     Pair<List<? extends Snapshot>, Integer> listSnapshots(ListSnapshotsCmd cmd);
 
@@ -87,7 +86,7 @@ public interface SnapshotApiService {
 
     boolean deleteSnapshotPolicies(DeleteSnapshotPoliciesCmd cmd);
 
-    Snapshot allocSnapshot(Long volumeId, Long policyId) throws ResourceAllocationException;
+    Snapshot allocSnapshot(Long volumeId, Long policyId, String snapshotName) throws ResourceAllocationException;
 
     /**
      * Create a snapshot of a volume
@@ -107,5 +106,7 @@ public interface SnapshotApiService {
      */
     Long getHostIdForSnapshotOperation(Volume vol);
 
-    boolean revertSnapshot(Long snapshotId);
+    Snapshot revertSnapshot(Long snapshotId);
+
+    SnapshotPolicy updateSnapshotPolicy(UpdateSnapshotPolicyCmd updateSnapshotPolicyCmd);
 }

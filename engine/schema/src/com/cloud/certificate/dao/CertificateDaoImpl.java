@@ -16,10 +16,6 @@
 // under the License.
 package com.cloud.certificate.dao;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-
-import javax.ejb.Local;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -29,32 +25,25 @@ import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
 
 @Component
-@Local(value={CertificateDao.class}) @DB
-public class CertificateDaoImpl extends GenericDaoBase<CertificateVO, Long>  implements CertificateDao {
-	
+@DB
+public class CertificateDaoImpl extends GenericDaoBase<CertificateVO, Long> implements CertificateDao {
+
     private static final Logger s_logger = Logger.getLogger(CertificateDaoImpl.class);
-    
-    public CertificateDaoImpl(){
-    	
+
+    public CertificateDaoImpl() {
+
     }
-    
-	@Override
-	public Long persistCustomCertToDb(String certStr, CertificateVO cert, Long managementServerId){		
-	    BufferedInputStream f = null;
-		try 
-	    {
-        	cert.setCertificate(certStr);
-        	cert.setUpdated("Y");
-        	update(cert.getId(),cert);
-        	return cert.getId();
-	    }  catch (Exception e){
-	    	s_logger.warn("Unable to read the certificate: "+e);
-	    	return new Long(0);
-	    }
-	    finally 
-	    {
-	        if (f != null) 
-	        	try { f.close(); } catch (IOException ignored) { }
-	    }
-	}
+
+    @Override
+    public Long persistCustomCertToDb(String certStr, CertificateVO cert, Long managementServerId) {
+        try {
+            cert.setCertificate(certStr);
+            cert.setUpdated("Y");
+            update(cert.getId(), cert);
+            return cert.getId();
+        } catch (Exception e) {
+            s_logger.warn("Unable to read the certificate: " + e);
+            return new Long(0);
+        }
+    }
 }

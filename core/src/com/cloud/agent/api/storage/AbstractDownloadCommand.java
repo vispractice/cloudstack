@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,11 +15,13 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.agent.api.storage;
 
 import com.cloud.storage.Storage.ImageFormat;
 
-public abstract class AbstractDownloadCommand extends ssCommand {
+public abstract class AbstractDownloadCommand extends SsCommand {
 
     private String url;
     private ImageFormat format;
@@ -28,9 +31,9 @@ public abstract class AbstractDownloadCommand extends ssCommand {
     protected AbstractDownloadCommand() {
     }
 
-    protected AbstractDownloadCommand(String name, String url, ImageFormat format, Long accountId) {
-    	assert(url != null);
-    	url = url.replace('\\', '/');
+    protected AbstractDownloadCommand(final String name, String url, final ImageFormat format, final Long accountId) {
+        assert url != null;
+        url = url.replace('\\', '/');
 
         this.url = url;
         this.format = format;
@@ -38,14 +41,14 @@ public abstract class AbstractDownloadCommand extends ssCommand {
         this.name = name;
     }
 
-    protected AbstractDownloadCommand(AbstractDownloadCommand that) {
+    protected AbstractDownloadCommand(final AbstractDownloadCommand that) {
         super(that);
-        assert(that.url != null);
+        assert that.url != null;
 
-        this.url = that.url.replace('\\', '/');
-        this.format = that.format;
-        this.accountId = that.accountId;
-        this.name = that.name;
+        url = that.url.replace('\\', '/');
+        format = that.format;
+        accountId = that.accountId;
+        name = that.name;
     }
 
     public String getUrl() {
@@ -69,10 +72,10 @@ public abstract class AbstractDownloadCommand extends ssCommand {
         return true;
     }
 
-	public void setUrl(String url) {
-		assert(url != null);
-		url = url.replace('\\', '/');
-		this.url = url;
-	}
+    public void setUrl(String url) {
+        assert url != null;
+        url = url.replace('\\', '/');
+        this.url = url;
+    }
 
 }

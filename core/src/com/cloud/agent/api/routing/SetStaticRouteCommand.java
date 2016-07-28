@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,6 +15,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
 
 package com.cloud.agent.api.routing;
 
@@ -25,7 +27,7 @@ import com.cloud.network.vpc.StaticRoute;
 import com.cloud.network.vpc.StaticRouteProfile;
 import com.cloud.utils.net.NetUtils;
 
-public class SetStaticRouteCommand extends NetworkElementCommand{
+public class SetStaticRouteCommand extends NetworkElementCommand {
     StaticRouteProfile[] staticRoutes;
 
     protected SetStaticRouteCommand() {
@@ -39,10 +41,9 @@ public class SetStaticRouteCommand extends NetworkElementCommand{
         return staticRoutes;
     }
 
-    public String[][] generateSRouteRules() {
-        String [][] result = new String [2][];
+    public String[] generateSRouteRules() {
         Set<String> toAdd = new HashSet<String>();
-        for (StaticRouteProfile route: staticRoutes) {
+        for (StaticRouteProfile route : staticRoutes) {
             /*  example  :  ip:gateway:cidr,
              */
             String cidr = route.getCidr();
@@ -56,7 +57,11 @@ public class SetStaticRouteCommand extends NetworkElementCommand{
             }
             toAdd.add(entry);
         }
-        result[0] = toAdd.toArray(new String[toAdd.size()]);
-        return result;
+        return toAdd.toArray(new String[toAdd.size()]);
+    }
+
+    @Override
+    public int getAnswersCount() {
+        return staticRoutes.length;
     }
 }

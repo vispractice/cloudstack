@@ -25,7 +25,7 @@ then
     exit 1
 fi
 
-#set -x
+set -x
 usage() {
   printf "Usage: %s: -c config string \n" $(basename $0) >&2
 }
@@ -57,9 +57,9 @@ done
 }
 
 config=$2
-
 if [ -n "$3" ]
 then
+
 #delete cron job before updating config file
 crontab -l|grep "monitorServices.py"
 
@@ -87,7 +87,7 @@ if [ $? -ne 0 ]
    then
       (crontab -l ;echo -e "#monitoringConfig\nSHELL=/bin/bash\nPATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n */3 * * * * /usr/bin/python /root/monitorServices.py") | crontab -
       logger -t cloud "added crontab entry for monitoring services"
-   fi
+fi
 
 
 unlock_exit 0 $lock $locked

@@ -27,7 +27,7 @@ import common.asn1.Tag;
  *   credType      [0] INTEGER,
  *   credentials   [1] OCTET STRING
  * }
- * 
+ *
  * credType:
  *   1 - credentials contains a TSPasswordCreds structure that defines the user's password credentials.
  *   2 - credentials contains a TSSmartCardCreds structure that defines the user's smart card credentials.
@@ -51,7 +51,7 @@ public class TSCredentials extends Sequence {
 
     public TSCredentials(String name) {
         super(name);
-        this.tags = new Tag[] {credType, credentials};
+        tags = new Tag[] {credType, credentials};
     }
 
     @Override

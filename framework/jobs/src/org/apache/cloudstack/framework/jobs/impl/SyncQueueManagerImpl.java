@@ -38,8 +38,10 @@ import com.cloud.utils.exception.CloudRuntimeException;
 public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManager {
     public static final Logger s_logger = Logger.getLogger(SyncQueueManagerImpl.class.getName());
 
-    @Inject private SyncQueueDao _syncQueueDao;
-    @Inject private SyncQueueItemDao _syncQueueItemDao;
+    @Inject
+    private SyncQueueDao _syncQueueDao;
+    @Inject
+    private SyncQueueItemDao _syncQueueItemDao;
 
     @Override
     @DB
@@ -50,7 +52,7 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
                 public SyncQueueVO doInTransaction(TransactionStatus status) {
                     _syncQueueDao.ensureQueue(syncObjType, syncObjId);
                     SyncQueueVO queueVO = _syncQueueDao.find(syncObjType, syncObjId);
-                    if(queueVO == null)
+                    if (queueVO == null)
                         throw new CloudRuntimeException("Unable to queue item into DB, DB is full?");
 
                     queueVO.setQueueSizeLimit(queueSizeLimit);
@@ -67,7 +69,7 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
                     return queueVO;
                 }
             });
-        } catch(Exception e) {
+        } catch (Exception e) {
             s_logger.error("Unexpected exception: ", e);
         }
         return null;
@@ -80,17 +82,17 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
             return Transaction.execute(new TransactionCallback<SyncQueueItemVO>() {
                 @Override
                 public SyncQueueItemVO doInTransaction(TransactionStatus status) {
-                    SyncQueueVO queueVO = _syncQueueDao.lockRow(queueId, true);
+                    SyncQueueVO queueVO = _syncQueueDao.findById(queueId);
                     if(queueVO == null) {
                         s_logger.error("Sync queue(id: " + queueId + ") does not exist");
                         return null;
                     }
 
-                    if(queueReadyToProcess(queueVO)) {
+                    if (queueReadyToProcess(queueVO)) {
                         SyncQueueItemVO itemVO = _syncQueueItemDao.getNextQueueItem(queueVO.getId());
-                        if(itemVO != null) {
+                        if (itemVO != null) {
                             Long processNumber = queueVO.getLastProcessNumber();
-                            if(processNumber == null)
+                            if (processNumber == null)
                                 processNumber = new Long(1);
                             else
                                 processNumber = processNumber + 1;
@@ -107,18 +109,18 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
 
                             return itemVO;
                         } else {
-                            if(s_logger.isDebugEnabled())
+                            if (s_logger.isDebugEnabled())
                                 s_logger.debug("Sync queue (" + queueId + ") is currently empty");
                         }
                     } else {
-                        if(s_logger.isDebugEnabled())
+                        if (s_logger.isDebugEnabled())
                             s_logger.debug("There is a pending process in sync queue(id: " + queueId + ")");
                     }
 
                     return null;
                 }
             });
-        } catch(Exception e) {
+        } catch (Exception e) {
             s_logger.error("Unexpected exception: ", e);
         }
 
@@ -138,11 +140,11 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
                     List<SyncQueueItemVO> l = _syncQueueItemDao.getNextQueueItems(maxItems);
                     if(l != null && l.size() > 0) {
                         for(SyncQueueItemVO item : l) {
-                            SyncQueueVO queueVO = _syncQueueDao.lockRow(item.getQueueId(), true);
-                            SyncQueueItemVO itemVO = _syncQueueItemDao.lockRow(item.getId(), true);
-                            if(queueReadyToProcess(queueVO) && itemVO.getLastProcessNumber() == null) {
+                            SyncQueueVO queueVO = _syncQueueDao.findById(item.getQueueId());
+                            SyncQueueItemVO itemVO = _syncQueueItemDao.findById(item.getId());
+                            if(queueReadyToProcess(queueVO) && itemVO != null && itemVO.getLastProcessNumber() == null) {
                                 Long processNumber = queueVO.getLastProcessNumber();
-                                if(processNumber == null)
+                                if (processNumber == null)
                                     processNumber = new Long(1);
                                 else
                                     processNumber = processNumber + 1;
@@ -158,7 +160,7 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
                                 itemVO.setLastProcessTime(dt);
                                 _syncQueueItemDao.update(item.getId(), itemVO);
 
-                                resultList.add(item);
+                                resultList.add(itemVO);
                             }
                         }
                     }
@@ -166,7 +168,7 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
             });
 
             return resultList;
-        } catch(Exception e) {
+        } catch (Exception e) {
             s_logger.error("Unexpected exception: ", e);
         }
 
@@ -182,7 +184,7 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
                 public void doInTransactionWithoutResult(TransactionStatus status) {
                     SyncQueueItemVO itemVO = _syncQueueItemDao.findById(queueItemId);
                     if(itemVO != null) {
-                        SyncQueueVO queueVO = _syncQueueDao.lockRow(itemVO.getQueueId(), true);
+                        SyncQueueVO queueVO = _syncQueueDao.findById(itemVO.getQueueId());
 
                         _syncQueueItemDao.expunge(itemVO.getId());
 
@@ -197,7 +199,7 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
                     }
                 }
             });
-        } catch(Exception e) {
+        } catch (Exception e) {
             s_logger.error("Unexpected exception: ", e);
         }
     }
@@ -205,25 +207,27 @@ public class SyncQueueManagerImpl extends ManagerBase implements SyncQueueManage
     @Override
     @DB
     public void returnItem(final long queueItemId) {
+        s_logger.info("Returning queue item " + queueItemId + " back to queue for second try in case of DB deadlock");
         try {
             Transaction.execute(new TransactionCallbackNoReturn() {
                 @Override
                 public void doInTransactionWithoutResult(TransactionStatus status) {
                     SyncQueueItemVO itemVO = _syncQueueItemDao.findById(queueItemId);
                     if(itemVO != null) {
-                        SyncQueueVO queueVO = _syncQueueDao.lockRow(itemVO.getQueueId(), true);
+                        SyncQueueVO queueVO = _syncQueueDao.findById(itemVO.getQueueId());
 
                         itemVO.setLastProcessMsid(null);
                         itemVO.setLastProcessNumber(null);
                         itemVO.setLastProcessTime(null);
                         _syncQueueItemDao.update(queueItemId, itemVO);
 
+                        queueVO.setQueueSize(queueVO.getQueueSize() - 1);
                         queueVO.setLastUpdated(DateUtil.currentGMTTime());
                         _syncQueueDao.update(queueVO.getId(), queueVO);
                     }
                 }
             });
-        } catch(Exception e) {
+        } catch (Exception e) {
             s_logger.error("Unexpected exception: ", e);
         }
     }

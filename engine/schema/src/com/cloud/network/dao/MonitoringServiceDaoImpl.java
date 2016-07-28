@@ -15,20 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
-
 package com.cloud.network.dao;
+
+import java.util.List;
+
+
+import org.springframework.stereotype.Component;
 
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
-import org.springframework.stereotype.Component;
-
-import javax.ejb.Local;
-import java.util.List;
 
 @Component
-@Local(value=MonitoringServiceDao.class)
 public class MonitoringServiceDaoImpl extends GenericDaoBase<MonitoringServiceVO, Long> implements MonitoringServiceDao {
     private final SearchBuilder<MonitoringServiceVO> AllFieldsSearch;
 
@@ -37,15 +35,13 @@ public class MonitoringServiceDaoImpl extends GenericDaoBase<MonitoringServiceVO
         AllFieldsSearch = createSearchBuilder();
         AllFieldsSearch.and("isDefault", AllFieldsSearch.entity().isDefaultService(), SearchCriteria.Op.EQ);
         AllFieldsSearch.and("service", AllFieldsSearch.entity().getService(), SearchCriteria.Op.EQ);
-        AllFieldsSearch.and("processname", AllFieldsSearch.entity().getProcessname(), SearchCriteria.Op.EQ);
+        AllFieldsSearch.and("processname", AllFieldsSearch.entity().getProcessName(), SearchCriteria.Op.EQ);
         AllFieldsSearch.and("servicename", AllFieldsSearch.entity().getServiceName(), SearchCriteria.Op.EQ);
         AllFieldsSearch.and("servicepath", AllFieldsSearch.entity().getServicePath(), SearchCriteria.Op.EQ);
-        AllFieldsSearch.and("servicePidFile", AllFieldsSearch.entity().getPidFile(), SearchCriteria.Op.EQ);
+        AllFieldsSearch.and("servicePidFile", AllFieldsSearch.entity().getServicePidFile(), SearchCriteria.Op.EQ);
 
         AllFieldsSearch.done();
     }
-
-
 
     @Override
     public List<MonitoringServiceVO> listAllServices() {

@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,6 +15,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.agent.api.storage;
 
 import com.cloud.agent.api.to.StorageFilerTO;
@@ -24,32 +27,23 @@ import com.cloud.storage.StoragePool;
  *
  */
 public class PrimaryStorageDownloadCommand extends AbstractDownloadCommand {
-	String localPath;
-	String poolUuid;
-	long poolId;
+    String localPath;
+    String poolUuid;
+    long poolId;
 
     StorageFilerTO primaryPool;
 
-	String secondaryStorageUrl;
-	String primaryStorageUrl;
+    String secondaryStorageUrl;
+    String primaryStorageUrl;
 
     protected PrimaryStorageDownloadCommand() {
-        
-	}
-    
-    public PrimaryStorageDownloadCommand(String url, StoragePool pool, int wait) {
-        super(null, url, null, null);
-        this.poolId = pool.getId();
-        this.poolUuid = pool.getUuid();
-        this.primaryPool = new StorageFilerTO(pool);
-        setWait(wait);
     }
 
-    public PrimaryStorageDownloadCommand(String name, String url, ImageFormat format, long accountId, StoragePool pool, int wait) {
+    public PrimaryStorageDownloadCommand(final String name, final String url, final ImageFormat format, final long accountId, final StoragePool pool, final int wait) {
         super(name, url, format, accountId);
-        this.poolId = pool.getId();
-        this.poolUuid = pool.getUuid();
-        this.primaryPool = new StorageFilerTO(pool);
+        poolId = pool.getId();
+        poolUuid = pool.getUuid();
+        primaryPool = new StorageFilerTO(pool);
         setWait(wait);
     }
 
@@ -64,29 +58,29 @@ public class PrimaryStorageDownloadCommand extends AbstractDownloadCommand {
     public StorageFilerTO getPool() {
         return primaryPool;
     }
-    
-    public void setLocalPath(String path) {
-    	this.localPath = path;
+
+    public void setLocalPath(final String path) {
+        localPath = path;
     }
 
     public String getLocalPath() {
-    	return localPath;
+        return localPath;
     }
 
-    public void setSecondaryStorageUrl(String url) {
-    	secondaryStorageUrl = url;
+    public void setSecondaryStorageUrl(final String url) {
+        secondaryStorageUrl = url;
     }
 
     public String getSecondaryStorageUrl() {
-    	return secondaryStorageUrl;
+        return secondaryStorageUrl;
     }
 
-    public void setPrimaryStorageUrl(String url) {
-    	primaryStorageUrl = url;
+    public void setPrimaryStorageUrl(final String url) {
+        primaryStorageUrl = url;
     }
 
     public String getPrimaryStorageUrl() {
-    	return primaryStorageUrl;
+        return primaryStorageUrl;
     }
 
     @Override

@@ -24,7 +24,6 @@ import streamer.Pipeline;
 import streamer.PipelineImpl;
 import streamer.debug.MockSink;
 import streamer.debug.MockSource;
-
 import common.ScreenDescription;
 
 public class VncInitializer extends OneTimeSwitch {
@@ -150,6 +149,7 @@ public class VncInitializer extends OneTimeSwitch {
         pushDataToPad(CLIENT_SUPPORTED_ENCODINGS_ADAPTER_PAD, new ByteBuffer(0));
     }
 
+    @Override
     public String toString() {
         return "VncInit(" + id + ")";
     }

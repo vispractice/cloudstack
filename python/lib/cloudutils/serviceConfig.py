@@ -54,9 +54,9 @@ class serviceCfgBase(object):
         except:
             logging.debug(formatExceptionInfo())
             if self.syscfg.env.mode == "Server":
-                raise CloudRuntimeException("Configure %s failed, Please check the /var/log/cloudstack/setupManagement.log for detail"%self.serviceName)
+                raise CloudRuntimeException("Configure %s failed, Please check the /var/log/cloudstack/management/setupManagement.log for detail"%self.serviceName)
             else:
-                raise CloudRuntimeException("Configure %s failed, Please check the /var/log/cloudstack/setupAgent.log for detail"%self.serviceName)
+                raise CloudRuntimeException("Configure %s failed, Please check the /var/log/cloudstack/agent/setup.log for detail"%self.serviceName)
 
     def backup(self):
         if self.status is None:
@@ -428,7 +428,7 @@ class securityPolicyConfigUbuntu(serviceCfgBase):
 
             return True
         except:
-            raise CloudRuntimeException("Failed to configure apparmor, please see the /var/log/cloudstack/setupAgent.log for detail, \
+            raise CloudRuntimeException("Failed to configure apparmor, please see the /var/log/cloudstack/agent/setup.log for detail, \
                                         or you can manually disable it before starting myCloud")
 
     def restore(self):
@@ -458,7 +458,7 @@ class securityPolicyConfigRedhat(serviceCfgBase):
                 cfo.replace_line("SELINUX=", "SELINUX=permissive")
                 return True
             except:
-                raise CloudRuntimeException("Failed to configure selinux, please see the /var/log/cloudstack/setupAgent.log for detail, \
+                raise CloudRuntimeException("Failed to configure selinux, please see the /var/log/cloudstack/agent/setup.log for detail, \
                                             or you can manually disable it before starting myCloud")
         else:
             return True
@@ -493,7 +493,6 @@ class libvirtConfigRedhat(serviceCfgBase):
             filename = "/etc/libvirt/qemu.conf"
 
             cfo = configFileOps(filename, self)
-            cfo.addEntry("cgroup_controllers", "[\"cpu\"]")
             cfo.addEntry("security_driver", "\"none\"")
             cfo.addEntry("user", "\"root\"")
             cfo.addEntry("group", "\"root\"")
@@ -671,6 +670,7 @@ class cloudAgentConfig(serviceCfgBase):
             cfo.addEntry("zone", self.syscfg.env.zone)
             cfo.addEntry("pod", self.syscfg.env.pod)
             cfo.addEntry("cluster", self.syscfg.env.cluster)
+            cfo.addEntry("hypervisor.type", self.syscfg.env.hypervisor)
             cfo.addEntry("port", "8250")
             cfo.addEntry("private.network.device", self.syscfg.env.nics[0])
             cfo.addEntry("public.network.device", self.syscfg.env.nics[1])
@@ -678,7 +678,8 @@ class cloudAgentConfig(serviceCfgBase):
             cfo.addEntry("guid", str(self.syscfg.env.uuid))
             if cfo.getEntry("local.storage.uuid") == "":
                 cfo.addEntry("local.storage.uuid", str(bash("uuidgen").getStdout()))
-            cfo.addEntry("resource", "com.cloud.hypervisor.kvm.resource.LibvirtComputingResource")
+            if cfo.getEntry("resource") == "":
+                cfo.addEntry("resource", "com.cloud.hypervisor.kvm.resource.LibvirtComputingResource")
             cfo.save()
 
             self.syscfg.svo.stopService("cloudstack-agent")
@@ -720,24 +721,6 @@ class cloudAgentConfig(serviceCfgBase):
     def restore(self):
         return True
 
-
-class sudoersConfig(serviceCfgBase):
-    def __init__(self, syscfg):
-        super(sudoersConfig, self).__init__(syscfg)
-        self.serviceName = "sudoers"
-    def config(self):
-        try:
-            cfo = configFileOps("/etc/sudoers", self)
-            cfo.addEntry("cloud ALL ", "NOPASSWD : /bin/chmod, /bin/cp, /bin/mkdir, /bin/mount, /bin/umount")
-            cfo.rmEntry("Defaults", "requiretty", " ")
-            cfo.save()
-            return True
-        except:
-            raise
-
-    def restore(self):
-        return True
-
 class firewallConfigServer(firewallConfigBase):
     def __init__(self, syscfg):
         super(firewallConfigServer, self).__init__(syscfg)
@@ -745,7 +728,7 @@ class firewallConfigServer(firewallConfigBase):
         if self.syscfg.env.svrMode == "myCloud":
             self.ports = "443 8080 8250 8443 9090".split()
         else:
-            self.ports = "8080 7080 8250 9090".split()
+            self.ports = "8080 8250 9090".split()
 
 class ubuntuFirewallConfigServer(firewallConfigServer):
     def allowPort(self, port):

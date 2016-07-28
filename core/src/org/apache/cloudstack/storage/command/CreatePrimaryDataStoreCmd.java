@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,20 +15,21 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package org.apache.cloudstack.storage.command;
 
-import com.cloud.agent.api.Command;
 
-public final class CreatePrimaryDataStoreCmd extends Command implements StorageSubSystemCommand {
+public final class CreatePrimaryDataStoreCmd extends StorageSubSystemCommand {
     private final String dataStore;
 
-    public CreatePrimaryDataStoreCmd(String uri) {
+    public CreatePrimaryDataStoreCmd(final String uri) {
         super();
-        this.dataStore = uri;
+        dataStore = uri;
     }
 
     public String getDataStore() {
-        return this.dataStore;
+        return dataStore;
     }
 
     @Override
@@ -36,7 +38,7 @@ public final class CreatePrimaryDataStoreCmd extends Command implements StorageS
     }
 
     @Override
-    public void setExecuteInSequence(boolean inSeq) {
+    public void setExecuteInSequence(final boolean inSeq) {
 
     }
 }

@@ -29,8 +29,8 @@ import streamer.debug.MockSource;
  * Once the External Security Protocol handshake has run to completion, the
  * client MUST continue with the connection sequence by sending the MCS Connect
  * Initial PDU to the server over the newly established secure channel.
- * 
- * 
+ *
+ *
  * @see http://msdn.microsoft.com/en-us/library/cc240663.aspx
  */
 public class ServerX224ConnectionConfirmPDU extends OneTimeSwitch {
@@ -174,15 +174,15 @@ public class ServerX224ConnectionConfirmPDU extends OneTimeSwitch {
 
     /**
      * Example.
-     * 
+     *
      */
     public static void main(String args[]) {
         // System.setProperty("streamer.Link.debug", "true");
         System.setProperty("streamer.Element.debug", "true");
         // System.setProperty("streamer.Pipeline.debug", "true");
 
-//    byte[] packet = new byte[] { 
-//    
+//    byte[] packet = new byte[] {
+//
 //        0x03, // -> TPKT Header: TPKT version = 3
 //        0x00, // TPKT Header: Reserved = 0
 //        0x00, 0x13, // TPKT Header: Packet length - (total = 19 bytes)
@@ -208,13 +208,13 @@ public class ServerX224ConnectionConfirmPDU extends OneTimeSwitch {
                 0x00, 0x13, // TPKT Header: Packet length - (total = 19 bytes)
                 0x0e, // X.224: Length indicator (14 bytes)
                 (byte)0xd0, // X.224: Type (high nibble) = 0xd = CC TPDU; credit
-                            // (low nibble) = 0
+                // (low nibble) = 0
                 0x00, 0x00, // X.224: Destination reference = 0
                 0x12, 0x34, // X.224: Source reference = 0x1234 (bogus value)
                 0x00, // X.224: Class and options = 0
-                (byte)0x03, // Failure 
+                (byte)0x03, // Failure
                 (byte)0x00, // RDP_NEG_RSP::flags (0)
-                (byte)0x08, (byte)0x00, // RDP_NEG_RSP::length (8 bytes) 
+                (byte)0x08, (byte)0x00, // RDP_NEG_RSP::length (8 bytes)
                 (byte)0x05, (byte)0x00, (byte)0x00, (byte)0x00, // Code:  HYBRID_REQUIRED_BY_SERVER
 
         };

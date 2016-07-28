@@ -43,16 +43,18 @@ import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.apache.cloudstack.api.IdentityService;
+import org.apache.cloudstack.framework.security.keys.KeysManager;
 
 import com.cloud.exception.PermissionDeniedException;
 import com.cloud.host.HostVO;
+import com.cloud.hypervisor.Hypervisor;
 import com.cloud.server.ManagementServer;
 import com.cloud.storage.GuestOSVO;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.User;
 import com.cloud.uservm.UserVm;
+import com.cloud.utils.ConstantTimeComparator;
 import com.cloud.utils.Pair;
 import com.cloud.utils.Ternary;
 import com.cloud.utils.db.EntityManager;
@@ -61,6 +63,7 @@ import com.cloud.vm.UserVmDetailVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.dao.UserVmDetailsDao;
+
 /**
  * Thumbnail access : /console?cmd=thumbnail&vm=xxx&w=xxx&h=xxx
  * Console access : /conosole?cmd=access&vm=xxx
@@ -73,15 +76,20 @@ public class ConsoleProxyServlet extends HttpServlet {
     private static final int DEFAULT_THUMBNAIL_WIDTH = 144;
     private static final int DEFAULT_THUMBNAIL_HEIGHT = 110;
 
-    @Inject AccountManager _accountMgr;
-    @Inject VirtualMachineManager _vmMgr;
-    @Inject ManagementServer _ms;
-    @Inject IdentityService _identityService;
-    @Inject EntityManager _entityMgr;
-    @Inject UserVmDetailsDao _userVmDetailsDao;
+    @Inject
+    AccountManager _accountMgr;
+    @Inject
+    VirtualMachineManager _vmMgr;
+    @Inject
+    ManagementServer _ms;
+    @Inject
+    EntityManager _entityMgr;
+    @Inject
+    UserVmDetailsDao _userVmDetailsDao;
+    @Inject
+    KeysManager _keysMgr;
 
-
-    static ManagementServer s_ms;
+    static KeysManager s_keysMgr;
 
     private final Gson _gson = new GsonBuilder().create();
 
@@ -91,7 +99,7 @@ public class ConsoleProxyServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         SpringBeanAutowiringSupport.processInjectionBasedOnServletContext(this, config.getServletContext());
-        s_ms = _ms;
+        s_keysMgr = _keysMgr;
     }
 
     @Override
@@ -108,7 +116,7 @@ public class ConsoleProxyServlet extends HttpServlet {
                 return;
             }
 
-            if (_ms.getHashKey() == null) {
+            if (_keysMgr.getHashKey() == null) {
                 s_logger.debug("Console/thumbnail access denied. Ticket service is not ready yet");
                 sendResponse(resp, "Service is not ready");
                 return;
@@ -159,12 +167,14 @@ public class ConsoleProxyServlet extends HttpServlet {
             }
 
             String vmIdString = req.getParameter("vm");
-            Long vmId = _identityService.getIdentityId("vm_instance", vmIdString);
-            if (vmId == null) {
+            VirtualMachine vm = _entityMgr.findByUuid(VirtualMachine.class, vmIdString);
+            if (vm == null) {
                 s_logger.info("invalid console servlet command parameter: " + vmIdString);
                 sendResponse(resp, "");
                 return;
             }
+
+            Long vmId = vm.getId();
 
             if (!checkSessionPermision(req, vmId, accountObj)) {
                 sendResponse(resp, "Permission denied");
@@ -218,20 +228,20 @@ public class ConsoleProxyServlet extends HttpServlet {
         try {
             w = Integer.parseInt(value);
         } catch (NumberFormatException e) {
+            s_logger.info("[ignored] not a number: " + value);
         }
 
         value = req.getParameter("h");
         try {
             h = Integer.parseInt(value);
         } catch (NumberFormatException e) {
+            s_logger.info("[ignored] not a number: " + value);
         }
 
         try {
             resp.sendRedirect(composeThumbnailUrl(rootUrl, vm, host, w, h));
         } catch (IOException e) {
-            if (s_logger.isInfoEnabled()) {
-                s_logger.info("Client may already close the connection");
-            }
+            s_logger.info("Client may already close the connection", e);
         }
     }
 
@@ -250,10 +260,14 @@ public class ConsoleProxyServlet extends HttpServlet {
         }
 
         HostVO host = _ms.getHostBy(vm.getHostId());
-
         if (host == null) {
             s_logger.warn("VM " + vmId + "'s host does not exist, sending blank response for console access request");
             sendResponse(resp, "");
+            return;
+        }
+
+        if (Hypervisor.HypervisorType.LXC.equals(vm.getHypervisorType())){
+            sendResponse(resp, "<html><body><p>Console access is not supported for LXC</p></body></html>");
             return;
         }
 
@@ -305,7 +319,7 @@ public class ConsoleProxyServlet extends HttpServlet {
 
         String sid = req.getParameter("sid");
         if (sid == null || !sid.equals(vm.getVncPassword())) {
-            s_logger.warn("sid " + sid + " in url does not match stored sid " + vm.getVncPassword());
+            s_logger.warn("sid " + sid + " in url does not match stored sid.");
             sendResponse(resp, "failed");
             return;
         }
@@ -323,15 +337,15 @@ public class ConsoleProxyServlet extends HttpServlet {
 
         if (hostInfo != null) {
             if (hostInfo.startsWith("consoleurl")) {
-                String tokens[] = hostInfo.split("&");
+            String tokens[] = hostInfo.split("&");
 
-                if (hostInfo.length() > 19 && hostInfo.indexOf('/', 19) > 19) {
-                    host = hostInfo.substring(19, hostInfo.indexOf('/', 19)).trim();
-                    tunnelUrl = tokens[0].substring("consoleurl=".length());
-                    tunnelSession = tokens[1].split("=")[1];
-                } else {
-                    host = "";
-                }
+            if (hostInfo.length() > 19 && hostInfo.indexOf('/', 19) > 19) {
+                host = hostInfo.substring(19, hostInfo.indexOf('/', 19)).trim();
+                tunnelUrl = tokens[0].substring("consoleurl=".length());
+                tunnelSession = tokens[1].split("=")[1];
+            } else {
+                host = "";
+            }
             } else if (hostInfo.startsWith("instanceId")) {
                 host = hostInfo.substring(hostInfo.indexOf('=') + 1);
             } else {
@@ -345,8 +359,8 @@ public class ConsoleProxyServlet extends HttpServlet {
     }
 
     private String getEncryptorPassword() {
-        String key = _ms.getEncryptionKey();
-        String iv = _ms.getEncryptionIV();
+        String key = _keysMgr.getEncryptionKey();
+        String iv = _keysMgr.getEncryptionIV();
 
         ConsoleProxyPasswordBasedEncryptor.KeyIVPair keyIvPair = new ConsoleProxyPasswordBasedEncryptor.KeyIVPair(key, iv);
         return _gson.toJson(keyIvPair);
@@ -361,8 +375,7 @@ public class ConsoleProxyServlet extends HttpServlet {
         Ternary<String, String, String> parsedHostInfo = parseHostInfo(portInfo.first());
 
         String sid = vm.getVncPassword();
-        String tag = String.valueOf(vm.getId());
-        tag = _identityService.getIdentityUuid("vm_instance", tag);
+        String tag = vm.getUuid();
 
         int port = -1;
         if (portInfo.second() == -9) {
@@ -392,8 +405,7 @@ public class ConsoleProxyServlet extends HttpServlet {
             param.setClientTunnelSession(parsedHostInfo.third());
         }
 
-        sb.append("/ajaximg?token="
-                + encryptor.encryptObject(ConsoleProxyClientParam.class, param));
+        sb.append("/ajaximg?token=" + encryptor.encryptObject(ConsoleProxyClientParam.class, param));
         sb.append("&w=").append(w).append("&h=").append(h).append("&key=0");
 
         if (s_logger.isDebugEnabled()) {
@@ -437,13 +449,14 @@ public class ConsoleProxyServlet extends HttpServlet {
         if (details != null) {
             param.setLocale(details.getValue());
         }
+
         if (portInfo.second() == -9) {
             //For Hyperv Clinet Host Address will send Instance id
             param.setHypervHost(host);
             param.setUsername(_ms.findDetail(hostVo.getId(), "username").getValue());
             param.setPassword(_ms.findDetail(hostVo.getId(), "password").getValue());
         }
-        if (parsedHostInfo.second() != null && parsedHostInfo.third() != null) {
+        if (parsedHostInfo.second() != null  && parsedHostInfo.third() != null) {
             param.setClientTunnelUrl(parsedHostInfo.second());
             param.setClientTunnelSession(parsedHostInfo.third());
         }
@@ -473,8 +486,8 @@ public class ConsoleProxyServlet extends HttpServlet {
             Mac mac = Mac.getInstance("HmacSHA1");
 
             long ts = normalizedHashTime.getTime();
-            ts = ts / 60000;		// round up to 1 minute
-            String secretKey = s_ms.getHashKey();
+            ts = ts / 60000;        // round up to 1 minute
+            String secretKey = s_keysMgr.getHashKey();
 
             SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA1");
             mac.init(keySpec);
@@ -495,9 +508,7 @@ public class ConsoleProxyServlet extends HttpServlet {
             resp.setContentType("text/html");
             resp.getWriter().print(content);
         } catch (IOException e) {
-            if (s_logger.isInfoEnabled()) {
-                s_logger.info("Client may already close the connection");
-            }
+            s_logger.info("Client may already close the connection", e);
         }
     }
 
@@ -510,22 +521,22 @@ public class ConsoleProxyServlet extends HttpServlet {
         }
 
         // root admin can access anything
-        if (accountObj.getType() == Account.ACCOUNT_TYPE_ADMIN)
+        if (_accountMgr.isRootAdmin(accountObj.getId()))
             return true;
 
-        switch (vm.getType())
-        {
-        case User:
+        switch (vm.getType()) {
+            case User:
             try {
                 _accountMgr.checkAccess(accountObj, null, true, vm);
             } catch (PermissionDeniedException ex) {
-                if (accountObj.getType() == Account.ACCOUNT_TYPE_NORMAL) {
+                if (_accountMgr.isNormalUser(accountObj.getId())) {
                     if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("VM access is denied. VM owner account " + vm.getAccountId()
-                                + " does not match the account id in session " + accountObj.getId() + " and caller is a normal user");
+                            s_logger.debug("VM access is denied. VM owner account " + vm.getAccountId() + " does not match the account id in session " +
+                                accountObj.getId() + " and caller is a normal user");
                     }
-                } else if (accountObj.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN || accountObj.getType() == Account.ACCOUNT_TYPE_READ_ONLY_ADMIN) {
-                    if (s_logger.isDebugEnabled()) {
+                } else if (_accountMgr.isDomainAdmin(accountObj.getId())
+                        || accountObj.getType() == Account.ACCOUNT_TYPE_READ_ONLY_ADMIN) {
+                    if(s_logger.isDebugEnabled()) {
                         s_logger.debug("VM access is denied. VM owner account " + vm.getAccountId()
                                 + " does not match the account id in session " + accountObj.getId() + " and the domain-admin caller does not manage the target domain");
                     }
@@ -535,11 +546,11 @@ public class ConsoleProxyServlet extends HttpServlet {
             break;
 
         case DomainRouter:
-        case ConsoleProxy:
+            case ConsoleProxy:
         case SecondaryStorageVm:
             return false;
 
-        default:
+            default:
             s_logger.warn("Unrecoginized virtual machine type, deny access by default. type: " + vm.getType());
             return false;
         }
@@ -563,8 +574,8 @@ public class ConsoleProxyServlet extends HttpServlet {
             account = _accountMgr.getAccount(user.getAccountId());
         }
 
-        if ((user == null) || (user.getRemoved() != null) || !user.getState().equals(Account.State.enabled)
-                || (account == null) || !account.getState().equals(Account.State.enabled)) {
+        if ((user == null) || (user.getRemoved() != null) || !user.getState().equals(Account.State.enabled) || (account == null) ||
+            !account.getState().equals(Account.State.enabled)) {
             s_logger.warn("Deleted/Disabled/Locked user with id=" + userId + " attempting to access public API");
             return false;
         }
@@ -631,8 +642,8 @@ public class ConsoleProxyServlet extends HttpServlet {
             Account account = userAcctPair.second();
 
             if (!user.getState().equals(Account.State.enabled) || !account.getState().equals(Account.State.enabled)) {
-                s_logger.debug("disabled or locked user accessing the api, userid = " + user.getId() + "; name = " + user.getUsername() + "; state: " + user.getState()
-                        + "; accountState: " + account.getState());
+                s_logger.debug("disabled or locked user accessing the api, userid = " + user.getId() + "; name = " + user.getUsername() + "; state: " + user.getState() +
+                    "; accountState: " + account.getState());
                 return false;
             }
 
@@ -651,7 +662,7 @@ public class ConsoleProxyServlet extends HttpServlet {
             mac.update(unsignedRequest.getBytes());
             byte[] encryptedBytes = mac.doFinal();
             String computedSignature = Base64.encodeBase64String(encryptedBytes);
-            boolean equalSig = signature.equals(computedSignature);
+            boolean equalSig = ConstantTimeComparator.compareStrings(signature, computedSignature);
             if (!equalSig) {
                 s_logger.debug("User signature: " + signature + " is not equaled to computed signature: " + computedSignature);
             }
@@ -672,28 +683,28 @@ public class ConsoleProxyServlet extends HttpServlet {
         if (content == null || content.isEmpty())
             return content;
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < content.length(); i++) {
             char c = content.charAt(i);
             switch (c) {
-            case '<':
-                sb.append("&lt;");
-                break;
-            case '>':
-                sb.append("&gt;");
-                break;
-            case '&':
-                sb.append("&amp;");
-                break;
-            case '"':
-                sb.append("&quot;");
-                break;
-            case ' ':
-                sb.append("&nbsp;");
-                break;
-            default:
-                sb.append(c);
-                break;
+                case '<':
+                    sb.append("&lt;");
+                    break;
+                case '>':
+                    sb.append("&gt;");
+                    break;
+                case '&':
+                    sb.append("&amp;");
+                    break;
+                case '"':
+                    sb.append("&quot;");
+                    break;
+                case ' ':
+                    sb.append("&nbsp;");
+                    break;
+                default:
+                    sb.append(c);
+                    break;
             }
         }
         return sb.toString();

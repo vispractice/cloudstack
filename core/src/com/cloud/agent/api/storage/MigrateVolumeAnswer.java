@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,6 +15,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.agent.api.storage;
 
 import com.cloud.agent.api.Answer;
@@ -21,6 +24,7 @@ import com.cloud.agent.api.Command;
 
 public class MigrateVolumeAnswer extends Answer {
     private String volumePath;
+    private String volumeChain;
 
     public MigrateVolumeAnswer(Command command, boolean success, String details, String volumePath) {
         super(command, success, details);
@@ -34,5 +38,13 @@ public class MigrateVolumeAnswer extends Answer {
 
     public String getVolumePath() {
         return volumePath;
+    }
+
+    public void setVolumeChainInfo(String chainInfo) {
+        this.volumeChain = chainInfo;
+    }
+
+    public String getVolumeChainInfo() {
+        return volumeChain;
     }
 }

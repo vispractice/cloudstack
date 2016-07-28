@@ -26,6 +26,14 @@
         title: 'label.menu.service.offerings',
         id: 'configuration',
         sectionSelect: {
+            preFilter: function(args) {
+               if(isAdmin())
+                   return ["serviceOfferings", "systemServiceOfferings", "diskOfferings", "networkOfferings", "vpcOfferings"];
+               else if(isDomainAdmin())
+                   return ["serviceOfferings", "diskOfferings"];
+               else
+                   return null;
+            },
             label: 'label.select.offering'
         },
         sections: {
@@ -62,6 +70,17 @@
 
                             createForm: {
                                 title: 'label.add.compute.offering',
+                                preFilter: function(args) {
+                                    if (isAdmin()) {
+                                    } else {
+                                        args.$form.find('.form-item[rel=isPublic]').hide();
+                                        args.$form.find('.form-item[rel=domainId]').css('display', 'inline-block'); //shown
+                                        args.$form.find('.form-item[rel=deploymentPlanner]').hide();
+                                        args.$form.find('.form-item[rel=plannerMode]').hide();
+                                        args.$form.find('.form-item[rel=storageTags]').hide();
+                                        args.$form.find('.form-item[rel=hostTags]').hide();
+                                    }
+                                },
                                 fields: {
                                     name: {
                                         label: 'label.name',
@@ -95,8 +114,30 @@
                                             });
                                         }
                                     },
+                                    provisioningType: {
+                                        label: 'label.disk.provisioningtype',
+                                        docID: 'helpComputeOfferingProvisioningType',
+                                        select: function(args) {
+                                            var items = [];
+                                            items.push({
+                                                id: 'thin',
+                                                description: 'thin'
+                                            });
+                                            items.push({
+                                                id: 'sparse',
+                                                description: 'sparse'
+                                            });
+                                            items.push({
+                                                id: 'fat',
+                                                description: 'fat'
+                                            });
+                                            args.response.success({
+                                                data: items
+                                            });
+                                        }
+                                    },
                                     isCustomized: {
-                                        label: 'Custom',                                       
+                                        label: 'label.custom',
                                         isBoolean: true,
                                         isReverse: true,
                                         isChecked: false
@@ -133,6 +174,113 @@
                                         docID: 'helpComputeOfferingNetworkRate',
                                         validation: {
                                             required: false, //optional
+                                            number: true
+                                        }
+                                    },
+                                    qosType: {
+                                        label: 'label.qos.type',
+                                        docID: 'helpDiskOfferingQoSType',
+                                        select: function(args) {
+                                            var items = [];
+                                            items.push({
+                                                id: '',
+                                                description: ''
+                                            });
+                                            items.push({
+                                                id: 'hypervisor',
+                                                description: 'hypervisor'
+                                            });
+                                            items.push({
+                                                id: 'storage',
+                                                description: 'storage'
+                                            });
+                                            args.response.success({
+                                                data: items
+                                            });
+
+                                            args.$select.change(function() {
+                                                var $form = $(this).closest('form');
+                                                var $isCustomizedIops = $form.find('.form-item[rel=isCustomizedIops]');
+                                                var $minIops = $form.find('.form-item[rel=minIops]');
+                                                var $maxIops = $form.find('.form-item[rel=maxIops]');
+                                                var $hypervisorSnapshotReserve = $form.find('.form-item[rel=hypervisorSnapshotReserve]');
+                                                var $diskBytesReadRate = $form.find('.form-item[rel=diskBytesReadRate]');
+                                                var $diskBytesWriteRate = $form.find('.form-item[rel=diskBytesWriteRate]');
+                                                var $diskIopsReadRate = $form.find('.form-item[rel=diskIopsReadRate]');
+                                                var $diskIopsWriteRate = $form.find('.form-item[rel=diskIopsWriteRate]');
+
+                                                var qosId = $(this).val();
+
+                                                if (qosId == 'storage') { // Storage QoS
+                                                    $diskBytesReadRate.hide();
+                                                    $diskBytesWriteRate.hide();
+                                                    $diskIopsReadRate.hide();
+                                                    $diskIopsWriteRate.hide();
+
+                                                    $isCustomizedIops.css('display', 'inline-block');
+
+                                                    if ($isCustomizedIops.find('input[type=checkbox]').is(':checked')) {
+                                                        $minIops.hide();
+                                                        $maxIops.hide();
+                                                    } else {
+                                                        $minIops.css('display', 'inline-block');
+                                                        $maxIops.css('display', 'inline-block');
+                                                    }
+
+                                                    $hypervisorSnapshotReserve.css('display', 'inline-block');
+                                                } else if (qosId == 'hypervisor') { // Hypervisor Qos
+                                                    $isCustomizedIops.hide();
+                                                    $minIops.hide();
+                                                    $maxIops.hide();
+                                                    $hypervisorSnapshotReserve.hide();
+
+                                                    $diskBytesReadRate.css('display', 'inline-block');
+                                                    $diskBytesWriteRate.css('display', 'inline-block');
+                                                    $diskIopsReadRate.css('display', 'inline-block');
+                                                    $diskIopsWriteRate.css('display', 'inline-block');
+                                                } else { // No Qos
+                                                    $diskBytesReadRate.hide();
+                                                    $diskBytesWriteRate.hide();
+                                                    $diskIopsReadRate.hide();
+                                                    $diskIopsWriteRate.hide();
+                                                    $isCustomizedIops.hide();
+                                                    $minIops.hide();
+                                                    $maxIops.hide();
+                                                    $hypervisorSnapshotReserve.hide();
+                                                }
+                                            });
+                                        }
+                                    },
+                                    isCustomizedIops: {
+                                        label: 'label.custom.disk.iops',
+                                        docID: 'helpDiskOfferingCustomDiskIops',
+                                        isBoolean: true,
+                                        isReverse: true,
+                                        isChecked: false
+                                    },
+                                    minIops: {
+                                        label: 'label.disk.iops.min',
+                                        docID: 'helpDiskOfferingDiskIopsMin',
+                                        dependsOn: 'isCustomizedIops',
+                                        validation: {
+                                            required: false,
+                                            number: true
+                                        }
+                                    },
+                                    maxIops: {
+                                        label: 'label.disk.iops.max',
+                                        docID: 'helpDiskOfferingDiskIopsMax',
+                                        dependsOn: 'isCustomizedIops',
+                                        validation: {
+                                            required: false,
+                                            number: true
+                                        }
+                                    },
+                                    hypervisorSnapshotReserve: {
+                                        label: 'label.hypervisor.snapshot.reserve',
+                                        docID: 'helpDiskOfferingHypervisorSnapshotReserve',
+                                        validation: {
+                                            required: false,
                                             number: true
                                         }
                                     },
@@ -176,10 +324,42 @@
                                     },
                                     storageTags: {
                                         label: 'label.storage.tags',
-                                        docID: 'helpComputeOfferingStorageType'
+                                        docID: 'helpComputeOfferingStorageType',
+                                        isTokenInput: true,
+                                        dataProvider: function(args) {
+                                            $.ajax({
+                                                url: createURL("listStorageTags"),
+                                                dataType: "json",
+                                                success: function(json) {
+                                                    var item = json.liststoragetagsresponse.storagetag;
+                                                    var tags = [];
+
+                                                    if (item != null)
+                                                    {
+                                                        tags = $.map(item, function(tag) {
+                                                            return {
+                                                                       id: tag.name,
+                                                                       name: tag.name
+                                                                   };
+                                                        });
+                                                    }
+
+                                                    args.response.success({
+                                                        data: tags,
+                                                        hintText: _l('hint.type.part.storage.tag'),
+                                                        noResultsText: _l('hint.no.storage.tags')
+                                                    });
+                                                },
+                                                error: function(XMLHttpResponse) {
+                                                    var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+
+                                                    args.response.error(errorMsg);
+                                                }
+                                            });
+                                        }
                                     },
-                                    hostTags: {
-                                        label: 'label.host.tags',
+                                    hostTags: { //Only one single host tag is supported at server-side. Multiple host tags are NOT supported at server-side.
+                                        label: 'label.host.tag',
                                         docID: 'helpComputeOfferingHostTags'
                                     },
                                     cpuCap: {
@@ -192,20 +372,21 @@
                                         label: 'label.public',
                                         isBoolean: true,
                                         isReverse: true,
-                                        isChecked: true,
+                                        isChecked: false,
                                         docID: 'helpComputeOfferingPublic'
                                     },
 
                                     isVolatile: {
                                         label: 'label.volatile',
                                         isBoolean: true,
-                                        isChecked: false,
-                                        docID: 'helpComputeOfferingIsVolatile'
+                                        isChecked: false
+
                                     },
 
                                     deploymentPlanner: {
                                         label: 'label.deployment.planner',
                                         select: function(args) {
+                                          if (isAdmin()) {
                                             $.ajax({
                                                 url: createURL('listDeploymentPlanners'),
                                                 dataType: 'json',
@@ -224,10 +405,18 @@
                                                     args.response.success({
                                                         data: items
                                                     });
-
-
+                                                    args.$select.change(function() {
+                                                        var $form = $(this).closest('form');
+                                                        var $fields = $form.find('.field');
+                                                        if ($(this).val() == "ImplicitDedicationPlanner") {
+                                                            $form.find('[rel=plannerMode]').css('display', 'block');
+                                                        } else {
+                                                            $form.find('[rel=plannerMode]').hide();
+                                                        }
+                                                    });
                                                 }
                                             });
+                                          }
                                         }
                                     },
 
@@ -254,6 +443,118 @@
                                         }
                                     },
 
+                                    pciDevice: {
+                                        label: 'label.gpu',
+                                        select: function(args) {
+                                            var items = [];
+                                            items.push({
+                                                id: '',
+                                                description: ''
+                                            });
+                                            items.push({
+                                                id: 'Group of NVIDIA Corporation GK107GL [GRID K1] GPUs',
+                                                description: 'NVIDIA GRID K1'
+                                            });
+                                            items.push({
+                                                id: 'Group of NVIDIA Corporation GK104GL [GRID K2] GPUs',
+                                                description: 'NVIDIA GRID K2'
+                                            });
+                                            args.response.success({
+                                                data: items
+                                            });
+
+                                            var vGpuMap = {};
+                                            vGpuMap['Group of NVIDIA Corporation GK107GL [GRID K1] GPUs'] = ['passthrough', 'GRID K100', 'GRID K120Q', 'GRID K140Q', 'GRID K160Q', 'GRID K180Q'];
+                                            vGpuMap['Group of NVIDIA Corporation GK104GL [GRID K2] GPUs'] = ['passthrough', 'GRID K200', 'GRID K220Q', 'GRID K240Q', 'GRID K260Q', 'GRID K280Q'];
+
+                                            args.$select.change(function() {
+                                                var gpu = $(this).val();
+
+                                                if (gpu == '') {
+                                                    $(this).closest('form').find('.form-item[rel=\"vgpuType\"]').hide();
+                                                }
+                                                else {
+                                                    $(this).closest('form').find('.form-item[rel=\"vgpuType\"]').css('display', 'inline-block');
+
+                                                    // enable/disable vGPU type options, depending on selected GPU
+                                                    var $vGpuTypeSelect = $(this).closest('form').find('select[name=vgpuType]');
+                                                    var $vGpuTypeOptions = $vGpuTypeSelect.find('option');
+                                                    $vGpuTypeOptions.each(function(index) {
+                                                        var vGpuTypeOption = $(this).val();
+                                                        if (vGpuTypeOption == '' || (gpu in vGpuMap && $.inArray(vGpuTypeOption, vGpuMap[gpu]) > -1))
+                                                            $(this).attr('disabled', false);
+                                                        else
+                                                            $(this).attr('disabled', true);
+                                                    });
+
+                                                    //if selected option is disabled, select the first enabled option instead
+                                                    if ($vGpuTypeSelect.find('option:selected:disabled').length > 0) {
+                                                        $vGpuTypeSelect.val($vGpuTypeSelect.find('option:enabled:first').val());
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    },
+
+                                    vgpuType: {
+                                        label: 'label.vgpu.type',
+                                        isHidden: true,
+                                        select: function(args) {
+                                            var items = [];
+                                            items.push({
+                                                id: '',
+                                                description: ''
+                                            });
+                                            items.push({
+                                                id: 'passthrough',
+                                                description: 'passthrough'
+                                            });
+                                            items.push({
+                                                id: 'GRID K100',
+                                                description: 'GRID K100'
+                                            });
+                                            items.push({
+                                                id: 'GRID K120Q',
+                                                description: 'GRID K120Q'
+                                            });
+                                            items.push({
+                                                id: 'GRID K140Q',
+                                                description: 'GRID K140Q'
+                                            });
+                                            items.push({
+                                                id: 'GRID K160Q',
+                                                description: 'GRID K160Q'
+                                            });
+                                            items.push({
+                                                id: 'GRID K180Q',
+                                                description: 'GRID K180Q'
+                                            });
+                                            items.push({
+                                                id: 'GRID K200',
+                                                description: 'GRID K200'
+                                            });
+                                            items.push({
+                                                id: 'GRID K220Q',
+                                                description: 'GRID K220Q'
+                                            });
+                                            items.push({
+                                                id: 'GRID K240Q',
+                                                description: 'GRID K240Q'
+                                            });
+                                            items.push({
+                                                id: 'GRID K260Q',
+                                                description: 'GRID K260Q'
+                                            });
+                                            items.push({
+                                                id: 'GRID K280Q',
+                                                description: 'GRID K280Q'
+                                            });
+                                            args.response.success({
+                                                data: items
+                                            });
+                                        }
+                                    },
+
                                     domainId: {
                                         label: 'label.domain',
                                         docID: 'helpComputeOfferingDomain',
@@ -272,6 +573,9 @@
                                                             description: this.path
                                                         });
                                                     });
+                                                    items.sort(function(a, b) {
+                                                        return a.description.localeCompare(b.description);
+                                                    });
                                                     args.response.success({
                                                         data: items
                                                     });
@@ -289,27 +593,24 @@
                                     name: args.data.name,
                                     displaytext: args.data.description,
                                     storageType: args.data.storageType,
-                                    customized: (args.data.isCustomized == "on")                                    
+                                    provisioningType :args.data.provisioningType,
+                                    customized: (args.data.isCustomized == "on")
                                 };
-                                
+
                                 //custom fields (begin)
-                                if (args.$form.find('.form-item[rel=cpuNumber]').css("display") != "none") {
+                                if (args.data.isCustomized != "on") {
                                     $.extend(data, {
-                                    	cpuNumber: args.data.cpuNumber
+                                        cpuNumber: args.data.cpuNumber
+                                    });
+                                    $.extend(data, {
+                                        cpuSpeed: args.data.cpuSpeed
+                                    });
+                                    $.extend(data, {
+                                        memory: args.data.memory
                                     });
                                 }
-                                if (args.$form.find('.form-item[rel=cpuSpeed]').css("display") != "none") {
-                                    $.extend(data, {
-                                    	cpuSpeed: args.data.cpuSpeed
-                                    });
-                                }
-                                if (args.$form.find('.form-item[rel=memory]').css("display") != "none") {
-                                    $.extend(data, {
-                                    	memory: args.data.memory
-                                    });
-                                }      
                                 //custom fields (end)
-                                
+
                                 if (args.data.deploymentPlanner != null && args.data.deploymentPlanner.length > 0) {
                                     $.extend(data, {
                                         deploymentplanner: args.data.deploymentPlanner
@@ -318,7 +619,18 @@
 
                                 var array1 = [];
                                 if (args.data.deploymentPlanner == "ImplicitDedicationPlanner" && args.data.plannerMode != "") {
-                                    array1.push("&serviceofferingdetails[0].ImplicitDedicationMode" + "=" + args.data.plannerMode);
+                                    array1.push("&serviceofferingdetails[0].key" + "=" + "ImplicitDedicationMode");
+                                    array1.push("&serviceofferingdetails[0].value" + "=" + args.data.plannerMode);
+                                }
+
+                                if (args.data.pciDevice != "") {
+                                    array1.push("&serviceofferingdetails[1].key" + "=" + "pciDevice");
+                                    array1.push("&serviceofferingdetails[1].value" + "=" + args.data.pciDevice);
+                                }
+
+                                if (args.data.vgpuType != "") {
+                                    array1.push("&serviceofferingdetails[2].key" + "=" + "vgpuType");
+                                    array1.push("&serviceofferingdetails[2].value" + "=" + args.data.vgpuType);
                                 }
 
                                 if (args.data.networkRate != null && args.data.networkRate.length > 0) {
@@ -326,26 +638,59 @@
                                         networkrate: args.data.networkRate
                                     });
                                 }
-                                if (args.data.diskBytesReadRate != null && args.data.diskBytesReadRate.length > 0) {
+
+                                if (args.data.qosType == 'storage') {
+                                    var customIops = args.data.isCustomizedIops == "on";
+
                                     $.extend(data, {
-                                        bytesreadrate: args.data.diskBytesReadRate
+                                        customizediops: customIops
                                     });
+
+                                    if (!customIops) {
+                                        if (args.data.minIops != null && args.data.minIops.length > 0) {
+                                            $.extend(data, {
+                                                miniops: args.data.minIops
+                                            });
+                                        }
+
+                                        if (args.data.maxIops != null && args.data.maxIops.length > 0) {
+                                            $.extend(data, {
+                                                maxiops: args.data.maxIops
+                                            });
+                                        }
+                                    }
+
+                                    if (args.data.hypervisorSnapshotReserve != null && args.data.hypervisorSnapshotReserve.length > 0) {
+                                        $.extend(data, {
+                                            hypervisorsnapshotreserve: args.data.hypervisorSnapshotReserve
+                                        });
+                                    }
+                                } else if (args.data.qosType == 'hypervisor') {
+                                    if (args.data.diskBytesReadRate != null && args.data.diskBytesReadRate.length > 0) {
+                                        $.extend(data, {
+                                            bytesreadrate: args.data.diskBytesReadRate
+                                        });
+                                    }
+
+                                    if (args.data.diskBytesWriteRate != null && args.data.diskBytesWriteRate.length > 0) {
+                                        $.extend(data, {
+                                            byteswriterate: args.data.diskBytesWriteRate
+                                        });
+                                    }
+
+                                    if (args.data.diskIopsReadRate != null && args.data.diskIopsReadRate.length > 0) {
+                                        $.extend(data, {
+                                            iopsreadrate: args.data.diskIopsReadRate
+                                        });
+                                    }
+
+                                    if (args.data.diskIopsWriteRate != null && args.data.diskIopsWriteRate.length > 0) {
+                                        $.extend(data, {
+                                            iopswriterate: args.data.diskIopsWriteRate
+                                        });
+                                    }
                                 }
-                                if (args.data.diskBytesWriteRate != null && args.data.diskBytesWriteRate.length > 0) {
-                                    $.extend(data, {
-                                        byteswriterate: args.data.diskBytesWriteRate
-                                    });
-                                }
-                                if (args.data.diskIopsReadRate != null && args.data.diskIopsReadRate.length > 0) {
-                                    $.extend(data, {
-                                        iopsreadrate: args.data.diskIopsReadRate
-                                    });
-                                }
-                                if (args.data.diskIopsWriteRate != null && args.data.diskIopsWriteRate.length > 0) {
-                                    $.extend(data, {
-                                        iopswriterate: args.data.diskIopsWriteRate
-                                    });
-                                }
+
                                 $.extend(data, {
                                     offerha: (args.data.offerHA == "on")
                                 });
@@ -370,7 +715,7 @@
                                     isvolatile: (args.data.isVolatile == "on")
                                 });
 
-                                if (args.$form.find('.form-item[rel=domainId]').css("display") != "none") {
+                                if (args.data.isPublic != "on") {
                                     $.extend(data, {
                                         domainid: args.data.domainId
                                     });
@@ -408,12 +753,12 @@
                         });
 
                         $.ajax({
-                            url: createURL('listServiceOfferings'),
+                            url: createURL('listServiceOfferings&isrecursive=true'),
                             data: data,
                             success: function(json) {
                                 var items = json.listserviceofferingsresponse.serviceoffering;
                                 args.response.success({
-                                    actionFitler: serviceOfferingActionfilter,
+                                    actionFilter: serviceOfferingActionfilter,
                                     data: items
                                 });
                             },
@@ -424,7 +769,7 @@
                     },
 
                     detailView: {
-                        name: 'Service offering details',
+                        name: 'label.service.offering.details',
                         actions: {
                             edit: {
                                 label: 'label.edit',
@@ -510,6 +855,9 @@
                                     storagetype: {
                                         label: 'label.storage.type'
                                     },
+                                    provisioningtype: {
+                                        label: 'label.disk.provisioningtype'
+                                    },
                                     cpunumber: {
                                         label: 'label.num.cpu.cores'
                                     },
@@ -522,14 +870,45 @@
                                     memory: {
                                         label: 'label.memory.mb',
                                         converter: function(args) {
-                                    	    if (args == undefined)
-                                    	    	return '';
-                                    	    else                                     	
-                                            return cloudStack.converters.convertBytes(args * 1024 * 1024);
+                                            if (args == undefined)
+                                                return '';
+                                            else
+                                                return cloudStack.converters.convertBytes(args * 1024 * 1024);
                                         }
                                     },
                                     networkrate: {
                                         label: 'label.network.rate'
+                                    },
+                                    iscustomizediops: {
+                                        label: 'label.custom.disk.iops',
+                                        converter: cloudStack.converters.toBooleanText
+                                    },
+                                    miniops: {
+                                        label: 'label.disk.iops.min',
+                                        converter: function(args) {
+                                            if (args > 0)
+                                                return args;
+                                            else
+                                                return "N/A";
+                                        }
+                                    },
+                                    maxiops: {
+                                        label: 'label.disk.iops.max',
+                                        converter: function(args) {
+                                            if (args > 0)
+                                                return args;
+                                            else
+                                                return "N/A";
+                                        }
+                                    },
+                                    hypervisorsnapshotreserve: {
+                                        label: 'label.hypervisor.snapshot.reserve',
+                                        converter: function(args) {
+                                            if (args > 0)
+                                                return args;
+                                            else
+                                                return "N/A";
+                                        }
                                     },
                                     diskBytesReadRate: {
                                         label: 'label.disk.bytes.read.rate'
@@ -552,20 +931,26 @@
                                         converter: cloudStack.converters.toBooleanText
                                     },
                                     isvolatile: {
-                                        label: 'Volatile',
+                                        label: 'label.volatile',
                                         converter: cloudStack.converters.toBooleanText
                                     },
                                     deploymentplanner: {
-                                        label: 'Deployment Planner'
-                                    },                                    
+                                        label: 'label.deployment.planner'
+                                    },
                                     plannerMode: {
-                                        label: 'Planner Mode'
-                                    },                                    
+                                        label: 'label.planner.mode'
+                                    },
+                                    pciDevice: {
+                                        label: 'label.gpu'
+                                    },
+                                    vgpuType: {
+                                        label: 'label.vgpu.type'
+                                    },
                                     tags: {
                                         label: 'label.storage.tags'
                                     },
                                     hosttags: {
-                                        label: 'label.host.tags'
+                                        label: 'label.host.tag'
                                     },
                                     domain: {
                                         label: 'label.domain'
@@ -582,20 +967,25 @@
                                         id: args.context.serviceOfferings[0].id
                                     };
                                     $.ajax({
-                                        url: createURL('listServiceOfferings'),
+                                        url: createURL('listServiceOfferings&isrecursive=true'),
                                         data: data,
                                         async: true,
                                         success: function(json) {
                                             var item = json.listserviceofferingsresponse.serviceoffering[0];
-                                            
+
                                             if (item.deploymentplanner != null && item.serviceofferingdetails != null) {
-                                            	if (item.deploymentplanner == 'ImplicitDedicationPlanner' && item.serviceofferingdetails.ImplicitDedicationMode != null) {
-                                            		item.plannerMode = item.serviceofferingdetails.ImplicitDedicationMode;
-                                            	}
+                                                if (item.deploymentplanner == 'ImplicitDedicationPlanner' && item.serviceofferingdetails.ImplicitDedicationMode != null) {
+                                                    item.plannerMode = item.serviceofferingdetails.ImplicitDedicationMode;
+                                                }
                                             }
-                                                                                       
+
+                                            if (item.serviceofferingdetails != null) {
+                                                item.pciDevice = item.serviceofferingdetails.pciDevice;
+                                                item.vgpuType = item.serviceofferingdetails.vgpuType;
+                                            }
+
                                             args.response.success({
-                                                actionFitler: serviceOfferingActionfilter,
+                                                actionFilter: serviceOfferingActionfilter,
                                                 data: item
                                             });
                                         }
@@ -640,6 +1030,13 @@
 
                             createForm: {
                                 title: 'label.add.system.service.offering',
+                                preFilter: function(args) {
+                                    if (isAdmin()) {
+                                    } else {
+                                        args.$form.find('.form-item[rel=isPublic]').hide();
+                                        args.$form.find('.form-item[rel=domainId]').css('display', 'inline-block'); //shown
+                                    }
+                                },
                                 fields: {
                                     name: {
                                         label: 'label.name',
@@ -662,15 +1059,15 @@
                                             var items = [];
                                             items.push({
                                                 id: 'domainrouter',
-                                                description: dictionary['label.domain.router']
+                                                description: _l('label.domain.router')
                                             });
                                             items.push({
                                                 id: 'consoleproxy',
-                                                description: dictionary['label.console.proxy']
+                                                description: _l('label.console.proxy')
                                             });
                                             items.push({
                                                 id: 'secondarystoragevm',
-                                                description: dictionary['label.secondary.storage.vm']
+                                                description: _l('label.secondary.storage.vm')
                                             });
                                             args.response.success({
                                                 data: items
@@ -689,6 +1086,28 @@
                                             items.push({
                                                 id: 'local',
                                                 description: 'local'
+                                            });
+                                            args.response.success({
+                                                data: items
+                                            });
+                                        }
+                                    },
+                                    provisioningType: {
+                                        label: 'label.disk.provisioningtype',
+                                        docID: 'helpDiskOfferingProvisioningType',
+                                        select: function(args) {
+                                            var items = [];
+                                            items.push({
+                                                id: 'thin',
+                                                description: 'thin'
+                                            });
+                                            items.push({
+                                                id: 'sparse',
+                                                description: 'sparse'
+                                            });
+                                            items.push({
+                                                id: 'fat',
+                                                description: 'fat'
                                             });
                                             args.response.success({
                                                 data: items
@@ -783,7 +1202,7 @@
                                         label: 'label.public',
                                         isBoolean: true,
                                         isReverse: true,
-                                        isChecked: true,
+                                        isChecked: false,
                                         docID: 'helpSystemOfferingPublic'
                                     },
                                     domainId: {
@@ -804,6 +1223,9 @@
                                                             description: this.path
                                                         });
                                                     });
+                                                    items.sort(function(a, b) {
+                                                        return a.description.localeCompare(b.description);
+                                                    });
                                                     args.response.success({
                                                         data: items
                                                     });
@@ -822,6 +1244,7 @@
                                     displaytext: args.data.description,
                                     systemvmtype: args.data.systemvmtype,
                                     storageType: args.data.storageType,
+                                    provisioningType: args.data.provisioningType,
                                     cpuNumber: args.data.cpuNumber,
                                     cpuSpeed: args.data.cpuSpeed,
                                     memory: args.data.memory
@@ -873,7 +1296,7 @@
                                     limitcpuuse: (args.data.cpuCap == "on")
                                 });
 
-                                if (args.$form.find('.form-item[rel=domainId]').css("display") != "none") {
+                                if (args.data.isPublic != "on") {
                                     $.extend(data, {
                                         domainid: args.data.domainId
                                     });
@@ -911,7 +1334,7 @@
                         });
 
                         $.ajax({
-                            url: createURL('listServiceOfferings'),
+                            url: createURL('listServiceOfferings&isrecursive=true'),
                             data: data,
                             success: function(json) {
                                 var items = json.listserviceofferingsresponse.serviceoffering;
@@ -926,7 +1349,7 @@
                     },
 
                     detailView: {
-                        name: 'System service offering details',
+                        name: 'label.system.service.offering.details',
                         actions: {
                             edit: {
                                 label: 'label.edit',
@@ -1014,13 +1437,13 @@
                                             var text = '';
                                             switch (args) {
                                                 case 'domainrouter':
-                                                    text = dictionary['label.domain.router'];
+                                                    text = _l('label.domain.router');
                                                     break;
                                                 case 'consoleproxy':
-                                                    text = dictionary['label.console.proxy'];
+                                                    text = _l('label.console.proxy');
                                                     break;
                                                 case 'secondarystoragevm':
-                                                    text = dictionary['label.secondary.storage.vm'];
+                                                    text = _l('label.secondary.storage.vm');
                                                     break;
                                             }
                                             return text;
@@ -1028,6 +1451,9 @@
                                     },
                                     storagetype: {
                                         label: 'label.storage.type'
+                                    },
+                                    provisioningtype: {
+                                        label: 'label.disk.provisioningtype'
                                     },
                                     cpunumber: {
                                         label: 'label.num.cpu.cores'
@@ -1041,23 +1467,23 @@
                                     memory: {
                                         label: 'label.memory.mb',
                                         converter: function(args) {
-                                    	    if (args == undefined)
-                                	    	    return '';
-                                	        else 
-                                            return cloudStack.converters.convertBytes(args * 1024 * 1024);
+                                            if (args == undefined)
+                                                return '';
+                                            else
+                                                return cloudStack.converters.convertBytes(args * 1024 * 1024);
                                         }
                                     },
                                     networkrate: {
                                         label: 'label.network.rate'
                                     },
                                     diskBytesReadRate: {
-                                        label: 'label.disk.bytes.write.rate'
+                                        label: 'label.disk.bytes.read.rate'
                                     },
                                     diskBytesWriteRate: {
                                         label: 'label.disk.bytes.write.rate'
                                     },
                                     diskIopsReadRate: {
-                                        label: 'label.disk.iops.write.rate'
+                                        label: 'label.disk.iops.read.rate'
                                     },
                                     diskIopsWriteRate: {
                                         label: 'label.disk.iops.write.rate'
@@ -1091,12 +1517,12 @@
                                         id: args.context.systemServiceOfferings[0].id
                                     };
                                     $.ajax({
-                                        url: createURL('listServiceOfferings'),
+                                        url: createURL('listServiceOfferings&isrecursive=true'),
                                         data: data,
                                         success: function(json) {
                                             var item = json.listserviceofferingsresponse.serviceoffering[0];
                                             args.response.success({
-                                                actionFitler: systemServiceOfferingActionfilter,
+                                                actionFilter: systemServiceOfferingActionfilter,
                                                 data: item
                                             });
                                         }
@@ -1143,7 +1569,7 @@
                         listViewDataProvider(args, data);
 
                         $.ajax({
-                            url: createURL('listDiskOfferings'),
+                            url: createURL('listDiskOfferings&isrecursive=true'),
                             data: data,
                             success: function(json) {
                                 var items = json.listdiskofferingsresponse.diskoffering;
@@ -1172,6 +1598,14 @@
 
                             createForm: {
                                 title: 'label.add.disk.offering',
+                                preFilter: function(args) {
+                                    if (isAdmin()) {
+                                    } else {
+                                        args.$form.find('.form-item[rel=isPublic]').hide();
+                                        args.$form.find('.form-item[rel=domainId]').css('display', 'inline-block'); //shown
+                                        args.$form.find('.form-item[rel=tags]').hide();
+                                    }
+                                },
                                 fields: {
                                     name: {
                                         label: 'label.name',
@@ -1199,6 +1633,28 @@
                                             items.push({
                                                 id: 'local',
                                                 description: 'local'
+                                            });
+                                            args.response.success({
+                                                data: items
+                                            });
+                                        }
+                                    },
+                                    provisioningType: {
+                                        label: 'label.disk.provisioningtype',
+                                        docID: 'helpDiskOfferingProvisioningType',
+                                        select: function(args) {
+                                            var items = [];
+                                            items.push({
+                                                id: 'thin',
+                                                description: 'thin'
+                                            });
+                                            items.push({
+                                                id: 'sparse',
+                                                description: 'sparse'
+                                            });
+                                            items.push({
+                                                id: 'fat',
+                                                description: 'fat'
                                             });
                                             args.response.success({
                                                 data: items
@@ -1360,15 +1816,69 @@
                                             number: true
                                         }
                                     },
+                                    cacheMode: {
+                                        label: 'label.cache.mode',
+                                        docID: 'helpDiskOfferingCacheMode',
+                                        select: function(args) {
+                                            var items = [];
+                                            items.push({
+                                                id: 'none',
+                                                description: 'No disk cache'
+                                            });
+                                            items.push({
+                                                id: 'writeback',
+                                                description: 'Write-back disk caching'
+                                            });
+                                            items.push({
+                                                id: 'writethrough',
+                                                description: 'Write-through disk caching'
+                                            });
+                                            args.response.success({
+                                                data: items
+                                            });
+                                        }
+                                    },
                                     tags: {
                                         label: 'label.storage.tags',
-                                        docID: 'helpDiskOfferingStorageTags'
+                                        docID: 'helpDiskOfferingStorageTags',
+                                        isTokenInput: true,
+                                        dataProvider: function(args) {
+                                            $.ajax({
+                                                url: createURL("listStorageTags"),
+                                                dataType: "json",
+                                                success: function(json) {
+                                                    var item = json.liststoragetagsresponse.storagetag;
+                                                    var tags = [];
+
+                                                    if (item != null)
+                                                    {
+                                                        tags = $.map(item, function(tag) {
+                                                            return {
+                                                                       id: tag.name,
+                                                                       name: tag.name
+                                                                   };
+                                                        });
+                                                    }
+
+                                                    args.response.success({
+                                                        data: tags,
+                                                        hintText: _l('hint.type.part.storage.tag'),
+                                                        noResultsText: _l('hint.no.storage.tags')
+                                                    });
+                                                },
+                                                error: function(XMLHttpResponse) {
+                                                    var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+
+                                                    args.response.error(errorMsg);
+                                                }
+                                            });
+                                        }
                                     },
                                     isPublic: {
                                         label: 'label.public',
                                         isBoolean: true,
                                         isReverse: true,
-                                        isChecked: true,
+                                        isChecked: false,
                                         docID: 'helpDiskOfferingPublic'
                                     },
                                     domainId: {
@@ -1389,6 +1899,9 @@
                                                             description: this.path
                                                         });
                                                     });
+                                                    items.sort(function(a, b) {
+                                                        return a.description.localeCompare(b.description);
+                                                    });
                                                     args.response.success({
                                                         data: items
                                                     });
@@ -1406,10 +1919,12 @@
                                     name: args.data.name,
                                     displaytext: args.data.description,
                                     storageType: args.data.storageType,
+                                    cacheMode: args.data.cacheMode,
+                                    provisioningType: args.data.provisioningType,
                                     customized: (args.data.isCustomized == "on")
                                 };
 
-                                if (args.$form.find('.form-item[rel=disksize]').css("display") != "none") {
+                                if (args.data.isCustomized != "on") {
                                     $.extend(data, {
                                         disksize: args.data.disksize
                                     });
@@ -1473,7 +1988,7 @@
                                     });
                                 }
 
-                                if (args.$form.find('.form-item[rel=domainId]').css("display") != "none") {
+                                if (args.data.isPublic != "on") {
                                     $.extend(data, {
                                         domainid: args.data.domainId
                                     });
@@ -1503,7 +2018,7 @@
                     },
 
                     detailView: {
-                        name: 'Disk offering details',
+                        name: 'label.disk.offering.details',
                         actions: {
                             edit: {
                                 label: 'label.edit',
@@ -1620,17 +2135,29 @@
                                                 return "N/A";
                                         }
                                     },
+                                    hypervisorsnapshotreserve: {
+                                        label: 'label.hypervisor.snapshot.reserve',
+                                        converter: function(args) {
+                                            if (args > 0)
+                                                return args;
+                                            else
+                                                return "N/A";
+                                        }
+                                    },
                                     diskBytesReadRate: {
-                                        label: 'label.disk.bytes.write.rate'
+                                        label: 'label.disk.bytes.read.rate'
                                     },
                                     diskBytesWriteRate: {
                                         label: 'label.disk.bytes.write.rate'
                                     },
                                     diskIopsReadRate: {
-                                        label: 'label.disk.iops.write.rate'
+                                        label: 'label.disk.iops.read.rate'
                                     },
                                     diskIopsWriteRate: {
                                         label: 'label.disk.iops.write.rate'
+                                    },
+                                    cacheMode: {
+                                        label: 'label.cache.mode'
                                     },
                                     tags: {
                                         label: 'label.storage.tags'
@@ -1640,6 +2167,9 @@
                                     },
                                     storagetype: {
                                         label: 'label.storage.type'
+                                    },
+                                    provisioningtype: {
+                                        label: 'label.disk.provisioningtype'
                                     }
                                 }],
 
@@ -1648,7 +2178,7 @@
                                         id: args.context.diskOfferings[0].id
                                     };
                                     $.ajax({
-                                        url: createURL('listDiskOfferings'),
+                                        url: createURL('listDiskOfferings&isrecursive=true'),
                                         data: data,
                                         success: function(json) {
                                             var item = json.listdiskofferingsresponse.diskoffering[0];
@@ -1724,15 +2254,14 @@
                                     var $lbType = args.$form.find('.form-item[rel=lbType]');
                                     var $serviceofferingid = args.$form.find('.form-item[rel=serviceofferingid]');
                                     var $conservemode = args.$form.find('.form-item[rel=conservemode]');
+                                    var $supportsstrechedl2subnet = args.$form.find('.form-item[rel=supportsstrechedl2subnet]');
                                     var $serviceSourceNatRedundantRouterCapabilityCheckbox = args.$form.find('.form-item[rel="service.SourceNat.redundantRouterCapabilityCheckbox"]');
                                     var hasAdvancedZones = false;
 
                                     // Check whether there are any advanced zones
                                     $.ajax({
                                         url: createURL('listZones'),
-                                        data: {
-                                            listAll: true
-                                        },
+                                        data: {},
                                         async: false,
                                         success: function(json) {
                                             var zones = json.listzonesresponse.zone;
@@ -1761,12 +2290,12 @@
                                         } else { //Isolated network offering
                                             $useVpc.css('display', 'inline-block');
                                         }
-                                        var $providers = $useVpcCb.closest('form').find('.dynamic-input select');
+                                        var $providers = $useVpcCb.closest('form').find('.dynamic-input select[name!="service.Connectivity.provider"]');
                                         var $optionsOfProviders = $providers.find('option');
                                         //p.s. Netscaler is supported in both vpc and non-vpc
                                         if ($useVpc.is(':visible') && $useVpcCb.is(':checked')) { //*** vpc ***
                                             $optionsOfProviders.each(function(index) {
-                                                if ($(this).val() == 'InternalLbVm' || $(this).val() == 'VpcVirtualRouter' || $(this).val() == 'Netscaler') {
+                                                if ($(this).val() == 'InternalLbVm' || $(this).val() == 'VpcVirtualRouter' || $(this).val() == 'Netscaler'  || $(this).val() == 'NuageVsp' || $(this).val() == 'NuageVspVpc' || $(this).val() == 'BigSwitchBcf') {
                                                     $(this).attr('disabled', false);
                                                 } else {
                                                     $(this).attr('disabled', true);
@@ -1857,7 +2386,7 @@
                                             if ($("input[name='" + checkboxName + "']").is(":checked") == true) {
                                                 var providerFieldName = checkboxName.replace(".isEnabled", ".provider"); //either dropdown or input hidden field
                                                 var providerName = $("[name='" + providerFieldName + "']").val();
-                                                if (providerName == "VirtualRouter") {
+                                                if (providerName == "VirtualRouter" || providerName == "VpcVirtualRouter") {
                                                     havingVirtualRouterForAtLeastOneService = true;
                                                     return false; //break each loop
                                                 }
@@ -1871,7 +2400,7 @@
 
 
                                         /*
-										when service(s) has VPC Virtual Router as provider:
+                                        when service(s) has VPC Virtual Router as provider:
                     (1) conserve mode is set to unchecked and grayed out.
                     (2) redundant router capability checkbox is set to unchecked and grayed out.
                     (3) remove Firewall service, SecurityGroup service.
@@ -1903,43 +2432,43 @@
 
                                         //CS-16612 show all services regardless of guestIpType(Shared/Isolated)
                                         /*
-										//hide/show service fields ***** (begin) *****
-										var serviceFieldsToHide = [];
-										if($guestTypeField.val() == 'Shared') { //Shared network offering
-										  serviceFieldsToHide = [
-												'service.SourceNat.isEnabled',
-												'service.PortForwarding.isEnabled',
-												'service.Firewall.isEnabled',
-												'service.Vpn.isEnabled'
-											];
-											if(havingVpcVirtualRouterForAtLeastOneService == true) { //add SecurityGroup to to-hide-list
-											  serviceFieldsToHide.push('service.SecurityGroup.isEnabled');
-											}
-											else { //remove SecurityGroup from to-hide-list
-											  var temp = $.map(serviceFieldsToHide, function(item) {
-													if (item != 'service.SecurityGroup.isEnabled') {
-													  return item;
-													}
-												});
-												serviceFieldsToHide = temp;
-											}
-										}
-										else { //Isolated network offering
-										  serviceFieldsToHide = [
-											  'service.SecurityGroup.isEnabled'
-											];
-											if(havingVpcVirtualRouterForAtLeastOneService == true) { //add firewall to to-hide-list
-											  serviceFieldsToHide.push('service.Firewall.isEnabled');
-											}
-											else { //remove firewall from to-hide-list
-											  var temp = $.map(serviceFieldsToHide, function(item) {
-													if (item != 'service.Firewall.isEnabled') {
-													  return item;
-													}
-												});
-												serviceFieldsToHide = temp;
-											}
-										}
+                                        //hide/show service fields ***** (begin) *****
+                                        var serviceFieldsToHide = [];
+                                        if($guestTypeField.val() == 'Shared') { //Shared network offering
+                                          serviceFieldsToHide = [
+                                                'service.SourceNat.isEnabled',
+                                                'service.PortForwarding.isEnabled',
+                                                'service.Firewall.isEnabled',
+                                                'service.Vpn.isEnabled'
+                                            ];
+                                            if(havingVpcVirtualRouterForAtLeastOneService == true) { //add SecurityGroup to to-hide-list
+                                              serviceFieldsToHide.push('service.SecurityGroup.isEnabled');
+                                            }
+                                            else { //remove SecurityGroup from to-hide-list
+                                              var temp = $.map(serviceFieldsToHide, function(item) {
+                                                    if (item != 'service.SecurityGroup.isEnabled') {
+                                                      return item;
+                                                    }
+                                                });
+                                                serviceFieldsToHide = temp;
+                                            }
+                                        }
+                                        else { //Isolated network offering
+                                          serviceFieldsToHide = [
+                                              'service.SecurityGroup.isEnabled'
+                                            ];
+                                            if(havingVpcVirtualRouterForAtLeastOneService == true) { //add firewall to to-hide-list
+                                              serviceFieldsToHide.push('service.Firewall.isEnabled');
+                                            }
+                                            else { //remove firewall from to-hide-list
+                                              var temp = $.map(serviceFieldsToHide, function(item) {
+                                                    if (item != 'service.Firewall.isEnabled') {
+                                                      return item;
+                                                    }
+                                                });
+                                                serviceFieldsToHide = temp;
+                                            }
+                                        }
                     */
 
 
@@ -1992,9 +2521,9 @@
                                         }
 
                                         if (args.$form.find('.form-item[rel=\"service.Firewall.isEnabled\"] input[type=checkbox]').is(':checked') == true) {
-                                            args.$form.find('.form-item[rel=\"egresspolicy\"]').css('display', 'inline-block');
+                                            args.$form.find('.form-item[rel=\"egressdefaultpolicy\"]').css('display', 'inline-block');
                                         } else {
-                                            args.$form.find('.form-item[rel=\"egresspolicy\"]').css('display', 'none');
+                                            args.$form.find('.form-item[rel=\"egressdefaultpolicy\"]').css('display', 'none');
                                         }
 
                                         //show LB Isolation dropdown only when (1)LB Service is checked (2)Service Provider is Netscaler OR F5
@@ -2026,6 +2555,13 @@
                                         } else {
                                             args.$form.find('.form-item[rel=\"service.StaticNat.associatePublicIP\"]').hide();
                                             args.$form.find('.form-item[rel=\"service.StaticNat.associatePublicIP\"]').find('input[type=checkbox]').attr('checked', false);
+                                        }
+
+                                        //StretchedL2Subnet checkbox should be displayed only when 'Connectivity' service is checked
+                                        if (args.$form.find('.form-item[rel=\"service.Connectivity.isEnabled\"]').find('input[type=checkbox]').is(':checked')) {
+                                            $supportsstrechedl2subnet.css('display', 'inline-block');
+                                        } else {
+                                            $supportsstrechedl2subnet.hide();
                                         }
                                     });
 
@@ -2064,7 +2600,7 @@
                       });
                     }
                   },
-									*/
+                                    */
 
                                     guestIpType: {
                                         label: 'label.guest.type',
@@ -2099,7 +2635,7 @@
                                     },
 
                                     isPersistent: {
-                                        label: 'Persistent ',
+                                        label: 'label.persistent',
                                         isBoolean: true,
                                         isChecked: false
 
@@ -2113,13 +2649,13 @@
                                     },
 
                                     useVpc: {
-                                        label: 'VPC',
+                                        label: 'label.vpc',
                                         docID: 'helpNetworkOfferingVPC',
                                         isBoolean: true
                                     },
 
                                     lbType: { //only shown when VPC is checked and LB service is checked
-                                        label: 'Load Balancer Type',
+                                        label: 'label.load.balancer.type',
                                         isHidden: true,
                                         select: function(args) {
                                             args.response.success({
@@ -2154,34 +2690,34 @@
                                                         // Sanitize names
                                                         switch (serviceName) {
                                                             case 'Vpn':
-                                                                serviceDisplayName = 'VPN';
+                                                                serviceDisplayName = _l('label.vpn');
                                                                 break;
                                                             case 'Dhcp':
-                                                                serviceDisplayName = dictionary['label.dhcp'];
+                                                                serviceDisplayName = _l('label.dhcp');
                                                                 break;
                                                             case 'Dns':
-                                                                serviceDisplayName = 'DNS';
+                                                                serviceDisplayName = _l('label.dns');
                                                                 break;
                                                             case 'Lb':
-                                                                serviceDisplayName = 'Load Balancer';
+                                                                serviceDisplayName = _l('label.load.balancer');
                                                                 break;
                                                             case 'SourceNat':
-                                                                serviceDisplayName = 'Source NAT';
+                                                                serviceDisplayName = _l('label.source.nat');
                                                                 break;
                                                             case 'StaticNat':
-                                                                serviceDisplayName = 'Static NAT';
+                                                                serviceDisplayName = _l('label.static.nat');
                                                                 break;
                                                             case 'PortForwarding':
-                                                                serviceDisplayName = 'Port Forwarding';
+                                                                serviceDisplayName = _l('label.port.forwarding');
                                                                 break;
                                                             case 'SecurityGroup':
-                                                                serviceDisplayName = 'Security Groups';
+                                                                serviceDisplayName = _l('label.security.groups');
                                                                 break;
                                                             case 'UserData':
-                                                                serviceDisplayName = 'User Data';
+                                                                serviceDisplayName = _l('label.user.data');
                                                                 break;
                                                             case 'Connectivity':
-                                                                serviceDisplayName = 'Virtual Networking';
+                                                                serviceDisplayName = _l('label.virtual.networking');
                                                                 break;
                                                             default:
                                                                 serviceDisplayName = serviceName;
@@ -2288,7 +2824,7 @@
 
                                     //show or hide upon checked services and selected providers above (begin)
                                     serviceofferingid: {
-                                        label: 'System Offering for Router',
+                                        label: 'label.system.offering.for.router',
                                         isHidden: true,
                                         docID: 'helpNetworkOfferingSystemOffering',
                                         select: function(args) {
@@ -2322,7 +2858,7 @@
                                     },
 
                                     "service.SourceNat.redundantRouterCapabilityCheckbox": {
-                                        label: "label.redundant.router.capability",
+                                        label: 'label.redundant.router.capability',
                                         isHidden: true,
                                         dependsOn: 'service.SourceNat.isEnabled',
                                         docID: 'helpNetworkOfferingRedundantRouterCapability',
@@ -2368,7 +2904,7 @@
                                         }
                                     },
                                     "service.Lb.inlineModeDropdown": {
-                                        label: 'Mode',
+                                        label: 'label.mode',
                                         docID: 'helpNetworkOfferingMode',
                                         select: function(args) {
                                             var items = [];
@@ -2393,17 +2929,24 @@
                                     },
 
                                     "service.StaticNat.associatePublicIP": {
-                                        label: 'Associate Public IP',
+                                        label: 'label.associate.public.ip',
                                         docID: 'helpNetworkOfferingAssociatePublicIP',
                                         isBoolean: true,
                                         isHidden: true
                                     },
                                     //show or hide upon checked services and selected providers above (end)
 
+                                    supportsstrechedl2subnet: {
+                                        label: 'label.supportsstrechedl2subnet',
+                                        isBoolean: true,
+                                        isChecked: false,
+                                        isHidden: true
+                                    },
 
                                     conservemode: {
                                         label: 'label.conserve.mode',
                                         isBoolean: true,
+                                        isChecked: true,
                                         docID: 'helpNetworkOfferingConserveMode'
                                     },
 
@@ -2419,23 +2962,23 @@
                                             args.response.success({
                                                 data: [{
                                                     id: 'Optional',
-                                                    description: 'Optional'
+                                                    description: 'label.optional'
                                                 }, {
                                                     id: 'Required',
-                                                    description: 'Required'
+                                                    description: 'label.required'
                                                 }]
                                             });
                                         }
                                     },
 
-                                    egresspolicy: {
-                                        label: 'Default egress policy',
+                                    egressdefaultpolicy: {
+                                        label: 'label.default.egress.policy',
                                         isHidden: true,
                                         select: function(args) {
                                             args.response.success({
                                                 data: [
-                                                    { id: 'ALLOW', description: 'Allow' },
-                                                    { id: 'DENY', description: 'Deny' }
+                                                    { id: 'ALLOW', description: 'label.allow' },
+                                                    { id: 'DENY', description: 'label.deny' }
                                                 ]
                                             });
                                         }
@@ -2503,14 +3046,16 @@
                                             inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].capabilityvalue'] = 'internal';
                                             serviceCapabilityIndex++;
                                         }
-                                    } else if (value != '') { // Normal data
+                                    } else if (value != '') { // normal data (serviceData.length ==1), e.g. "name", "displayText", "networkRate", "guestIpType", "lbType" (unwanted), "availability" (unwated when value is "Optional"), "egressdefaultpolicy", "state" (unwanted), "status" (unwanted), "allocationstate" (unwanted)
+                                        if (!(key ==  "lbType"  || (key == "availability" && value == "Optional") || key == "state" || key == "status" || key == "allocationstate" || key == "useVpc" )) {
                                         inputData[key] = value;
+                                    }
                                     }
                                 });
 
                                 for (var key1 in inputData) {
                                     /* When capability ElasticIp=true is passed to API, if capability associatePublicIP is not passed to API, cloudStack API will assume associatePublicIP=true.
-									So, UI has to explicitly pass associatePublicIP=false to API if its checkbox is unchecked. */
+                                    So, UI has to explicitly pass associatePublicIP=false to API if its checkbox is unchecked. */
                                     if (inputData[key1] == 'ElasticIp') { //ElasticIp checkbox is checked
                                         var associatePublicIPExists = false;
                                         for (var key2 in inputData) {
@@ -2524,10 +3069,24 @@
                                             inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].service'] = 'StaticNat';
                                             inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].capabilitytype'] = 'associatePublicIP';
                                             inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].capabilityvalue'] = false; //associatePublicIP checkbox is unchecked
+                                            serviceCapabilityIndex++;
                                         }
                                         break; //break key1 for loop
                                     }
                                 }
+
+                                //passing supportsstrechedl2subnet's value as capability
+                                for (var k in inputData) {
+                                    if (k == 'supportsstrechedl2subnet' && ("Connectivity" in serviceProviderMap)) {
+                                            inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].service'] = 'Connectivity';
+                                            inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].capabilitytype'] = 'StretchedL2Subnet';
+                                            inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].capabilityvalue'] = true;
+                                            serviceCapabilityIndex++;
+                                            break;
+                                    }
+                                }
+                                //removing supportsstrechedl2subnet from parameters, it has been set as capability
+                                delete inputData['supportsstrechedl2subnet'];
 
                                 // Make supported services list
                                 inputData['supportedServices'] = $.map(serviceProviderMap, function(value, key) {
@@ -2538,28 +3097,27 @@
                                 if (inputData['guestIpType'] == "Shared") { //specifyVlan checkbox is disabled, so inputData won't include specifyVlan
                                     inputData['specifyVlan'] = true; //hardcode inputData['specifyVlan']
                                     inputData['specifyIpRanges'] = true;
-                                    inputData['isPersistent'] = false;
+                                    delete inputData.isPersistent; //if Persistent checkbox is unchecked, do not pass isPersistent parameter to API call since we need to keep API call's size as small as possible (p.s. isPersistent is defaulted as false at server-side)
                                 } else if (inputData['guestIpType'] == "Isolated") { //specifyVlan checkbox is shown
-                                    inputData['specifyIpRanges'] = false;
+                                    //inputData['specifyIpRanges'] = false;
+                                    delete inputData.specifyIpRanges; //if specifyIpRanges should be false, do not pass specifyIpRanges parameter to API call since we need to keep API call's size as small as possible (p.s. specifyIpRanges is defaulted as false at server-side)
 
                                     if (inputData['specifyVlan'] == 'on') { //specifyVlan checkbox is checked
                                         inputData['specifyVlan'] = true;
-                                        inputData['specifyIpRanges'] = true;
                                     } else { //specifyVlan checkbox is unchecked
-                                        inputData['specifyVlan'] = false;
-
+                                        delete inputData.specifyVlan; //if specifyVlan checkbox is unchecked, do not pass specifyVlan parameter to API call since we need to keep API call's size as small as possible (p.s. specifyVlan is defaulted as false at server-side)
                                     }
 
                                     if (inputData['isPersistent'] == 'on') { //It is a persistent network
                                         inputData['isPersistent'] = true;
                                     } else { //Isolated Network with Non-persistent network
-                                        inputData['isPersistent'] = false;
+                                        delete inputData.isPersistent; //if Persistent checkbox is unchecked, do not pass isPersistent parameter to API call since we need to keep API call's size as small as possible (p.s. isPersistent is defaulted as false at server-side)
                                     }
                                 }
 
 
                                 if (inputData['conservemode'] == 'on') {
-                                    inputData['conservemode'] = true;
+                                    delete inputData.conservemode; //if ConserveMode checkbox is checked, do not pass conservemode parameter to API call since we need to keep API call's size as small as possible (p.s. conservemode is defaulted as true at server-side)
                                 } else {
                                     inputData['conservemode'] = false;
                                 }
@@ -2572,13 +3130,14 @@
                                     serviceProviderIndex++;
                                 });
 
-                                if (args.$form.find('.form-item[rel=availability]').css("display") == "none")
-                                    inputData['availability'] = 'Optional';
-
-                                if (args.$form.find('.form-item[rel=egresspolicy]').is(':visible')) {
-                                    inputData['egressdefaultpolicy'] = formData.egresspolicy === 'ALLOW' ? true : false;
+                                if (args.$form.find('.form-item[rel=egressdefaultpolicy]').is(':visible')) {
+                                    if (formData.egressdefaultpolicy === 'ALLOW') {
+                                        delete inputData.egressdefaultpolicy; //do not pass egressdefaultpolicy to API call  since we need to keep API call's size as small as possible (p.s. egressdefaultpolicy is defaulted as true at server-side)
+                                    } else {
+                                        inputData['egressdefaultpolicy'] = false;
+                                    }
                                 } else {
-                                    delete inputData.egresspolicy;
+                                    delete inputData.egressdefaultpolicy;
                                 }
 
                                 if (args.$form.find('.form-item[rel=serviceofferingid]').css("display") == "none")
@@ -2589,8 +3148,7 @@
                                 $.ajax({
                                     url: createURL('createNetworkOffering'),
                                     data: inputData,
-                                    dataType: 'json',
-                                    async: true,
+                                    type: "POST", //use POST instead of GET since the API call might be overlong and exceed size limit
                                     success: function(data) {
                                         var item = data.createnetworkofferingresponse.networkoffering;
 
@@ -2619,7 +3177,7 @@
 
                             messages: {
                                 notification: function(args) {
-                                    return 'Added network offering';
+                                    return 'label.add.network.offering';
                                 }
                             }
                         }
@@ -2628,7 +3186,7 @@
                     reorder: cloudStack.api.actions.sort('updateNetworkOffering', 'networkOfferings'),
 
                     detailView: {
-                        name: 'Network offering details',
+                        name: 'label.network.offering.details',
                         actions: {
                             edit: {
                                 label: 'label.edit',
@@ -2664,13 +3222,13 @@
                             },
 
                             enable: {
-                                label: 'Enable network offering',
+                                label: 'label.enable.network.offering',
                                 messages: {
                                     confirm: function(args) {
-                                        return 'Are you sure you want to enable this network offering?';
+                                        return 'message.confirm.enable.network.offering';
                                     },
                                     notification: function(args) {
-                                        return 'Enabling network offering';
+                                        return 'message.enabling.network.offering';
                                     }
                                 },
                                 action: function(args) {
@@ -2699,13 +3257,13 @@
                             },
 
                             disable: {
-                                label: 'Disable network offering',
+                                label: 'label.disable.network.offering',
                                 messages: {
                                     confirm: function(args) {
-                                        return 'Are you sure you want to disable this network offering?';
+                                        return 'message.confirm.disable.network.offering';
                                     },
                                     notification: function(args) {
-                                        return 'Disabling network offering';
+                                        return 'message.disabling.network.offering';
                                     }
                                 },
                                 action: function(args) {
@@ -2734,7 +3292,7 @@
                             },
 
                             remove: {
-                                label: 'Remove network offering',
+                                label: 'label.remove.network.offering',
                                 action: function(args) {
                                     $.ajax({
                                         url: createURL('deleteNetworkOffering'),
@@ -2754,10 +3312,10 @@
                                 },
                                 messages: {
                                     confirm: function() {
-                                        return 'Are you sure you want to remove this network offering?';
+                                        return 'message.confirm.remove.network.offering';
                                     },
                                     notification: function() {
-                                        return 'Remove network offering';
+                                        return 'label.remove.network.offering';
                                     }
                                 },
                                 notification: {
@@ -2803,7 +3361,7 @@
                                     },
 
                                     ispersistent: {
-                                        label: 'Persistent ',
+                                        label: 'label.persistent',
                                         converter: cloudStack.converters.toBooleanText
                                     },
 
@@ -2864,6 +3422,10 @@
                                     traffictype: {
                                         label: 'label.traffic.type'
                                     },
+                                    supportsstrechedl2subnet: {
+                                        label: 'label.supportsstrechedl2subnet',
+                                        converter: cloudStack.converters.toBooleanText
+                                    },
                                     supportedServices: {
                                         label: 'label.supported.services'
                                     },
@@ -2903,9 +3465,589 @@
                         }
                     }
                 }
+            },
+
+            vpcOfferings: {
+                type: 'select',
+                title: 'label.menu.vpc.offerings',
+                listView: {
+                    id: 'vpcOfferings',
+                    label: 'label.menu.vpc.offerings',
+                    fields: {
+                        name: {
+                            label: 'label.name'
+                        },
+                        state: {
+                            label: 'label.state',
+                            indicator: {
+                                'Enabled': 'on',
+                                'Disabled': 'off',
+                                'Destroyed': 'off'
+                            }
+                        }
+                    },
+
+                    dataProvider: function(args) {
+                        var data = {};
+                        listViewDataProvider(args, data);
+
+                        $.ajax({
+                            url: createURL('listVPCOfferings'),
+                            data: data,
+                            success: function(json) {
+                                var items = json.listvpcofferingsresponse.vpcoffering;
+                                args.response.success({
+                                    actionFilter: vpcOfferingActionfilter,
+                                    data: items
+                                });
+                            },
+                            error: function(data) {
+                                args.response.error(parseXMLHttpResponse(data));
+                            }
+                        });
+                    },
+
+                    actions: {
+                        add: {
+                            label: 'label.add.vpc.offering',
+
+                            createForm: {
+                                title: 'label.add.vpc.offering',
+
+                                preFilter: function(args) {
+                                    var hasAdvancedZones = false;
+
+                                    // Check whether there are any advanced zones
+                                    $.ajax({
+                                        url: createURL('listZones'),
+                                        data: {},
+                                        async: false,
+                                        success: function(json) {
+                                            var zones = json.listzonesresponse.zone;
+                                            if (zones != null && zones.length > 0) {
+                                                for (var i = 0; i < zones.length; i++) {
+                                                    if (zones[i].networktype == "Advanced")
+                                                        hasAdvancedZones = true;
+                                                }
+                                            }
+                                        }
+                                    });
+
+                                    args.$form.bind('change', function() { //when any field in the dialog is changed
+
+                                        var $providers = args.$form.find('.dynamic-input select');
+                                        var $optionsOfProviders = $providers.find('option');
+
+                                        $providers.each(function() {
+                                            //if selected option is disabled, select the first enabled option instead
+                                            if ($(this).find('option:selected:disabled').length > 0) {
+                                                $(this).val($(this).find('option:first'));
+                                            }
+                                        });
+                                    });
+
+                                    args.$form.change();
+                                },
+
+                                fields: {
+                                    name: {
+                                        label: 'label.name',
+                                        validation: {
+                                            required: true
+                                        },
+                                        docID: 'helpVpcOfferingName'
+                                    },
+
+                                    displayText: {
+                                        label: 'label.description',
+                                        validation: {
+                                            required: true
+                                        },
+                                        docID: 'helpVpcOfferingDescription'
+                                    },
+
+                                    supportedServices: {
+                                        label: 'label.supported.services',
+
+                                        dynamic: function(args) {
+                                            var networkServiceObjs = [];
+                                            networkServiceObjs.push({
+                                                name: 'Dhcp',
+                                                provider: [
+                                                       {name: 'VpcVirtualRouter'},
+                                                       {name: 'NuageVsp'}]
+                                            });
+                                            networkServiceObjs.push({
+                                                name: 'Dns',
+                                                provider: [{name: 'VpcVirtualRouter'}]
+                                            });
+                                            networkServiceObjs.push({
+                                                name: 'Lb',
+                                                provider: [{name: 'VpcVirtualRouter'}]
+                                            });
+                                            networkServiceObjs.push({
+                                                name: 'Gateway',
+                                                provider: [{name: 'VpcVirtualRouter'},
+                                                           {name: 'BigSwitchBcf'}]
+                                            });
+                                            networkServiceObjs.push({
+                                                name: 'StaticNat',
+                                                provider: [
+                                                       {name: 'VpcVirtualRouter'},
+                                                       {name: 'NuageVsp'},
+                                                       {name: 'BigSwitchBcf'}]
+                                            });
+                                            networkServiceObjs.push({
+                                                name: 'SourceNat',
+                                                provider: [
+                                                       {name: 'VpcVirtualRouter'},
+                                                       {name: 'NuageVsp'},
+                                                       {name: 'BigSwitchBcf'}]
+                                            });
+                                            networkServiceObjs.push({
+                                                name: 'NetworkACL',
+                                                provider: [
+                                                       {name: 'VpcVirtualRouter'},
+                                                       {name: 'NuageVsp'},
+                                                       {name: 'BigSwitchBcf'}]
+                                            });
+                                            networkServiceObjs.push({
+                                                name: 'PortForwarding',
+                                                provider: [{name: 'VpcVirtualRouter'}]
+                                            });
+                                            networkServiceObjs.push({
+                                                name: 'UserData',
+                                                provider: [{name: 'VpcVirtualRouter'}]
+                                            });
+                                            networkServiceObjs.push({
+                                                name: 'Vpn',
+                                                provider: [{name: 'VpcVirtualRouter'},
+                                                           {name: 'BigSwitchBcf'}]
+                                            });
+
+                                            networkServiceObjs.push({
+                                                name: 'Connectivity',
+                                                provider: [
+                                                    {name: 'BigSwitchBcf'},
+                                                    {name: 'NiciraNvp'},
+                                                    {name: 'Ovs'},
+                                                    {name: 'JuniperContrailVpcRouter'},
+                                                    {name: 'NuageVsp'}
+                                                ]
+                                            });
+
+                                            serviceFields = [];
+                                            var fields = {};
+                                            $(networkServiceObjs).each(function() {
+                                                var serviceName = this.name;
+                                                var providerObjs = this.provider;
+                                                var serviceDisplayName;
+
+                                                // Sanitize names
+                                                switch (serviceName) {
+                                                    case 'Vpn':
+                                                        serviceDisplayName = _l('label.vpn');
+                                                        break;
+                                                    case 'Dhcp':
+                                                        serviceDisplayName = _l('label.dhcp');
+                                                        break;
+                                                    case 'Dns':
+                                                        serviceDisplayName = _l('label.dns');
+                                                        break;
+                                                    case 'Lb':
+                                                        serviceDisplayName = _l('label.load.balancer');
+                                                        break;
+                                                    case 'SourceNat':
+                                                        serviceDisplayName = _l('label.source.nat');
+                                                        break;
+                                                    case 'StaticNat':
+                                                        serviceDisplayName = _l('label.static.nat');
+                                                        break;
+                                                    case 'PortForwarding':
+                                                        serviceDisplayName = _l('label.port.forwarding');
+                                                        break;
+                                                    case 'UserData':
+                                                        serviceDisplayName = _l('label.user.data');
+                                                        break;
+                                                    default:
+                                                        serviceDisplayName = serviceName;
+                                                        break;
+                                                }
+
+                                                var id = {
+                                                    isEnabled: 'service' + '.' + serviceName + '.' + 'isEnabled',
+                                                    capabilities: 'service' + '.' + serviceName + '.' + 'capabilities',
+                                                    provider: 'service' + '.' + serviceName + '.' + 'provider'
+                                                };
+
+                                                serviceCheckboxNames.push(id.isEnabled);
+
+                                                fields[id.isEnabled] = {
+                                                    label: serviceDisplayName,
+                                                    isBoolean: true
+                                                };
+
+                                                serviceFields.push(id.isEnabled);
+
+                                                fields[id.provider] = {
+                                                    label: serviceDisplayName + ' Provider',
+                                                    isHidden: true,
+                                                    dependsOn: id.isEnabled,
+                                                    select: function(args) {
+                                                        var items = [];
+                                                        $(providerObjs).each(function() {
+                                                               items.push({
+                                                                    id: this.name,
+                                                                    description: this.name
+                                                                });
+                                                        });
+                                                        args.response.success({
+                                                            data: items
+                                                        });
+                                                    }
+                                                }
+                                            });
+
+                                            args.response.success({
+                                                fields: fields
+                                            });
+                                        }
+                                    }, //end of supportedservices field
+
+                                    "service.Connectivity.regionLevelVpcCapabilityCheckbox": {
+                                        label: 'label.regionlevelvpc',
+                                        isHidden: true,
+                                        dependsOn: 'service.Connectivity.isEnabled',
+                                        isBoolean: true
+                                    },
+
+                                    "service.Connectivity.distributedRouterCapabilityCheckbox": {
+                                        label: 'label.distributedrouter',
+                                        isHidden: true,
+                                        dependsOn: 'service.Connectivity.isEnabled',
+                                        isBoolean: true
+                                    },
+
+                                    "service.SourceNat.redundantRouterCapabilityCheckbox": {
+                                        label: 'label.redundant.router.capability',
+                                        isHidden: true,
+                                        dependsOn: 'service.SourceNat.isEnabled',
+                                        isBoolean: true
+                                    }
+                                }//end of fields
+                            }, //end of createForm
+
+                            action: function(args) {
+                                var formData = args.data;
+                                var inputData = {};
+                                var serviceProviderMap = {};
+                                var serviceCapabilityIndex = 0;
+                                $.each(formData, function(key, value) {
+                                    var serviceData = key.split('.');
+                                    if (serviceData.length > 1) {
+                                        if (serviceData[0] == 'service' &&
+                                            serviceData[2] == 'isEnabled' &&
+                                            value == 'on') { // Services field
+
+                                            serviceProviderMap[serviceData[1]] = formData[
+                                                'service.' + serviceData[1] + '.provider'
+                                            ];
+                                        } else if ((key == 'service.Connectivity.regionLevelVpcCapabilityCheckbox') && ("Connectivity" in serviceProviderMap)) {
+                                            inputData['serviceCapabilityList[' + serviceCapabilityIndex + '].service'] = 'Connectivity';
+                                            inputData['serviceCapabilityList[' + serviceCapabilityIndex + '].capabilitytype'] = "RegionLevelVpc";
+                                            inputData['serviceCapabilityList[' + serviceCapabilityIndex + '].capabilityvalue'] = true;
+                                            serviceCapabilityIndex++;
+                                        } else if ((key == 'service.Connectivity.distributedRouterCapabilityCheckbox') && ("Connectivity" in serviceProviderMap)) {
+                                            inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].service'] = 'Connectivity';
+                                            inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].capabilitytype'] = 'DistributedRouter';
+                                            inputData['servicecapabilitylist[' + serviceCapabilityIndex + '].capabilityvalue'] = true;
+                                            serviceCapabilityIndex++;
+                                        } else if ((key == 'service.SourceNat.redundantRouterCapabilityCheckbox') && ("SourceNat" in serviceProviderMap)) {
+                                            inputData['serviceCapabilityList[' + serviceCapabilityIndex + '].service'] = 'SourceNat';
+                                            inputData['serviceCapabilityList[' + serviceCapabilityIndex + '].capabilitytype'] = "RedundantRouter";
+                                            inputData['serviceCapabilityList[' + serviceCapabilityIndex + '].capabilityvalue'] = true;
+                                            serviceCapabilityIndex++;
+                                        }
+
+                                    } else if (value != '') { // Normal data
+                                        inputData[key] = value;
+                                    }
+                                });
+
+                                // Make supported services list
+                                inputData['supportedServices'] = $.map(serviceProviderMap, function(value, key) {
+                                    return key;
+                                }).join(',');
+
+
+                                // Make service provider map
+                                var serviceProviderIndex = 0;
+                                $.each(serviceProviderMap, function(key, value) {
+                                    inputData['serviceProviderList[' + serviceProviderIndex + '].service'] = key;
+                                    inputData['serviceProviderList[' + serviceProviderIndex + '].provider'] = value;
+                                    serviceProviderIndex++;
+                                });
+
+                                $.ajax({
+                                    url: createURL('createVPCOffering'),
+                                    data: inputData,
+                                    dataType: 'json',
+                                    async: true,
+                                    success: function(data) {
+                                        var item = data.createvpcofferingresponse;
+
+                                        args.response.success({
+                                            data: item,
+                                            actionFilter: vpcOfferingActionfilter
+                                        });
+                                    },
+
+                                    error: function(data) {
+                                        args.response.error(parseXMLHttpResponse(data));
+                                    }
+                                });
+                            },
+
+                            notification: {
+                                poll: function(args) {
+                                    args.complete({
+                                        actionFilter: vpcOfferingActionfilter
+                                    });
+                                }
+                            },
+
+                            messages: {
+                                notification: function(args) {
+                                    return 'message.added.vpc.offering';
+                                }
+                            }
+                        }
+                    },
+
+                    reorder: cloudStack.api.actions.sort('updateVPCOffering', 'vpcOfferings'),
+
+                    detailView: {
+                        name: 'label.vpc.offering.details',
+                        actions: {
+                            edit: {
+                                label: 'label.edit',
+                                action: function(args) {
+                                    var data = {
+                                        id: args.context.vpcOfferings[0].id,
+                                        name: args.data.name,
+                                        displaytext: args.data.displaytext,
+                                        availability: args.data.availability
+                                    };
+
+                                    $.ajax({
+                                        url: createURL('updateVPCOffering'),
+                                        data: data,
+                                        success: function(json) {
+                                            var item = json.updatevpcofferingresponse.vpcoffering;
+                                            args.response.success({
+                                                data: item
+                                            });
+                                        },
+                                        error: function(data) {
+                                            args.response.error(parseXMLHttpResponse(data));
+                                        }
+                                    });
+                                }
+                            },
+
+                            enable: {
+                                label: 'label.enable.vpc.offering',
+                                messages: {
+                                    confirm: function(args) {
+                                        return 'message.confirm.enable.vpc.offering';
+                                    },
+                                    notification: function(args) {
+                                        return 'message.enabling.vpc.offering';
+                                    }
+                                },
+                                action: function(args) {
+                                    $.ajax({
+                                        url: createURL("updateVPCOffering&id=" + args.context.vpcOfferings[0].id + "&state=Enabled"),
+                                        dataType: "json",
+                                        async: true,
+                                        success: function(json) {
+                                            var item = json.updatevpcofferingresponse.vpcoffering;
+                                            args.response.success();
+                                        },
+                                        error: function(data) {
+                                            args.response.error(parseXMLHttpResponse(data));
+                                        }
+                                    });
+                                },
+                                notification: {
+                                    poll: function(args) {
+                                        args.complete({
+                                            data: {
+                                                state: 'Enabled'
+                                            }
+                                        });
+                                    }
+                                }
+                            },
+
+                            disable: {
+                                label: 'label.disable.vpc.offering',
+                                messages: {
+                                    confirm: function(args) {
+                                        return 'message.confirm.disable.vpc.offering';
+                                    },
+                                    notification: function(args) {
+                                        return 'message.disabling.vpc.offering';
+                                    }
+                                },
+                                action: function(args) {
+                                    $.ajax({
+                                        url: createURL("updateVPCOffering&id=" + args.context.vpcOfferings[0].id + "&state=Disabled"),
+                                        dataType: "json",
+                                        async: true,
+                                        success: function(json) {
+                                            var item = json.updatevpcofferingresponse.vpcoffering;
+                                            args.response.success();
+                                        },
+                                        error: function(data) {
+                                            args.response.error(parseXMLHttpResponse(data));
+                                        }
+                                    });
+                                },
+                                notification: {
+                                    poll: function(args) {
+                                        args.complete({
+                                            data: {
+                                                state: 'Disabled'
+                                            }
+                                        });
+                                    }
+                                }
+                            },
+
+                            remove: {
+                                label: 'label.remove.vpc.offering',
+                                action: function(args) {
+                                    $.ajax({
+                                        url: createURL('deleteVPCOffering'),
+                                        data: {
+                                            id: args.context.vpcOfferings[0].id
+                                        },
+                                        success: function(json) {
+                                            args.response.success();
+                                        },
+                                        error: function(data) {
+                                            args.response.error(parseXMLHttpResponse(data));
+                                        }
+                                    });
+                                },
+                                messages: {
+                                    confirm: function() {
+                                        return 'message.confirm.remove.vpc.offering';
+                                    },
+                                    notification: function() {
+                                        return 'label.remove.vpc.offering';
+                                    }
+                                },
+                                notification: {
+                                    poll: function(args) {
+                                        args.complete({
+                                            data: {
+                                                state: 'Destroyed'
+                                            },
+                                            actionFilter: vpcOfferingActionfilter
+                                        });
+                                    }
+                                }
+                            }
+                        },
+                        tabs: {
+                            details: {
+                                title: 'label.details',
+
+                                fields: [{
+                                    name: {
+                                        label: 'label.name',
+                                        isEditable: true,
+                                        validation: {
+                                            required: true
+                                        }
+                                    }
+                                }, {
+                                    id: {
+                                        label: 'label.id'
+                                    },
+                                    displaytext: {
+                                        label: 'label.description',
+                                        isEditable: true,
+                                        validation: {
+                                            required: true
+                                        }
+                                    },
+                                    state: {
+                                        label: 'label.state'
+                                    },
+
+                                    isdefault: { //created by system by default
+                                        label: 'label.created.by.system',
+                                        converter: cloudStack.converters.toBooleanText
+                                    },
+
+                                    supportedServices: {
+                                        label: 'label.supported.services'
+                                    },
+                                    serviceCapabilities: {
+                                        label: 'label.service.capabilities'
+                                    },
+                                    distributedvpcrouter: {
+                                        label: 'label.vpc.distributedvpcrouter',
+                                        converter: cloudStack.converters.toBooleanText
+                                    },
+                                    supportsregionLevelvpc: {
+                                        label: 'label.vpc.supportsregionlevelvpc',
+                                        converter: cloudStack.converters.toBooleanText
+                                    },
+                                    serviceCapabilities: {
+                                        label: 'label.service.capabilities'
+                                    },
+                                    tags: {
+                                        label: 'label.tags'
+                                    }
+
+                                }],
+
+                                dataProvider: function(args) {
+                                    $.ajax({
+                                        url: createURL('listVPCOfferings&id=' + args.context.vpcOfferings[0].id),
+                                        dataType: "json",
+                                        async: true,
+                                        success: function(json) {
+                                            var item = json.listvpcofferingsresponse.vpcoffering[0];
+                                            args.response.success({
+                                                actionFilter: vpcOfferingActionfilter,
+                                                data: $.extend(item, {
+                                                    supportedServices: $.map(item.service, function(service) {
+                                                        return service.name;
+                                                    }).join(', '),
+
+                                                    serviceCapabilities: $.map(item.service, function(service) {
+                                                        return service.provider ? $.map(service.provider, function(capability) {
+                                                            return service.name + ': ' + capability.name;
+                                                        }).join(', ') : null;
+                                                    }).join(', ')
+                                                })
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
-    };
+}
+
 
     var serviceOfferingActionfilter = function(args) {
         var jsonObj = args.context.item;
@@ -2932,6 +4074,26 @@
     };
 
     var networkOfferingActionfilter = function(args) {
+        var jsonObj = args.context.item;
+
+        if (jsonObj.state == 'Destroyed')
+            return [];
+
+        var allowedActions = [];
+        allowedActions.push("edit");
+
+        if (jsonObj.state == "Enabled")
+            allowedActions.push("disable");
+        else if (jsonObj.state == "Disabled")
+            allowedActions.push("enable");
+
+        if (jsonObj.isdefault == false)
+            allowedActions.push("remove");
+
+        return allowedActions;
+    };
+
+    var vpcOfferingActionfilter = function(args) {
         var jsonObj = args.context.item;
 
         if (jsonObj.state == 'Destroyed')

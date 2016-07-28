@@ -27,7 +27,7 @@
         regionSelector: {
             dataProvider: function(args) {
                 $.ajax({
-                    url: createURL('listRegions&listAll=true'),
+                    url: createURL('listRegions'),
                     success: function(json) {
                         var regions = json.listregionsresponse.region;
 
@@ -55,7 +55,7 @@
                             label: 'label.name'
                         },
                         id: {
-                            label: 'ID'
+                            label: 'label.id'
                         },
                         endpoint: {
                             label: 'label.endpoint'
@@ -130,7 +130,7 @@
                     },
                     dataProvider: function(args) {
                         $.ajax({
-                            url: createURL('listRegions&listAll=true'),
+                            url: createURL('listRegions'),
                             success: function(json) {
                                 var items = json.listregionsresponse.region;
                                 args.response.success({
@@ -143,13 +143,16 @@
                         });
                     },
                     detailView: {
-                        name: 'Region details',
+                        name: 'label.region.details',
                         viewAll: [{
                             path: 'regions.GSLB',
-                            label: 'GSLB'
+                            label: 'label.gslb'
+                        }, {
+                            path: 'network.vpc',
+                            label: 'label.regionlevelvpc'
                         }, {
                             path: 'regions.portableIpRanges',
-                            label: 'Portable IP',
+                            label: 'label.portable.ip',
                             preFilter: function(args) {
                                 if (isAdmin())
                                     return true;
@@ -193,16 +196,6 @@
                                 preAction: function(args) {
                                     var region = args.context.regions[0];
 
-                                    /* e.g.
-                  region.endpoint	== "http://localhost:8080/client/"
-                  document.location.href == "http://localhost:8080/client/#"
-                  */
-                                    /*
-                  if(document.location.href.indexOf(region.endpoint) != -1) {
-                    cloudStack.dialog.notice({ message: _l('You can not remove the region that you are currently in.') });
-                    return false;
-                  }
-                  */
                                     return true;
                                 },
                                 action: function(args) {
@@ -243,7 +236,7 @@
                                 }],
                                 dataProvider: function(args) {
                                     $.ajax({
-                                        url: createURL('listRegions&listAll=true'),
+                                        url: createURL('listRegions'),
                                         data: {
                                             id: args.context.regions[0].id
                                         },
@@ -268,36 +261,36 @@
             GSLB: {
                 id: 'GSLB',
                 type: 'select',
-                title: 'GSLB',
+                title: 'label.gslb',
                 listView: {
                     id: 'GSLB',
-                    label: 'GSLB',
+                    label: 'label.gslb',
                     fields: {
                         name: {
                             label: 'label.name'
                         },
                         gslbdomainname: {
-                            label: 'GSLB Domain Name'
+                            label: 'label.gslb.domain.name'
                         },
                         gslblbmethod: {
-                            label: 'Algorithm'
+                            label: 'label.algorithm'
                         }
                     },
                     actions: {
                         add: {
-                            label: 'Add GSLB',
+                            label: 'label.add.gslb',
 
                             messages: {
                                 confirm: function(args) {
-                                    return 'Add GSLB';
+                                    return 'label.add.gslb';
                                 },
                                 notification: function(args) {
-                                    return 'Add GSLB';
+                                    return 'label.add.gslb';
                                 }
                             },
 
                             createForm: {
-                                title: 'Add GSLB',
+                                title: 'label.add.gslb',
                                 fields: {
                                     name: {
                                         label: 'label.name',
@@ -309,13 +302,13 @@
                                         label: 'label.description'
                                     },
                                     gslbdomainname: {
-                                        label: 'GSLB Domain Name',
+                                        label: 'label.gslb.domain.name',
                                         validation: {
                                             required: true
                                         }
                                     },
                                     gslblbmethod: {
-                                        label: 'Algorithm',
+                                        label: 'label.algorithm',
                                         select: function(args) {
                                             var array1 = [{
                                                 id: 'roundrobin',
@@ -333,7 +326,7 @@
                                         }
                                     },
                                     gslbservicetype: {
-                                        label: 'Service Type',
+                                        label: 'label.gslb.servicetype',
                                         select: function(args) {
                                             var array1 = [{
                                                 id: 'tcp',
@@ -341,6 +334,9 @@
                                             }, {
                                                 id: 'udp',
                                                 description: 'udp'
+                                            }, {
+                                                id: 'http',
+                                                description: 'http'
                                             }];
                                             args.response.success({
                                                 data: array1
@@ -351,7 +347,7 @@
                                         }
                                     },
                                     domainid: {
-                                        label: 'Domain',
+                                        label: 'label.domain',
                                         select: function(args) {
                                             if (isAdmin() || isDomainAdmin()) {
                                                 $.ajax({
@@ -374,6 +370,9 @@
                                                                 });
                                                             }
                                                         }
+                                                        array1.sort(function(a, b) {
+                                                            return a.description.localeCompare(b.description);
+                                                        });
                                                         args.response.success({
                                                             data: array1
                                                         });
@@ -393,7 +392,7 @@
                                         }
                                     },
                                     account: {
-                                        label: 'Account',
+                                        label: 'label.account',
                                         isHidden: function(args) {
                                             if (isAdmin() || isDomainAdmin())
                                                 return false;
@@ -470,45 +469,46 @@
                     },
 
                     detailView: {
-                        name: 'GSLB details',
+                        name: 'label.gslb.details',
                         viewAll: {
                             path: 'regions.lbUnderGSLB',
-                            label: 'assigned load balancing'
+                            label: 'label.gslb.assigned.lb'
                         },
-                        actions: {                            
-                        	edit: {
+
+                        actions: {
+                            edit: {
                                 label: 'label.edit',
-                                action: function(args) {                                	
+                                action: function(args) {
                                     var data = {
-                                    	id: args.context.GSLB[0].id,
-                                    	description: args.data.description,
-                                    	gslblbmethod: args.data.gslblbmethod
-                                    };                                    
+                                        id: args.context.GSLB[0].id,
+                                        description: args.data.description,
+                                        gslblbmethod: args.data.gslblbmethod
+                                    };
                                     $.ajax({
                                         url: createURL('updateGlobalLoadBalancerRule'),
                                         data: data,
-                                        success: function(json) {                                        	
-                                            var jid = json.updategloballoadbalancerruleresponse.jobid;                                           
+                                        success: function(json) {
+                                            var jid = json.updategloballoadbalancerruleresponse.jobid;
                                             args.response.success({
                                                 _custom: {
                                                     jobId: jid
                                                 }
-                                            });                                            
+                                            });
                                         }
                                     });
-                                },                                
+                                },
                                 notification: {
                                     poll: pollAsyncJobResult
                                 }
-                            },                        	
-                        	remove: {
-                                label: 'delete GSLB',
+                            },
+                            remove: {
+                                label: 'label.gslb.delete',
                                 messages: {
                                     confirm: function(args) {
-                                        return 'Please confirm you want to delete this GSLB';
+                                        return 'message.gslb.delete.confirm';
                                     },
                                     notification: function(args) {
-                                        return 'delete GSLB';
+                                        return 'label.gslb.delete';
                                     }
                                 },
                                 action: function(args) {
@@ -546,10 +546,10 @@
                                         isEditable: true
                                     },
                                     gslbdomainname: {
-                                        label: 'GSLB Domain Name'
+                                        label: 'label.gslb.domain.name'
                                     },
                                     gslblbmethod: {
-                                        label: 'Algorithm',
+                                        label: 'label.algorithm',
                                         isEditable: true,
                                         select: function(args) {
                                             var array1 = [{
@@ -568,10 +568,10 @@
                                         }
                                     },
                                     gslbservicetype: {
-                                        label: 'Service Type'
+                                        label: 'label.gslb.servicetype'
                                     },
                                     id: {
-                                        label: 'ID'
+                                        label: 'label.id'
                                     }
                                 }],
                                 dataProvider: function(args) {
@@ -598,10 +598,10 @@
             portableIpRanges: {
                 id: 'portableIpRanges',
                 type: 'select',
-                title: 'Portable IP Ranges',
+                title: 'label.portable.ip.ranges',
                 listView: {
                     id: 'portableIpRanges',
-                    label: 'Portable IP Ranges',
+                    label: 'label.portable.ip.ranges',
                     fields: {
                         startip: {
                             label: 'label.start.IP'
@@ -642,14 +642,14 @@
                     },
                     actions: {
                         add: {
-                            label: 'Add Portable IP Range',
+                            label: 'label.add.portable.ip.range',
                             messages: {
                                 notification: function(args) {
-                                    return 'Add Portable IP Range';
+                                    return 'label.add.portable.ip.range';
                                 }
                             },
                             createForm: {
-                                title: 'Add Portable IP Range',
+                                title: 'label.add.portable.ip.range',
                                 fields: {
                                     startip: {
                                         label: 'label.start.IP',
@@ -742,16 +742,16 @@
                     },
 
                     detailView: {
-                        name: 'Portable IP Range details',
+                        name: 'label.portable.ip.range.details',
                         actions: {
                             remove: {
-                                label: 'Delete Portable IP Range',
+                                label: 'label.delete.portable.ip.range',
                                 messages: {
                                     confirm: function(args) {
-                                        return 'Please confirm you want to delete Portable IP Range';
+                                        return 'message.portable.ip.delete.confirm';
                                     },
                                     notification: function(args) {
-                                        return 'Delete Portable IP Range';
+                                        return 'label.delete.portable.ip.range';
                                     }
                                 },
                                 action: function(args) {
@@ -804,7 +804,7 @@
                                         label: 'label.vlan'
                                     },
                                     portableipaddress: {
-                                        label: 'Portable IPs',
+                                        label: 'label.portable.ips',
                                         converter: function(args) {
                                             var text1 = '';
                                             if (args != null) {
@@ -845,11 +845,11 @@
             lbUnderGSLB: {
                 id: 'lbUnderGSLB',
                 type: 'select',
-                title: 'assigned load balancing',
+                title: 'label.gslb.assigned.lb',
                 listView: {
                     section: 'lbUnderGSLB',
                     id: 'lbUnderGSLB',
-                    label: 'assigned load balancing',
+                    label: 'label.gslb.assigned.lb',
                     fields: {
                         name: {
                             label: 'label.name'
@@ -881,17 +881,17 @@
                     },
                     actions: {
                         add: {
-                            label: 'assign more load balancing',
+                            label: 'label.gslb.assigned.lb.more',
                             messages: {
                                 notification: function(args) {
-                                    return 'assign more load balancing';
+                                    return 'label.gslb.assigned.lb.more';
                                 }
                             },
                             createForm: {
-                                title: 'assign more load balancing',
+                                title: 'label.gslb.assigned.lb.more',
                                 fields: {
                                     loadbalancerrule: {
-                                        label: 'load balancing rule',
+                                        label: 'label.gslb.lb.rule',
                                         select: function(args) {
                                             var data = {
                                                 globalloadbalancerruleid: args.context.GSLB[0].id,
@@ -958,24 +958,24 @@
                     },
 
                     detailView: {
-                        name: 'load balancing details',
+                        name: 'label.gslb.lb.details',
                         actions: {
                             remove: {
-                                label: 'remove load balancing from this GSLB',
+                                label: 'label.gslb.lb.remove',
                                 messages: {
                                     notification: function() {
-                                        return 'remove load balancing from GSLB';
+                                        return 'label.gslb.lb.remove';
                                     },
                                     confirm: function() {
-                                        return 'Please confirm you want to remove load balancing from GSLB';
+                                        return 'message.gslb.lb.remove.confirm';
                                     }
                                 },
                                 action: function(args) {
                                     $.ajax({
                                         url: createURL('removeFromGlobalLoadBalancerRule'),
                                         data: {
-                                        	id: args.context.GSLB[0].id,
-                                        	loadbalancerrulelist: args.context.lbUnderGSLB[0].id
+                                            id: args.context.GSLB[0].id,
+                                            loadbalancerrulelist: args.context.lbUnderGSLB[0].id
                                         },
                                         success: function(json) {
                                             var jid = json.removefromloadbalancerruleresponse.jobid;

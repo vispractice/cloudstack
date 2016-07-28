@@ -18,31 +18,19 @@ package com.cloud.vm;
 
 import com.cloud.deploy.DeployDestination;
 
-public class VmWorkMigrateForScale extends VmWork {
-	private static final long serialVersionUID = 6854870395568389613L;
+public class VmWorkMigrateForScale extends VmWorkMigrate {
+    private static final long serialVersionUID = 6854870395568389613L;
 
-	long srcHostId;
-	DeployDestination deployDestination;
-	Long newSvcOfferingId;
-	
+    Long newSvcOfferingId;
+
     public VmWorkMigrateForScale(long userId, long accountId, long vmId, String handlerName, long srcHostId,
-    	DeployDestination dest, Long newSvcOfferingId) {
-    	
-        super(userId, accountId, vmId, handlerName);
-    	this.srcHostId = srcHostId;
-    	deployDestination = dest;
-    	this.newSvcOfferingId = newSvcOfferingId;
+            DeployDestination dest, Long newSvcOfferingId) {
+
+        super(userId, accountId, vmId, handlerName, srcHostId, dest);
+        this.newSvcOfferingId = newSvcOfferingId;
     }
-	
-    public long getSrcHostId() {
-    	return srcHostId;
-    }
-    
-    public DeployDestination getDeployDestination() {
-    	return deployDestination;
-    }
-    
+
     public Long getNewServiceOfferringId() {
-    	return newSvcOfferingId;
+        return newSvcOfferingId;
     }
 }

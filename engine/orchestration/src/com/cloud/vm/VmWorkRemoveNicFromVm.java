@@ -17,7 +17,7 @@
 package com.cloud.vm;
 
 public class VmWorkRemoveNicFromVm extends VmWork {
-	private static final long serialVersionUID = -4265657031064437923L;
+    private static final long serialVersionUID = -4265657031064437923L;
 
     Long nicId;
 

@@ -5,7 +5,7 @@
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,6 @@ package com.cloud.network.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
 import org.springframework.stereotype.Component;
@@ -42,7 +41,6 @@ import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.TransactionLegacy;
 
 @Component
-@Local(value = FirewallRulesDao.class)
 @DB
 public class FirewallRulesDaoImpl extends GenericDaoBase<FirewallRuleVO, Long> implements FirewallRulesDao {
 
@@ -53,9 +51,12 @@ public class FirewallRulesDaoImpl extends GenericDaoBase<FirewallRuleVO, Long> i
     protected final SearchBuilder<FirewallRuleVO> SystemRuleSearch;
     protected final GenericSearchBuilder<FirewallRuleVO, Long> RulesByIpCount;
 
-    @Inject protected FirewallRulesCidrsDao _firewallRulesCidrsDao;
-    @Inject ResourceTagDao _tagsDao;
-    @Inject IPAddressDao _ipDao;
+    @Inject
+    protected FirewallRulesCidrsDao _firewallRulesCidrsDao;
+    @Inject
+    ResourceTagDao _tagsDao;
+    @Inject
+    IPAddressDao _ipDao;
 
     protected FirewallRulesDaoImpl() {
         super();
@@ -179,7 +180,6 @@ public class FirewallRulesDaoImpl extends GenericDaoBase<FirewallRuleVO, Long> i
         return listBy(sc);
     }
 
-
     @Override
     public boolean setStateToAdd(FirewallRuleVO rule) {
         SearchCriteria<FirewallRuleVO> sc = AllFieldsSearch.create();
@@ -239,7 +239,8 @@ public class FirewallRulesDaoImpl extends GenericDaoBase<FirewallRuleVO, Long> i
     }
 
     @Override
-    public List<FirewallRuleVO> listByIpPurposeAndProtocolAndNotRevoked(long ipAddressId, Integer startPort, Integer endPort, String protocol, FirewallRule.Purpose purpose) {
+    public List<FirewallRuleVO> listByIpPurposeAndProtocolAndNotRevoked(long ipAddressId, Integer startPort, Integer endPort, String protocol,
+        FirewallRule.Purpose purpose) {
         SearchCriteria<FirewallRuleVO> sc = NotRevokedSearch.create();
         sc.setParameters("ipId", ipAddressId);
         sc.setParameters("state", State.Revoke);

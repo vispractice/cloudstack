@@ -5,7 +5,7 @@
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
@@ -16,18 +16,17 @@
 // under the License.
 package org.apache.cloudstack.resourcedetail.dao;
 
-import javax.ejb.Local;
+
+import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.resourcedetail.ResourceDetailsDaoBase;
 import org.apache.cloudstack.resourcedetail.Site2SiteCustomerGatewayDetailVO;
-import org.springframework.stereotype.Component;
 
 @Component
-@Local(value = {Site2SiteCustomerGatewayDetailsDao.class})
 public class Site2SiteCustomerGatewayDetailsDaoImpl extends ResourceDetailsDaoBase<Site2SiteCustomerGatewayDetailVO> implements Site2SiteCustomerGatewayDetailsDao {
 
     @Override
-    public void addDetail(long resourceId, String key, String value) {
-        super.addDetail(new Site2SiteCustomerGatewayDetailVO(resourceId, key, value));
+    public void addDetail(long resourceId, String key, String value, boolean display) {
+        super.addDetail(new Site2SiteCustomerGatewayDetailVO(resourceId, key, value, display));
     }
 }

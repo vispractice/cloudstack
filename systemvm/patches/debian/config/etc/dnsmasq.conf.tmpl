@@ -87,7 +87,7 @@ local=/2.vmops-test.vmops.com/
 # specified interfaces (and the loopback) give the name of the
 # interface (eg eth0) here.
 # Repeat the line for more than one interface.
-interface=eth0
+#interface=eth0
 # Or you can specify which interface _not_ to listen on
 except-interface=eth1
 except-interface=eth2
@@ -108,7 +108,7 @@ no-dhcp-interface=eth2
 # want dnsmasq to really bind only the interfaces it is listening on,
 # uncomment this option. About the only time you may need this is when
 # running another nameserver on the same machine.
-bind-interfaces
+#bind-interfaces
 
 # If you don't want dnsmasq to read /etc/hosts, uncomment the
 # following line.
@@ -277,7 +277,9 @@ dhcp-hostsfile=/etc/dhcphosts.txt
 # or /etc/ethers. Equivalent to ISC "deny unknown-clients".
 # This relies on the special "known" tag which is set when
 # a host is matched.
-#dhcp-ignore=tag:!known
+#
+# When using bridged networks in ACS this prevents ack to DHCPINFORM etc. request
+dhcp-ignore=tag:!known
 
 # Send extra options which are tagged as "red" to any machine whose
 # DHCP vendorclass string includes the substring "Linux"
@@ -413,7 +415,7 @@ dhcp-option=vendor:MSFT,2,1i
 # this is you want to boot machines over the network and you will need
 # a TFTP server; either dnsmasq's built in TFTP server or an
 # external one. (See below for how to enable the TFTP server.)
-#dhcp-boot=pxelinux.0
+dhcp-boot=pxelinux.0
 
 # The same as above, but use custom tftp-server instead machine running dnsmasq
 #dhcp-boot=pxelinux,server.name,192.168.1.100
@@ -470,10 +472,10 @@ dhcp-option=vendor:MSFT,2,1i
 
 
 # Enable dnsmasq's built-in TFTP server
-#enable-tftp
+enable-tftp
 
 # Set the root directory for files available via FTP.
-#tftp-root=/var/ftpd
+tftp-root=/opt/tftpboot
 
 # Make the TFTP server more secure: with this set, only files owned by
 # the user dnsmasq is running as will be send over the net.

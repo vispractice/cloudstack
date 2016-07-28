@@ -23,15 +23,14 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreProviderManager;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -39,6 +38,7 @@ import com.cloud.agent.api.ModifyStoragePoolCommand;
 import com.cloud.alert.AlertManager;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.ResourceManager;
 import com.cloud.server.ManagementServer;
 import com.cloud.storage.dao.StoragePoolHostDao;
@@ -64,8 +64,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 
 @Component
 public class StoragePoolAutomationImpl implements StoragePoolAutomation {
-    private static final Logger s_logger = Logger
-            .getLogger(StoragePoolAutomationImpl.class);
+    private static final Logger s_logger = Logger.getLogger(StoragePoolAutomationImpl.class);
     @Inject
     protected VirtualMachineManager vmMgr;
     @Inject
@@ -113,19 +112,14 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
             // Handling Zone and Cluster wide storage scopes.
             // if the storage is ZONE wide then we pass podid and cluster id as null as they will be empty for ZWPS
             if (pool.getScope() == ScopeType.ZONE) {
-                spes = primaryDataStoreDao.listBy(
-                        pool.getDataCenterId(), null,
-                        null, ScopeType.ZONE);
-            }
-            else {
-                spes = primaryDataStoreDao.listBy(
-                        pool.getDataCenterId(), pool.getPodId(),
-                        pool.getClusterId(), ScopeType.CLUSTER);
+                spes = primaryDataStoreDao.listBy(pool.getDataCenterId(), null, null, ScopeType.ZONE);
+            } else {
+                spes = primaryDataStoreDao.listBy(pool.getDataCenterId(), pool.getPodId(), pool.getClusterId(), ScopeType.CLUSTER);
             }
             for (StoragePoolVO sp : spes) {
                 if (sp.getStatus() == StoragePoolStatus.PrepareForMaintenance) {
-                    throw new CloudRuntimeException("Only one storage pool in a cluster can be in PrepareForMaintenance mode, " + sp.getId()
-                            + " is already in  PrepareForMaintenance mode ");
+                    throw new CloudRuntimeException("Only one storage pool in a cluster can be in PrepareForMaintenance mode, " + sp.getId() +
+                        " is already in  PrepareForMaintenance mode ");
                 }
             }
             StoragePool storagePool = (StoragePool)store;
@@ -135,10 +129,14 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
             // if the storage scope is ZONE wide, then get all the hosts for which hypervisor ZWSP created to send Modifystoragepoolcommand
             //TODO: if it's zone wide, this code will list a lot of hosts in the zone, which may cause performance/OOM issue.
             if (pool.getScope().equals(ScopeType.ZONE)) {
-                hosts = _resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(pool.getHypervisor(), pool.getDataCenterId());
+                if (HypervisorType.Any.equals(pool.getHypervisor())) {
+                    hosts = _resourceMgr.listAllUpAndEnabledHostsInOneZone(pool.getDataCenterId());
+                }
+                else {
+                    hosts = _resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(pool.getHypervisor(), pool.getDataCenterId());
+                }
             } else {
-                hosts = _resourceMgr.listHostsInClusterByStatus(
-                        pool.getClusterId(), Status.Up);
+                hosts = _resourceMgr.listHostsInClusterByStatus(pool.getClusterId(), Status.Up);
             }
 
             if (hosts == null || hosts.size() == 0) {
@@ -157,9 +155,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
                 final Answer answer = agentMgr.easySend(host.getId(), cmd);
                 if (answer == null || !answer.getResult()) {
                     if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("ModifyStoragePool false failed due to "
-                                + ((answer == null) ? "answer null" : answer
-                                        .getDetails()));
+                        s_logger.debug("ModifyStoragePool false failed due to " + ((answer == null) ? "answer null" : answer.getDetails()));
                     }
                 } else {
                     if (s_logger.isDebugEnabled()) {
@@ -170,44 +166,34 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
             // check to see if other ps exist
             // if they do, then we can migrate over the system vms to them
             // if they dont, then just stop all vms on this one
-            List<StoragePoolVO> upPools = primaryDataStoreDao
-                    .listByStatusInZone(pool.getDataCenterId(),
-                            StoragePoolStatus.Up);
+            List<StoragePoolVO> upPools = primaryDataStoreDao.listByStatusInZone(pool.getDataCenterId(), StoragePoolStatus.Up);
             boolean restart = true;
             if (upPools == null || upPools.size() == 0) {
                 restart = false;
             }
 
             // 2. Get a list of all the ROOT volumes within this storage pool
-            List<VolumeVO> allVolumes = volumeDao.findByPoolId(pool
-                    .getId());
+            List<VolumeVO> allVolumes = volumeDao.findByPoolId(pool.getId());
 
             // 3. Enqueue to the work queue
             for (VolumeVO volume : allVolumes) {
-                VMInstanceVO vmInstance = vmDao
-                        .findById(volume.getInstanceId());
+                VMInstanceVO vmInstance = vmDao.findById(volume.getInstanceId());
 
                 if (vmInstance == null) {
                     continue;
                 }
 
                 // enqueue sp work
-                if (vmInstance.getState().equals(State.Running)
-                        || vmInstance.getState().equals(State.Starting)
-                        || vmInstance.getState().equals(State.Stopping)) {
+                if (vmInstance.getState().equals(State.Running) || vmInstance.getState().equals(State.Starting) || vmInstance.getState().equals(State.Stopping)) {
 
                     try {
-                        StoragePoolWorkVO work = new StoragePoolWorkVO(
-                                vmInstance.getId(), pool.getId(), false, false,
-                                server.getId());
+                        StoragePoolWorkVO work = new StoragePoolWorkVO(vmInstance.getId(), pool.getId(), false, false, server.getId());
                         _storagePoolWorkDao.persist(work);
                     } catch (Exception e) {
                         if (s_logger.isDebugEnabled()) {
                             s_logger.debug("Work record already exists, re-using by re-setting values");
                         }
-                        StoragePoolWorkVO work = _storagePoolWorkDao
-                                .findByPoolIdAndVmId(pool.getId(),
-                                        vmInstance.getId());
+                        StoragePoolWorkVO work = _storagePoolWorkDao.findByPoolIdAndVmId(pool.getId(), vmInstance.getId());
                         work.setStartedAfterMaintenance(false);
                         work.setStoppedForMaintenance(false);
                         work.setManagementServerId(server.getId());
@@ -217,9 +203,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
             }
 
             // 4. Process the queue
-            List<StoragePoolWorkVO> pendingWork = _storagePoolWorkDao
-                    .listPendingWorkForPrepareForMaintenanceByPoolId(pool
-                            .getId());
+            List<StoragePoolWorkVO> pendingWork = _storagePoolWorkDao.listPendingWorkForPrepareForMaintenanceByPoolId(pool.getId());
 
             for (StoragePoolWorkVO work : pendingWork) {
                 // shut down the running vms
@@ -231,8 +215,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
 
                 // if the instance is of type consoleproxy, call the console
                 // proxy
-                if (vmInstance.getType().equals(
-                        VirtualMachine.Type.ConsoleProxy)) {
+                if (vmInstance.getType().equals(VirtualMachine.Type.ConsoleProxy)) {
                     // call the consoleproxymanager
                     ConsoleProxyVO consoleProxy = _consoleProxyDao.findById(vmInstance.getId());
                     vmMgr.advanceStop(consoleProxy.getUuid(), false);
@@ -260,8 +243,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
 
                 // if the instance is of type secondary storage vm, call the
                 // secondary storage vm manager
-                if (vmInstance.getType().equals(
-                        VirtualMachine.Type.SecondaryStorageVm)) {
+                if (vmInstance.getType().equals(VirtualMachine.Type.SecondaryStorageVm)) {
                     SecondaryStorageVmVO secStrgVm = _secStrgDao.findById(vmInstance.getId());
                     vmMgr.advanceStop(secStrgVm.getUuid(), false);
                     // update work status
@@ -278,8 +260,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
 
                 // if the instance is of type domain router vm, call the network
                 // manager
-                if (vmInstance.getType().equals(
-                        VirtualMachine.Type.DomainRouter)) {
+                if (vmInstance.getType().equals(VirtualMachine.Type.DomainRouter)) {
                     DomainRouterVO domR = _domrDao.findById(vmInstance.getId());
                     vmMgr.advanceStop(domR.getUuid(), false);
                     // update work status
@@ -295,8 +276,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
                 }
             }
         } catch (Exception e) {
-            s_logger.error(
-                    "Exception in enabling primary storage maintenance:", e);
+            s_logger.error("Exception in enabling primary storage maintenance:", e);
             pool.setStatus(StoragePoolStatus.ErrorInMaintenance);
             primaryDataStoreDao.update(pool.getId(), pool);
             throw new CloudRuntimeException(e.getMessage());
@@ -310,18 +290,21 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
         Long userId = CallContext.current().getCallingUserId();
         User user = _userDao.findById(userId);
         Account account = CallContext.current().getCallingAccount();
-        StoragePoolVO poolVO = primaryDataStoreDao
-                .findById(store.getId());
+        StoragePoolVO poolVO = primaryDataStoreDao.findById(store.getId());
         StoragePool pool = (StoragePool)store;
 
         //Handeling the Zone wide and cluster wide primay storage
         List<HostVO> hosts = new ArrayList<HostVO>();
         // if the storage scope is ZONE wide, then get all the hosts for which hypervisor ZWSP created to send Modifystoragepoolcommand
         if (poolVO.getScope().equals(ScopeType.ZONE)) {
-            hosts = _resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(poolVO.getHypervisor(), pool.getDataCenterId());
+            if (HypervisorType.Any.equals(pool.getHypervisor())) {
+                hosts = _resourceMgr.listAllUpAndEnabledHostsInOneZone(pool.getDataCenterId());
+            }
+            else {
+                hosts = _resourceMgr.listAllUpAndEnabledHostsInOneZoneByHypervisor(poolVO.getHypervisor(), pool.getDataCenterId());
+            }
         } else {
-            hosts = _resourceMgr.listHostsInClusterByStatus(
-                    pool.getClusterId(), Status.Up);
+            hosts = _resourceMgr.listHostsInClusterByStatus(pool.getClusterId(), Status.Up);
         }
 
         if (hosts == null || hosts.size() == 0) {
@@ -334,9 +317,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
             final Answer answer = agentMgr.easySend(host.getId(), msPoolCmd);
             if (answer == null || !answer.getResult()) {
                 if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("ModifyStoragePool add failed due to "
-                            + ((answer == null) ? "answer null" : answer
-                                    .getDetails()));
+                    s_logger.debug("ModifyStoragePool add failed due to " + ((answer == null) ? "answer null" : answer.getDetails()));
                 }
             } else {
                 if (s_logger.isDebugEnabled()) {
@@ -346,8 +327,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
         }
 
         // 2. Get a list of pending work for this queue
-        List<StoragePoolWorkVO> pendingWork = _storagePoolWorkDao
-                .listPendingWorkForCancelMaintenanceByPoolId(poolVO.getId());
+        List<StoragePoolWorkVO> pendingWork = _storagePoolWorkDao.listPendingWorkForCancelMaintenanceByPoolId(poolVO.getId());
 
         // 3. work through the queue
         for (StoragePoolWorkVO work : pendingWork) {
@@ -360,8 +340,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
 
                 // if the instance is of type consoleproxy, call the console
                 // proxy
-                if (vmInstance.getType().equals(
-                        VirtualMachine.Type.ConsoleProxy)) {
+                if (vmInstance.getType().equals(VirtualMachine.Type.ConsoleProxy)) {
 
                     ConsoleProxyVO consoleProxy = _consoleProxyDao
                             .findById(vmInstance.getId());
@@ -382,9 +361,9 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
                     _storagePoolWorkDao.update(work.getId(), work);
                 }
 
-                // if the instance is of type ssvm, call the ssvm manager
-                if (vmInstance.getType().equals(
-                        VirtualMachine.Type.DomainRouter)) {
+                // if the instance is of type domain router vm, call the network
+                // manager
+                if (vmInstance.getType().equals(VirtualMachine.Type.DomainRouter)) {
                     DomainRouterVO domR = _domrDao.findById(vmInstance.getId());
                     vmMgr.advanceStart(domR.getUuid(), null, null);
                     // update work queue
@@ -394,13 +373,19 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
 
                 // if the instance is of type user vm, call the user vm manager
                 if (vmInstance.getType().equals(VirtualMachine.Type.User)) {
-                    UserVmVO userVm = userVmDao.findById(vmInstance.getId());
+                    // check if the vm has a root volume. If not, remove the item from the queue, the vm should be
+                    // started only when it has at least one root volume attached to it
+                    // don't allow to start vm that doesn't have a root volume
+                    if (volumeDao.findByInstanceAndType(vmInstance.getId(), Volume.Type.ROOT).isEmpty()) {
+                        _storagePoolWorkDao.remove(work.getId());
+                    } else {
+                        UserVmVO userVm = userVmDao.findById(vmInstance.getId());
 
-                    vmMgr.advanceStart(userVm.getUuid(), null, null);                        // update work queue
-                    work.setStartedAfterMaintenance(true);
-                    _storagePoolWorkDao.update(work.getId(), work);
+                        vmMgr.advanceStart(userVm.getUuid(), null, null);
+                        work.setStartedAfterMaintenance(true);
+                        _storagePoolWorkDao.update(work.getId(), work);
+                    }
                 }
-                return true;
             } catch (Exception e) {
                 s_logger.debug("Failed start vm", e);
                 throw new CloudRuntimeException(e.toString());

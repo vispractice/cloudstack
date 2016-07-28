@@ -5,8 +5,7 @@
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
-// 
-//   http://www.apache.org/licenses/LICENSE-2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
@@ -16,18 +15,16 @@
 // under the License.
 package org.apache.cloudstack.resourcedetail.dao;
 
-import javax.ejb.Local;
 
 import org.apache.cloudstack.resourcedetail.ResourceDetailsDaoBase;
 import org.apache.cloudstack.resourcedetail.Site2SiteVpnConnectionDetailVO;
 import org.springframework.stereotype.Component;
 
 @Component
-@Local(value = {Site2SiteVpnConnectionDetailsDao.class})
 public class Site2SiteVpnConnectionDetailsDaoImpl extends ResourceDetailsDaoBase<Site2SiteVpnConnectionDetailVO> implements Site2SiteVpnConnectionDetailsDao {
 
     @Override
-    public void addDetail(long resourceId, String key, String value) {
-        super.addDetail(new Site2SiteVpnConnectionDetailVO(resourceId, key, value));
+    public void addDetail(long resourceId, String key, String value, boolean display) {
+        super.addDetail(new Site2SiteVpnConnectionDetailVO(resourceId, key, value, display));
     }
 }

@@ -16,21 +16,35 @@
 // under the License.
 package org.apache.cloudstack.ldap;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.NamingException;
-import javax.naming.directory.DirContext;
+import javax.naming.ldap.LdapContext;
+
+import org.apache.cloudstack.api.command.LinkDomainToLdapCmd;
+import org.apache.cloudstack.api.response.LinkDomainToLdapResponse;
+import org.apache.cloudstack.ldap.dao.LdapTrustMapDao;
+import org.apache.commons.lang.Validate;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.api.LdapValidator;
-import org.apache.cloudstack.api.command.*;
+import org.apache.cloudstack.api.command.LDAPConfigCmd;
+import org.apache.cloudstack.api.command.LDAPRemoveCmd;
+import org.apache.cloudstack.api.command.LdapAddConfigurationCmd;
+import org.apache.cloudstack.api.command.LdapCreateAccountCmd;
+import org.apache.cloudstack.api.command.LdapDeleteConfigurationCmd;
+import org.apache.cloudstack.api.command.LdapImportUsersCmd;
+import org.apache.cloudstack.api.command.LdapListConfigurationCmd;
+import org.apache.cloudstack.api.command.LdapListUsersCmd;
+import org.apache.cloudstack.api.command.LdapUserSearchCmd;
 import org.apache.cloudstack.api.response.LdapConfigurationResponse;
 import org.apache.cloudstack.api.response.LdapUserResponse;
 import org.apache.cloudstack.ldap.dao.LdapConfigurationDao;
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
 
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.utils.Pair;
@@ -47,33 +61,44 @@ public class LdapManagerImpl implements LdapManager, LdapValidator {
     private LdapContextFactory _ldapContextFactory;
 
     @Inject
-    private LdapUserManager _ldapUserManager;
+    private LdapConfiguration _ldapConfiguration;
+
+    @Inject LdapUserManagerFactory _ldapUserManagerFactory;
+
+    @Inject
+    LdapTrustMapDao _ldapTrustMapDao;
+
 
     public LdapManagerImpl() {
         super();
     }
 
-    public LdapManagerImpl(final LdapConfigurationDao ldapConfigurationDao, final LdapContextFactory ldapContextFactory, final LdapUserManager ldapUserManager) {
+    public LdapManagerImpl(final LdapConfigurationDao ldapConfigurationDao, final LdapContextFactory ldapContextFactory, final LdapUserManagerFactory ldapUserManagerFactory,
+                           final LdapConfiguration ldapConfiguration) {
         super();
         _ldapConfigurationDao = ldapConfigurationDao;
         _ldapContextFactory = ldapContextFactory;
-        _ldapUserManager = ldapUserManager;
+        _ldapUserManagerFactory = ldapUserManagerFactory;
+        _ldapConfiguration = ldapConfiguration;
     }
 
     @Override
     public LdapConfigurationResponse addConfiguration(final String hostname, final int port) throws InvalidParameterValueException {
         LdapConfigurationVO configuration = _ldapConfigurationDao.findByHostname(hostname);
         if (configuration == null) {
+            LdapContext context = null;
             try {
                 final String providerUrl = "ldap://" + hostname + ":" + port;
-                _ldapContextFactory.createBindContext(providerUrl);
+                context = _ldapContextFactory.createBindContext(providerUrl);
                 configuration = new LdapConfigurationVO(hostname, port);
                 _ldapConfigurationDao.persist(configuration);
                 s_logger.info("Added new ldap server with hostname: " + hostname);
                 return new LdapConfigurationResponse(hostname, port);
-            } catch (final NamingException e) {
+            } catch (NamingException | IOException e) {
                 s_logger.debug("NamingException while doing an LDAP bind", e);
                 throw new InvalidParameterValueException("Unable to bind to the given LDAP server");
+            } finally {
+                closeContext(context);
             }
         } else {
             throw new InvalidParameterValueException("Duplicate configuration");
@@ -81,28 +106,25 @@ public class LdapManagerImpl implements LdapManager, LdapValidator {
     }
 
     @Override
-    public boolean canAuthenticate(final String username, final String password) {
-        final String escapedUsername = LdapUtils.escapeLDAPSearchFilter(username);
+    public boolean canAuthenticate(final String principal, final String password) {
         try {
-            final LdapUser user = getUser(escapedUsername);
-            final String principal = user.getPrincipal();
-            final DirContext context = _ldapContextFactory.createUserContext(principal, password);
+            final LdapContext context = _ldapContextFactory.createUserContext(principal, password);
             closeContext(context);
             return true;
-        } catch (final NamingException e) {
-            s_logger.debug("NamingException: while doing an LDAP bind for user "+" "+username, e);
-            s_logger.info("Failed to authenticate user: " + username + ". incorrect password.");
+        } catch (NamingException | IOException e) {
+            s_logger.debug("Exception while doing an LDAP bind for user "+" "+principal, e);
+            s_logger.info("Failed to authenticate user: " + principal + ". incorrect password.");
             return false;
         }
     }
 
-    private void closeContext(final DirContext context) {
+    private void closeContext(final LdapContext context) {
         try {
             if (context != null) {
                 context.close();
             }
         } catch (final NamingException e) {
-            s_logger.warn(e.getMessage(),e);
+            s_logger.warn(e.getMessage(), e);
         }
     }
 
@@ -150,20 +172,37 @@ public class LdapManagerImpl implements LdapManager, LdapValidator {
         cmdList.add(LdapImportUsersCmd.class);
         cmdList.add(LDAPConfigCmd.class);
         cmdList.add(LDAPRemoveCmd.class);
+        cmdList.add(LinkDomainToLdapCmd.class);
         return cmdList;
     }
 
     @Override
-    public LdapUser getUser(final String username) throws NamingException {
-        DirContext context = null;
+    public LdapUser getUser(final String username) throws NoLdapUserMatchingQueryException {
+        LdapContext context = null;
         try {
             context = _ldapContextFactory.createBindContext();
 
             final String escapedUsername = LdapUtils.escapeLDAPSearchFilter(username);
-            return _ldapUserManager.getUser(escapedUsername, context);
+            return _ldapUserManagerFactory.getInstance(_ldapConfiguration.getLdapProvider()).getUser(escapedUsername, context);
 
-        } catch (final NamingException e) {
-            throw e;
+        } catch (NamingException | IOException e) {
+            s_logger.debug("ldap Exception: ",e);
+            throw new NoLdapUserMatchingQueryException("No Ldap User found for username: "+username);
+        } finally {
+            closeContext(context);
+        }
+    }
+
+    @Override
+    public LdapUser getUser(final String username, final String type, final String name) throws NoLdapUserMatchingQueryException {
+        LdapContext context = null;
+        try {
+            context = _ldapContextFactory.createBindContext();
+            final String escapedUsername = LdapUtils.escapeLDAPSearchFilter(username);
+            return _ldapUserManagerFactory.getInstance(_ldapConfiguration.getLdapProvider()).getUser(escapedUsername, type, name, context);
+        } catch (NamingException | IOException e) {
+            s_logger.debug("ldap Exception: ",e);
+            throw new NoLdapUserMatchingQueryException("No Ldap User found for username: "+username + "name: " + name + "of type: " + type);
         } finally {
             closeContext(context);
         }
@@ -171,12 +210,12 @@ public class LdapManagerImpl implements LdapManager, LdapValidator {
 
     @Override
     public List<LdapUser> getUsers() throws NoLdapUserMatchingQueryException {
-        DirContext context = null;
+        LdapContext context = null;
         try {
             context = _ldapContextFactory.createBindContext();
-            return _ldapUserManager.getUsers(context);
-        } catch (final NamingException e) {
-            s_logger.debug("ldap NamingException: ",e);
+            return _ldapUserManagerFactory.getInstance(_ldapConfiguration.getLdapProvider()).getUsers(context);
+        } catch (NamingException | IOException e) {
+            s_logger.debug("ldap Exception: ",e);
             throw new NoLdapUserMatchingQueryException("*");
         } finally {
             closeContext(context);
@@ -185,11 +224,11 @@ public class LdapManagerImpl implements LdapManager, LdapValidator {
 
     @Override
     public List<LdapUser> getUsersInGroup(String groupName) throws NoLdapUserMatchingQueryException {
-        DirContext context = null;
+        LdapContext context = null;
         try {
             context = _ldapContextFactory.createBindContext();
-            return _ldapUserManager.getUsersInGroup(groupName, context);
-        } catch (final NamingException e) {
+            return _ldapUserManagerFactory.getInstance(_ldapConfiguration.getLdapProvider()).getUsersInGroup(groupName, context);
+        } catch (NamingException | IOException e) {
             s_logger.debug("ldap NamingException: ",e);
             throw new NoLdapUserMatchingQueryException("groupName=" + groupName);
         } finally {
@@ -212,16 +251,34 @@ public class LdapManagerImpl implements LdapManager, LdapValidator {
 
     @Override
     public List<LdapUser> searchUsers(final String username) throws NoLdapUserMatchingQueryException {
-        DirContext context = null;
+        LdapContext context = null;
         try {
             context = _ldapContextFactory.createBindContext();
             final String escapedUsername = LdapUtils.escapeLDAPSearchFilter(username);
-            return _ldapUserManager.getUsers("*" + escapedUsername + "*", context);
-        } catch (final NamingException e) {
-            s_logger.debug("ldap NamingException: ",e);
+            return _ldapUserManagerFactory.getInstance(_ldapConfiguration.getLdapProvider()).getUsers("*" + escapedUsername + "*", context);
+        } catch (NamingException | IOException e) {
+            s_logger.debug("ldap Exception: ",e);
             throw new NoLdapUserMatchingQueryException(username);
         } finally {
             closeContext(context);
         }
+    }
+
+    @Override
+    public LinkDomainToLdapResponse linkDomainToLdap(Long domainId, String type, String name, short accountType) {
+        Validate.notNull(type, "type cannot be null. It should either be GROUP or OU");
+        Validate.notNull(domainId, "domainId cannot be null.");
+        Validate.notEmpty(name, "GROUP or OU name cannot be empty");
+        //Account type should be 0 or 2. check the constants in com.cloud.user.Account
+        Validate.isTrue(accountType==0 || accountType==2, "accountype should be either 0(normal user) or 2(domain admin)");
+        LinkType linkType = LdapManager.LinkType.valueOf(type.toUpperCase());
+        LdapTrustMapVO vo = _ldapTrustMapDao.persist(new LdapTrustMapVO(domainId, linkType, name, accountType));
+        LinkDomainToLdapResponse response = new LinkDomainToLdapResponse(vo.getDomainId(), vo.getType().toString(), vo.getName(), vo.getAccountType());
+        return response;
+    }
+
+    @Override
+    public LdapTrustMapVO getDomainLinkedToLdap(long domainId){
+        return _ldapTrustMapDao.findByDomainId(domainId);
     }
 }

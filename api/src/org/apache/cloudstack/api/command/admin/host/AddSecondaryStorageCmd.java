@@ -31,7 +31,8 @@ import com.cloud.exception.DiscoveryException;
 import com.cloud.storage.ImageStore;
 import com.cloud.user.Account;
 
-@APICommand(name = "addSecondaryStorage", description="Adds secondary storage.", responseObject=ImageStoreResponse.class)
+@APICommand(name = "addSecondaryStorage", description = "Adds secondary storage.", responseObject = ImageStoreResponse.class,
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddSecondaryStorageCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(AddSecondaryStorageCmd.class.getName());
     private static final String s_name = "addsecondarystorageresponse";
@@ -40,14 +41,11 @@ public class AddSecondaryStorageCmd extends BaseCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.URL, type=CommandType.STRING, required=true, description="the URL for the secondary storage")
+    @Parameter(name = ApiConstants.URL, type = CommandType.STRING, required = true, description = "the URL for the secondary storage")
     protected String url;
 
-    @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.UUID, entityType=ZoneResponse.class,
-            description="the Zone ID for the secondary storage")
+    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class, description = "the Zone ID for the secondary storage")
     protected Long zoneId;
-
-
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -60,7 +58,6 @@ public class AddSecondaryStorageCmd extends BaseCmd {
     public Long getZoneId() {
         return zoneId;
     }
-
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////

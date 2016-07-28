@@ -16,14 +16,17 @@
 // under the License.
 package com.cloud.agent.manager;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.cloud.agent.api.Answer;
-import com.cloud.agent.api.BumpUpPriorityCommand;
 import com.cloud.agent.api.CheckRouterAnswer;
 import com.cloud.agent.api.CheckRouterCommand;
 import com.cloud.agent.api.CheckVirtualMachineCommand;
 import com.cloud.agent.api.CleanupNetworkRulesCmd;
 import com.cloud.agent.api.CreateVMSnapshotCommand;
 import com.cloud.agent.api.DeleteVMSnapshotCommand;
+import com.cloud.agent.api.FenceCommand;
 import com.cloud.agent.api.GetDomRVersionAnswer;
 import com.cloud.agent.api.GetDomRVersionCmd;
 import com.cloud.agent.api.GetVmStatsCommand;
@@ -52,14 +55,11 @@ import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.simulator.MockVMVO;
 import com.cloud.utils.Pair;
 import com.cloud.utils.component.Manager;
-import com.cloud.vm.VirtualMachine.State;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.cloud.vm.VirtualMachine.PowerState;
 
 public interface MockVmManager extends Manager {
 
-    Map<String, State> getVmStates(String hostGuid);
+    Map<String, PowerState> getVmStates(String hostGuid);
 
     Map<String, MockVMVO> getVms(String hostGuid);
 
@@ -75,31 +75,29 @@ public interface MockVmManager extends Manager {
 
     Answer getVncPort(GetVncPortCommand cmd);
 
-	Answer getVmStats(GetVmStatsCommand cmd);
+    Answer getVmStats(GetVmStatsCommand cmd);
 
     CheckSshAnswer checkSshCommand(CheckSshCommand cmd);
 
     Answer setVmData(VmDataCommand cmd);
 
-    Answer CheckConsoleProxyLoad(CheckConsoleProxyLoadCommand cmd);
+    Answer checkConsoleProxyLoad(CheckConsoleProxyLoadCommand cmd);
 
-    Answer WatchConsoleProxyLoad(WatchConsoleProxyLoadCommand cmd);
+    Answer watchConsoleProxyLoad(WatchConsoleProxyLoadCommand cmd);
 
-    Answer SavePassword(SavePasswordCommand cmd);
+    Answer savePassword(SavePasswordCommand cmd);
 
-    MigrateAnswer Migrate(MigrateCommand cmd, SimulatorInfo info);
+    MigrateAnswer migrate(MigrateCommand cmd, SimulatorInfo info);
 
     PrepareForMigrationAnswer prepareForMigrate(PrepareForMigrationCommand cmd);
 
-    SecurityGroupRuleAnswer AddSecurityGroupRules(SecurityGroupRulesCmd cmd, SimulatorInfo info);
+    SecurityGroupRuleAnswer addSecurityGroupRules(SecurityGroupRulesCmd cmd, SimulatorInfo info);
 
     GetDomRVersionAnswer getDomRVersion(GetDomRVersionCmd cmd);
 
     CheckRouterAnswer checkRouter(CheckRouterCommand cmd);
 
-    Answer bumpPriority(BumpUpPriorityCommand cmd);
-
-    Answer CleanupNetworkRules(CleanupNetworkRulesCmd cmd, SimulatorInfo info);
+    Answer cleanupNetworkRules(CleanupNetworkRulesCmd cmd, SimulatorInfo info);
 
     Answer scaleVm(ScaleVmCommand cmd);
 
@@ -110,4 +108,6 @@ public interface MockVmManager extends Manager {
     Answer deleteVmSnapshot(DeleteVMSnapshotCommand cmd);
 
     Answer revertVmSnapshot(RevertToVMSnapshotCommand cmd);
+
+    Answer fence(FenceCommand cmd);
 }

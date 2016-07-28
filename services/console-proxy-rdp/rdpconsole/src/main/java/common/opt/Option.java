@@ -28,7 +28,7 @@ public class Option {
 
     /**
      * Parse option value, if any.
-     * 
+     *
      * @param position
      *          position of this option in list of arguments
      * @param args
@@ -47,7 +47,7 @@ public class Option {
 
     /**
      * Return help string for this option. Example:
-     * 
+     *
      * <pre>
      *   --foo|-f    Foo option.
      * </pre>
@@ -84,7 +84,7 @@ public class Option {
 
     /**
      * Return description of options in format suitable for help and usage text.
-     * 
+     *
      * @param header
      *          header string to print before list of options
      * @param options

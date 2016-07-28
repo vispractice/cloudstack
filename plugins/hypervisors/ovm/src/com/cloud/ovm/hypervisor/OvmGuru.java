@@ -16,7 +16,8 @@
 // under the License.
 package com.cloud.ovm.hypervisor;
 
-import javax.ejb.Local;
+import java.util.Map;
+
 import javax.inject.Inject;
 
 import com.cloud.agent.api.to.VirtualMachineTO;
@@ -27,33 +28,40 @@ import com.cloud.storage.GuestOSVO;
 import com.cloud.storage.dao.GuestOSDao;
 import com.cloud.vm.VirtualMachineProfile;
 
-@Local(value=HypervisorGuru.class)
 public class OvmGuru extends HypervisorGuruBase implements HypervisorGuru {
-	@Inject GuestOSDao _guestOsDao;
-	protected OvmGuru() {
-		super();
-	}
-	
-	@Override
-	public HypervisorType getHypervisorType() {
-		return HypervisorType.Ovm;
-	}
+    @Inject
+    GuestOSDao _guestOsDao;
 
-	@Override
+    protected OvmGuru() {
+        super();
+    }
+
+    @Override
+    public HypervisorType getHypervisorType() {
+        return HypervisorType.Ovm;
+    }
+
+    @Override
     public VirtualMachineTO implement(VirtualMachineProfile vm) {
-		VirtualMachineTO to = toVirtualMachineTO(vm);
-		to.setBootloader(vm.getBootLoaderType());
+        VirtualMachineTO to = toVirtualMachineTO(vm);
+        to.setBootloader(vm.getBootLoaderType());
 
-		// Determine the VM's OS description
-		GuestOSVO guestOS = _guestOsDao.findById(vm.getVirtualMachine().getGuestOSId());
-		to.setOs(guestOS.getDisplayName());
+        // Determine the VM's OS description
+        GuestOSVO guestOS = _guestOsDao.findById(vm.getVirtualMachine().getGuestOSId());
+        to.setOs(guestOS.getDisplayName());
 
-		return to;
-	}
+        return to;
+    }
 
     @Override
     public boolean trackVmHostChange() {
         return true;
     }
+
+    @Override
+    public Map<String, String> getClusterSettings(long vmId) {
+        return null;
+    }
+
 
 }

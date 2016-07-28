@@ -17,17 +17,12 @@
 package org.apache.cloudstack.region;
 
 import java.util.List;
-
-import javax.ejb.Local;
-
 import org.springframework.stereotype.Component;
-
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
 @Component
-@Local(value={PortableIpDao.class})
 public class PortableIpDaoImpl extends GenericDaoBase<PortableIpVO, Long> implements PortableIpDao {
 
     private final SearchBuilder<PortableIpVO> listByRegionIDSearch;

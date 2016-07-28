@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.agent.api.to;
 
+import java.util.List;
 import java.util.Map;
 
 import com.cloud.template.VirtualMachineTemplate.BootloaderType;
@@ -47,9 +48,9 @@ public class VirtualMachineTO {
     String hostName;
     String arch;
     String os;
+    String platformEmulator;
     String bootArgs;
     String[] bootupScripts;
-    boolean rebootOnCrash;
     boolean enableHA;
     boolean limitCpuUse;
     boolean enableDynamicallyScaleVm;
@@ -60,11 +61,19 @@ public class VirtualMachineTO {
 
     DiskTO[] disks;
     NicTO[] nics;
+    GPUDeviceTO gpuDevice;
     Integer vcpuMaxLimit;
+    List<String[]> vmData = null;
 
-    public VirtualMachineTO(long id, String instanceName, VirtualMachine.Type type, int cpus, Integer speed, long minRam, long maxRam, BootloaderType bootloader, String os, boolean enableHA, boolean limitCpuUse, String vncPassword) {
+    String configDriveLabel = null;
+    String configDriveIsoRootFolder = null;
+    String configDriveIsoFile = null;
+
+
+    public VirtualMachineTO(long id, String instanceName, VirtualMachine.Type type, int cpus, Integer speed, long minRam, long maxRam, BootloaderType bootloader,
+            String os, boolean enableHA, boolean limitCpuUse, String vncPassword) {
         this.id = id;
-        this.name = instanceName;
+        name = instanceName;
         this.type = type;
         this.cpus = cpus;
         this.speed = speed;
@@ -77,9 +86,10 @@ public class VirtualMachineTO {
         this.vncPassword = vncPassword;
     }
 
-    public VirtualMachineTO(long id, String instanceName, VirtualMachine.Type type, int cpus, Integer minSpeed, Integer maxSpeed, long minRam, long maxRam, BootloaderType bootloader, String os, boolean enableHA, boolean limitCpuUse, String vncPassword) {
+    public VirtualMachineTO(long id, String instanceName, VirtualMachine.Type type, int cpus, Integer minSpeed, Integer maxSpeed, long minRam, long maxRam,
+            BootloaderType bootloader, String os, boolean enableHA, boolean limitCpuUse, String vncPassword) {
         this.id = id;
-        this.name = instanceName;
+        name = instanceName;
         this.type = type;
         this.cpus = cpus;
         this.minSpeed = minSpeed;
@@ -151,8 +161,9 @@ public class VirtualMachineTO {
     public Integer getMaxSpeed() {
         return maxSpeed;
     }
+
     public boolean getLimitCpuUse() {
-    	return limitCpuUse;
+        return limitCpuUse;
     }
 
     public long getMinRam() {
@@ -233,15 +244,15 @@ public class VirtualMachineTO {
     }
 
     public String getVncPassword() {
-    	return this.vncPassword;
+        return vncPassword;
     }
 
     public void setVncPassword(String vncPassword) {
-    	this.vncPassword = vncPassword;
+        this.vncPassword = vncPassword;
     }
 
     public String getVncAddr() {
-        return this.vncAddr;
+        return vncAddr;
     }
 
     public void setVncAddr(String vncAddr) {
@@ -249,11 +260,11 @@ public class VirtualMachineTO {
     }
 
     public Map<String, String> getDetails() {
-    	return params;
+        return params;
     }
 
     public void setDetails(Map<String, String> params) {
-    	this.params = params;
+        this.params = params;
     }
 
     public String getUuid() {
@@ -264,6 +275,22 @@ public class VirtualMachineTO {
         this.uuid = uuid;
     }
 
+    public GPUDeviceTO getGpuDevice() {
+        return gpuDevice;
+    }
+
+    public void setGpuDevice(GPUDeviceTO gpuDevice) {
+        this.gpuDevice = gpuDevice;
+    }
+
+    public String getPlatformEmulator() {
+        return platformEmulator;
+    }
+
+    public void setPlatformEmulator(String platformEmulator) {
+        this.platformEmulator = platformEmulator;
+    }
+
     public Integer getVcpuMaxLimit() {
         return vcpuMaxLimit;
     }
@@ -272,5 +299,36 @@ public class VirtualMachineTO {
         this.vcpuMaxLimit = vcpuMaxLimit;
     }
 
+    public List<String[]> getVmData() {
+        return vmData;
+    }
+
+    public void setVmData(List<String[]> vmData) {
+        this.vmData = vmData;
+    }
+
+    public String getConfigDriveLabel() {
+        return configDriveLabel;
+    }
+
+    public void setConfigDriveLabel(String configDriveLabel) {
+        this.configDriveLabel = configDriveLabel;
+    }
+
+    public String getConfigDriveIsoRootFolder() {
+        return configDriveIsoRootFolder;
+    }
+
+    public void setConfigDriveIsoRootFolder(String configDriveIsoRootFolder) {
+        this.configDriveIsoRootFolder = configDriveIsoRootFolder;
+    }
+
+    public String getConfigDriveIsoFile() {
+        return configDriveIsoFile;
+    }
+
+    public void setConfigDriveIsoFile(String configDriveIsoFile) {
+        this.configDriveIsoFile = configDriveIsoFile;
+    }
 
 }

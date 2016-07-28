@@ -18,7 +18,6 @@ package com.cloud.network.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -29,12 +28,12 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
-@Local(value=NetworkExternalLoadBalancerDao.class) @DB()
+@DB()
 public class NetworkExternalLoadBalancerDaoImpl extends GenericDaoBase<NetworkExternalLoadBalancerVO, Long> implements NetworkExternalLoadBalancerDao {
 
     final SearchBuilder<NetworkExternalLoadBalancerVO> networkIdSearch;
     final SearchBuilder<NetworkExternalLoadBalancerVO> deviceIdSearch;
-    
+
     protected NetworkExternalLoadBalancerDaoImpl() {
         super();
         networkIdSearch = createSearchBuilder();

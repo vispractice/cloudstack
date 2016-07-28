@@ -15,11 +15,11 @@
 // specific language governing permissions and limitations
 // under the License.
 /**
- * 
+ *
  * CredSSP/SPNEGO/NTLMSSP implementation.
- * 
+ *
  * CredSSP ASN.1 definition:
- * 
+ *
  <pre>
 CredSSP DEFINITIONS EXPLICIT TAGS ::=
 

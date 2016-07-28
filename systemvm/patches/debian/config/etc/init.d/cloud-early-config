@@ -30,13 +30,13 @@ PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
 #set -x
 #exec 3>&0 4>&1 > /var/log/test.log 2>&1
 #start hv_kvp daemon
-/usr/sbin/hv_kvp_daemon
+[ -f /usr/sbin/hv_kvp_daemon ] && /usr/sbin/hv_kvp_daemon
 
 # Fix haproxy directory issue
 mkdir -p /var/lib/haproxy
 
 # Clear boot up flag, it would be created by rc.local after boot up done
-rm /var/cache/cloud/boot_up_done
+rm -f /var/cache/cloud/boot_up_done
 
 [ -x /sbin/ifup ] || exit 0
 
@@ -44,7 +44,7 @@ rm /var/cache/cloud/boot_up_done
 
 log_it() {
   echo "$(date) $@" >> /var/log/cloud.log
-  log_action_begin_msg "$@"
+  log_action_msg "$@"
 }
 
 init_interfaces_orderby_macs() {
@@ -118,18 +118,30 @@ get_boot_params() {
             log_it "/dev/vport0p1 not loaded, perhaps guest kernel is too old." && exit 2
           fi
 
-          while [ -z "$cmd" ]; do
-              while read line; do
-                if [[ $line == cmdline:* ]]; then
-                  cmd=${line//cmdline:/}
-                  echo $cmd > /var/cache/cloud/cmdline
-                elif [[ $line == pubkey:* ]]; then
-                  pubkey=${line//pubkey:/}
-                  echo $pubkey > /var/cache/cloud/authorized_keys
-                  echo $pubkey > /root/.ssh/authorized_keys
-                fi
-              done < /dev/vport0p1
-          done
+	      local factor=2
+	      local progress=1
+		  for i in {1..5}
+		  do
+	        while read line; do
+	          if [[ $line == cmdline:* ]]; then
+	            cmd=${line//cmdline:/}
+                echo $cmd > /var/cache/cloud/cmdline
+	          elif [[ $line == pubkey:* ]]; then
+	            pubkey=${line//pubkey:/}
+	            echo $pubkey > /var/cache/cloud/authorized_keys
+	            echo $pubkey > /root/.ssh/authorized_keys
+              fi
+	        done < /dev/vport0p1
+	        # In case of reboot we do not send the boot args again.
+	        # So, no need to wait for them, as the boot args are already set at startup
+	        if [ -s /var/cache/cloud/cmdline  ]
+	        then
+              log_it "Found a non empty cmdline file. Will now exit the loop and proceed with configuration."
+              break;
+            fi
+            sleep ${progress}s
+            progress=$[ progress * factor ]
+		  done
           chmod go-rwx /root/.ssh/authorized_keys
           ;;
      vmware)
@@ -142,6 +154,15 @@ get_boot_params() {
           sleep 5
           cp -f /var/opt/hyperv/.kvp_pool_0 /var/cache/cloud/cmdline
           cat /dev/null > /var/opt/hyperv/.kvp_pool_0
+          ;;
+     virtualbox)
+          # Virtualbox is used to test the virtual router
+          # get the commandline from a dmistring  (yes, hacky!)
+          dmidecode | grep cmdline | sed 's/^.*cmdline://' > /var/cache/cloud/cmdline
+          RV=$?
+          if [ $RV -ne 0 ] ; then
+            log_it "Failed to get cmdline from a virtualbox dmi property"
+          fi
           ;;
   esac
 
@@ -392,12 +413,16 @@ setup_interface_ipv6() {
   sysctl net.ipv6.conf.all.disable_ipv6=0
   sysctl net.ipv6.conf.all.forwarding=1
   sysctl net.ipv6.conf.all.accept_ra=1
-  
+
+  sed  -i "s/net.ipv6.conf.all.disable_ipv6 =.*$/net.ipv6.conf.all.disable_ipv6 = 0/" /etc/sysctl.conf
+  sed  -i "s/net.ipv6.conf.all.forwarding =.*$/net.ipv6.conf.all.forwarding = 1/" /etc/sysctl.conf
+  sed  -i "s/net.ipv6.conf.all.accept_ra =.*$/net.ipv6.conf.all.accept_ra = 1/" /etc/sysctl.conf
+
   local intfnum=$1
   local ipv6="$2"
   local prelen="$3"
   local intf=eth${intfnum}
-  
+
   echo "iface $intf inet6 static" >> /etc/network/interfaces
   echo "  address $ipv6 " >> /etc/network/interfaces
   echo "  netmask $prelen" >> /etc/network/interfaces
@@ -694,8 +719,6 @@ setup_dnsmasq() {
     sed -i -e "s/^dhcp-range_ip6=.*$//" /etc/dnsmasq.conf
   fi
 
-  sed -i -e "s/^[#]*listen-address=.*$/listen-address=$LOCAL_ADDRS/" /etc/dnsmasq.conf
-
   if [ "$RROUTER" == "1" ]
   then
     DEFAULT_GW=$GUEST_GW
@@ -857,6 +880,7 @@ setup_redundant_router() {
     sed -i "s/\[ETH2MASK\]/$ETH2_MASK/g" $rrouter_bin_path/enable_pubip.sh
     sed -i "s/\[GATEWAY\]/$GW/g" $rrouter_bin_path/enable_pubip.sh
     sed -i "s/\[GATEWAY\]/$GW/g" $rrouter_bin_path/master.sh
+
     sed -i "s/\[RROUTER_BIN_PATH\]/$rrouter_bin_path_str/g" $rrouter_bin_path/master.sh
     sed -i "s/\[RROUTER_BIN_PATH\]/$rrouter_bin_path_str/g" $rrouter_bin_path/backup.sh
     sed -i "s/\[RROUTER_BIN_PATH\]/$rrouter_bin_path_str/g" $rrouter_bin_path/fault.sh
@@ -869,6 +893,12 @@ setup_redundant_router() {
     sed -i "s/\[RROUTER_LOG\]/$rrouter_log_str/g" $rrouter_bin_path/check_heartbeat.sh
     sed -i "s/\[RROUTER_LOG\]/$rrouter_log_str/g" $rrouter_bin_path/arping_gateways.sh
     sed -i "s/\[RROUTER_LOG\]/$rrouter_log_str/g" /opt/cloud/bin/checkrouter.sh
+
+    if [ $ADVERT_INT ]
+    then
+        sed -i "s/advert_int 1/advert_int $ADVERT_INT/g" /etc/keepalived/keepalived.conf
+    fi
+
     chmod a+x $rrouter_bin_path/*.sh
 
     sed -i "s/--exec\ \$DAEMON;/--exec\ \$DAEMON\ --\ --vrrp;/g" /etc/init.d/keepalived
@@ -897,6 +927,9 @@ load_modules() {
 setup_router() {
   log_it "Setting up virtual router system vm"
 
+   #To save router public interface and gw ip information
+   touch /var/cache/cloud/ifaceGwIp
+
   oldmd5=
   [ -f "/etc/udev/rules.d/70-persistent-net.rules" ] && oldmd5=$(md5sum "/etc/udev/rules.d/70-persistent-net.rules" | awk '{print $1}')
   
@@ -921,11 +954,12 @@ setup_router() {
         done
       fi
   fi
-  
-  if [ -n "$ETH2_IP" -a "$RROUTER" == "1" ]
-  then
-    setup_redundant_router
-  fi
+ 
+  # Moved to Cs Python code 
+  #if [ -n "$ETH2_IP" -a "$RROUTER" == "1" ]
+  #then
+    #setup_redundant_router
+  #fi
   
   log_it "Checking udev NIC assignment order changes"
   if [ "$NIC_MACS" != "" ]
@@ -966,6 +1000,16 @@ setup_router() {
   cp /etc/iptables/iptables-router /etc/iptables/rules
   setup_sshd $ETH1_IP "eth1"
   load_modules
+
+  #Only allow DNS service for current network
+  sed -i "s/-A INPUT -i eth0 -p udp -m udp --dport 53 -j ACCEPT/-A INPUT -i eth0 -p udp -m udp --dport 53 -s $DHCP_RANGE\/$CIDR_SIZE -j ACCEPT/g" /etc/iptables/rules.v4
+  sed -i "s/-A INPUT -i eth0 -p udp -m udp --dport 53 -j ACCEPT/-A INPUT -i eth0 -p udp -m udp --dport 53 -s $DHCP_RANGE\/$CIDR_SIZE -j ACCEPT/g" /etc/iptables/rules
+  sed -i "s/-A INPUT -i eth0 -p tcp -m tcp --dport 53 -j ACCEPT/-A INPUT -i eth0 -p tcp -m tcp --dport 53 -s $DHCP_RANGE\/$CIDR_SIZE -j ACCEPT/g" /etc/iptables/rules.v4
+  sed -i "s/-A INPUT -i eth0 -p tcp -m tcp --dport 53 -j ACCEPT/-A INPUT -i eth0 -p tcp -m tcp --dport 53 -s $DHCP_RANGE\/$CIDR_SIZE -j ACCEPT/g" /etc/iptables/rules
+
+  #setup hourly logrotate
+  mv -n /etc/cron.daily/logrotate /etc/cron.hourly 2>&1
+  
 }
 
 
@@ -1121,14 +1165,37 @@ setup_storage_network() {
 	log_it "Successfully setup storage network with STORAGE_IP:$STORAGE_IP, STORAGE_NETMASK:$STORAGE_NETMASK, STORAGE_CIDR:$STORAGE_CIDR"
 }
 
+setup_system_rfc1918_internal() {
+  public_ip=`getPublicIp`
+  echo "$public_ip" | grep -E "^((127\.)|(10\.)|(172\.1[6-9]\.)|(172\.2[0-9]\.)|(172\.3[0-1]\.)|(192\.168\.))"
+  if [ "$?" == "0" ]; then
+     log_it "Not setting up route of RFC1918 space to $LOCAL_GW befause $public_ip is RFC1918."
+  else
+     log_it "Setting up route of RFC1918 space to $LOCAL_GW"
+     # Setup general route for RFC 1918 space, as otherwise it will be sent to
+     # the public gateway and not work
+     # More specific routes that may be set have preference over this generic route.
+     ip route add 10.0.0.0/8 via $LOCAL_GW
+     ip route add 172.16.0.0/12 via $LOCAL_GW
+     ip route add 192.168.0.0/16 via $LOCAL_GW
+  fi
+}
+
+getPublicIp() {
+  public_ip=$ETH2_IP
+  [ "$ETH2_IP" == "0.0.0.0" ] && public_ip=$ETH1_IP
+  echo $public_ip
+}
+
 setup_secstorage() {
   log_it "Setting up secondary storage system vm"
+  sysctl vm.min_free_kbytes=8192
   local hyp=$1
   setup_common eth0 eth1 eth2
   setup_storage_network
+  setup_system_rfc1918_internal
   sed -i  /gateway/d /etc/hosts
-  public_ip=$ETH2_IP
-  [ "$ETH2_IP" == "0.0.0.0" ] && public_ip=$ETH1_IP
+  public_ip=`getPublicIp`
   echo "$public_ip $NAME" >> /etc/hosts
 
   cp /etc/iptables/iptables-secstorage /etc/iptables/rules.v4
@@ -1140,6 +1207,36 @@ setup_secstorage() {
   fi
   setup_apache2 $ETH2_IP
 
+  log_it "setting up apache2 for post upload of volume/template"
+  a2enmod proxy
+  a2enmod proxy_http
+  a2enmod headers
+
+  SSL_FILE="/etc/apache2/sites-available/default-ssl"
+  PATTERN="RewriteRule ^\/upload\/(.*)"
+  CORS_PATTERN="Header set Access-Control-Allow-Origin"
+  if [ -f $SSL_FILE ]; then
+    if grep -q "$PATTERN" $SSL_FILE ; then
+      log_it "rewrite rules already exist in file $SSL_FILE"
+    else
+        log_it "adding rewrite rules to file: $SSL_FILE"
+        sed -i -e "s/<\/VirtualHost>/RewriteEngine On \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/RewriteCond %{HTTPS} =on \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/RewriteCond %{REQUEST_METHOD} =POST \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/RewriteRule ^\/upload\/(.*) http:\/\/127.0.0.1:8210\/upload?uuid=\$1 [P,L] \n&/" $SSL_FILE
+    fi
+    if grep -q "$CORS_PATTERN" $SSL_FILE ; then
+      log_it "cors rules already exist in file $SSL_FILE"
+    else
+        log_it "adding cors rules to file: $SSL_FILE"
+        sed -i -e "s/<\/VirtualHost>/Header always set Access-Control-Allow-Origin \"*\" \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/Header always set Access-Control-Allow-Methods \"POST, OPTIONS\" \n&/" $SSL_FILE
+        sed -i -e "s/<\/VirtualHost>/Header always set Access-Control-Allow-Headers \"x-requested-with, Content-Type, origin, authorization, accept, client-security-token, x-signature, x-metadata, x-expires\" \n&/" $SSL_FILE
+    fi
+  fi
+
+  service apache2 restart
+
   disable_rpfilter
   enable_fwding 0
   enable_svc haproxy 0
@@ -1147,14 +1244,15 @@ setup_secstorage() {
   enable_svc dnsmasq 0
   enable_svc cloud-passwd-srvr 0
   enable_svc cloud 1
+  rm /etc/logrotate.d/cloud
 }
 
 setup_console_proxy() {
   log_it "Setting up console proxy system vm"
   local hyp=$1
   setup_common eth0 eth1 eth2
-  public_ip=$ETH2_IP
-  [ "$ETH2_IP" == "0.0.0.0" ] && public_ip=$ETH1_IP
+  setup_system_rfc1918_internal
+  public_ip=`getPublicIp`
   sed -i  /gateway/d /etc/hosts
   echo "$public_ip $NAME" >> /etc/hosts
   cp /etc/iptables/iptables-consoleproxy /etc/iptables/rules.v4
@@ -1173,6 +1271,7 @@ setup_console_proxy() {
   enable_svc cloud-passwd-srvr 0
   enable_svc cloud 1
   chkconfig nfs-common off
+  rm /etc/logrotate.d/cloud
 }
 
 setup_elbvm() {
@@ -1253,22 +1352,30 @@ start() {
   patch_log4j
   parse_cmd_line
   change_password
-  if [ "$hyp" == "hyperv" ]; then
-    # eject the systemvm.iso
-      eject
-  fi
   case $TYPE in 
      router)
          [ "$NAME" == "" ] && NAME=router
          setup_router
+         if [ -x /opt/cloud/bin/update_config.py ]
+         then
+	         /opt/cloud/bin/update_config.py cmd_line.json
+         fi
 	  ;;
      vpcrouter)
          [ "$NAME" == "" ] && NAME=vpcrouter
          setup_vpcrouter
+         if [ -x /opt/cloud/bin/update_config.py ]
+         then
+	         /opt/cloud/bin/update_config.py cmd_line.json
+         fi
 	  ;;
      dhcpsrvr)
          [ "$NAME" == "" ] && NAME=dhcpsrvr
          setup_dhcpsrvr
+         if [ -x /opt/cloud/bin/update_config.py ]
+         then
+	         /opt/cloud/bin/update_config.py cmd_line.json
+         fi
 	  ;;
      secstorage)
          [ "$NAME" == "" ] && NAME=secstorage
@@ -1291,6 +1398,10 @@ start() {
          setup_default;
           ;;
   esac
+    if [ "$hyp" == "hyperv" ]; then
+    # eject the systemvm.iso
+     eject
+  fi
   return 0
 }
 
@@ -1306,11 +1417,20 @@ STORAGE_NETMASK=""
 STORAGE_CIDR=""
 VM_PASSWORD=""
 
+CHEF_TMP_FILE=/tmp/cmdline.json
+COMMA="\t"
+echo -e "{\n\"type\": \"cmdline\"," > ${CHEF_TMP_FILE}
+echo -e "\n\"cmd_line\": {" >> ${CHEF_TMP_FILE}
+
 for i in $CMDLINE
   do
     # search for foo=bar pattern and cut out foo
     KEY=$(echo $i | cut -d= -f1)
     VALUE=$(echo $i | cut -d= -f2)
+    echo -en ${COMMA} >> ${CHEF_TMP_FILE}
+    # Two lines so values do not accidently interpretted as escapes!!
+    echo -n \"${KEY}\"': '\"${VALUE}\" >> ${CHEF_TMP_FILE}
+    COMMA=",\n\t"
     case $KEY in 
       disable_rp_filter)
           DISABLE_RP_FILTER=$VALUE
@@ -1444,8 +1564,16 @@ for i in $CMDLINE
       cidrsize)
         CIDR_SIZE=$VALUE
         ;;
+      advert_int)
+        ADVERT_INT=$VALUE
+        ;;
     esac
 done
+echo -e "\n\t}\n}" >> ${CHEF_TMP_FILE}
+if [ "$TYPE" != "unknown" ]
+then
+	mv ${CHEF_TMP_FILE} /var/cache/cloud/cmd_line.json
+fi
 
 [ $ETH0_IP ] && LOCAL_ADDRS=$ETH0_IP
 [ $ETH0_IP6 ] && LOCAL_ADDRS=$ETH0_IP6

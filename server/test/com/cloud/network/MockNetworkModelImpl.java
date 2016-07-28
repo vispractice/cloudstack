@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
 import com.cloud.dc.Vlan;
@@ -48,7 +47,6 @@ import com.cloud.vm.Nic;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.VirtualMachine;
 
-@Local(value = {NetworkModel.class})
 public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
 
     /* (non-Javadoc)
@@ -87,8 +85,7 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
      * @see com.cloud.network.NetworkModel#listPublicIpsAssignedToGuestNtwk(long, long, java.lang.Boolean)
      */
     @Override
-    public List<IPAddressVO> listPublicIpsAssignedToGuestNtwk(long accountId, long associatedNetworkId,
-            Boolean sourceNat) {
+    public List<IPAddressVO> listPublicIpsAssignedToGuestNtwk(long accountId, long associatedNetworkId, Boolean sourceNat) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -124,13 +121,10 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
      * @see com.cloud.network.NetworkModel#getNextAvailableMacAddressInNetwork(long)
      */
     @Override
-    public String getNextAvailableMacAddressInNetwork(long networkConfigurationId)
-            throws InsufficientAddressCapacityException {
+    public String getNextAvailableMacAddressInNetwork(long networkConfigurationId) throws InsufficientAddressCapacityException {
         // TODO Auto-generated method stub
         return null;
     }
-
-    
 
     /* (non-Javadoc)
      * @see com.cloud.network.NetworkModel#getPublicIpAddress(long)
@@ -222,6 +216,11 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
         return null;
     }
 
+    @Override
+    public boolean isSharedNetworkWithoutServices(long networkId) {
+        return false;
+    }
+
     /* (non-Javadoc)
      * @see com.cloud.network.NetworkModel#areServicesSupportedByNetworkOffering(long, com.cloud.network.Network.Service[])
      */
@@ -229,6 +228,15 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
     public boolean areServicesSupportedByNetworkOffering(long networkOfferingId, Service... services) {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    /* (non-Javadoc)
+     * @see com.cloud.network.NetworkModel#getNetworkWithSGWithFreeIPs(java.lang.Long)
+     */
+    @Override
+    public NetworkVO getNetworkWithSGWithFreeIPs(Long zoneId) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     /* (non-Javadoc)
@@ -266,7 +274,6 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
         // TODO Auto-generated method stub
         return null;
     }
-
 
     /* (non-Javadoc)
      * @see com.cloud.network.NetworkModel#getStartIpAddress(long)
@@ -767,8 +774,7 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
      * @see com.cloud.network.NetworkModel#getIpToServices(java.util.List, boolean, boolean)
      */
     @Override
-    public Map<PublicIpAddress, Set<Service>> getIpToServices(List<? extends PublicIpAddress> publicIps, boolean rulesRevoked,
-            boolean includingFirewall) {
+    public Map<PublicIpAddress, Set<Service>> getIpToServices(List<? extends PublicIpAddress> publicIps, boolean rulesRevoked, boolean includingFirewall) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -777,8 +783,7 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
      * @see com.cloud.network.NetworkModel#getProviderToIpList(com.cloud.network.Network, java.util.Map)
      */
     @Override
-    public Map<Provider, ArrayList<PublicIpAddress>> getProviderToIpList(Network network,
-            Map<PublicIpAddress, Set<Service>> ipToServices) {
+    public Map<Provider, ArrayList<PublicIpAddress>> getProviderToIpList(Network network, Map<PublicIpAddress, Set<Service>> ipToServices) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -801,37 +806,34 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
         return false;
     }
 
-	@Override
-	public boolean isIP6AddressAvailableInNetwork(long networkId) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean isIP6AddressAvailableInNetwork(long networkId) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
-	@Override
-	public boolean isIP6AddressAvailableInVlan(long vlanId) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean isIP6AddressAvailableInVlan(long vlanId) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
-	@Override
-	public void checkIp6Parameters(String startIPv6, String endIPv6,
-			String ip6Gateway, String ip6Cidr)
-			throws InvalidParameterValueException {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void checkIp6Parameters(String startIPv6, String endIPv6, String ip6Gateway, String ip6Cidr) throws InvalidParameterValueException {
+        // TODO Auto-generated method stub
 
-	@Override
-	public void checkRequestedIpAddresses(long networkId, String ip4, String ip6)
-			throws InvalidParameterValueException {
-		// TODO Auto-generated method stub
-	}
+    }
 
-	@Override
-	public String getStartIpv6Address(long id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public void checkRequestedIpAddresses(long networkId, String ip4, String ip6) throws InvalidParameterValueException {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public String getStartIpv6Address(long id) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     @Override
     public boolean isProviderEnabledInZone(long zoneId, String provider) {
@@ -861,7 +863,7 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
     public Map<Detail, String> getNtwkOffDetails(long offId) {
         return null;
     }
-    
+
     @Override
     public IsolationType[] listNetworkIsolationMethods() {
         // TODO Auto-generated method stub
@@ -903,4 +905,10 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+    @Override
+    public List<String[]> generateVmData(String userData, String serviceOffering, String zoneName, String vmName, long vmId, String publicKey, String password, Boolean isWindows) {
+        return null;
+    }
+
 }

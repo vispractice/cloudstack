@@ -19,7 +19,6 @@ package com.cloud.api.query.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
@@ -33,23 +32,20 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import com.cloud.api.query.vo.ImageStoreJoinVO;
 import com.cloud.storage.ImageStore;
 import com.cloud.utils.StringUtils;
-import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
 @Component
-@Local(value={ImageStoreJoinDao.class})
 public class ImageStoreJoinDaoImpl extends GenericDaoBase<ImageStoreJoinVO, Long> implements ImageStoreJoinDao {
     public static final Logger s_logger = Logger.getLogger(ImageStoreJoinDaoImpl.class);
 
     @Inject
-    private ConfigurationDao  _configDao;
+    private ConfigurationDao _configDao;
 
     private final SearchBuilder<ImageStoreJoinVO> dsSearch;
 
     private final SearchBuilder<ImageStoreJoinVO> dsIdSearch;
-
 
     protected ImageStoreJoinDaoImpl() {
 
@@ -63,10 +59,6 @@ public class ImageStoreJoinDaoImpl extends GenericDaoBase<ImageStoreJoinVO, Long
 
         _count = "select count(distinct id) from image_store_view WHERE ";
     }
-
-
-
-
 
     @Override
     public ImageStoreResponse newImageStoreResponse(ImageStoreJoinVO ids) {
@@ -89,7 +81,8 @@ public class ImageStoreJoinDaoImpl extends GenericDaoBase<ImageStoreJoinVO, Long
         if ( detailName != null && detailName.length() > 0 && !detailName.equals(ApiConstants.PASSWORD)) {
             String detailValue = ids.getDetailValue();
             if (detailName.equals(ApiConstants.KEY) || detailName.equals(ApiConstants.S3_SECRET_KEY)) {
-                detailValue = DBEncryptionUtil.decrypt(detailValue);
+                // ALWAYS return an empty value for the S3 secret key since that key is managed by Amazon and not CloudStack
+                detailValue = "";
             }
             ImageStoreDetailResponse osdResponse = new ImageStoreDetailResponse(detailName, detailValue);
             osResponse.addDetail(osdResponse);
@@ -98,25 +91,20 @@ public class ImageStoreJoinDaoImpl extends GenericDaoBase<ImageStoreJoinVO, Long
         return osResponse;
     }
 
-
-
-
-
     @Override
     public ImageStoreResponse setImageStoreResponse(ImageStoreResponse response, ImageStoreJoinVO ids) {
         String detailName = ids.getDetailName();
         if ( detailName != null && detailName.length() > 0 && !detailName.equals(ApiConstants.PASSWORD)) {
             String detailValue = ids.getDetailValue();
             if (detailName.equals(ApiConstants.KEY) || detailName.equals(ApiConstants.S3_SECRET_KEY)) {
-                detailValue = DBEncryptionUtil.decrypt(detailValue);
+                // ALWAYS return an empty value for the S3 secret key since that key is managed by Amazon and not CloudStack
+                detailValue = "";
             }
             ImageStoreDetailResponse osdResponse = new ImageStoreDetailResponse(detailName, detailValue);
             response.addDetail(osdResponse);
         }
         return response;
     }
-
-
 
     @Override
     public List<ImageStoreJoinVO> newImageStoreView(ImageStore os) {
@@ -126,22 +114,20 @@ public class ImageStoreJoinDaoImpl extends GenericDaoBase<ImageStoreJoinVO, Long
 
     }
 
-
-
     @Override
     public List<ImageStoreJoinVO> searchByIds(Long... spIds) {
         // set detail batch query size
         int DETAILS_BATCH_SIZE = 2000;
         String batchCfg = _configDao.getValue("detail.batch.query.size");
-        if ( batchCfg != null ){
+        if (batchCfg != null) {
             DETAILS_BATCH_SIZE = Integer.parseInt(batchCfg);
         }
         // query details by batches
         List<ImageStoreJoinVO> uvList = new ArrayList<ImageStoreJoinVO>();
         // query details by batches
         int curr_index = 0;
-        if ( spIds.length > DETAILS_BATCH_SIZE ){
-            while ( (curr_index + DETAILS_BATCH_SIZE ) <= spIds.length ) {
+        if (spIds.length > DETAILS_BATCH_SIZE) {
+            while ((curr_index + DETAILS_BATCH_SIZE) <= spIds.length) {
                 Long[] ids = new Long[DETAILS_BATCH_SIZE];
                 for (int k = 0, j = curr_index; j < curr_index + DETAILS_BATCH_SIZE; j++, k++) {
                     ids[k] = spIds[j];
@@ -171,8 +157,5 @@ public class ImageStoreJoinDaoImpl extends GenericDaoBase<ImageStoreJoinVO, Long
         }
         return uvList;
     }
-
-
-
 
 }

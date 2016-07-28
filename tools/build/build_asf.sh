@@ -19,7 +19,7 @@
 version='TESTBUILD'
 sourcedir=~/cloudstack/
 outputdir=/tmp/cloudstack-build/
-branch='master'
+branch='master' # DH(20140604): maybe change default to `git symbolic-ref --short HEAD`
 tag='no'
 certid='X'
 committosvn='X'
@@ -92,16 +92,45 @@ echo "found $currentversion"
 echo 'setting version numbers'
 mvn versions:set -DnewVersion=$version -P vmware -P developer -P systemvm -P simulator -P baremetal -P ucs -Dnoredist
 mv deps/XenServerJava/pom.xml.versionsBackup deps/XenServerJava/pom.xml
-perl -pi -e "s/<cs.xapi.version>5.6.100-1-SNAPSHOT<\/cs.xapi.version>/<cs.xapi.version>5.6.100-1<\/cs.xapi.version>/" pom.xml
+perl -pi -e "s/<cs.xapi.version>6.2.0-1-SNAPSHOT<\/cs.xapi.version>/<cs.xapi.version>6.2.0-1<\/cs.xapi.version>/" pom.xml
+perl -pi -e "s/-SNAPSHOT//" tools/checkstyle/pom.xml
 perl -pi -e "s/-SNAPSHOT//" deps/XenServerJava/pom.xml
 perl -pi -e "s/-SNAPSHOT//" tools/apidoc/pom.xml
+perl -pi -e "s/-SNAPSHOT//" Dockerfile
+perl -pi -e "s/-SNAPSHOT//" build/replace.properties
+perl -pi -e "s/-SNAPSHOT//" services/console-proxy/plugin/pom.xml
+perl -pi -e "s/-SNAPSHOT//" tools/marvin/setup.py
+perl -pi -e "s/-SNAPSHOT//" tools/marvin/marvin/deployAndRun.py
+perl -pi -e "s/-SNAPSHOT//" services/iam/plugin/pom.xml
+perl -pi -e "s/-SNAPSHOT//" services/iam/pom.xm
+perl -pi -e "s/-SNAPSHOT//" services/iam/server/pom.xml
+
 case "$currentversion" in 
   *-SNAPSHOT*)
     perl -pi -e 's/-SNAPSHOT//' debian/rules
     ;;
 esac
 
+# set debian changelog entry
+tmpfilenm=$$.tmp
+echo "cloudstack ($version) unstable; urgency=low" >>$tmpfilenm 
+echo >>$tmpfilenm
+echo "  * Update the version to $version" >>$tmpfilenm
+echo >>$tmpfilenm
+echo " -- the Apache CloudStack project <dev@cloudstack.apache.org>  `date '+%a, %d %b %Y %T %z'`" >>$tmpfilenm
+echo >>$tmpfilenm
+
+cat debian/changelog >>$tmpfilenm
+mv $tmpfilenm debian/changelog
+
 git clean -f
+
+#create a RC branch
+RC_BRANCH_SUFFIX="RC"`date +%Y%m%dT%H%M`
+BRANCHNAME=$version-$RC_BRANCH_SUFFIX
+git branch $BRANCHNAME
+git checkout $BRANCHNAME
+
 
 echo 'commit changes'
 git commit -a -s -m "Updating pom.xml version numbers for release $version"
@@ -110,7 +139,7 @@ export commitsh=`git show HEAD | head -n 1 | cut -d ' ' -f 2`
 echo "committed as $commitsh"
 
 echo 'archiving'
-git archive --format=tar --prefix=apache-cloudstack-$version-src/ $branch > $outputdir/apache-cloudstack-$version-src.tar
+git archive --format=tar --prefix=apache-cloudstack-$version-src/ $BRANCHNAME > $outputdir/apache-cloudstack-$version-src.tar
 bzip2 $outputdir/apache-cloudstack-$version-src.tar
 
 cd $outputdir
@@ -164,9 +193,5 @@ if [ "$committosvn" == "yes" ]; then
   svn add apache-cloudstack-$version-src.tar.bz2.sha
   svn commit -m "Committing release candidate artifacts for $version to dist/dev/cloudstack in preparation for release vote"
 fi
-
-echo 'revert version changes'
-cd $sourcedir
-git revert --no-edit $commitsh
 
 echo "completed.  use commit-sh of $commitsh when starting the VOTE thread"

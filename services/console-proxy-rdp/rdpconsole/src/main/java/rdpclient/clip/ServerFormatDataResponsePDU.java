@@ -16,8 +16,6 @@
 // under the License.
 package rdpclient.clip;
 
-import common.adapter.AwtClipboardAdapter;
-
 import streamer.BaseElement;
 import streamer.ByteBuffer;
 import streamer.Element;
@@ -26,6 +24,7 @@ import streamer.Pipeline;
 import streamer.PipelineImpl;
 import streamer.debug.MockSink;
 import streamer.debug.MockSource;
+import common.adapter.AwtClipboardAdapter;
 
 public class ServerFormatDataResponsePDU extends BaseElement {
 
@@ -68,15 +67,15 @@ public class ServerFormatDataResponsePDU extends BaseElement {
         // System.setProperty("streamer.Pipeline.debug", "true");
 
         /* @formatter:off */
-    byte[] packet = new byte[] {
-        0x05, 0x00,  //  CLIPRDR_HEADER::msgType = CB_FORMAT_DATA_RESPONSE (5)
-        0x01, 0x00,  //  CLIPRDR_HEADER::msgFlags = 0x0001 = CB_RESPONSE_OK
-        0x18, 0x00, 0x00, 0x00,  //  CLIPRDR_HEADER::dataLen = 0x18 = 24 bytes
-        
-        0x68, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x6f, 0x00, 0x20, 0x00, 0x77, 0x00, 0x6f, 0x00,
-        0x72, 0x00, 0x6c, 0x00, 0x64, 0x00, 0x00, 0x00,  //  CLIPRDR_FORMAT_DATA_RESPONSE::requestedFormatData: "hello world"
-    };
-    /* @formatter:on */
+        byte[] packet = new byte[] {
+                0x05, 0x00,  //  CLIPRDR_HEADER::msgType = CB_FORMAT_DATA_RESPONSE (5)
+                0x01, 0x00,  //  CLIPRDR_HEADER::msgFlags = 0x0001 = CB_RESPONSE_OK
+                0x18, 0x00, 0x00, 0x00,  //  CLIPRDR_HEADER::dataLen = 0x18 = 24 bytes
+
+                0x68, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x6f, 0x00, 0x20, 0x00, 0x77, 0x00, 0x6f, 0x00,
+                0x72, 0x00, 0x6c, 0x00, 0x64, 0x00, 0x00, 0x00,  //  CLIPRDR_FORMAT_DATA_RESPONSE::requestedFormatData: "hello world"
+        };
+        /* @formatter:on */
 
         MockSource source = new MockSource("source", ByteBuffer.convertByteArraysToByteBuffers(packet));
         Element router = new ServerClipRdrChannelRouter("router");

@@ -30,7 +30,8 @@ import org.apache.log4j.Logger;
 import com.cloud.alert.Alert;
 import com.cloud.utils.Pair;
 
-@APICommand(name = "listAlerts", description = "Lists all alerts.", responseObject = AlertResponse.class)
+@APICommand(name = "listAlerts", description = "Lists all alerts.", responseObject = AlertResponse.class,
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListAlertsCmd extends BaseListCmd {
 
     public static final Logger s_logger = Logger.getLogger(ListAlertsCmd.class.getName());
@@ -41,14 +42,13 @@ public class ListAlertsCmd extends BaseListCmd {
     // ////////////// API parameters /////////////////////
     // ///////////////////////////////////////////////////
 
-    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = AlertResponse.class,
-            description = "the ID of the alert")
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = AlertResponse.class, description = "the ID of the alert")
     private Long id;
 
     @Parameter(name = ApiConstants.TYPE, type = CommandType.STRING, description = "list by alert type")
     private String type;
     
-    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "list by alert name", since="4.3")
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "list by alert name", since = "4.3")
     private String name;
 
     // ///////////////////////////////////////////////////

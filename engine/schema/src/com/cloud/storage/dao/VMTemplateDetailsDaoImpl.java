@@ -16,19 +16,18 @@
 // under the License.
 package com.cloud.storage.dao;
 
-import javax.ejb.Local;
+
+import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.resourcedetail.ResourceDetailsDaoBase;
-import org.springframework.stereotype.Component;
 
 import com.cloud.storage.VMTemplateDetailVO;
 
 @Component
-@Local(value = VMTemplateDetailsDao.class)
 public class VMTemplateDetailsDaoImpl extends ResourceDetailsDaoBase<VMTemplateDetailVO> implements VMTemplateDetailsDao {
 
     @Override
-    public void addDetail(long resourceId, String key, String value) {
-        super.addDetail(new VMTemplateDetailVO(resourceId, key, value));
+    public void addDetail(long resourceId, String key, String value, boolean display) {
+        super.addDetail(new VMTemplateDetailVO(resourceId, key, value, display));
     }
 }

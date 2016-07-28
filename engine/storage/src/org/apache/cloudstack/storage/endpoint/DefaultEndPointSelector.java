@@ -18,6 +18,8 @@
  */
 package org.apache.cloudstack.storage.endpoint;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -62,15 +64,15 @@ public class DefaultEndPointSelector implements EndPointSelector {
     private static final Logger s_logger = Logger.getLogger(DefaultEndPointSelector.class);
     @Inject
     HostDao hostDao;
-    private final String findOneHostOnPrimaryStorage = "select h.id from host h, storage_pool_host_ref s  where h.status = 'Up' and h.type = 'Routing' and h.resource_state = 'Enabled' and" +
-            " h.id = s.host_id and s.pool_id = ? ";
+    private final String findOneHostOnPrimaryStorage =
+        "select h.id from host h, storage_pool_host_ref s  where h.status = 'Up' and h.type = 'Routing' and h.resource_state = 'Enabled' and"
+            + " h.id = s.host_id and s.pool_id = ? ";
     private String findOneHypervisorHostInScope = "select h.id from host h where h.status = 'Up' and h.hypervisor_type is not null ";
 
     protected boolean moveBetweenPrimaryImage(DataStore srcStore, DataStore destStore) {
         DataStoreRole srcRole = srcStore.getRole();
         DataStoreRole destRole = destStore.getRole();
-        if ((srcRole == DataStoreRole.Primary && destRole.isImageStore())
-                || (srcRole.isImageStore() && destRole == DataStoreRole.Primary)) {
+        if ((srcRole == DataStoreRole.Primary && destRole.isImageStore()) || (srcRole.isImageStore() && destRole == DataStoreRole.Primary)) {
             return true;
         } else {
             return false;
@@ -80,8 +82,7 @@ public class DefaultEndPointSelector implements EndPointSelector {
     protected boolean moveBetweenCacheAndImage(DataStore srcStore, DataStore destStore) {
         DataStoreRole srcRole = srcStore.getRole();
         DataStoreRole destRole = destStore.getRole();
-        if (srcRole == DataStoreRole.Image && destRole == DataStoreRole.ImageCache
-                || srcRole == DataStoreRole.ImageCache && destRole == DataStoreRole.Image) {
+        if (srcRole == DataStoreRole.Image && destRole == DataStoreRole.ImageCache || srcRole == DataStoreRole.ImageCache && destRole == DataStoreRole.Image) {
             return true;
         } else {
             return false;
@@ -116,33 +117,21 @@ public class DefaultEndPointSelector implements EndPointSelector {
         // TODO: order by rand() is slow if there are lot of hosts
         sbuilder.append(" ORDER by rand() limit 1");
         String sql = sbuilder.toString();
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
         HostVO host = null;
         TransactionLegacy txn = TransactionLegacy.currentTxn();
-
-        try {
-            pstmt = txn.prepareStatement(sql);
+        try(PreparedStatement pstmt = txn.prepareStatement(sql);) {
             pstmt.setLong(1, poolId);
-            rs = pstmt.executeQuery();
-            while (rs.next()) {
-                long id = rs.getLong(1);
-                host = hostDao.findById(id);
+            try(ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    long id = rs.getLong(1);
+                    host = hostDao.findById(id);
+                }
+            }catch (SQLException e) {
+                s_logger.warn("can't find endpoint", e);
             }
         } catch (SQLException e) {
             s_logger.warn("can't find endpoint", e);
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (pstmt != null) {
-                    pstmt.close();
-                }
-            } catch (SQLException e) {
-            }
         }
-
         if (host == null) {
             return null;
         }
@@ -151,7 +140,7 @@ public class DefaultEndPointSelector implements EndPointSelector {
     }
 
     protected EndPoint findEndPointForImageMove(DataStore srcStore, DataStore destStore) {
-        // find any xen/kvm host in the scope
+        // find any xenserver/kvm host in the scope
         Scope srcScope = srcStore.getScope();
         Scope destScope = destStore.getScope();
         Scope selectedScope = null;
@@ -216,11 +205,19 @@ public class DefaultEndPointSelector implements EndPointSelector {
     public EndPoint select(DataObject srcData, DataObject destData, StorageAction action) {
         if (action == StorageAction.BACKUPSNAPSHOT && srcData.getDataStore().getRole() == DataStoreRole.Primary) {
             SnapshotInfo srcSnapshot = (SnapshotInfo)srcData;
+            VolumeInfo volumeInfo = srcSnapshot.getBaseVolume();
+            VirtualMachine vm = volumeInfo.getAttachedVM();
             if (srcSnapshot.getHypervisorType() == Hypervisor.HypervisorType.KVM) {
-                VolumeInfo volumeInfo = srcSnapshot.getBaseVolume();
-                VirtualMachine vm = volumeInfo.getAttachedVM();
                 if (vm != null && vm.getState() == VirtualMachine.State.Running) {
                     return getEndPointFromHostId(vm.getHostId());
+                }
+            }
+            if (srcSnapshot.getHypervisorType() == Hypervisor.HypervisorType.VMware) {
+                if (vm != null) {
+                    Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
+                    if (hostId != null) {
+                        return getEndPointFromHostId(hostId);
+                    }
                 }
             }
         }
@@ -252,7 +249,7 @@ public class DefaultEndPointSelector implements EndPointSelector {
     private List<HostVO> listUpAndConnectingSecondaryStorageVmHost(Long dcId) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
         if (dcId != null) {
-            sc.and(sc.entity().getDataCenterId(), Op.EQ,dcId);
+            sc.and(sc.entity().getDataCenterId(), Op.EQ, dcId);
         }
         sc.and(sc.entity().getStatus(), Op.IN, Status.Up, Status.Connecting);
         sc.and(sc.entity().getType(), Op.EQ, Host.Type.SecondaryStorageVM);
@@ -272,6 +269,33 @@ public class DefaultEndPointSelector implements EndPointSelector {
             }
         }
         return null;
+    }
+
+    @Override
+    public EndPoint select(DataStore store, String downloadUrl){
+
+        HostVO host = null;
+        try {
+            URI uri = new URI(downloadUrl);
+            String scheme = uri.getScheme();
+            String publicIp = uri.getHost();
+            // If its https then public ip will be of the form xxx-xxx-xxx-xxx.mydomain.com
+            if(scheme.equalsIgnoreCase("https")){
+                publicIp = publicIp.split("\\.")[0]; // We want xxx-xxx-xxx-xxx
+                publicIp = publicIp.replace("-","."); // We not want the IP -  xxx.xxx.xxx.xxx
+            }
+            host = hostDao.findByPublicIp(publicIp);
+            if(host != null){
+                return RemoteHostEndPoint.getHypervisorHostEndPoint(host);
+            }
+
+        } catch (URISyntaxException e) {
+            s_logger.debug("Received URISyntaxException for url" +downloadUrl);
+        }
+
+        // If ssvm doesnt exist then find any ssvm in the zone.
+        s_logger.debug("Coudn't find ssvm for url" +downloadUrl);
+        return findEndpointForImageStorage(store);
     }
 
     @Override
@@ -306,6 +330,26 @@ public class DefaultEndPointSelector implements EndPointSelector {
                     return getEndPointFromHostId(hostId);
                 }
             }
+        } else if (action == StorageAction.MIGRATEVOLUME) {
+            VolumeInfo volume = (VolumeInfo)object;
+            if (volume.getHypervisorType() == Hypervisor.HypervisorType.Hyperv || volume.getHypervisorType() == Hypervisor.HypervisorType.VMware) {
+                VirtualMachine vm = volume.getAttachedVM();
+                if ((vm != null) && (vm.getState() == VirtualMachine.State.Running)) {
+                    Long hostId = vm.getHostId();
+                    return getEndPointFromHostId(hostId);
+                }
+            }
+        } else if (action == StorageAction.DELETEVOLUME) {
+            VolumeInfo volume = (VolumeInfo)object;
+            if (volume.getHypervisorType() == Hypervisor.HypervisorType.VMware) {
+                VirtualMachine vm = volume.getAttachedVM();
+                if (vm != null) {
+                    Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
+                    if (hostId != null) {
+                        return getEndPointFromHostId(hostId);
+                    }
+                }
+            }
         }
         return select(object);
     }
@@ -320,6 +364,7 @@ public class DefaultEndPointSelector implements EndPointSelector {
         List<EndPoint> endPoints = new ArrayList<EndPoint>();
         if (store.getScope().getScopeType() == ScopeType.HOST) {
             HostVO host = hostDao.findById(store.getScope().getScopeId());
+
             endPoints.add(RemoteHostEndPoint.getHypervisorHostEndPoint(host));
         } else if (store.getScope().getScopeType() == ScopeType.CLUSTER) {
             QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
@@ -350,30 +395,19 @@ public class DefaultEndPointSelector implements EndPointSelector {
         sbuilder.append(" ORDER by rand() limit 1");
 
         String sql = sbuilder.toString();
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
         HostVO host = null;
         TransactionLegacy txn = TransactionLegacy.currentTxn();
 
-        try {
-            pstmt = txn.prepareStatement(sql);
-            rs = pstmt.executeQuery();
+        try (
+                PreparedStatement pstmt = txn.prepareStatement(sql);
+                ResultSet rs = pstmt.executeQuery();
+            ) {
             while (rs.next()) {
                 long id = rs.getLong(1);
                 host = hostDao.findById(id);
             }
         } catch (SQLException e) {
             s_logger.warn("can't find endpoint", e);
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (pstmt != null) {
-                    pstmt.close();
-                }
-            } catch (SQLException e) {
-            }
         }
 
         if (host == null) {

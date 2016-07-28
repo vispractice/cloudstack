@@ -39,31 +39,40 @@ import com.cloud.exception.ResourceAllocationException;
 import com.cloud.network.vpc.VpcOffering;
 import com.cloud.user.Account;
 
-@APICommand(name = "createVPCOffering", description="Creates VPC offering", responseObject=VpcOfferingResponse.class)
-public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd{
+@APICommand(name = "createVPCOffering", description = "Creates VPC offering", responseObject = VpcOfferingResponse.class,
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
+public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd {
     public static final Logger s_logger = Logger.getLogger(CreateVPCOfferingCmd.class.getName());
-    private static final String _name = "createvpcofferingresponse";
+    private static final String s_name = "createvpcofferingresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.NAME, type=CommandType.STRING, required=true, description="the name of the vpc offering")
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "the name of the vpc offering")
     private String vpcOfferingName;
 
-    @Parameter(name=ApiConstants.DISPLAY_TEXT, type=CommandType.STRING, required=true, description="the display text of " +
-            "the vpc offering")
+    @Parameter(name = ApiConstants.DISPLAY_TEXT, type = CommandType.STRING, required = true, description = "the display text of " + "the vpc offering")
     private String displayText;
 
-    @Parameter(name=ApiConstants.SUPPORTED_SERVICES, type=CommandType.LIST, required=true, collectionType=CommandType.STRING,
-            description="services supported by the vpc offering")
+    @Parameter(name = ApiConstants.SUPPORTED_SERVICES,
+               type = CommandType.LIST,
+               required = true,
+               collectionType = CommandType.STRING,
+               description = "services supported by the vpc offering")
     private List<String> supportedServices;
 
-    @Parameter(name = ApiConstants.SERVICE_PROVIDER_LIST, type = CommandType.MAP, description = "provider to service mapping. " +
-            "If not specified, the provider for the service will be mapped to the default provider on the physical network")
-    private Map<String, String> serviceProviderList;
+    @Parameter(name = ApiConstants.SERVICE_PROVIDER_LIST, type = CommandType.MAP, description = "provider to service mapping. "
+        + "If not specified, the provider for the service will be mapped to the default provider on the physical network")
+    private Map<String, ? extends Map<String, String>> serviceProviderList;
 
-    @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class, description = "the ID of the service offering for the VPC router appliance")
+    @Parameter(name = ApiConstants.SERVICE_CAPABILITY_LIST, type = CommandType.MAP, description = "desired service capabilities as part of vpc offering", since = "4.4")
+    private Map<String, List<String>> serviceCapabilitystList;
+
+    @Parameter(name = ApiConstants.SERVICE_OFFERING_ID,
+               type = CommandType.UUID,
+               entityType = ServiceOfferingResponse.class,
+               description = "the ID of the service offering for the VPC router appliance")
     private Long serviceOfferingId;
 
     /////////////////////////////////////////////////////
@@ -86,10 +95,14 @@ public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd{
         Map<String, List<String>> serviceProviderMap = null;
         if (serviceProviderList != null && !serviceProviderList.isEmpty()) {
             serviceProviderMap = new HashMap<String, List<String>>();
-            Collection servicesCollection = serviceProviderList.values();
-            Iterator iter = servicesCollection.iterator();
+            Collection<? extends Map<String, String>> servicesCollection = serviceProviderList.values();
+            Iterator<? extends Map<String, String>> iter = servicesCollection.iterator();
             while (iter.hasNext()) {
-                HashMap<String, String> services = (HashMap<String, String>) iter.next();
+                Map<String, String> obj = iter.next();
+                if (s_logger.isTraceEnabled()) {
+                    s_logger.trace("service provider entry specified: " + obj);
+                }
+                HashMap<String, String> services = (HashMap<String, String>)obj;
                 String service = services.get("service");
                 String provider = services.get("provider");
                 List<String> providerList = null;
@@ -106,14 +119,18 @@ public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd{
         return serviceProviderMap;
     }
 
+    public Map<String, List<String>> getServiceCapabilitystList() {
+        return serviceCapabilitystList;
+    }
+
     public Long getServiceOfferingId() {
         return serviceOfferingId;
     }
 
     @Override
     public void create() throws ResourceAllocationException {
-        VpcOffering vpcOff = _vpcProvSvc.createVpcOffering(getVpcOfferingName(), getDisplayText(), getSupportedServices(),
-                getServiceProviders(), getServiceOfferingId());
+        VpcOffering vpcOff = _vpcProvSvc.createVpcOffering(getVpcOfferingName(), getDisplayText(),
+                getSupportedServices(), getServiceProviders(), getServiceCapabilitystList(), getServiceOfferingId());
         if (vpcOff != null) {
             setEntityId(vpcOff.getId());
             setEntityUuid(vpcOff.getUuid());
@@ -134,7 +151,6 @@ public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd{
         }
     }
 
-
     @Override
     public String getEventType() {
         return EventTypes.EVENT_VPC_OFFERING_CREATE;
@@ -142,12 +158,12 @@ public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd{
 
     @Override
     public String getEventDescription() {
-        return  "creating VPC offering. Id: " + getEntityId();
+        return "creating VPC offering. Id: " + getEntityId();
     }
 
     @Override
     public String getCommandName() {
-        return _name;
+        return s_name;
     }
 
     @Override

@@ -16,6 +16,7 @@
 // under the License.
 package streamer.apr;
 
+import org.apache.log4j.Logger;
 import org.apache.tomcat.jni.Socket;
 
 import streamer.BaseElement;
@@ -29,6 +30,7 @@ import streamer.Link;
  * Source element, which reads data from InputStream.
  */
 public class AprSocketSource extends BaseElement {
+    private static final Logger s_logger = Logger.getLogger(AprSocketSource.class);
 
     protected AprSocketWrapperImpl socketWrapper;
     protected Long socket;
@@ -101,41 +103,44 @@ public class AprSocketSource extends BaseElement {
             if (verbose)
                 System.out.println("[" + this + "] INFO: Reading data from stream.");
 
+            // to unblock during reboot
+            long startTime = System.currentTimeMillis();
             // FIXME: If pull is destroyed or socket is closed, segfault will happen here
             int actualLength = (block) ? // Blocking read
-            Socket.recv(socket, buf.data, buf.offset, buf.data.length - buf.offset)
+                    Socket.recv(socket, buf.data, buf.offset, buf.data.length - buf.offset)
                     : // Non-blocking read
-                    Socket.recvt(socket, buf.data, buf.offset, buf.data.length - buf.offset, 1);
+                        Socket.recvt(socket, buf.data, buf.offset, buf.data.length - buf.offset, 5000000);
 
-            if (socketWrapper.shutdown) {
-                socketWrapper.destroyPull();
-                return;
-            }
+                    if (socketWrapper.shutdown) {
+                        socketWrapper.destroyPull();
+                        return;
+                    }
 
-            if (actualLength < 0) {
-                if (verbose)
-                    System.out.println("[" + this + "] INFO: End of stream.");
+                    long elapsedTime = System.currentTimeMillis() - startTime;
+                    if (actualLength < 0 || elapsedTime > 5000) {
+                        if (verbose)
+                            System.out.println("[" + this + "] INFO: End of stream or timeout");
 
-                buf.unref();
-                closeStream();
-                sendEventToAllPads(Event.STREAM_CLOSE, Direction.OUT);
-                return;
-            }
+                        buf.unref();
+                        closeStream();
+                        sendEventToAllPads(Event.STREAM_CLOSE, Direction.OUT);
+                        return;
+                    }
 
-            if (actualLength == 0) {
-                if (verbose)
-                    System.out.println("[" + this + "] INFO: Empty buffer is read from stream.");
+                    if (actualLength == 0) {
+                        if (verbose)
+                            System.out.println("[" + this + "] INFO: Empty buffer is read from stream.");
 
-                buf.unref();
-                return;
-            }
+                        buf.unref();
+                        return;
+                    }
 
-            buf.length = actualLength;
+                    buf.length = actualLength;
 
-            if (verbose)
-                System.out.println("[" + this + "] INFO: Data read from stream: " + buf + ".");
+                    if (verbose)
+                        System.out.println("[" + this + "] INFO: Data read from stream: " + buf + ".");
 
-            pushDataToAllOuts(buf);
+                    pushDataToAllOuts(buf);
 
         } catch (Exception e) {
             System.err.println("[" + this + "] ERROR: " + e.getMessage());
@@ -159,6 +164,8 @@ public class AprSocketSource extends BaseElement {
         try {
             sendEventToAllPads(Event.STREAM_CLOSE, Direction.OUT);
         } catch (Exception e) {
+            s_logger.info("[ignored]"
+                    + "failing sending source event to all pads: " + e.getLocalizedMessage());
         }
         socketWrapper.shutdown();
     }

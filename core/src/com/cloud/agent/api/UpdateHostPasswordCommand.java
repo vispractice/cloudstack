@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,31 +15,45 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.agent.api;
 
 import com.cloud.agent.api.LogLevel.Log4jLevel;
 
-
 public class UpdateHostPasswordCommand extends Command {
+
     @LogLevel(Log4jLevel.Off)
-    protected String _username;
+    protected String username;
     @LogLevel(Log4jLevel.Off)
-    protected String _new_password;
+    protected String newPassword;
+    @LogLevel(Log4jLevel.Off)
+    protected String hostIp;
+
 
     protected UpdateHostPasswordCommand() {
     }
 
-    public UpdateHostPasswordCommand(String username, String new_password) {
-        this._username = username;
-        this._new_password = new_password;
+    public UpdateHostPasswordCommand(final String username, final String newPassword) {
+        this(username, newPassword, null);
+    }
+
+    public UpdateHostPasswordCommand(final String username, final String newPassword, final String hostIp) {
+        this.username = username;
+        this.newPassword = newPassword;
+        this.hostIp = hostIp;
     }
 
     public String getNewPassword() {
-        return _new_password;
+        return newPassword;
     }
 
     public String getUsername() {
-        return _username;
+        return username;
+    }
+
+    public String getHostIp() {
+        return hostIp;
     }
 
     @Override

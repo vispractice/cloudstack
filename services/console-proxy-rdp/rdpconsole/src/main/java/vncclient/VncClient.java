@@ -26,8 +26,8 @@ import vncclient.vnc.RGB888LE32PixelFormatRequest;
 import vncclient.vnc.RfbConstants;
 import vncclient.vnc.VncInitializer;
 import vncclient.vnc.VncMessageHandler;
-import vncclient.vnc.Vnc_3_3_Authentication;
-import vncclient.vnc.Vnc_3_3_Hello;
+import vncclient.vnc.Vnc33Authentication;
+import vncclient.vnc.Vnc33Hello;
 import common.AwtKeyEventSource;
 import common.AwtMouseEventSource;
 import common.BufferedImageCanvas;
@@ -57,9 +57,9 @@ public class VncClient extends PipelineImpl {
                 // Handshake
 
                 // RFB protocol version exchanger
-                new Vnc_3_3_Hello("hello"),
+                new Vnc33Hello("hello"),
                 // Authenticator
-                new Vnc_3_3_Authentication("auth", password),
+                new Vnc33Authentication("auth", password),
                 // Initializer
                 new VncInitializer("init", true, screen),
 
@@ -88,7 +88,7 @@ public class VncClient extends PipelineImpl {
 
                 mouseEventSource, keyEventSource
 
-        );
+                );
 
         // Link handshake elements
         link("IN", "hello", "auth", "init", "message_handler");

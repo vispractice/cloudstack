@@ -23,9 +23,11 @@ import java.awt.image.DataBufferInt;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import com.cloud.consoleproxy.util.Logger;
 import com.cloud.consoleproxy.vnc.VncScreenDescription;
 
 public class RawRect extends AbstractRect {
+    private static final Logger s_logger = Logger.getLogger(RawRect.class);
     private final int[] buf;
 
     public RawRect(VncScreenDescription screen, int x, int y, int width, int height, DataInputStream is) throws IOException {
@@ -52,7 +54,7 @@ public class RawRect extends AbstractRect {
 
         case DataBuffer.TYPE_INT: {
             // We chose RGB888 model, so Raster will use DataBufferInt type
-            DataBufferInt dataBuffer = (DataBufferInt) dataBuf;
+            DataBufferInt dataBuffer = (DataBufferInt)dataBuf;
 
             int imageWidth = image.getWidth();
             int imageHeight = image.getHeight();
@@ -63,13 +65,15 @@ public class RawRect extends AbstractRect {
                 try {
                     System.arraycopy(buf, srcLine * width, imageBuffer, x + dstLine * imageWidth, width);
                 } catch (IndexOutOfBoundsException e) {
+                    s_logger.info("[ignored] buffer overflow!?!", e);
                 }
             }
             break;
         }
 
         default:
-            throw new RuntimeException("Unsupported data buffer in buffered image: expected data buffer of type int (DataBufferInt). Actual data buffer type: " + dataBuf.getClass().getSimpleName());
+            throw new RuntimeException("Unsupported data buffer in buffered image: expected data buffer of type int (DataBufferInt). Actual data buffer type: " +
+                    dataBuf.getClass().getSimpleName());
         }
     }
 }

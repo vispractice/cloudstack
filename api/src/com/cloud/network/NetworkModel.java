@@ -39,18 +39,17 @@ import com.cloud.vm.Nic;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.VirtualMachine;
 
-
 /**
  * The NetworkModel presents a read-only view into the Network data such as L2 networks,
  * Nics, PublicIps, NetworkOfferings, traffic labels, physical networks and the like
- * The idea is that only the orchestration core should be able to modify the data, while other 
+ * The idea is that only the orchestration core should be able to modify the data, while other
  * participants in the orchestration can use this interface to query the data.
  */
 public interface NetworkModel {
 
     /**
      * Lists IP addresses that belong to VirtualNetwork VLANs
-     * 
+     *
      * @param accountId
      *            - account that the IP address should belong to
      * @param associatedNetworkId
@@ -62,7 +61,7 @@ public interface NetworkModel {
     List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long accountId, long associatedNetworkId, Boolean sourceNat);
 
     List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long associatedNetworkId, Boolean sourceNat);
-    
+
     List<? extends NetworkOffering> getSystemAccountNetworkOfferings(String... offeringNames);
 
     List<? extends Nic> getNics(long vmId);
@@ -89,7 +88,11 @@ public interface NetworkModel {
 
     Map<Capability, String> getNetworkServiceCapabilities(long networkId, Service service);
 
+    boolean isSharedNetworkWithoutServices(long networkId);
+
     boolean areServicesSupportedByNetworkOffering(long networkOfferingId, Service... services);
+
+    Network getNetworkWithSGWithFreeIPs(Long zoneId);
 
     Network getNetworkWithSecurityGroupEnabled(Long zoneId);
 
@@ -145,8 +148,7 @@ public interface NetworkModel {
 
     boolean areServicesEnabledInZone(long zoneId, NetworkOffering offering, List<Service> services);
 
-    Map<PublicIpAddress, Set<Service>> getIpToServices(List<? extends PublicIpAddress> publicIps, boolean rulesRevoked,
-            boolean includingFirewall);
+    Map<PublicIpAddress, Set<Service>> getIpToServices(List<? extends PublicIpAddress> publicIps, boolean rulesRevoked, boolean includingFirewall);
 
     Map<Provider, ArrayList<PublicIpAddress>> getProviderToIpList(Network network, Map<PublicIpAddress, Set<Service>> ipToServices);
 
@@ -241,25 +243,25 @@ public interface NetworkModel {
     Set<Long> getAvailableIps(Network network, String requestedIp);
 
     String getDomainNetworkDomain(long domainId, long zoneId);
-    
+
     PublicIpAddress getSourceNatIpAddressForGuestNetwork(Account owner, Network guestNetwork);
-    
+
     boolean isNetworkInlineMode(Network network);
 
-	boolean isIP6AddressAvailableInNetwork(long networkId);
+    boolean isIP6AddressAvailableInNetwork(long networkId);
 
-	boolean isIP6AddressAvailableInVlan(long vlanId);
+    boolean isIP6AddressAvailableInVlan(long vlanId);
 
-	void checkIp6Parameters(String startIPv6, String endIPv6, String ip6Gateway, String ip6Cidr) throws InvalidParameterValueException;
+    void checkIp6Parameters(String startIPv6, String endIPv6, String ip6Gateway, String ip6Cidr) throws InvalidParameterValueException;
 
-	void checkRequestedIpAddresses(long networkId, String ip4, String ip6) throws InvalidParameterValueException;
+    void checkRequestedIpAddresses(long networkId, String ip4, String ip6) throws InvalidParameterValueException;
 
-	String getStartIpv6Address(long id);
+    String getStartIpv6Address(long id);
 
     boolean isProviderEnabledInZone(long zoneId, String provider);
 
     Nic getPlaceholderNicForRouter(Network network, Long podId);
-    
+
     IpAddress getPublicIpAddress(String ipAddress, long zoneId);
 
     List<String> getUsedIpsInNetwork(Network network);
@@ -275,8 +277,12 @@ public interface NetworkModel {
     boolean isNetworkReadyForGc(long networkId);
 
     boolean getNetworkEgressDefaultPolicy(Long networkId);
-    
+
     List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long accountId, long associatedNetworkId, Boolean sourceNat,String multilineLabel);
     
     List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long associatedNetworkId, Boolean sourceNat,String multilineLabel);
+
+    List<String[]> generateVmData(String userData, String serviceOffering, String zoneName,
+                                  String vmName, long vmId, String publicKey, String password, Boolean isWindows);
+
 }

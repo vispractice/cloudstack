@@ -24,7 +24,6 @@ import streamer.Pipeline;
 import streamer.PipelineImpl;
 import streamer.debug.MockSink;
 import streamer.debug.MockSource;
-
 import common.BitmapOrder;
 import common.BitmapRectangle;
 import common.CopyRectOrder;
@@ -309,6 +308,7 @@ public class VncMessageHandler extends BaseElement {
         return true;
     }
 
+    @Override
     public void onStart() {
         // Send Frame Buffer Update request
         sendFBUR();
@@ -320,6 +320,7 @@ public class VncMessageHandler extends BaseElement {
         pushDataToPad(FRAME_BUFFER_UPDATE_REQUEST_ADAPTER_PAD, buf);
     }
 
+    @Override
     public String toString() {
         return "VNCMessageHandler(" + id + ")";
     }
@@ -360,35 +361,35 @@ public class VncMessageHandler extends BaseElement {
 
                         new byte[] {
 
-                                // x, y, width, height: 0x0@4x4
-                                0, 0, 0, 0, 0, 4, 0, 4,
-                                // Encoding: desktop size
-                                (byte)((RfbConstants.ENCODING_DESKTOP_SIZE >> 24) & 0xff), (byte)((RfbConstants.ENCODING_DESKTOP_SIZE >> 16) & 0xff),
-                                (byte)((RfbConstants.ENCODING_DESKTOP_SIZE >> 8) & 0xff), (byte)((RfbConstants.ENCODING_DESKTOP_SIZE >> 0) & 0xff),},
+                        // x, y, width, height: 0x0@4x4
+                        0, 0, 0, 0, 0, 4, 0, 4,
+                        // Encoding: desktop size
+                        (byte)((RfbConstants.ENCODING_DESKTOP_SIZE >> 24) & 0xff), (byte)((RfbConstants.ENCODING_DESKTOP_SIZE >> 16) & 0xff),
+                        (byte)((RfbConstants.ENCODING_DESKTOP_SIZE >> 8) & 0xff), (byte)((RfbConstants.ENCODING_DESKTOP_SIZE >> 0) & 0xff),},
 
                         new byte[] {
 
-                                // x, y, width, height: 0x0@4x4
-                                0, 0, 0, 0, 0, 4, 0, 4,
-                                // Encoding: raw rect
-                                (byte)((RfbConstants.ENCODING_RAW >> 24) & 0xff), (byte)((RfbConstants.ENCODING_RAW >> 16) & 0xff),
-                                (byte)((RfbConstants.ENCODING_RAW >> 8) & 0xff), (byte)((RfbConstants.ENCODING_RAW >> 0) & 0xff),
-                                // Raw pixel data 4x4x1 bpp
-                                1, 2, 3, 4, 5, 6, 7, 8, 9, 10,}, new byte[] {11, 12, 13, 14, 15, 16,
+                        // x, y, width, height: 0x0@4x4
+                        0, 0, 0, 0, 0, 4, 0, 4,
+                        // Encoding: raw rect
+                        (byte)((RfbConstants.ENCODING_RAW >> 24) & 0xff), (byte)((RfbConstants.ENCODING_RAW >> 16) & 0xff),
+                        (byte)((RfbConstants.ENCODING_RAW >> 8) & 0xff), (byte)((RfbConstants.ENCODING_RAW >> 0) & 0xff),
+                        // Raw pixel data 4x4x1 bpp
+                        1, 2, 3, 4, 5, 6, 7, 8, 9, 10,}, new byte[] {11, 12, 13, 14, 15, 16,
 
-                                // x, y, width, height: 0x0@2x2
-                                0, 0, 0, 0, 0, 2, 0, 2,
-                                // Encoding: copy rect
-                                (byte)((RfbConstants.ENCODING_COPY_RECT >> 24) & 0xff), (byte)((RfbConstants.ENCODING_COPY_RECT >> 16) & 0xff),
-                                (byte)((RfbConstants.ENCODING_COPY_RECT >> 8) & 0xff), (byte)((RfbConstants.ENCODING_COPY_RECT >> 0) & 0xff),
-                                // srcX, srcY: 2x2
-                                0, 2, 0, 2,});
+                        // x, y, width, height: 0x0@2x2
+                        0, 0, 0, 0, 0, 2, 0, 2,
+                        // Encoding: copy rect
+                        (byte)((RfbConstants.ENCODING_COPY_RECT >> 24) & 0xff), (byte)((RfbConstants.ENCODING_COPY_RECT >> 16) & 0xff),
+                        (byte)((RfbConstants.ENCODING_COPY_RECT >> 8) & 0xff), (byte)((RfbConstants.ENCODING_COPY_RECT >> 0) & 0xff),
+                        // srcX, srcY: 2x2
+                        0, 2, 0, 2,});
             }
         };
 
         ScreenDescription screen = new ScreenDescription() {
             {
-                this.bytesPerPixel = 1;
+                bytesPerPixel = 1;
             }
         };
 

@@ -45,6 +45,7 @@ public class BufferedImageCopyRectAdapter extends BaseElement {
         inputPads.put(STDIN, null);
     }
 
+    @Override
     public String toString() {
         return "Renderer(" + id + ")";
     }

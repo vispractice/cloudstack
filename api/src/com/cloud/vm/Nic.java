@@ -38,9 +38,8 @@ public interface Nic extends Identity, InternalIdentity {
     }
 
     public enum State implements FiniteState<State, Event> {
-        Allocated("Resource is allocated but not reserved"), Reserving("Resource is being reserved right now"),
-        Reserved("Resource has been reserved."), Releasing("Resource is being released"), Deallocating(
-                "Resource is being deallocated");
+        Allocated("Resource is allocated but not reserved"), Reserving("Resource is being reserved right now"), Reserved("Resource has been reserved."), Releasing(
+                "Resource is being released"), Deallocating("Resource is being deallocated");
 
         String _description;
 
@@ -116,13 +115,7 @@ public interface Nic extends Identity, InternalIdentity {
 
     boolean isDefaultNic();
 
-    String getIp4Address();
-
     String getMacAddress();
-
-    String getNetmask();
-
-    String getGateway();
 
     /**
      * @return network profile id that this
@@ -146,10 +139,25 @@ public interface Nic extends Identity, InternalIdentity {
 
     AddressFormat getAddressFormat();
 
-	String getIp6Gateway();
-
-	String getIp6Cidr();
-
-	String getIp6Address();
     boolean getSecondaryIp();
+
+    //
+    // IPv4
+    //
+
+    String getIPv4Address();
+
+    String getIPv4Netmask();
+
+    String getIPv4Gateway();
+
+    //
+    // IPv6
+    //
+
+    String getIPv6Gateway();
+
+    String getIPv6Cidr();
+
+    String getIPv6Address();
 }

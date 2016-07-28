@@ -16,14 +16,14 @@
 // under the License.
 package com.cloud.network.vpc;
 
+import java.util.List;
 
-import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.utils.Pair;
 import org.apache.cloudstack.api.command.user.network.CreateNetworkACLCmd;
 import org.apache.cloudstack.api.command.user.network.ListNetworkACLListsCmd;
 import org.apache.cloudstack.api.command.user.network.ListNetworkACLsCmd;
 
-import java.util.List;
+import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.utils.Pair;
 
 public interface NetworkACLService {
     /**
@@ -31,9 +31,10 @@ public interface NetworkACLService {
      * @param name
      * @param description
      * @param vpcId
+     * @param forDisplay TODO
      * @return
      */
-    NetworkACL createNetworkACL(String name, String description, long vpcId);
+    NetworkACL createNetworkACL(String name, String description, long vpcId, Boolean forDisplay);
 
     /**
      * Get Network ACL with specified Id
@@ -47,7 +48,7 @@ public interface NetworkACLService {
      * @param cmd
      * @return
      */
-    Pair<List<? extends NetworkACL>,Integer> listNetworkACLs(ListNetworkACLListsCmd cmd);
+    Pair<List<? extends NetworkACL>, Integer> listNetworkACLs(ListNetworkACLListsCmd cmd);
 
     /**
      * Delete specified network ACL. Deletion fails if the list is not empty
@@ -95,9 +96,8 @@ public interface NetworkACLService {
     Pair<List<? extends NetworkACLItem>, Integer> listNetworkACLItems(ListNetworkACLsCmd cmd);
 
     /**
-     * Revoked ACL Item with specified Id
+     * Revoke ACL Item with specified Id
      * @param ruleId
-     * @param apply
      * @return
      */
     boolean revokeNetworkACLItem(long ruleId);
@@ -114,12 +114,13 @@ public interface NetworkACLService {
      * @param sourcePortEnd
      * @param icmpCode
      * @param icmpType
+     * @param newUUID TODO
+     * @param forDisplay TODO
      * @return
      * @throws ResourceUnavailableException
      */
-    NetworkACLItem updateNetworkACLItem(Long id, String protocol, List<String> sourceCidrList, NetworkACLItem.TrafficType trafficType,
-                                        String action, Integer number, Integer sourcePortStart, Integer sourcePortEnd,
-                                        Integer icmpCode, Integer icmpType) throws ResourceUnavailableException;
+    NetworkACLItem updateNetworkACLItem(Long id, String protocol, List<String> sourceCidrList, NetworkACLItem.TrafficType trafficType, String action, Integer number,
+            Integer sourcePortStart, Integer sourcePortEnd, Integer icmpCode, Integer icmpType, String newUUID, Boolean forDisplay) throws ResourceUnavailableException;
 
     /**
      * Associates ACL with specified Network
@@ -129,5 +130,7 @@ public interface NetworkACLService {
      * @throws ResourceUnavailableException
      */
     boolean replaceNetworkACLonPrivateGw(long aclId, long privateGatewayId) throws ResourceUnavailableException;
+
+    NetworkACL updateNetworkACL(Long id, String customId, Boolean forDisplay);
 
 }

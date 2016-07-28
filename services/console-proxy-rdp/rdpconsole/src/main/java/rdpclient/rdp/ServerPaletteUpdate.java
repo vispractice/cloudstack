@@ -18,11 +18,10 @@ package rdpclient.rdp;
 
 import java.awt.image.IndexColorModel;
 
-import common.ScreenDescription;
-
 import streamer.BaseElement;
 import streamer.ByteBuffer;
 import streamer.Link;
+import common.ScreenDescription;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/cc240623.aspx

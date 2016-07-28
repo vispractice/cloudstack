@@ -19,7 +19,6 @@ package com.cloud.network.ovs.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -29,41 +28,38 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
-@Local(value = { OvsTunnelNetworkDao.class })
-public class OvsTunnelNetworkDaoImpl extends
-		GenericDaoBase<OvsTunnelNetworkVO, Long> implements OvsTunnelNetworkDao {
+public class OvsTunnelNetworkDaoImpl extends GenericDaoBase<OvsTunnelNetworkVO, Long> implements OvsTunnelNetworkDao {
 
-	protected final SearchBuilder<OvsTunnelNetworkVO> fromToNetworkSearch;
-	protected final SearchBuilder<OvsTunnelNetworkVO> fromNetworkSearch;
-	protected final SearchBuilder<OvsTunnelNetworkVO> toNetworkSearch;
-	
-	public OvsTunnelNetworkDaoImpl() {
-		fromToNetworkSearch = createSearchBuilder();
-		fromToNetworkSearch.and("from", fromToNetworkSearch.entity().getFrom(), Op.EQ);
-		fromToNetworkSearch.and("to", fromToNetworkSearch.entity().getTo(), Op.EQ);
-		fromToNetworkSearch.and("network_id", fromToNetworkSearch.entity().getNetworkId(), Op.EQ);
-		fromToNetworkSearch.done();
-		
-		fromNetworkSearch = createSearchBuilder();
-		fromNetworkSearch.and("from", fromNetworkSearch.entity().getFrom(), Op.EQ);
-		fromNetworkSearch.and("network_id", fromNetworkSearch.entity().getNetworkId(), Op.EQ);
-		fromNetworkSearch.done();
-		
-		toNetworkSearch = createSearchBuilder();
-		toNetworkSearch.and("to", toNetworkSearch.entity().getTo(), Op.EQ);
-		toNetworkSearch.and("network_id", toNetworkSearch.entity().getNetworkId(), Op.EQ);
-		toNetworkSearch.done();
-	}
-	
-	@Override
-	public OvsTunnelNetworkVO getByFromToNetwork(long from, long to,
-			long networkId) {
-		SearchCriteria<OvsTunnelNetworkVO> sc = fromToNetworkSearch.create();
+    protected final SearchBuilder<OvsTunnelNetworkVO> fromToNetworkSearch;
+    protected final SearchBuilder<OvsTunnelNetworkVO> fromNetworkSearch;
+    protected final SearchBuilder<OvsTunnelNetworkVO> toNetworkSearch;
+
+    public OvsTunnelNetworkDaoImpl() {
+        fromToNetworkSearch = createSearchBuilder();
+        fromToNetworkSearch.and("from", fromToNetworkSearch.entity().getFrom(), Op.EQ);
+        fromToNetworkSearch.and("to", fromToNetworkSearch.entity().getTo(), Op.EQ);
+        fromToNetworkSearch.and("network_id", fromToNetworkSearch.entity().getNetworkId(), Op.EQ);
+        fromToNetworkSearch.done();
+
+        fromNetworkSearch = createSearchBuilder();
+        fromNetworkSearch.and("from", fromNetworkSearch.entity().getFrom(), Op.EQ);
+        fromNetworkSearch.and("network_id", fromNetworkSearch.entity().getNetworkId(), Op.EQ);
+        fromNetworkSearch.done();
+
+        toNetworkSearch = createSearchBuilder();
+        toNetworkSearch.and("to", toNetworkSearch.entity().getTo(), Op.EQ);
+        toNetworkSearch.and("network_id", toNetworkSearch.entity().getNetworkId(), Op.EQ);
+        toNetworkSearch.done();
+    }
+
+    @Override
+    public OvsTunnelNetworkVO getByFromToNetwork(long from, long to, long networkId) {
+        SearchCriteria<OvsTunnelNetworkVO> sc = fromToNetworkSearch.create();
         sc.setParameters("from", from);
         sc.setParameters("to", to);
         sc.setParameters("network_id", networkId);
-		return findOneBy(sc);
-	}
+        return findOneBy(sc);
+    }
 
     @Override
     public void removeByFromNetwork(long from, long networkId) {

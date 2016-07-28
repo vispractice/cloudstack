@@ -19,11 +19,11 @@ package com.cloud.agent.manager;
 import org.apache.cloudstack.storage.command.DeleteCommand;
 import org.apache.cloudstack.storage.command.DownloadCommand;
 import org.apache.cloudstack.storage.command.DownloadProgressCommand;
+import org.apache.cloudstack.storage.command.UploadStatusAnswer;
+import org.apache.cloudstack.storage.command.UploadStatusCommand;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.AttachIsoCommand;
-import com.cloud.agent.api.AttachVolumeAnswer;
-import com.cloud.agent.api.AttachVolumeCommand;
 import com.cloud.agent.api.BackupSnapshotCommand;
 import com.cloud.agent.api.ComputeChecksumCommand;
 import com.cloud.agent.api.CreatePrivateTemplateFromSnapshotCommand;
@@ -53,32 +53,45 @@ public interface MockStorageManager extends Manager {
     public static final long DEFAULT_HOST_STORAGE_SIZE = 1 * 1024 * 1024 * 1024 * 1024L; //1T
     public static final long DEFAULT_TEMPLATE_SIZE = 1 * 1000 * 1000 * 1000L; //1G
 
-	public PrimaryStorageDownloadAnswer primaryStorageDownload(PrimaryStorageDownloadCommand cmd);
+    public PrimaryStorageDownloadAnswer primaryStorageDownload(PrimaryStorageDownloadCommand cmd);
 
-	public CreateAnswer createVolume(CreateCommand cmd);
-	public AttachVolumeAnswer AttachVolume(AttachVolumeCommand cmd);
-	public Answer AttachIso(AttachIsoCommand cmd);
+    public CreateAnswer createVolume(CreateCommand cmd);
 
-	public Answer DeleteStoragePool(DeleteStoragePoolCommand cmd);
-	public Answer ModifyStoragePool(ModifyStoragePoolCommand cmd);
-	public Answer CreateStoragePool(CreateStoragePoolCommand cmd);
+    public Answer AttachIso(AttachIsoCommand cmd);
 
-	public Answer SecStorageSetup(SecStorageSetupCommand cmd);
-	public Answer ListTemplates(ListTemplateCommand cmd);
+    public Answer DeleteStoragePool(DeleteStoragePoolCommand cmd);
+
+    public Answer ModifyStoragePool(ModifyStoragePoolCommand cmd);
+
+    public Answer CreateStoragePool(CreateStoragePoolCommand cmd);
+
+    public Answer SecStorageSetup(SecStorageSetupCommand cmd);
+
+    public Answer ListTemplates(ListTemplateCommand cmd);
+
     public Answer ListVolumes(ListVolumeCommand cmd);
-	public Answer Destroy(DestroyCommand cmd);
-	public Answer Download(DownloadCommand cmd);
-	public Answer DownloadProcess(DownloadProgressCommand cmd);
-	public GetStorageStatsAnswer GetStorageStats(GetStorageStatsCommand cmd);
-	public Answer ManageSnapshot(ManageSnapshotCommand cmd);
-	public Answer BackupSnapshot(BackupSnapshotCommand cmd, SimulatorInfo info);
-	//public Answer DeleteSnapshotBackup(DeleteSnapshotBackupCommand cmd);
-	public Answer CreateVolumeFromSnapshot(CreateVolumeFromSnapshotCommand cmd);
-	//public Answer DeleteTemplate(DeleteTemplateCommand cmd);
-	public Answer Delete(DeleteCommand cmd);
-	public Answer SecStorageVMSetup(SecStorageVMSetupCommand cmd);
 
-	public void preinstallTemplates(String url, long zoneId);
+    public Answer Destroy(DestroyCommand cmd);
+
+    public Answer Download(DownloadCommand cmd);
+
+    public Answer DownloadProcess(DownloadProgressCommand cmd);
+
+    public GetStorageStatsAnswer GetStorageStats(GetStorageStatsCommand cmd);
+
+    public Answer ManageSnapshot(ManageSnapshotCommand cmd);
+
+    public Answer BackupSnapshot(BackupSnapshotCommand cmd, SimulatorInfo info);
+
+    //public Answer DeleteSnapshotBackup(DeleteSnapshotBackupCommand cmd);
+    public Answer CreateVolumeFromSnapshot(CreateVolumeFromSnapshotCommand cmd);
+
+    //public Answer DeleteTemplate(DeleteTemplateCommand cmd);
+    public Answer Delete(DeleteCommand cmd);
+
+    public Answer SecStorageVMSetup(SecStorageVMSetupCommand cmd);
+
+    public void preinstallTemplates(String url, long zoneId);
 
     StoragePoolInfo getLocalStorage(String hostGuid);
 
@@ -90,5 +103,8 @@ public interface MockStorageManager extends Manager {
 
     StoragePoolInfo getLocalStorage(String hostGuid, Long storageSize);
 
-	CopyVolumeAnswer CopyVolume(CopyVolumeCommand cmd);
+    CopyVolumeAnswer CopyVolume(CopyVolumeCommand cmd);
+
+    public UploadStatusAnswer getUploadStatus(UploadStatusCommand cmd);
+
 }

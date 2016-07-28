@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,24 +15,24 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.storage.template;
 
 import java.io.File;
 import java.util.Map;
 
-import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
-import com.cloud.storage.StorageLayer;
 import com.cloud.storage.Storage.ImageFormat;
+import com.cloud.storage.StorageLayer;
 import com.cloud.utils.component.AdapterBase;
 
-@Local(value=Processor.class)
 public class IsoProcessor extends AdapterBase implements Processor {
     private static final Logger s_logger = Logger.getLogger(IsoProcessor.class);
-    
+
     StorageLayer _storage;
 
     @Override
@@ -40,14 +41,14 @@ public class IsoProcessor extends AdapterBase implements Processor {
             s_logger.debug("We don't handle conversion from " + format + " to ISO.");
             return null;
         }
-        
+
         String isoPath = templatePath + File.separator + templateName + "." + ImageFormat.ISO.getFileExtension();
-       
+
         if (!_storage.exists(isoPath)) {
             s_logger.debug("Unable to find the iso file: " + isoPath);
             return null;
         }
-        
+
         FormatInfo info = new FormatInfo();
         info.format = ImageFormat.ISO;
         info.filename = templateName + "." + ImageFormat.ISO.getFileExtension();
@@ -58,8 +59,8 @@ public class IsoProcessor extends AdapterBase implements Processor {
     }
 
     @Override
-    public Long getVirtualSize(File file) {
-       return file.length();
+    public long getVirtualSize(File file) {
+        return file.length();
     }
 
     @Override

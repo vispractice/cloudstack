@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,6 +15,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.agent.api;
 
 import java.util.Map;
@@ -23,6 +26,7 @@ import com.cloud.storage.template.TemplateProp;
 public class ModifyStoragePoolAnswer extends Answer {
     StoragePoolInfo poolInfo;
     Map<String, TemplateProp> templateInfo;
+    String localDatastoreName = null;
 
     protected ModifyStoragePoolAnswer() {
     }
@@ -30,21 +34,19 @@ public class ModifyStoragePoolAnswer extends Answer {
     public ModifyStoragePoolAnswer(ModifyStoragePoolCommand cmd, long capacityBytes, long availableBytes, Map<String, TemplateProp> tInfo) {
         super(cmd);
         this.result = true;
-        this.poolInfo = new StoragePoolInfo(null,
-                cmd.getPool().getHost(), cmd.getPool().getPath(), cmd.getLocalPath(),
-                cmd.getPool().getType(), capacityBytes, availableBytes );
+        this.poolInfo =
+            new StoragePoolInfo(null, cmd.getPool().getHost(), cmd.getPool().getPath(), cmd.getLocalPath(), cmd.getPool().getType(), capacityBytes, availableBytes);
 
         this.templateInfo = tInfo;
     }
 
     public StoragePoolInfo getPoolInfo() {
-       return poolInfo;
+        return poolInfo;
     }
 
     public void setPoolInfo(StoragePoolInfo poolInfo) {
         this.poolInfo = poolInfo;
     }
-
 
     public Map<String, TemplateProp> getTemplateInfo() {
         return templateInfo;
@@ -52,6 +54,14 @@ public class ModifyStoragePoolAnswer extends Answer {
 
     public void setTemplateInfo(Map<String, TemplateProp> templateInfo) {
         this.templateInfo = templateInfo;
+    }
+
+    public String getLocalDatastoreName() {
+        return localDatastoreName;
+    }
+
+    public void setLocalDatastoreName(String localDatastoreName) {
+        this.localDatastoreName = localDatastoreName;
     }
 
 }

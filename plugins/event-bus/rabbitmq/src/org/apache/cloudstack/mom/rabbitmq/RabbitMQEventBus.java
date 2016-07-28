@@ -19,18 +19,6 @@
 
 package org.apache.cloudstack.mom.rabbitmq;
 
-import com.rabbitmq.client.*;
-
-import org.apache.cloudstack.framework.events.*;
-import org.apache.cloudstack.managed.context.ManagedContextRunnable;
-import org.apache.log4j.Logger;
-
-import com.cloud.utils.Ternary;
-import com.cloud.utils.component.ManagerBase;
-
-import javax.ejb.Local;
-import javax.naming.ConfigurationException;
-
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.Map;
@@ -39,7 +27,33 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Local(value=EventBus.class)
+import javax.naming.ConfigurationException;
+
+import com.cloud.utils.exception.CloudRuntimeException;
+import com.rabbitmq.client.BlockedListener;
+import org.apache.log4j.Logger;
+
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AlreadyClosedException;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.MessageProperties;
+import com.rabbitmq.client.ShutdownListener;
+import com.rabbitmq.client.ShutdownSignalException;
+
+import org.apache.cloudstack.framework.events.Event;
+import org.apache.cloudstack.framework.events.EventBus;
+import org.apache.cloudstack.framework.events.EventBusException;
+import org.apache.cloudstack.framework.events.EventSubscriber;
+import org.apache.cloudstack.framework.events.EventTopic;
+import org.apache.cloudstack.managed.context.ManagedContextRunnable;
+
+import com.cloud.utils.Ternary;
+import com.cloud.utils.component.ManagerBase;
+
 public class RabbitMQEventBus extends ManagerBase implements EventBus {
 
     // details of AMQP server
@@ -47,8 +61,9 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
     private static Integer port;
     private static String username;
     private static String password;
+    private static String secureProtocol = "TLSv1";
 
-    public static void setVirtualHost(String virtualHost) {
+    public synchronized static void setVirtualHost(String virtualHost) {
         RabbitMQEventBus.virtualHost = virtualHost;
     }
 
@@ -68,16 +83,17 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
     private static Integer retryInterval;
 
     // hashmap to book keep the registered subscribers
-    private static ConcurrentHashMap<String, Ternary<String, Channel, EventSubscriber>> _subscribers;
+    private static ConcurrentHashMap<String, Ternary<String, Channel, EventSubscriber>> s_subscribers;
 
     // connection to AMQP server,
-    private static Connection _connection=null;
+    private static Connection s_connection = null;
 
     // AMQP server should consider messages acknowledged once delivered if _autoAck is true
-    private static boolean _autoAck = true;
+    private static boolean s_autoAck = true;
 
     private ExecutorService executorService;
     private static DisconnectHandler disconnectHandler;
+    private static BlockedConnectionHandler blockedConnectionHandler;
     private static final Logger s_logger = Logger.getLogger(RabbitMQEventBus.class);
 
     @Override
@@ -118,39 +134,45 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
             throw new ConfigurationException("Invalid port number/retry interval");
         }
 
-        _subscribers = new ConcurrentHashMap<String, Ternary<String, Channel, EventSubscriber>>();
+        s_subscribers = new ConcurrentHashMap<String, Ternary<String, Channel, EventSubscriber>>();
         executorService = Executors.newCachedThreadPool();
         disconnectHandler = new DisconnectHandler();
+        blockedConnectionHandler = new BlockedConnectionHandler();
 
         return true;
     }
 
-    public void setServer(String amqpHost) {
-        this.amqpHost = amqpHost;
+    public static void setServer(String amqpHost) {
+        RabbitMQEventBus.amqpHost = amqpHost;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public static void setUsername(String username) {
+        RabbitMQEventBus.username = username;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public static void setPassword(String password) {
+        RabbitMQEventBus.password = password;
     }
 
-    public void setPort(Integer port) {
-        this.port = port;
+    public static void setPort(Integer port) {
+        RabbitMQEventBus.port = port;
     }
 
+    public static void setSecureProtocol(String protocol) {
+        RabbitMQEventBus.secureProtocol = protocol;
+    }
+
+    @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    public void  setExchange(String exchange) {
-        this.amqpExchangeName = exchange;
+    public static void setExchange(String exchange) {
+        RabbitMQEventBus.amqpExchangeName = exchange;
     }
 
-    public void setRetryInterval(Integer retryInterval) {
-        this.retryInterval = retryInterval;
+    public static void setRetryInterval(Integer retryInterval) {
+        RabbitMQEventBus.retryInterval = retryInterval;
     }
 
     /** Call to subscribe to interested set of events
@@ -176,7 +198,7 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
             String bindingKey = createBindingKey(topic);
 
             // store the subscriber details before creating channel
-            _subscribers.put(queueName, new Ternary(bindingKey, null, subscriber));
+            s_subscribers.put(queueName, new Ternary(bindingKey, null, subscriber));
 
             // create a channel dedicated for this subscription
             Connection connection = getConnection();
@@ -188,45 +210,36 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
             channel.queueBind(queueName, amqpExchangeName, bindingKey);
 
             // register a callback handler to receive the events that a subscriber subscribed to
-            channel.basicConsume(queueName, _autoAck, queueName,
-                    new DefaultConsumer(channel) {
-                        @Override
-                        public void handleDelivery(String queueName,
-                                                   Envelope envelope,
-                                                   AMQP.BasicProperties properties,
-                                                   byte[] body)
-                            throws IOException {
-                            Ternary<String, Channel, EventSubscriber> queueDetails = _subscribers.get(queueName);
-                            if (queueDetails != null) {
-                                EventSubscriber subscriber = queueDetails.third();
-                                String routingKey =  envelope.getRoutingKey();
-                                String eventSource = getEventSourceFromRoutingKey(routingKey);
-                                String eventCategory = getEventCategoryFromRoutingKey(routingKey);
-                                String eventType = getEventTypeFromRoutingKey(routingKey);
-                                String resourceType = getResourceTypeFromRoutingKey(routingKey);
-                                String resourceUUID = getResourceUUIDFromRoutingKey(routingKey);
-                                Event event = new Event(eventSource, eventCategory, eventType,
-                                        resourceType, resourceUUID);
-                                event.setDescription(new String(body));
+            channel.basicConsume(queueName, s_autoAck, queueName, new DefaultConsumer(channel) {
+                @Override
+                public void handleDelivery(String queueName, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    Ternary<String, Channel, EventSubscriber> queueDetails = s_subscribers.get(queueName);
+                    if (queueDetails != null) {
+                        EventSubscriber subscriber = queueDetails.third();
+                        String routingKey = envelope.getRoutingKey();
+                        String eventSource = getEventSourceFromRoutingKey(routingKey);
+                        String eventCategory = getEventCategoryFromRoutingKey(routingKey);
+                        String eventType = getEventTypeFromRoutingKey(routingKey);
+                        String resourceType = getResourceTypeFromRoutingKey(routingKey);
+                        String resourceUUID = getResourceUUIDFromRoutingKey(routingKey);
+                        Event event = new Event(eventSource, eventCategory, eventType, resourceType, resourceUUID);
+                        event.setDescription(new String(body));
 
-                                // deliver the event to call back object provided by subscriber
-                                subscriber.onEvent(event);
-                            }
-                        }
+                        // deliver the event to call back object provided by subscriber
+                        subscriber.onEvent(event);
                     }
-            );
+                }
+            });
 
             // update the channel details for the subscription
-            Ternary<String, Channel, EventSubscriber> queueDetails = _subscribers.get(queueName);
+            Ternary<String, Channel, EventSubscriber> queueDetails = s_subscribers.get(queueName);
             queueDetails.second(channel);
-            _subscribers.put(queueName, queueDetails);
+            s_subscribers.put(queueName, queueDetails);
 
         } catch (AlreadyClosedException closedException) {
-            s_logger.warn("Connection to AMQP service is lost. Subscription:" + queueName +
-                    " will be active after reconnection");
+            s_logger.warn("Connection to AMQP service is lost. Subscription:" + queueName + " will be active after reconnection");
         } catch (ConnectException connectException) {
-            s_logger.warn("Connection to AMQP service is lost. Subscription:" + queueName +
-                    " will be active after reconnection");
+            s_logger.warn("Connection to AMQP service is lost. Subscription:" + queueName + " will be active after reconnection");
         } catch (Exception e) {
             throw new EventBusException("Failed to subscribe to event due to " + e.getMessage());
         }
@@ -237,12 +250,12 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
     @Override
     public void unsubscribe(UUID subscriberId, EventSubscriber subscriber) throws EventBusException {
         try {
-            String classname =  subscriber.getClass().getName();
+            String classname = subscriber.getClass().getName();
             String queueName = UUID.nameUUIDFromBytes(classname.getBytes()).toString();
-            Ternary<String, Channel, EventSubscriber> queueDetails = _subscribers.get(queueName);
+            Ternary<String, Channel, EventSubscriber> queueDetails = s_subscribers.get(queueName);
             Channel channel = queueDetails.second();
             channel.basicCancel(queueName);
-            _subscribers.remove(queueName, queueDetails);
+            s_subscribers.remove(queueName, queueDetails);
         } catch (Exception e) {
             throw new EventBusException("Failed to unsubscribe from event bus due to " + e.getMessage());
         }
@@ -276,7 +289,7 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
 
         StringBuilder routingKey = new StringBuilder();
 
-        String eventSource =  replaceNullWithWildcard(event.getEventSource());
+        String eventSource = replaceNullWithWildcard(event.getEventSource());
         eventSource = eventSource.replace(".", "-");
 
         String eventCategory = replaceNullWithWildcard(event.getEventCategory());
@@ -312,7 +325,7 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
 
         StringBuilder bindingKey = new StringBuilder();
 
-        String eventSource =  replaceNullWithWildcard(topic.getEventSource());
+        String eventSource = replaceNullWithWildcard(topic.getEventSource());
         eventSource = eventSource.replace(".", "-");
 
         String eventCategory = replaceNullWithWildcard(topic.getEventCategory());
@@ -342,7 +355,7 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
     }
 
     private synchronized Connection getConnection() throws Exception {
-        if (_connection == null) {
+        if (s_connection == null) {
             try {
                 return createConnection();
             } catch (Exception e) {
@@ -350,7 +363,7 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
                 throw e;
             }
         } else {
-            return _connection;
+            return s_connection;
         }
     }
 
@@ -369,12 +382,13 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
             }
 
             if (useSsl != null && !useSsl.isEmpty() && useSsl.equalsIgnoreCase("true")) {
-                factory.useSslProtocol();
+                factory.useSslProtocol(secureProtocol);
             }
             Connection connection = factory.newConnection();
             connection.addShutdownListener(disconnectHandler);
-            _connection = connection;
-            return _connection;
+            connection.addBlockedListener(blockedConnectionHandler);
+            s_connection = connection;
+            return s_connection;
         } catch (Exception e) {
             throw e;
         }
@@ -382,25 +396,25 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
 
     private synchronized void closeConnection() {
         try {
-            if (_connection != null) {
-                _connection.close();
+            if (s_connection != null) {
+                s_connection.close();
             }
         } catch (Exception e) {
             s_logger.warn("Failed to close connection to AMQP server due to " + e.getMessage());
         }
-        _connection = null;
+        s_connection = null;
     }
 
-    private synchronized void abortConnection () {
-        if (_connection == null)
+    private synchronized void abortConnection() {
+        if (s_connection == null)
             return;
 
         try {
-            _connection.abort();
+            s_connection.abort();
         } catch (Exception e) {
             s_logger.warn("Failed to abort connection due to " + e.getMessage());
         }
-        _connection = null;
+        s_connection = null;
     }
 
     private String replaceNullWithWildcard(String key) {
@@ -429,40 +443,38 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
         }
     }
 
-    private void publishEventToExchange(Channel channel, String exchangeName,
-                                        String routingKey, String eventDescription) throws Exception {
+    private void publishEventToExchange(Channel channel, String exchangeName, String routingKey, String eventDescription) throws Exception {
         try {
             byte[] messageBodyBytes = eventDescription.getBytes();
             channel.basicPublish(exchangeName, routingKey, MessageProperties.PERSISTENT_TEXT_PLAIN, messageBodyBytes);
         } catch (Exception e) {
-            s_logger.error("Failed to publish event " + routingKey + " on exchange " + exchangeName +
-                    "  of message broker due to " + e.getMessage());
+            s_logger.error("Failed to publish event " + routingKey + " on exchange " + exchangeName + "  of message broker due to " + e.getMessage());
             throw e;
         }
     }
 
     private String getEventCategoryFromRoutingKey(String routingKey) {
-        String[] keyParts =  routingKey.split("\\.");
+        String[] keyParts = routingKey.split("\\.");
         return keyParts[1];
     }
 
     private String getEventTypeFromRoutingKey(String routingKey) {
-        String[] keyParts =  routingKey.split("\\.");
+        String[] keyParts = routingKey.split("\\.");
         return keyParts[2];
     }
 
     private String getEventSourceFromRoutingKey(String routingKey) {
-        String[] keyParts =  routingKey.split("\\.");
+        String[] keyParts = routingKey.split("\\.");
         return keyParts[0];
     }
 
     private String getResourceTypeFromRoutingKey(String routingKey) {
-        String[] keyParts =  routingKey.split("\\.");
+        String[] keyParts = routingKey.split("\\.");
         return keyParts[3];
     }
 
     private String getResourceUUIDFromRoutingKey(String routingKey) {
-        String[] keyParts =  routingKey.split("\\.");
+        String[] keyParts = routingKey.split("\\.");
         return keyParts[4];
     }
 
@@ -479,18 +491,17 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
     }
 
     @Override
-    public boolean stop() {
-
-        if (_connection.isOpen()) {
-            for (String subscriberId : _subscribers.keySet()) {
-                Ternary<String, Channel, EventSubscriber> subscriberDetails = _subscribers.get(subscriberId);
-                Channel channel =  subscriberDetails.second();
+    public synchronized boolean stop() {
+        if (s_connection.isOpen()) {
+            for (String subscriberId : s_subscribers.keySet()) {
+                Ternary<String, Channel, EventSubscriber> subscriberDetails = s_subscribers.get(subscriberId);
+                Channel channel = subscriberDetails.second();
                 String queueName = subscriberId;
                 try {
                     channel.queueDelete(queueName);
                     channel.abort();
                 } catch (IOException ioe) {
-                    s_logger.warn("Failed to delete queue: " + queueName + " on AMQP server due to " + ioe.getMessage() );
+                    s_logger.warn("Failed to delete queue: " + queueName + " on AMQP server due to " + ioe.getMessage());
                 }
             }
         }
@@ -499,6 +510,21 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
         return true;
     }
 
+    //logic to deal with blocked connection. connections are blocked for example when the rabbitmq server is out of space. https://www.rabbitmq.com/connection-blocked.html
+    private class BlockedConnectionHandler implements BlockedListener {
+
+        @Override
+        public void handleBlocked(String reason) throws IOException {
+            s_logger.error("rabbitmq connection is blocked with reason: " + reason);
+            closeConnection();
+            throw new CloudRuntimeException("unblocking the parent thread as publishing to rabbitmq server is blocked with reason: " + reason);
+        }
+
+        @Override
+        public void handleUnblocked() throws IOException {
+            s_logger.info("rabbitmq connection in unblocked");
+        }
+    }
     // logic to deal with loss of connection to AMQP server
     private class DisconnectHandler implements ShutdownListener {
 
@@ -506,10 +532,10 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
         public void shutdownCompleted(ShutdownSignalException shutdownSignalException) {
             if (!shutdownSignalException.isInitiatedByApplication()) {
 
-                for (String subscriberId : _subscribers.keySet()) {
-                    Ternary<String, Channel, EventSubscriber> subscriberDetails = _subscribers.get(subscriberId);
+                for (String subscriberId : s_subscribers.keySet()) {
+                    Ternary<String, Channel, EventSubscriber> subscriberDetails = s_subscribers.get(subscriberId);
                     subscriberDetails.second(null);
-                    _subscribers.put(subscriberId, subscriberDetails);
+                    s_subscribers.put(subscriberId, subscriberDetails);
                 }
 
                 abortConnection(); // disconnected to AMQP server, so abort the connection and channels
@@ -547,8 +573,8 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
                     }
 
                     // prepare consumer on AMQP server for each of subscriber
-                    for (String subscriberId : _subscribers.keySet()) {
-                        Ternary<String, Channel, EventSubscriber> subscriberDetails = _subscribers.get(subscriberId);
+                    for (String subscriberId : s_subscribers.keySet()) {
+                        Ternary<String, Channel, EventSubscriber> subscriberDetails = s_subscribers.get(subscriberId);
                         String bindingKey = subscriberDetails.first();
                         EventSubscriber subscriber = subscriberDetails.third();
 
@@ -561,42 +587,34 @@ public class RabbitMQEventBus extends ManagerBase implements EventBus {
                         channel.queueBind(subscriberId, amqpExchangeName, bindingKey);
 
                         // register a callback handler to receive the events that a subscriber subscribed to
-                        channel.basicConsume(subscriberId, _autoAck, subscriberId,
-                                new DefaultConsumer(channel) {
-                                    @Override
-                                    public void handleDelivery(String queueName,
-                                                               Envelope envelope,
-                                                               AMQP.BasicProperties properties,
-                                                               byte[] body)
-                                            throws IOException {
+                        channel.basicConsume(subscriberId, s_autoAck, subscriberId, new DefaultConsumer(channel) {
+                            @Override
+                            public void handleDelivery(String queueName, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
 
-                                        Ternary<String, Channel, EventSubscriber> subscriberDetails
-                                                = _subscribers.get(queueName); // queue name == subscriber ID
+                                Ternary<String, Channel, EventSubscriber> subscriberDetails = s_subscribers.get(queueName); // queue name == subscriber ID
 
-                                        if (subscriberDetails != null) {
-                                            EventSubscriber subscriber = subscriberDetails.third();
-                                            String routingKey =  envelope.getRoutingKey();
-                                            String eventSource = getEventSourceFromRoutingKey(routingKey);
-                                            String eventCategory = getEventCategoryFromRoutingKey(routingKey);
-                                            String eventType = getEventTypeFromRoutingKey(routingKey);
-                                            String resourceType = getResourceTypeFromRoutingKey(routingKey);
-                                            String resourceUUID = getResourceUUIDFromRoutingKey(routingKey);
+                                if (subscriberDetails != null) {
+                                    EventSubscriber subscriber = subscriberDetails.third();
+                                    String routingKey = envelope.getRoutingKey();
+                                    String eventSource = getEventSourceFromRoutingKey(routingKey);
+                                    String eventCategory = getEventCategoryFromRoutingKey(routingKey);
+                                    String eventType = getEventTypeFromRoutingKey(routingKey);
+                                    String resourceType = getResourceTypeFromRoutingKey(routingKey);
+                                    String resourceUUID = getResourceUUIDFromRoutingKey(routingKey);
 
-                                            // create event object from the message details obtained from AMQP server
-                                            Event event = new Event(eventSource, eventCategory, eventType,
-                                                    resourceType, resourceUUID);
-                                            event.setDescription(new String(body));
+                                    // create event object from the message details obtained from AMQP server
+                                    Event event = new Event(eventSource, eventCategory, eventType, resourceType, resourceUUID);
+                                    event.setDescription(new String(body));
 
-                                            // deliver the event to call back object provided by subscriber
-                                            subscriber.onEvent(event);
-                                        }
-                                    }
+                                    // deliver the event to call back object provided by subscriber
+                                    subscriber.onEvent(event);
                                 }
-                        );
+                            }
+                        });
 
                         // update the channel details for the subscription
                         subscriberDetails.second(channel);
-                        _subscribers.put(subscriberId, subscriberDetails);
+                        s_subscribers.put(subscriberId, subscriberDetails);
                     }
                 } catch (Exception e) {
                     s_logger.warn("Failed to recreate queues and binding for the subscribers due to " + e.getMessage());

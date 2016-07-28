@@ -16,18 +16,6 @@
 // under the License.
 package com.cloud.hypervisor.kvm.discoverer;
 
-import java.net.InetAddress;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.inject.Inject;
-import javax.naming.ConfigurationException;
-
-import org.apache.log4j.Logger;
-
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.Listener;
 import com.cloud.agent.api.AgentControlAnswer;
@@ -51,22 +39,28 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.PhysicalNetworkSetupInfo;
 import com.cloud.resource.Discoverer;
 import com.cloud.resource.DiscovererBase;
-import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
 import com.cloud.utils.ssh.SSHCmdHelper;
+import org.apache.log4j.Logger;
 
-public abstract class LibvirtServerDiscoverer extends DiscovererBase implements Discoverer, Listener,
-        ResourceStateAdapter {
+import javax.inject.Inject;
+import javax.naming.ConfigurationException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+public abstract class LibvirtServerDiscoverer extends DiscovererBase implements Discoverer, Listener, ResourceStateAdapter {
     private static final Logger s_logger = Logger.getLogger(LibvirtServerDiscoverer.class);
     private String _hostIp;
     private final int _waitTime = 5; /* wait for 5 minutes */
     private String _kvmPrivateNic;
     private String _kvmPublicNic;
     private String _kvmGuestNic;
-    @Inject
-    ResourceManager _resourceMgr;
     @Inject
     AgentManager _agentMgr;
 
@@ -120,8 +114,8 @@ public abstract class LibvirtServerDiscoverer extends DiscovererBase implements 
     }
 
     @Override
-    public Map<? extends ServerResource, Map<String, String>> find(long dcId, Long podId, Long clusterId, URI uri,
-            String username, String password, List<String> hostTags) throws DiscoveryException {
+    public Map<? extends ServerResource, Map<String, String>>
+        find(long dcId, Long podId, Long clusterId, URI uri, String username, String password, List<String> hostTags) throws DiscoveryException {
 
         ClusterVO cluster = _clusterDao.findById(clusterId);
         if (cluster == null || cluster.getHypervisorType() != getHypervisorType()) {
@@ -145,15 +139,15 @@ public abstract class LibvirtServerDiscoverer extends DiscovererBase implements 
             InetAddress ia = InetAddress.getByName(hostname);
             agentIp = ia.getHostAddress();
             String guid = UUID.nameUUIDFromBytes(agentIp.getBytes()).toString();
-            String guidWithTail = guid + "-LibvirtComputingResource";/*
-                                                                      * tail
-                                                                      * added by
-                                                                      * agent
-                                                                      * .java
-                                                                      */
-            if (_resourceMgr.findHostByGuid(guidWithTail) != null) {
-                s_logger.debug("Skipping " + agentIp + " because " + guidWithTail + " is already in the database.");
-                return null;
+
+            List<HostVO> existingHosts = _resourceMgr.listAllHostsInOneZoneByType(Host.Type.Routing, dcId);
+            if (existingHosts != null) {
+                for (HostVO existingHost : existingHosts) {
+                    if (existingHost.getGuid().toLowerCase().startsWith(guid.toLowerCase())) {
+                        s_logger.debug("Skipping " + agentIp + " because " + guid + " is already in the database for resource " + existingHost.getGuid());
+                        return null;
+                    }
+                }
             }
 
             sshConnection = new com.trilead.ssh2.Connection(agentIp, 22);
@@ -204,17 +198,28 @@ public abstract class LibvirtServerDiscoverer extends DiscovererBase implements 
                 kvmGuestNic = (kvmPublicNic != null) ? kvmPublicNic : kvmPrivateNic;
             }
 
-            String parameters = " -m " + _hostIp + " -z " + dcId + " -p " + podId + " -c " + clusterId + " -g " + guid
-                    + " -a";
+            String parameters = " -m " + _hostIp + " -z " + dcId + " -p " + podId + " -c " + clusterId + " -g " + guid + " -a";
 
             parameters += " --pubNic=" + kvmPublicNic;
             parameters += " --prvNic=" + kvmPrivateNic;
             parameters += " --guestNic=" + kvmGuestNic;
+            parameters += " --hypervisor=" + cluster.getHypervisorType().toString().toLowerCase();
 
-            SSHCmdHelper.sshExecuteCmd(sshConnection, "cloudstack-setup-agent " + parameters, 3);
+            String setupAgentCommand = "cloudstack-setup-agent ";
+            if (!username.equals("root")) {
+                setupAgentCommand = "sudo cloudstack-setup-agent ";
+            }
+            if (!SSHCmdHelper.sshExecuteCmd(sshConnection,
+                    setupAgentCommand + parameters, 3)) {
+                s_logger.info("cloudstack agent setup command failed: "
+                        + setupAgentCommand + parameters);
+                return null;
+            }
 
             KvmDummyResourceBase kvmResource = new KvmDummyResourceBase();
             Map<String, Object> params = new HashMap<String, Object>();
+
+            params.put("router.aggregation.command.each.timeout", _configDao.getValue(Config.RouterAggregationCommandEachTimeout.toString()));
 
             params.put("zone", Long.toString(dcId));
             params.put("pod", Long.toString(podId));
@@ -224,11 +229,11 @@ public abstract class LibvirtServerDiscoverer extends DiscovererBase implements 
             kvmResource.configure("kvm agent", params);
             resources.put(kvmResource, details);
 
-            HostVO connectedHost = waitForHostConnect(dcId, podId, clusterId, guidWithTail);
+            HostVO connectedHost = waitForHostConnect(dcId, podId, clusterId, guid);
             if (connectedHost == null)
                 return null;
 
-            details.put("guid", guidWithTail);
+            details.put("guid", connectedHost.getGuid());
 
             // place a place holder guid derived from cluster ID
             if (cluster.getGuid() == null) {
@@ -260,7 +265,7 @@ public abstract class LibvirtServerDiscoverer extends DiscovererBase implements 
         for (int i = 0; i < _waitTime * 2; i++) {
             List<HostVO> hosts = _resourceMgr.listAllUpAndEnabledHosts(Host.Type.Routing, clusterId, podId, dcId);
             for (HostVO host : hosts) {
-                if (host.getGuid().equalsIgnoreCase(guid)) {
+                if (host.getGuid().toLowerCase().startsWith(guid.toLowerCase())) {
                     return host;
                 }
             }
@@ -331,7 +336,7 @@ public abstract class LibvirtServerDiscoverer extends DiscovererBase implements 
             return null;
         }
 
-        StartupRoutingCommand ssCmd = ((StartupRoutingCommand) firstCmd);
+        StartupRoutingCommand ssCmd = ((StartupRoutingCommand)firstCmd);
         if (ssCmd.getHypervisorType() != getHypervisorType()) {
             return null;
         }
@@ -350,9 +355,8 @@ public abstract class LibvirtServerDiscoverer extends DiscovererBase implements 
             String hostOsInCluster = oneHost.getDetail("Host.OS");
             String hostOs = ssCmd.getHostDetails().get("Host.OS");
             if (!hostOsInCluster.equalsIgnoreCase(hostOs)) {
-                throw new IllegalArgumentException("Can't add host: " + firstCmd.getPrivateIpAddress()
-                        + " with hostOS: " + hostOs + " into a cluster," + "in which there are " + hostOsInCluster
-                        + " hosts added");
+                throw new IllegalArgumentException("Can't add host: " + firstCmd.getPrivateIpAddress() + " with hostOS: " + hostOs + " into a cluster," +
+                    "in which there are " + hostOsInCluster + " hosts added");
             }
         }
 
@@ -362,17 +366,14 @@ public abstract class LibvirtServerDiscoverer extends DiscovererBase implements 
     }
 
     @Override
-    public HostVO createHostVOForDirectConnectAgent(HostVO host, StartupCommand[] startup, ServerResource resource,
-            Map<String, String> details, List<String> hostTags) {
+    public HostVO createHostVOForDirectConnectAgent(HostVO host, StartupCommand[] startup, ServerResource resource, Map<String, String> details, List<String> hostTags) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public DeleteHostAnswer deleteHost(HostVO host, boolean isForced, boolean isForceDeleteStorage)
-            throws UnableDeleteHostException {
-        if (host.getType() != Host.Type.Routing
-                || (host.getHypervisorType() != HypervisorType.KVM && host.getHypervisorType() != HypervisorType.LXC)) {
+    public DeleteHostAnswer deleteHost(HostVO host, boolean isForced, boolean isForceDeleteStorage) throws UnableDeleteHostException {
+        if (host.getType() != Host.Type.Routing || (host.getHypervisorType() != HypervisorType.KVM && host.getHypervisorType() != HypervisorType.LXC)) {
             return null;
         }
 

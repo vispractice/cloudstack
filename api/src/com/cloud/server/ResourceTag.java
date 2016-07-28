@@ -22,7 +22,6 @@ import org.apache.cloudstack.api.InternalIdentity;
 
 public interface ResourceTag extends ControlledEntity, Identity, InternalIdentity {
 
-
     // FIXME - extract enum to another interface as its used both by resourceTags and resourceMetaData code
     public enum ResourceObjectType {
         UserVm(true, true),
@@ -36,6 +35,7 @@ public interface ResourceTag extends ControlledEntity, Identity, InternalIdentit
         PortForwardingRule(true, true),
         FirewallRule(true, true),
         SecurityGroup(true, false),
+        SecurityGroupRule(true, false),
         PublicIpAddress(true, true),
         Project(true, false),
         Vpc(true, true),
@@ -50,22 +50,30 @@ public interface ResourceTag extends ControlledEntity, Identity, InternalIdentit
         NetworkACLList(false, true),
         VpnGateway(false, true),
         CustomerGateway(false, true),
-        VpnConnection(false, true);
+        VpnConnection(false, true),
+        User(true, true),
+        DiskOffering(false, true),
+        AutoScaleVmProfile(false, true),
+        AutoScaleVmGroup(false, true),
+        LBStickinessPolicy(false, true),
+        LBHealthCheckPolicy(false, true),
+        SnapshotPolicy(false, true);
+
 
         ResourceObjectType(boolean resourceTagsSupport, boolean resourceMetadataSupport) {
             this.resourceTagsSupport = resourceTagsSupport;
-            this.metadataSupport = resourceMetadataSupport;
+            metadataSupport = resourceMetadataSupport;
         }
-        
+
         private final boolean resourceTagsSupport;
         private final boolean metadataSupport;
-        
+
         public boolean resourceTagsSupport() {
-            return this.resourceTagsSupport;
+            return resourceTagsSupport;
         }
-        
+
         public boolean resourceMetadataSupport() {
-            return this.metadataSupport;
+            return metadataSupport;
         }
     }
 
@@ -83,6 +91,8 @@ public interface ResourceTag extends ControlledEntity, Identity, InternalIdentit
      * @return
      */
     long getResourceId();
+
+    void setResourceId(long resourceId);
 
     /**
      * @return

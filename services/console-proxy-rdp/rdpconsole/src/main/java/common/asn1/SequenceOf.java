@@ -36,6 +36,7 @@ public class SequenceOf extends Sequence {
         super(name);
     }
 
+    @Override
     protected void parseContent(ByteBuffer buf) {
         ArrayList<Tag> tagList = new ArrayList<Tag>();
 
@@ -45,7 +46,7 @@ public class SequenceOf extends Sequence {
                 break;
             }
 
-            Tag tag = (Tag)type.deepCopy(index);
+            Tag tag = type.deepCopy(index);
 
             tag.readTag(buf);
             tagList.add(tag);
@@ -63,11 +64,11 @@ public class SequenceOf extends Sequence {
     public Tag copyFrom(Tag tag) {
         super.copyFrom(tag);
         // We can create shallow copy of type, because it will not be modified
-        this.type = ((SequenceOf)tag).type;
+        type = ((SequenceOf)tag).type;
 
-        this.tags = new Tag[((Sequence)tag).tags.length];
+        tags = new Tag[((Sequence)tag).tags.length];
         for (int i = 0; i < tags.length; i++) {
-            this.tags[i] = ((Sequence)tag).tags[i].deepCopy("");
+            tags[i] = ((Sequence)tag).tags[i].deepCopy("");
         }
 
         return this;

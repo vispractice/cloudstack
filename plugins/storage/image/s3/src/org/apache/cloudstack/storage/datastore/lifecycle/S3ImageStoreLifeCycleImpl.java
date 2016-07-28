@@ -60,8 +60,8 @@ public class S3ImageStoreLifeCycleImpl implements ImageStoreLifeCycle {
         return _discoverers;
     }
 
-    public void setDiscoverers(List<? extends Discoverer> _discoverers) {
-        this._discoverers = _discoverers;
+    public void setDiscoverers(List<? extends Discoverer> discoverers) {
+        this._discoverers = discoverers;
     }
 
     public S3ImageStoreLifeCycleImpl() {
@@ -71,19 +71,17 @@ public class S3ImageStoreLifeCycleImpl implements ImageStoreLifeCycle {
     @Override
     public DataStore initialize(Map<String, Object> dsInfos) {
 
-        Long dcId = (Long) dsInfos.get("zoneId");
-        String url = (String) dsInfos.get("url");
-        String name = (String) dsInfos.get("name");
-        String providerName = (String) dsInfos.get("providerName");
-        ScopeType scope = (ScopeType) dsInfos.get("scope");
-        DataStoreRole role = (DataStoreRole) dsInfos.get("role");
-        Map<String, String> details = (Map<String, String>) dsInfos.get("details");
+        String url = (String)dsInfos.get("url");
+        String name = (String)dsInfos.get("name");
+        String providerName = (String)dsInfos.get("providerName");
+        ScopeType scope = (ScopeType)dsInfos.get("scope");
+        DataStoreRole role = (DataStoreRole)dsInfos.get("role");
+        Map<String, String> details = (Map<String, String>)dsInfos.get("details");
 
-        s_logger.info("Trying to add a S3 store in data center " + dcId);
+        s_logger.info("Trying to add a S3 store with endpoint: " + details.get(ApiConstants.S3_END_POINT));
 
-        Map<String, Object> imageStoreParameters = new HashMap<String, Object>();
+        Map<String, Object> imageStoreParameters = new HashMap();
         imageStoreParameters.put("name", name);
-        imageStoreParameters.put("zoneId", dcId);
         imageStoreParameters.put("url", url);
         String protocol = "http";
         String useHttps = details.get(ApiConstants.S3_HTTPS_FLAG);

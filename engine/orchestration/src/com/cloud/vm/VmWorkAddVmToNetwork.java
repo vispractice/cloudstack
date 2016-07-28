@@ -17,24 +17,24 @@
 package com.cloud.vm;
 
 public class VmWorkAddVmToNetwork extends VmWork {
-	private static final long serialVersionUID = 8861516006586736813L;
+    private static final long serialVersionUID = 8861516006586736813L;
 
     Long networkId;
-	NicProfile requstedNicProfile;
+    NicProfile requstedNicProfile;
 
     public VmWorkAddVmToNetwork(long userId, long accountId, long vmId, String handlerName,
             Long networkId, NicProfile requested) {
         super(userId, accountId, vmId, handlerName);
 
         this.networkId = networkId;
-		requstedNicProfile = requested;
-	}
+        requstedNicProfile = requested;
+    }
 
     public Long getNetworkId() {
         return networkId;
-	}
+    }
 
-	public NicProfile getRequestedNicProfile() {
-		return requstedNicProfile;
-	}
+    public NicProfile getRequestedNicProfile() {
+        return requstedNicProfile;
+    }
 }

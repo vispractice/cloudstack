@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,6 +15,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.storage.template;
 
 import java.io.File;
@@ -24,8 +27,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 
-import org.apache.cloudstack.storage.command.DownloadCommand.ResourceType;
 import org.apache.log4j.Logger;
+
+import org.apache.cloudstack.storage.command.DownloadCommand.ResourceType;
 
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.StorageLayer;
@@ -55,11 +59,11 @@ public class TemplateLocation {
         _formats = new ArrayList<FormatInfo>(5);
         _props = new Properties();
         //TO DO - remove this hack
-        if (_templatePath.matches(".*"+"volumes"+".*")){
-        	_file = _storage.getFile(_templatePath + "volume.properties");
-        	_resourceType = ResourceType.VOLUME;
-        }else {
-        	_file = _storage.getFile(_templatePath + Filename);
+        if (_templatePath.matches(".*" + "volumes" + ".*")) {
+            _file = _storage.getFile(_templatePath + "volume.properties");
+            _resourceType = ResourceType.VOLUME;
+        } else {
+            _file = _storage.getFile(_templatePath + Filename);
         }
         _isCorrupted = false;
     }
@@ -90,17 +94,10 @@ public class TemplateLocation {
     }
 
     public boolean load() throws IOException {
-        FileInputStream strm = null;
-        try {
-            strm = new FileInputStream(_file);
+        try (FileInputStream strm = new FileInputStream(_file);) {
             _props.load(strm);
-        } finally {
-            if (strm != null) {
-                try {
-                    strm.close();
-                } catch (IOException e) {
-                }
-            }
+        } catch (IOException e) {
+            s_logger.warn("Unable to load the template properties", e);
         }
 
         for (ImageFormat format : ImageFormat.values()) {
@@ -109,7 +106,7 @@ public class TemplateLocation {
                 FormatInfo info = new FormatInfo();
                 info.format = format;
                 info.filename = _props.getProperty(format.getFileExtension() + ".filename");
-                if( info.filename == null ) {
+                if (info.filename == null) {
                     continue;
                 }
                 info.size = NumbersUtil.parseLong(_props.getProperty(format.getFileExtension() + ".size"), -1);
@@ -138,20 +135,11 @@ public class TemplateLocation {
             _props.setProperty(info.format.getFileExtension() + ".size", Long.toString(info.size));
             _props.setProperty(info.format.getFileExtension() + ".virtualsize", Long.toString(info.virtualSize));
         }
-        FileOutputStream strm = null;
-        try {
-            strm = new FileOutputStream(_file);
+        try (FileOutputStream strm =  new FileOutputStream(_file);) {
             _props.store(strm, "");
         } catch (IOException e) {
             s_logger.warn("Unable to save the template properties ", e);
             return false;
-        } finally {
-            if (strm != null) {
-                try {
-                    strm.close();
-                } catch (IOException e) {
-                }
-            }
         }
         return true;
     }
@@ -159,11 +147,11 @@ public class TemplateLocation {
     public TemplateProp getTemplateInfo() {
         TemplateProp tmplInfo = new TemplateProp();
         tmplInfo.id = Long.parseLong(_props.getProperty("id"));
-        tmplInfo.installPath = _templatePath  + _props.getProperty("filename"); // _templatePath endsWith /
-        if (_resourceType == ResourceType.VOLUME){
-        	tmplInfo.installPath = tmplInfo.installPath.substring(tmplInfo.installPath.indexOf("volumes"));
-        }else {
-        	tmplInfo.installPath = tmplInfo.installPath.substring(tmplInfo.installPath.indexOf("template"));
+        tmplInfo.installPath = _templatePath + _props.getProperty("filename"); // _templatePath endsWith /
+        if (_resourceType == ResourceType.VOLUME) {
+            tmplInfo.installPath = tmplInfo.installPath.substring(tmplInfo.installPath.indexOf("volumes"));
+        } else {
+            tmplInfo.installPath = tmplInfo.installPath.substring(tmplInfo.installPath.indexOf("template"));
         }
         tmplInfo.isCorrupted = _isCorrupted;
         tmplInfo.isPublic = Boolean.parseBoolean(_props.getProperty("public"));
@@ -177,7 +165,6 @@ public class TemplateLocation {
 
         return tmplInfo;
     }
-
 
     public FormatInfo getFormat(ImageFormat format) {
         for (FormatInfo info : _formats) {
@@ -193,7 +180,9 @@ public class TemplateLocation {
         deleteFormat(newInfo.format);
 
         if (!checkFormatValidity(newInfo)) {
-            s_logger.warn("Format is invalid ");
+            s_logger.warn("Format is invalid");
+            s_logger.debug("Format: " + newInfo.format + " size: " + newInfo.size + " virtualsize: " + newInfo.virtualSize + " filename: " + newInfo.filename);
+            s_logger.debug("format, filename cannot be null and size, virtual size should be  > 0 ");
             return false;
         }
 

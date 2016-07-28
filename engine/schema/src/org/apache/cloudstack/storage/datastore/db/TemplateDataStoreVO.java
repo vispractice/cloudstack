@@ -42,7 +42,7 @@ import com.cloud.utils.fsm.StateObject;
 
 /**
  * Join table for image_data_store and templates
- * 
+ *
  */
 @Entity
 @Table(name = "template_store_ref")
@@ -98,6 +98,13 @@ public class TemplateDataStoreVO implements StateObject<ObjectInDataStoreStateMa
     @Column(name = "url")
     private String downloadUrl;
 
+    @Column(name = "download_url")
+    private String extractUrl;
+
+    @Column(name = "download_url_created")
+    @Temporal(value = TemporalType.TIMESTAMP)
+    private Date extractUrlCreated = null;
+
     @Column(name = "is_copy")
     private boolean isCopy = false;
 
@@ -126,9 +133,8 @@ public class TemplateDataStoreVO implements StateObject<ObjectInDataStoreStateMa
         refCnt = 0L;
     }
 
-    public TemplateDataStoreVO(Long hostId, long templateId, Date lastUpdated, int downloadPercent,
-            Status downloadState, String localDownloadPath, String errorString, String jobId, String installPath,
-            String downloadUrl) {
+    public TemplateDataStoreVO(Long hostId, long templateId, Date lastUpdated, int downloadPercent, Status downloadState, String localDownloadPath, String errorString,
+            String jobId, String installPath, String downloadUrl) {
         super();
         dataStoreId = hostId;
         this.templateId = templateId;
@@ -142,24 +148,24 @@ public class TemplateDataStoreVO implements StateObject<ObjectInDataStoreStateMa
         this.installPath = installPath;
         setDownloadUrl(downloadUrl);
         switch (downloadState) {
-        case DOWNLOADED:
-            state = ObjectInDataStoreStateMachine.State.Ready;
-            break;
-        case CREATING:
-        case DOWNLOAD_IN_PROGRESS:
-        case UPLOAD_IN_PROGRESS:
-            state = ObjectInDataStoreStateMachine.State.Creating2;
-            break;
-        case DOWNLOAD_ERROR:
-        case UPLOAD_ERROR:
-            state = ObjectInDataStoreStateMachine.State.Failed;
-            break;
-        case ABANDONED:
-            state = ObjectInDataStoreStateMachine.State.Destroyed;
-            break;
-        default:
-            state = ObjectInDataStoreStateMachine.State.Allocated;
-            break;
+            case DOWNLOADED:
+                state = ObjectInDataStoreStateMachine.State.Ready;
+                break;
+            case CREATING:
+            case DOWNLOAD_IN_PROGRESS:
+            case UPLOAD_IN_PROGRESS:
+                state = ObjectInDataStoreStateMachine.State.Creating2;
+                break;
+            case DOWNLOAD_ERROR:
+            case UPLOAD_ERROR:
+                state = ObjectInDataStoreStateMachine.State.Failed;
+                break;
+            case ABANDONED:
+                state = ObjectInDataStoreStateMachine.State.Destroyed;
+                break;
+            default:
+                state = ObjectInDataStoreStateMachine.State.Allocated;
+                break;
         }
     }
 
@@ -253,7 +259,7 @@ public class TemplateDataStoreVO implements StateObject<ObjectInDataStoreStateMa
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof TemplateDataStoreVO) {
-            TemplateDataStoreVO other = (TemplateDataStoreVO) obj;
+            TemplateDataStoreVO other = (TemplateDataStoreVO)obj;
             return (templateId == other.getTemplateId() && dataStoreId == other.getDataStoreId());
         }
         return false;
@@ -312,8 +318,7 @@ public class TemplateDataStoreVO implements StateObject<ObjectInDataStoreStateMa
 
     @Override
     public String toString() {
-        return new StringBuilder("TmplDataStore[").append(id).append("-").append(templateId).append("-").append(dataStoreId)
-                .append(installPath).append("]").toString();
+        return new StringBuilder("TmplDataStore[").append(id).append("-").append(templateId).append("-").append(dataStoreId).append(installPath).append("]").toString();
     }
 
     @Override
@@ -379,6 +384,22 @@ public class TemplateDataStoreVO implements StateObject<ObjectInDataStoreStateMa
         else{
             s_logger.warn("We should not try to decrement a zero reference count even though our code has guarded");
         }
+    }
+
+    public String getExtractUrl() {
+        return extractUrl;
+    }
+
+    public void setExtractUrl(String extractUrl) {
+        this.extractUrl = extractUrl;
+    }
+
+    public Date getExtractUrlCreated() {
+        return extractUrlCreated;
+    }
+
+    public void setExtractUrlCreated(Date extractUrlCreated) {
+        this.extractUrlCreated = extractUrlCreated;
     }
 
 }

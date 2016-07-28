@@ -27,7 +27,7 @@ public class BitString extends Tag {
 
     public BitString(String name) {
         super(name);
-        this.tagType = BIT_STRING;
+        tagType = BIT_STRING;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class BitString extends Tag {
     @Override
     public Tag copyFrom(Tag tag) {
         super.copyFrom(tag);
-        this.value = new ByteBuffer(((BitString)tag).value.toByteArray());
+        value = new ByteBuffer(((BitString)tag).value.toByteArray());
         return this;
     }
 

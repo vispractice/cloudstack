@@ -1,34 +1,48 @@
-cloudstack (4.3.2) unstable; urgency=low
+cloudstack (4.8.1-SNAPSHOT) unstable; urgency=low
 
-  * Update the version to 4.3.2
+  [ Remi Bergsma ]
+  * Update the version to 4.8.1-SNAPSHOT
 
- -- Rohit Yadav <bhaisaab@apache.org>  Fri, 12 Dec 2014 05:30:00 +0530
+ -- the Apache CloudStack project <dev@cloudstack.apache.org>  Wed, 20 Jan 2016 23:43:35 +0100
 
-cloudstack (4.3.2-snapshot) unstable; urgency=low
+cloudstack (4.8.0-SNAPSHOT) unstable; urgency=low
 
-  * Update the version to 4.3.2.snapshot
+  [ Remi Bergsma ]
+  * Update the version to 4.8.1.snapshot
 
- -- Sebastien Goasguen <runseb@gmail.com>  Thu, 16 Sep 2014 15:00:00 +0000
+ -- the Apache CloudStack project <dev@cloudstack.apache.org>  Sun, 21 Dec 2015 22:11:55 +0100
 
-cloudstack (4.3.1) unstable; urgency=low
+cloudstack (4.7.0-SNAPSHOT) unstable; urgency=low
 
-  * Update the version to 4.3.1
+  [ Remi Bergsma ]
+  * Update the version to 4.7.0.snapshot
 
- -- Sebastien Goasguen <runseb@gmail.com>  Thu, 04 Sep 2014 16:47:57 +0200
+ -- the Apache CloudStack project <dev@cloudstack.apache.org>  Sun, 15 Nov 2015 21:28:33 +0100
 
-cloudstack (4.3.1-snapshot) unstable; urgency=low
+cloudstack (4.6.0-SNAPSHOT) unstable; urgency=low
 
-  * Update the version to 4.3.1.snapshot 
+  [ Hugo Trippaers ]
+  * Update the version to 4.6.0.snapshot
 
- -- Sebastien Goasguen <runseb@gmail.com>  Thu, 28 Aug 2014 13:38:42 +0000
+  [ Rafael da Fonseca ]
+  * Switch to dpkg-source 3.0 (native) format
 
-cloudstack (4.3.0) unstable; urgency=low
+ -- the Apache CloudStack project <dev@cloudstack.apache.org>  Thu, 18 Jun 2015 11:17:09 +0200
 
-  * Update the version to 4.3.0 
+cloudstack (4.5.0-snapshot) unstable; urgency=low
 
- -- David Nalley <david@gnsa.us>  Sat, 22 Feb 2014 00:00:00 -0400
+  * Update the version to 4.5.0.snapshot
+
+ -- Hugo Trippaers <hugo@apache.org>  Thu, 21 Nov 2013 12:00:00 -0400
+
+cloudstack (4.4.0-snapshot) unstable; urgency=low
+
+  * Update the version to 4.4.0.snapshot
+
+ -- Hugo Trippaers <hugo@apache.org>  Thu, 21 Nov 2013 12:00:00 -0400
 
 cloudstack (4.3.0-snapshot) unstable; urgency=low
+
   * Update the version to 4.3.0.snapshot
 
  -- Chip Childers <chipchilders@apache.org>  Thu, 1 Aug 2013 12:00:00 -0400

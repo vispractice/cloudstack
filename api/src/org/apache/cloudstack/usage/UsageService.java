@@ -16,20 +16,20 @@
 // under the License.
 package org.apache.cloudstack.usage;
 
-import java.util.List;
-import java.util.TimeZone;
-
+import com.cloud.utils.Pair;
 import org.apache.cloudstack.api.command.admin.usage.GenerateUsageRecordsCmd;
 import org.apache.cloudstack.api.command.admin.usage.GetUsageRecordsCmd;
+import org.apache.cloudstack.api.command.admin.usage.RemoveRawUsageRecordsCmd;
 import org.apache.cloudstack.api.response.UsageTypeResponse;
 
-import com.cloud.utils.Pair;
+import java.util.List;
+import java.util.TimeZone;
 
 public interface UsageService {
     /**
      * Generate Billing Records from the last time it was generated to the
      * time specified.
-     * 
+     *
      * @param cmd the command wrapping the generate parameters
      *   - userId unique id of the user, pass in -1 to generate billing records
      *            for all users
@@ -38,10 +38,10 @@ public interface UsageService {
      *             system will use the current time.
      */
     boolean generateUsageRecords(GenerateUsageRecordsCmd cmd);
-    
+
     /**
      * Retrieves all Usage Records generated between the start and end date specified
-     * 
+     *
      * @param userId unique id of the user, pass in -1 to retrieve billing records
      *        for all users
      * @param startDate inclusive.
@@ -61,6 +61,7 @@ public interface UsageService {
      */
     TimeZone getUsageTimezone();
 
-	List<UsageTypeResponse> listUsageTypes();
+    boolean removeRawUsageRecords(RemoveRawUsageRecordsCmd cmd);
 
+    List<UsageTypeResponse> listUsageTypes();
 }

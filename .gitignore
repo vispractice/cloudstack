@@ -17,7 +17,6 @@
 
 build/replace.properties
 build/build.number
-bin/
 .lock-wscript
 .waf-*
 waf-*
@@ -38,7 +37,6 @@ build.number
 cloud.log.*.*
 unittest
 deps/cloud.userlibraries
-deps/awsapi-lib/
 .DS_Store
 .idea
 *.iml
@@ -48,6 +46,7 @@ tools/devcloud/devcloudbox/.vagrant
 tools/cli/cloudmonkey/marvin/
 tools/cli/cloudmonkey/precache.py
 tools/marvin/marvin/cloudstackAPI/
+tools/marvin/build/
 tools/cli/build/
 *.jar
 *.war
@@ -56,15 +55,17 @@ tools/cli/build/
 *.iso
 *.tar.gz
 *.tgz
-.*
+
+# this ignores _all files starting with '.'. Don't do that!
+#.*
+
 target-eclipse
-awsapi/modules/*
 !.gitignore
 .classpath
 .settings.xml
 .settings/
 db.properties.override
-awsapi/overlays/
+replace.properties.override
 tools/marvin/marvin/cloudstackAPI/*
 *.egg-info/
 docs/tmp
@@ -84,5 +85,14 @@ configure-stamp
 *_flymake.js
 engine/storage/integration-test/test-output
 tools/apidoc/log/
-log/
+plugins/network-elements/juniper-contrail/logs/
 scripts/vm/hypervisor/xenserver/vhd-util
+*.orig
+tools/appliance/box/
+.reviewboardrc
+.checkstyle
+.pmd
+.pmdruleset.xml
+.pydevproject
+systemvm/.pydevproject
+test/.pydevprojec

@@ -19,7 +19,6 @@ package com.cloud.network.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -30,46 +29,46 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
-@Local(value=NetworkDomainDao.class) @DB()
+@DB()
 public class NetworkDomainDaoImpl extends GenericDaoBase<NetworkDomainVO, Long> implements NetworkDomainDao {
     final SearchBuilder<NetworkDomainVO> AllFieldsSearch;
     final SearchBuilder<NetworkDomainVO> DomainsSearch;
-    
+
     protected NetworkDomainDaoImpl() {
         super();
-        
+
         AllFieldsSearch = createSearchBuilder();
         AllFieldsSearch.and("domainId", AllFieldsSearch.entity().getDomainId(), Op.EQ);
         AllFieldsSearch.and("networkId", AllFieldsSearch.entity().getNetworkId(), Op.EQ);
         AllFieldsSearch.done();
-        
+
         DomainsSearch = createSearchBuilder();
         DomainsSearch.and("domainId", DomainsSearch.entity().getDomainId(), Op.IN);
         DomainsSearch.done();
     }
-    
+
     @Override
     public List<NetworkDomainVO> listDomainNetworkMapByDomain(Object... domainId) {
         SearchCriteria<NetworkDomainVO> sc = DomainsSearch.create();
-        sc.setParameters("domainId", (Object[])domainId);
-        
+        sc.setParameters("domainId", domainId);
+
         return listBy(sc);
     }
-    
+
     @Override
     public NetworkDomainVO getDomainNetworkMapByNetworkId(long networkId) {
         SearchCriteria<NetworkDomainVO> sc = AllFieldsSearch.create();
         sc.setParameters("networkId", networkId);
         return findOneBy(sc);
     }
-    
+
     @Override
     public List<Long> listNetworkIdsByDomain(long domainId) {
         List<Long> networkIdsToReturn = new ArrayList<Long>();
         List<NetworkDomainVO> maps = listDomainNetworkMapByDomain(domainId);
         for (NetworkDomainVO map : maps) {
             networkIdsToReturn.add(map.getNetworkId());
-        } 
+        }
         return networkIdsToReturn;
     }
 }

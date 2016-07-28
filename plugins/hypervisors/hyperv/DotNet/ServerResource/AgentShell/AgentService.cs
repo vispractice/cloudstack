@@ -1,4 +1,4 @@
-﻿// Licensed to the Apache Software Foundation (ASF) under one
+// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
 // regarding copyright ownership.  The ASF licenses this file
@@ -72,13 +72,10 @@ namespace CloudStack.Plugin.AgentShell
             // use of VisualStudio settings designer.  The designer allows us to avoid
             // accessing config using their key strings.
             HypervResourceControllerConfig rsrcCnf = new HypervResourceControllerConfig();
-            rsrcCnf.PrivateIpAddress = AgentSettings.Default.private_ip_address;
-            rsrcCnf.GatewayIpAddress = AgentSettings.Default.gateway_ip_address;
             rsrcCnf.RootDeviceReservedSpaceBytes = AgentSettings.Default.RootDeviceReservedSpaceBytes;
             rsrcCnf.RootDeviceName = AgentSettings.Default.RootDeviceName;
             rsrcCnf.ParentPartitionMinMemoryMb = AgentSettings.Default.dom0MinMemory;
             rsrcCnf.LocalSecondaryStoragePath = AgentSettings.Default.local_secondary_storage_path;
-            rsrcCnf.systemVmIso = null;
 
             // Side effect:  loads the assembly containing HypervResourceController, which
             // allows HttpSelfHostServer to route requests to the controller.

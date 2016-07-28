@@ -51,23 +51,6 @@ public interface DeploymentPlanner extends Adapter {
     DeployDestination plan(VirtualMachineProfile vm, DeploymentPlan plan, ExcludeList avoid) throws InsufficientServerCapacityException;
 
     /**
-     * check() is called right before the virtual machine starts to make sure
-     * the host has enough capacity.
-     *
-     * @param vm
-     *            virtual machine in question.
-     * @param plan
-     *            deployment plan used to determined the deploy destination.
-     * @param dest
-     *            destination returned by plan.
-     * @param avoid
-     *            what to avoid.
-     * @return true if it's okay to start; false if not. If false, the exclude list will include what should be
-     *         excluded.
-     */
-    boolean check(VirtualMachineProfile vm, DeploymentPlan plan, DeployDestination dest, ExcludeList exclude);
-
-    /**
      * canHandle is called before plan to determine if the plan can do the allocation. Planers should be exclusive so
      * planner writer must
      * make sure only one planer->canHandle return true in the planner list
@@ -83,11 +66,7 @@ public interface DeploymentPlanner extends Adapter {
     boolean canHandle(VirtualMachineProfile vm, DeploymentPlan plan, ExcludeList avoid);
 
     public enum AllocationAlgorithm {
-        random,
-        firstfit,
-        userdispersing,
-        userconcentratedpod_random,
-        userconcentratedpod_firstfit;
+        random, firstfit, userdispersing, userconcentratedpod_random, userconcentratedpod_firstfit;
     }
 
     public enum PlannerResourceUsage {
@@ -106,22 +85,22 @@ public interface DeploymentPlanner extends Adapter {
         public ExcludeList() {
         }
 
-        public ExcludeList(Set<Long> _dcIds, Set<Long> _podIds, Set<Long> _clusterIds, Set<Long> _hostIds, Set<Long> _poolIds) {
-            if (_dcIds != null) {
-                this._dcIds = new HashSet<Long>(_dcIds);
+        public ExcludeList(Set<Long> dcIds, Set<Long> podIds, Set<Long> clusterIds, Set<Long> hostIds, Set<Long> poolIds) {
+            if (dcIds != null) {
+                this._dcIds = new HashSet<Long>(dcIds);
             }
-            if (_podIds != null) {
-                this._podIds = new HashSet<Long>(_podIds);
+            if (podIds != null) {
+                this._podIds = new HashSet<Long>(podIds);
             }
-            if (_clusterIds != null) {
-                this._clusterIds = new HashSet<Long>(_clusterIds);
+            if (clusterIds != null) {
+                this._clusterIds = new HashSet<Long>(clusterIds);
             }
 
-            if (_hostIds != null) {
-                this._hostIds = new HashSet<Long>(_hostIds);
+            if (hostIds != null) {
+                this._hostIds = new HashSet<Long>(hostIds);
             }
-            if (_poolIds != null) {
-                this._poolIds = new HashSet<Long>(_poolIds);
+            if (poolIds != null) {
+                this._poolIds = new HashSet<Long>(poolIds);
             }
         }
 

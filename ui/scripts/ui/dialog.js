@@ -36,6 +36,7 @@
          * Dialog with form
          */
         createForm: function(args) {
+            var cancel = args.cancel;
             var $formContainer = $('<div>').addClass('form-container');
             var $form = $('<form>').appendTo($formContainer)
                     .submit(function() {
@@ -47,11 +48,11 @@
 
             // Description text
             var formDesc;
-            if (typeof(args.form.desc) == 'function') {            	
-            	formDesc = args.form.desc(args);
+            if (typeof(args.form.desc) == 'function') {
+                formDesc = args.form.desc(args);
             } else { //typeof(args.form.desc) == 'string' or 'undefined'
-            	formDesc = args.form.desc;
-            }              
+                formDesc = args.form.desc;
+            }
             $('<span>').addClass('message').prependTo($formContainer).html(
                 _l(formDesc)
             );
@@ -69,11 +70,16 @@
                 return key;
             });
 
+            $(window).trigger('cloudStack.createForm.makeFields', {
+                $form: $form,
+                fields: args.form.fields
+            });
+
             var ret = function() {
                 $('.overlay').remove();
 
                 return $formContainer.dialog({
-                    dialogClass: 'create-form',
+                    dialogClass: args.form.isWarning ? 'create-form warning' : 'create-form',
                     closeOnEscape: false,
                     draggable: false,
                     width: 400,
@@ -85,6 +91,10 @@
                                 context: args.context
                             });
                         }
+
+                        $(window).trigger('cloudStack.createForm.open', {
+                          $form: $form
+                        });
                     },
                     buttons: [{
                         text: createLabel ? createLabel : _l('label.ok'),
@@ -113,6 +123,10 @@
                             $(this).dialog('destroy');
 
                             $('.hovered-elem').hide();
+
+                            if (cancel) {
+                                cancel();
+                            }
                         }
                     }]
                 }).closest('.ui-dialog').overlay();
@@ -179,11 +193,12 @@
                         );
 
                 // red asterisk
-                var $astersikSpan = $('<span>').addClass('field-required').html('*');
-                $name.find('label').prepend($astersikSpan);
+                var $asterisk = $('<span>').addClass('field-required').html('*');
 
-                if (field.validation == null || field.validation.required == false) {
-                    $astersikSpan.hide();
+                $name.find('label').prepend($asterisk);
+
+                if (field.validation == null || !field.validation.required) {
+                    $asterisk.hide();
                 }
 
                 // Tooltip description
@@ -209,7 +224,12 @@
                     });
 
                     if ($dependsOn.is('[type=checkbox]')) {
-                        var isReverse = args.form.fields[dependsOn].isReverse;
+                        var isReverse = false;
+
+                        if (args.form.fields[dependsOn]) {
+                            isReverse = args.form.fields[dependsOn].isReverse;
+                            isChecked = args.form.fields[dependsOn].isChecked;
+                        }
 
                         // Checkbox
                         $dependsOn.bind('click', function(event) {
@@ -218,7 +238,10 @@
 
                             if (($target.is(':checked') && !isReverse) ||
                                 ($target.is(':unchecked') && isReverse)) {
-                                $dependent.css('display', 'inline-block');
+
+                                $dependent.css('display', 'inline-block'); //show dependent dropdown field
+                                $dependent.change(); //trigger event handler for default option in dependent dropdown field (CLOUDSTACK-7826)
+
                                 $dependent.each(function() {
                                     if ($(this).data('dialog-select-fn')) {
                                         $(this).data('dialog-select-fn')();
@@ -243,6 +266,10 @@
                         // Show fields by default if it is reverse checkbox
                         if (isReverse) {
                             $dependsOn.click();
+
+                            if (isChecked) {
+                                $dependsOn.attr('checked', true);
+                            }
                         }
                     }
                 }
@@ -254,24 +281,31 @@
                         context: args.context,
                         response: {
                             success: function(args) {
+                                if (args.data == undefined || args.data.length == 0) {
+                                    var $option = $('<option>')
+                                    .appendTo($input)
+                                    .html("");
+                                } else {
                                 $(args.data).each(function() {
                                     var id;
                                     if (field.valueField)
                                         id = this[field.valueField];
                                     else
                                         id = this.id !== undefined ? this.id : this.name;
-                                    var description = this.description;
 
+                                    var desc;
                                     if (args.descriptionField)
-                                        description = this[args.descriptionField];
+                                        desc = this[args.descriptionField];
                                     else
-                                        description = this.description;
+                                        desc = _l(this.description);
 
                                     var $option = $('<option>')
                                             .appendTo($input)
                                             .val(_s(id))
-                                            .html(_s(description));
+                                            .data('json-obj', this)
+                                            .html(_s(desc));
                                 });
+                                }
 
                                 if (field.defaultValue) {
                                     $input.val(_s(strOrFunc(field.defaultValue, args.data)));
@@ -376,14 +410,14 @@
                             name: key,
                             type: 'checkbox'
                         }).appendTo($value);
-                    	var isChecked;
-                    	if (typeof (field.isChecked) == 'function') {
-                    	    isChecked = field.isChecked();
-                    	} else {
-                    	    isChecked = field.isChecked;
-                    	}
+                        var isChecked;
+                        if (typeof (field.isChecked) == 'function') {
+                            isChecked = field.isChecked(args);
+                        } else {
+                            isChecked = field.isChecked;
+                        }
                         if (isChecked) {
-                        	$input.attr('checked', strOrFunc(field.isChecked));
+                            $input.attr('checked', strOrFunc(field.isChecked, args));
                         } else {
                             // This is mainly for IE compatibility
                             setTimeout(function() {
@@ -407,6 +441,7 @@
                     $form.hide();
 
                     field.dynamic({
+                        context: args.context,
                         response: {
                             success: function(args) {
                                 var form = cloudStack.dialog.createForm({
@@ -439,6 +474,45 @@
                     if (field.defaultValue) {
                         $input.val(strOrFunc(field.defaultValue));
                     }
+                } else if (field.isFileUpload) {
+                    $input = $('<input>').attr({
+                        type: 'file',
+                        name: 'files[]'
+                    }).appendTo($value);
+
+                    // Add events
+                    $input.change(function(event) {
+                        $form.data('files', event.target.files);
+                    });
+                } else if (field.isTokenInput) { // jquery.tokeninput.js
+                    isAsync = true;
+
+                    selectArgs = {
+                        context: args.context,
+                        response: {
+                            success: function(args) {
+                                $input.tokenInput(unique_tags(args.data),
+                                {
+                                    theme: "facebook",
+                                    preventDuplicates: true,
+                                    hintText: args.hintText,
+                                    noResultsText: args.noResultsText
+                                });
+                            }
+                        }
+                    };
+
+                    $input = $('<input>').attr({
+                        name: key,
+                        type: 'text'
+                    }).appendTo($value);
+
+                    $.extend(selectArgs, {
+                        $form: $form,
+                        type: 'createForm'
+                    });
+
+                    field.dataProvider(selectArgs);
                 } else if (field.isDatepicker) { //jQuery datepicker
                     $input = $('<input>').attr({
                         name: key,
@@ -453,7 +527,9 @@
                     }
                     $input.addClass("disallowSpecialCharacters");
                     $input.datepicker({
-                        dateFormat: 'yy-mm-dd'
+			dateFormat: 'yy-mm-dd',
+			maxDate: field.maxDate,
+			minDate: field.minDate
                     });
 
                 } else if (field.range) { //2 text fields on the same line (e.g. port range: startPort - endPort)
@@ -541,7 +617,7 @@
                     }).appendTo($value);
 
                     if (field.defaultValue) {
-                        $input.val(strOrFunc(field.defaultValue));
+                        $input.val(strOrFunc(field.defaultValue, args.context));
                     }
                     if (field.id) {
                         $input.attr('id', field.id);
@@ -609,12 +685,131 @@
                     }
                 }
 
-                args.after({
-                    data: data,
-                    ref: args.ref, // For backwards compatibility; use context
-                    context: args.context,
-                    $form: $form
-                });
+                var uploadFiles = function() {
+                    $form.prepend($('<div>').addClass('loading-overlay'));
+                    args.form.fileUpload.getURL({
+                        $form: $form,
+                        formData: data,
+                        context: args.context,
+                        response: {
+                            success: function(successArgs) {
+                                var $file = $form.find('input[type=file]');
+                                var postUploadArgs = {
+                                    $form: $form,
+                                    data: data,
+                                    context: args.context,
+                                    response: {
+                                        success: function() {
+                                            args.after({
+                                                data: data,
+                                                ref: args.ref, // For backwards compatibility; use context
+                                                context: args.context,
+                                                $form: $form
+                                            });
+
+                                            $('div.overlay').remove();
+                                            $form.find('.loading-overlay').remove();
+                                            $('div.loading-overlay').remove();
+
+                                            $('.tooltip-box').remove();
+                                            $formContainer.remove();
+                                            $(this).dialog('destroy');
+
+                                            $('.hovered-elem').hide();
+                                        },
+                                        error: function(msg) {
+                                            $('div.overlay').remove();
+                                            $form.find('.loading-overlay').remove();
+                                            $('div.loading-overlay').remove();
+
+                                            cloudStack.dialog.error({ message: msg });
+                                        }
+                                    }
+                                };
+                                var postUploadArgsWithStatus = $.extend(true, {}, postUploadArgs);
+
+                                if(successArgs.ajaxPost) {
+                                    var request = new FormData();
+                                    request.append('file', $file.prop("files")[0]);
+                                    $.ajax({
+                                            type: 'POST',
+                                            url: successArgs.url,
+                                            data: request,
+                                            dataType : 'html',
+                                            processData: false,
+                                            contentType: false,
+                                            headers: successArgs.data,
+                                            success: function(r) {
+                                                postUploadArgsWithStatus.error = false;
+                                                args.form.fileUpload.postUpload(postUploadArgsWithStatus);
+                                            },
+                                            error: function(r) {
+                                                postUploadArgsWithStatus.error = true;
+                                                postUploadArgsWithStatus.errorMsg = r.responseText;
+                                                args.form.fileUpload.postUpload(postUploadArgsWithStatus);
+                                            }
+                                        });
+                                } else {
+                                    //
+                                    // Move file field into iframe; keep visible for consistency
+                                    //
+                                    var $uploadFrame = $('<iframe>');
+                                    var $frameForm = $('<form>').attr({
+                                        method: 'POST',
+                                        action: successArgs.url,
+                                        enctype: 'multipart/form-data'
+                                    });
+                                    var $field = $file.closest('.form-item .value');
+
+                                    // Add additional passed data
+                                    $.map(successArgs.data, function(v, k) {
+                                        var $hidden = $('<input>').attr({
+                                            type: 'hidden',
+                                            name: k,
+                                            value: v
+                                        });
+
+                                        $hidden.appendTo($frameForm);
+
+                                    });
+
+                                    console.log("The following object is a hidden HTML form that will submit local file with hidden field signature/expires/metadata:");
+                                    console.log($frameForm);
+
+                                    $uploadFrame.css({ width: $field.outerWidth(), height: $field.height() }).show();
+                                    $frameForm.append($file);
+                                    $field.append($uploadFrame);
+                                    $uploadFrame.contents().find('html body').append($frameForm);
+                                    $frameForm.submit(function() {
+                                        console.log("callback() in $frameForm.submit(callback(){}) is triggered");
+                                        $uploadFrame.load(function() {
+                                            console.log("callback() in $uploadFrame.load(callback(){}) is triggered");
+                                            args.form.fileUpload.postUpload(postUploadArgs);
+                                        });
+                                        return true;
+                                    });
+                                    $frameForm.submit();
+                                }
+                            },
+                            error: function(msg) {
+                                cloudStack.dialog.error({ message: msg });
+                            }
+                        }
+                    });
+                };
+
+                if ($form.data('files')) {
+                    uploadFiles();
+
+                    return false;
+                } else {
+                    args.after({
+                        data: data,
+                        ref: args.ref, // For backwards compatibility; use context
+                        context: args.context,
+                        $form: $form
+                    });
+                }
 
                 return true;
             };
@@ -764,8 +959,8 @@
                     _l(args.message)
                 )
             ).dialog({
-                title: _l('label.confirmation'),
-                dialogClass: 'confirm',
+                title: args.isWarning ? _l('label.warning') : _l('label.confirmation'),
+                dialogClass: args.isWarning ? 'confirm warning': 'confirm',
                 closeOnEscape: false,
                 zIndex: 5000,
                 buttons: [{
@@ -807,7 +1002,7 @@
                     closeOnEscape: false,
                     zIndex: 5000,
                     buttons: [{
-                        text: _l('Close'),
+                        text: _l('label.close'),
                         'class': 'close',
                         click: function() {
                             $(this).dialog('destroy');

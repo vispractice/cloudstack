@@ -20,7 +20,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
 import net.sf.ehcache.Cache;
@@ -33,7 +32,6 @@ import com.cloud.utils.db.GenericSearchBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
-@Local(value=EntityManager.class)
 @SuppressWarnings("unchecked")
 public class EntityManagerImpl extends ManagerBase implements EntityManager {
     String _name;
@@ -44,7 +42,8 @@ public class EntityManagerImpl extends ManagerBase implements EntityManager {
         GenericDao<? extends T, K> dao = (GenericDao<? extends T, K>)GenericDaoBase.getDao(entityType);
         return dao.findById(id);
     }
-    
+
+    @Override
     public <T, K extends Serializable> T findByIdIncludingRemoved(Class<T> entityType, K id) {
         GenericDao<? extends T, K> dao = (GenericDao<? extends T, K>)GenericDaoBase.getDao(entityType);
         return dao.findByIdIncludingRemoved(id);
@@ -93,7 +92,7 @@ public class EntityManagerImpl extends ManagerBase implements EntityManager {
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
         _name = name;
-        
+
         return true;
     }
 

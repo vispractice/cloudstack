@@ -16,8 +16,7 @@
 // under the License.
 package com.cloud.network.rules;
 
-
-public interface StaticNat{
+public interface StaticNat {
 
     long getAccountId();
 
@@ -28,6 +27,8 @@ public interface StaticNat{
     long getSourceIpAddressId();
 
     String getDestIpAddress();
+
+    String getSourceMacAddress();
 
     boolean isForRevoke();
 }

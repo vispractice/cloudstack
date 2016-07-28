@@ -32,63 +32,63 @@ public class MessageDispatcher implements MessageSubscriber {
 
     private static Map<Class<?>, List<Method>> s_handlerCache = new HashMap<Class<?>, List<Method>>();
 
-	private static Map<Object, MessageDispatcher> s_targetMap = new HashMap<Object, MessageDispatcher>();
-	private Object _targetObject;
+    private static Map<Object, MessageDispatcher> s_targetMap = new HashMap<Object, MessageDispatcher>();
+    private Object _targetObject;
 
-	public MessageDispatcher(Object targetObject) {
-		_targetObject = targetObject;
+    public MessageDispatcher(Object targetObject) {
+        _targetObject = targetObject;
         buildHandlerMethodCache(targetObject.getClass());
-	}
+    }
 
-	@Override
-	public void onPublishMessage(String senderAddress, String subject, Object args) {
-		dispatch(_targetObject, subject, senderAddress, args);
-	}
+    @Override
+    public void onPublishMessage(String senderAddress, String subject, Object args) {
+        dispatch(_targetObject, subject, senderAddress, args);
+    }
 
-	public static MessageDispatcher getDispatcher(Object targetObject) {
-		MessageDispatcher dispatcher;
-		synchronized(s_targetMap) {
-			dispatcher = s_targetMap.get(targetObject);
-			if(dispatcher == null) {
-				dispatcher = new MessageDispatcher(targetObject);
-				s_targetMap.put(targetObject, dispatcher);
-			}
-		}
-		return dispatcher;
-	}
+    public static MessageDispatcher getDispatcher(Object targetObject) {
+        MessageDispatcher dispatcher;
+        synchronized (s_targetMap) {
+            dispatcher = s_targetMap.get(targetObject);
+            if (dispatcher == null) {
+                dispatcher = new MessageDispatcher(targetObject);
+                s_targetMap.put(targetObject, dispatcher);
+            }
+        }
+        return dispatcher;
+    }
 
-	public static void removeDispatcher(Object targetObject) {
-		synchronized(s_targetMap) {
-			s_targetMap.remove(targetObject);
-		}
-	}
+    public static void removeDispatcher(Object targetObject) {
+        synchronized (s_targetMap) {
+            s_targetMap.remove(targetObject);
+        }
+    }
 
-	public static boolean dispatch(Object target, String subject, String senderAddress, Object args) {
-		assert(subject != null);
-		assert(target != null);
+    public static boolean dispatch(Object target, String subject, String senderAddress, Object args) {
+        assert (subject != null);
+        assert (target != null);
 
-		Method handler = resolveHandler(target.getClass(), subject);
-		if(handler == null)
-			return false;
+        Method handler = resolveHandler(target.getClass(), subject);
+        if (handler == null)
+            return false;
 
-		try {
-			handler.invoke(target, subject, senderAddress, args);
-		} catch (IllegalArgumentException e) {
+        try {
+            handler.invoke(target, subject, senderAddress, args);
+        } catch (IllegalArgumentException e) {
             s_logger.error("Unexpected exception when calling " + target.getClass().getName() + "." + handler.getName(), e);
-			throw new RuntimeException("IllegalArgumentException when invoking event handler for subject: " + subject);
-		} catch (IllegalAccessException e) {
+            throw new RuntimeException("IllegalArgumentException when invoking event handler for subject: " + subject);
+        } catch (IllegalAccessException e) {
             s_logger.error("Unexpected exception when calling " + target.getClass().getName() + "." + handler.getName(), e);
-			throw new RuntimeException("IllegalAccessException when invoking event handler for subject: " + subject);
-		} catch (InvocationTargetException e) {
+            throw new RuntimeException("IllegalAccessException when invoking event handler for subject: " + subject);
+        } catch (InvocationTargetException e) {
             s_logger.error("Unexpected exception when calling " + target.getClass().getName() + "." + handler.getName(), e);
-			throw new RuntimeException("InvocationTargetException when invoking event handler for subject: " + subject);
-		}
+            throw new RuntimeException("InvocationTargetException when invoking event handler for subject: " + subject);
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	public static Method resolveHandler(Class<?> handlerClz, String subject) {
-		synchronized(s_handlerCache) {
+    public static Method resolveHandler(Class<?> handlerClz, String subject) {
+        synchronized (s_handlerCache) {
             List<Method> handlerList = s_handlerCache.get(handlerClz);
             if (handlerList != null) {
                 for (Method method : handlerList) {
@@ -102,14 +102,14 @@ public class MessageDispatcher implements MessageSubscriber {
             } else {
                 s_logger.error("Handler class " + handlerClz.getName() + " is not registered");
             }
-		}
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	private static boolean match(String expression, String param) {
-		return param.matches(expression);
-	}
+    private static boolean match(String expression, String param) {
+        return param.matches(expression);
+    }
 
     private void buildHandlerMethodCache(Class<?> handlerClz) {
         if (s_logger.isInfoEnabled())

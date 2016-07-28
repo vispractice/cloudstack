@@ -36,7 +36,7 @@ public class OptionParser {
 
     /**
      * Parse options, capture values and return rest of arguments.
-     * 
+     *
      * @param args
      *          command line arguments to parse
      * @param startFrom
@@ -98,7 +98,7 @@ public class OptionParser {
     public static void main(String args[]) {
         if (args.length == 0)
             args = new String[] {"--help", "--foo", "fooval", "--bar", "123", "-v", "--verbose", "-v", "-a", "a1", "-aa", "a2", "-aaa", "a3", "rest", "of",
-                    "arguments"};
+        "arguments"};
 
         StringOption foo = new StringOption() {
             {

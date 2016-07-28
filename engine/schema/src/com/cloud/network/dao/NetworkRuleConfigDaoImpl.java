@@ -18,7 +18,6 @@ package com.cloud.network.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -27,22 +26,23 @@ import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
 @Component
-@Local(value={NetworkRuleConfigDao.class})
 public class NetworkRuleConfigDaoImpl extends GenericDaoBase<NetworkRuleConfigVO, Long> implements NetworkRuleConfigDao {
     protected SearchBuilder<NetworkRuleConfigVO> SecurityGroupIdSearch;
 
     protected NetworkRuleConfigDaoImpl() {
-        SecurityGroupIdSearch  = createSearchBuilder();
+        SecurityGroupIdSearch = createSearchBuilder();
         SecurityGroupIdSearch.and("securityGroupId", SecurityGroupIdSearch.entity().getSecurityGroupId(), SearchCriteria.Op.EQ);
         SecurityGroupIdSearch.done();
     }
 
+    @Override
     public List<NetworkRuleConfigVO> listBySecurityGroupId(long securityGroupId) {
         SearchCriteria<NetworkRuleConfigVO> sc = SecurityGroupIdSearch.create();
         sc.setParameters("securityGroupId", securityGroupId);
         return listBy(sc);
     }
 
+    @Override
     public void deleteBySecurityGroup(long securityGroupId) {
         SearchCriteria<NetworkRuleConfigVO> sc = SecurityGroupIdSearch.create();
         sc.setParameters("securityGroupId", securityGroupId);

@@ -18,7 +18,6 @@ package com.cloud.tags.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -31,10 +30,9 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
-@Local(value = { ResourceTagDao.class })
-public class ResourceTagsDaoImpl extends GenericDaoBase<ResourceTagVO, Long> implements ResourceTagDao{
+public class ResourceTagsDaoImpl extends GenericDaoBase<ResourceTagVO, Long> implements ResourceTagDao {
     final SearchBuilder<ResourceTagVO> AllFieldsSearch;
-    
+
     public ResourceTagsDaoImpl() {
         AllFieldsSearch = createSearchBuilder();
         AllFieldsSearch.and("resourceId", AllFieldsSearch.entity().getResourceId(), Op.EQ);
@@ -42,7 +40,7 @@ public class ResourceTagsDaoImpl extends GenericDaoBase<ResourceTagVO, Long> imp
         AllFieldsSearch.and("resourceType", AllFieldsSearch.entity().getResourceType(), Op.EQ);
         AllFieldsSearch.done();
     }
-    
+
     @Override
     public boolean removeByIdAndType(long resourceId, ResourceTag.ResourceObjectType resourceType) {
         SearchCriteria<ResourceTagVO> sc = AllFieldsSearch.create();
@@ -58,5 +56,15 @@ public class ResourceTagsDaoImpl extends GenericDaoBase<ResourceTagVO, Long> imp
         sc.setParameters("resourceId", resourceId);
         sc.setParameters("resourceType", resourceType);
         return listBy(sc);
+    }
+
+    @Override public void updateResourceId(long srcId, long destId, ResourceObjectType resourceType) {
+        SearchCriteria<ResourceTagVO> sc = AllFieldsSearch.create();
+        sc.setParameters("resourceId", srcId);
+        sc.setParameters("resourceType", resourceType);
+        for( ResourceTagVO tag : listBy(sc)) {
+            tag.setResourceId(destId);
+            update(tag.getId(), tag);
+        }
     }
 }

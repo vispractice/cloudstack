@@ -26,6 +26,7 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
+import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
@@ -37,7 +38,8 @@ import com.cloud.exception.StorageUnavailableException;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 
-@APICommand(name = "copyTemplate", description="Copies a template from one zone to another.", responseObject=TemplateResponse.class)
+@APICommand(name = "copyTemplate", description = "Copies a template from one zone to another.", responseObject = TemplateResponse.class, responseView = ResponseView.Restricted,
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CopyTemplateCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(CopyTemplateCmd.class.getName());
     private static final String s_name = "copytemplateresponse";
@@ -46,18 +48,21 @@ public class CopyTemplateCmd extends BaseAsyncCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.DESTINATION_ZONE_ID, type=CommandType.UUID, entityType = ZoneResponse.class,
-            required=true, description="ID of the zone the template is being copied to.")
+    @Parameter(name = ApiConstants.DESTINATION_ZONE_ID,
+               type = CommandType.UUID,
+               entityType = ZoneResponse.class,
+               required = true,
+               description = "ID of the zone the template is being copied to.")
     private Long destZoneId;
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = TemplateResponse.class,
-            required=true, description="Template ID.")
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = TemplateResponse.class, required = true, description = "Template ID.")
     private Long id;
 
-    @Parameter(name=ApiConstants.SOURCE_ZONE_ID, type=CommandType.UUID, entityType = ZoneResponse.class,
-            description = "ID of the zone the template is currently hosted on. If not specified and template is cross-zone, then we will sync this template to region wide image store")
+    @Parameter(name = ApiConstants.SOURCE_ZONE_ID,
+               type = CommandType.UUID,
+               entityType = ZoneResponse.class,
+            description = "ID of the zone the template is currently hosted on. If not specified and template is cross-zone, then we will sync this template to region wide image store.")
     private Long sourceZoneId;
-
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -120,13 +125,13 @@ public class CopyTemplateCmd extends BaseAsyncCmd {
     }
 
     @Override
-    public void execute() throws ResourceAllocationException{
+    public void execute() throws ResourceAllocationException {
         try {
             CallContext.current().setEventDetails(getEventDescription());
             VirtualMachineTemplate template = _templateService.copyTemplate(this);
 
             if (template != null){
-                List<TemplateResponse> listResponse = _responseGenerator.createTemplateResponses(template, getDestinationZoneId(), false);
+                List<TemplateResponse> listResponse = _responseGenerator.createTemplateResponses(ResponseView.Restricted, template, getDestinationZoneId(), false);
                 TemplateResponse response = new TemplateResponse();
                 if (listResponse != null && !listResponse.isEmpty()) {
                     response = listResponse.get(0);
@@ -143,4 +148,3 @@ public class CopyTemplateCmd extends BaseAsyncCmd {
         }
     }
 }
-

@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.agent.api.to;
 
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +31,9 @@ import com.cloud.network.lb.LoadBalancingRule.LbAutoScaleVmProfile;
 import com.cloud.network.lb.LoadBalancingRule.LbCondition;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.lb.LoadBalancingRule.LbHealthCheckPolicy;
-import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.lb.LoadBalancingRule.LbSslCert;
+import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.utils.Pair;
-
 
 public class LoadBalancerTO {
     String uuid;
@@ -55,7 +53,8 @@ public class LoadBalancerTO {
     final static int MAX_STICKINESS_POLICIES = 1;
     final static int MAX_HEALTHCHECK_POLICIES = 1;
 
-    public LoadBalancerTO(String uuid, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, boolean inline, List<LbDestination> destinations) {
+    public LoadBalancerTO(String uuid, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, boolean inline,
+            List<LbDestination> destinations) {
         if (destinations == null) { // for autoscaleconfig destinations will be null;
             destinations = new ArrayList<LbDestination>();
         }
@@ -77,18 +76,16 @@ public class LoadBalancerTO {
         }
     }
 
-    public LoadBalancerTO(String id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked,
-            boolean alreadyAdded, boolean inline, List<LbDestination> arg_destinations,
-            List<LbStickinessPolicy> stickinessPolicies) {
+    public LoadBalancerTO(String id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, boolean inline,
+            List<LbDestination> argDestinations, List<LbStickinessPolicy> stickinessPolicies) {
 
-        this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, inline, arg_destinations,
-                stickinessPolicies, null, null, null);
+        this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, inline, argDestinations, stickinessPolicies, null, null, null);
     }
 
-    public LoadBalancerTO(String id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked,
-            boolean alreadyAdded, boolean inline, List<LbDestination> arg_destinations,
-            List<LbStickinessPolicy> stickinessPolicies, List<LbHealthCheckPolicy> healthCheckPolicies, LbSslCert sslCert, String lbProtocol) {
-        this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, inline, arg_destinations);
+    public LoadBalancerTO(String id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, boolean inline,
+            List<LbDestination> argDestinations, List<LbStickinessPolicy> stickinessPolicies, List<LbHealthCheckPolicy> healthCheckPolicies, LbSslCert sslCert,
+            String lbProtocol) {
+        this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, inline, argDestinations);
         this.stickinessPolicies = null;
         this.healthCheckPolicies = null;
         if (stickinessPolicies != null && stickinessPolicies.size() > 0) {
@@ -96,8 +93,7 @@ public class LoadBalancerTO {
             int index = 0;
             for (LbStickinessPolicy stickinesspolicy : stickinessPolicies) {
                 if (!stickinesspolicy.isRevoked()) {
-                    this.stickinessPolicies[index] = new StickinessPolicyTO(stickinesspolicy.getMethodName(),
-                            stickinesspolicy.getParams());
+                    this.stickinessPolicies[index] = new StickinessPolicyTO(stickinesspolicy.getMethodName(), stickinesspolicy.getParams());
                     index++;
                     if (index == MAX_STICKINESS_POLICIES)
                         break;
@@ -111,12 +107,12 @@ public class LoadBalancerTO {
             this.healthCheckPolicies = new HealthCheckPolicyTO[MAX_HEALTHCHECK_POLICIES];
             int index = 0;
             for (LbHealthCheckPolicy hcp : healthCheckPolicies) {
-                    this.healthCheckPolicies[0] = new HealthCheckPolicyTO(hcp.getpingpath(), hcp.getDescription(),
-                            hcp.getResponseTime(), hcp.getHealthcheckInterval(), hcp.getHealthcheckThresshold(),
-                            hcp.getUnhealthThresshold(), hcp.isRevoked());
-                    index++;
-                    if (index == MAX_HEALTHCHECK_POLICIES)
-                        break;
+                this.healthCheckPolicies[0] =
+                    new HealthCheckPolicyTO(hcp.getpingpath(), hcp.getDescription(), hcp.getResponseTime(), hcp.getHealthcheckInterval(), hcp.getHealthcheckThresshold(),
+                        hcp.getUnhealthThresshold(), hcp.isRevoked());
+                index++;
+                if (index == MAX_HEALTHCHECK_POLICIES)
+                    break;
             }
 
             if (index == 0)
@@ -152,6 +148,10 @@ public class LoadBalancerTO {
 
     public String getLbProtocol() {
         return lbProtocol;
+    }
+
+    public void setLbProtocol(String lbProtocol) {
+        this.lbProtocol = lbProtocol;
     }
 
     public boolean isRevoked() {
@@ -190,8 +190,8 @@ public class LoadBalancerTO {
         return this.autoScaleVmGroupTO != null;
     }
 
-    public LbSslCert getSslCert(){
-       return this.sslCert;
+    public LbSslCert getSslCert() {
+        return this.sslCert;
     }
 
     public static class StickinessPolicyTO {
@@ -210,7 +210,7 @@ public class LoadBalancerTO {
             this._methodName = methodName;
             this._paramsList = paramsList;
         }
-     }
+    }
 
     public static class HealthCheckPolicyTO {
         private String pingPath;
@@ -221,8 +221,8 @@ public class LoadBalancerTO {
         private int unhealthThresshold;
         private boolean revoke = false;
 
-        public HealthCheckPolicyTO(String pingPath, String description, int responseTime, int healthcheckInterval,
-                int healthcheckThresshold, int unhealthThresshold, boolean revoke) {
+        public HealthCheckPolicyTO(String pingPath, String description, int responseTime, int healthcheckInterval, int healthcheckThresshold, int unhealthThresshold,
+                boolean revoke) {
 
             this.description = description;
             this.pingPath = pingPath;
@@ -277,6 +277,7 @@ public class LoadBalancerTO {
         boolean revoked;
         boolean alreadyAdded;
         String monitorState;
+
         public DestinationTO(String destIp, int destPort, boolean revoked, boolean alreadyAdded) {
             this.destIp = destIp;
             this.destPort = destPort;
@@ -311,9 +312,10 @@ public class LoadBalancerTO {
             return monitorState;
         }
 
-
     }
+
     public static class CounterTO implements Serializable {
+        private static final long serialVersionUID = 2L;
         private final String name;
         private final String source;
         private final String value;
@@ -338,12 +340,12 @@ public class LoadBalancerTO {
     }
 
     public static class ConditionTO implements Serializable {
+        private static final long serialVersionUID = 2L;
         private final long threshold;
         private final String relationalOperator;
         private final CounterTO counter;
 
-        public ConditionTO(long threshold, String relationalOperator, CounterTO counter)
-        {
+        public ConditionTO(long threshold, String relationalOperator, CounterTO counter) {
             this.threshold = threshold;
             this.relationalOperator = relationalOperator;
             this.counter = counter;
@@ -363,6 +365,7 @@ public class LoadBalancerTO {
     }
 
     public static class AutoScalePolicyTO implements Serializable {
+        private static final long serialVersionUID = 2L;
         private final long id;
         private final int duration;
         private final int quietTime;
@@ -405,6 +408,7 @@ public class LoadBalancerTO {
     }
 
     public static class AutoScaleVmProfileTO implements Serializable {
+        private static final long serialVersionUID = 2L;
         private final String zoneId;
         private final String domainId;
         private final String serviceOfferingId;
@@ -418,8 +422,9 @@ public class LoadBalancerTO {
         private final String vmName;
         private final String networkId;
 
-        public AutoScaleVmProfileTO(String zoneId, String domainId, String cloudStackApiUrl, String autoScaleUserApiKey, String autoScaleUserSecretKey, String serviceOfferingId,
-                String templateId, String vmName, String networkId, String otherDeployParams, List<Pair<String, String>> counterParamList, Integer destroyVmGraceperiod) {
+        public AutoScaleVmProfileTO(String zoneId, String domainId, String cloudStackApiUrl, String autoScaleUserApiKey, String autoScaleUserSecretKey,
+                String serviceOfferingId, String templateId, String vmName, String networkId, String otherDeployParams, List<Pair<String, String>> counterParamList,
+                Integer destroyVmGraceperiod) {
             this.zoneId = zoneId;
             this.domainId = domainId;
             this.serviceOfferingId = serviceOfferingId;
@@ -484,6 +489,7 @@ public class LoadBalancerTO {
     }
 
     public static class AutoScaleVmGroupTO implements Serializable {
+        private static final long serialVersionUID = 2L;
         private final String uuid;
         private final int minMembers;
         private final int maxMembers;
@@ -494,8 +500,8 @@ public class LoadBalancerTO {
         private final String state;
         private final String currentState;
 
-        AutoScaleVmGroupTO(String uuid, int minMembers, int maxMembers, int memberPort, int interval, List<AutoScalePolicyTO> policies, AutoScaleVmProfileTO profile, String state, String currentState)
-        {
+        AutoScaleVmGroupTO(String uuid, int minMembers, int maxMembers, int memberPort, int interval, List<AutoScalePolicyTO> policies, AutoScaleVmProfileTO profile,
+                String state, String currentState) {
             this.uuid = uuid;
             this.minMembers = minMembers;
             this.maxMembers = maxMembers;
@@ -544,8 +550,7 @@ public class LoadBalancerTO {
         }
     }
 
-    public void setAutoScaleVmGroup(LbAutoScaleVmGroup lbAutoScaleVmGroup)
-    {
+    public void setAutoScaleVmGroup(LbAutoScaleVmGroup lbAutoScaleVmGroup) {
         List<LbAutoScalePolicy> lbAutoScalePolicies = lbAutoScaleVmGroup.getPolicies();
         List<AutoScalePolicyTO> autoScalePolicyTOs = new ArrayList<AutoScalePolicyTO>(lbAutoScalePolicies.size());
         for (LbAutoScalePolicy lbAutoScalePolicy : lbAutoScalePolicies) {
@@ -559,21 +564,21 @@ public class LoadBalancerTO {
                 conditionTOs.add(conditionTO);
             }
             AutoScalePolicy autoScalePolicy = lbAutoScalePolicy.getPolicy();
-            autoScalePolicyTOs.add(new AutoScalePolicyTO(autoScalePolicy.getId(), autoScalePolicy.getDuration(),
-                    autoScalePolicy.getQuietTime(), autoScalePolicy.getAction(),
-                    conditionTOs, lbAutoScalePolicy.isRevoked()));
+            autoScalePolicyTOs.add(new AutoScalePolicyTO(autoScalePolicy.getId(), autoScalePolicy.getDuration(), autoScalePolicy.getQuietTime(),
+                autoScalePolicy.getAction(), conditionTOs, lbAutoScalePolicy.isRevoked()));
         }
         LbAutoScaleVmProfile lbAutoScaleVmProfile = lbAutoScaleVmGroup.getProfile();
         AutoScaleVmProfile autoScaleVmProfile = lbAutoScaleVmProfile.getProfile();
 
-        AutoScaleVmProfileTO autoScaleVmProfileTO = new AutoScaleVmProfileTO(lbAutoScaleVmProfile.getZoneId(), lbAutoScaleVmProfile.getDomainId(),
-                lbAutoScaleVmProfile.getCsUrl(), lbAutoScaleVmProfile.getAutoScaleUserApiKey(), lbAutoScaleVmProfile.getAutoScaleUserSecretKey(),
-                lbAutoScaleVmProfile.getServiceOfferingId(), lbAutoScaleVmProfile.getTemplateId(), lbAutoScaleVmProfile.getVmName(),
-                lbAutoScaleVmProfile.getNetworkId(),autoScaleVmProfile.getOtherDeployParams(), autoScaleVmProfile.getCounterParams(),
-                autoScaleVmProfile.getDestroyVmGraceperiod());
+        AutoScaleVmProfileTO autoScaleVmProfileTO =
+            new AutoScaleVmProfileTO(lbAutoScaleVmProfile.getZoneId(), lbAutoScaleVmProfile.getDomainId(), lbAutoScaleVmProfile.getCsUrl(),
+                lbAutoScaleVmProfile.getAutoScaleUserApiKey(), lbAutoScaleVmProfile.getAutoScaleUserSecretKey(), lbAutoScaleVmProfile.getServiceOfferingId(),
+                lbAutoScaleVmProfile.getTemplateId(), lbAutoScaleVmProfile.getVmName(), lbAutoScaleVmProfile.getNetworkId(), autoScaleVmProfile.getOtherDeployParams(),
+                autoScaleVmProfile.getCounterParams(), autoScaleVmProfile.getDestroyVmGraceperiod());
 
         AutoScaleVmGroup autoScaleVmGroup = lbAutoScaleVmGroup.getVmGroup();
-        autoScaleVmGroupTO = new AutoScaleVmGroupTO(autoScaleVmGroup.getUuid(), autoScaleVmGroup.getMinMembers(), autoScaleVmGroup.getMaxMembers(), autoScaleVmGroup.getMemberPort(),
+        autoScaleVmGroupTO =
+            new AutoScaleVmGroupTO(autoScaleVmGroup.getUuid(), autoScaleVmGroup.getMinMembers(), autoScaleVmGroup.getMaxMembers(), autoScaleVmGroup.getMemberPort(),
                 autoScaleVmGroup.getInterval(), autoScalePolicyTOs, autoScaleVmProfileTO, autoScaleVmGroup.getState(), lbAutoScaleVmGroup.getCurrentState());
     }
 }

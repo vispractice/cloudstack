@@ -49,6 +49,7 @@ public class AwtClipboardAdapter extends BaseElement {
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(contents, null);
     }
 
+    @Override
     public String toString() {
         return "ClipboardAdapter(" + id + ")";
     }

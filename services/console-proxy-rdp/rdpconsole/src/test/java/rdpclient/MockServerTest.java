@@ -30,11 +30,15 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import junit.framework.TestCase;
+
+import org.junit.Test;
+
 import streamer.debug.MockServer;
 import streamer.debug.MockServer.Packet;
 
 public class MockServerTest extends TestCase {
 
+    @Test
     public void testIsMockServerCanRespond() throws Exception {
 
         final byte[] mockClientData = new byte[] {0x01, 0x02, 0x03};
@@ -87,6 +91,7 @@ public class MockServerTest extends TestCase {
         }
     }
 
+    @Test
     public void testIsMockServerCanUpgradeConnectionToSsl() throws Exception {
 
         final byte[] mockClientData1 = new byte[] {0x01, 0x02, 0x03};
@@ -156,7 +161,8 @@ public class MockServerTest extends TestCase {
 
                 final SSLSocketFactory sslSocketFactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
                 SSLSocket sslSocket = (SSLSocket)sslSocketFactory.createSocket(socket, address.getHostName(), address.getPort(), true);
-                sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+                //sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+                sslSocket.setEnabledCipherSuites(new String[] { "SSL_DH_anon_WITH_3DES_EDE_CBC_SHA" });
                 sslSocket.startHandshake();
 
                 InputStream is = sslSocket.getInputStream();

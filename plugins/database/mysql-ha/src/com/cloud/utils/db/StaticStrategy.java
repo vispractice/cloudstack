@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+
 import com.mysql.jdbc.BalanceStrategy;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.ConnectionImpl;
@@ -30,6 +32,7 @@ import com.mysql.jdbc.LoadBalancingConnectionProxy;
 import com.mysql.jdbc.SQLError;
 
 public class StaticStrategy implements BalanceStrategy {
+    private static final Logger s_logger = Logger.getLogger(StaticStrategy.class);
 
     public StaticStrategy() {
     }
@@ -45,9 +48,8 @@ public class StaticStrategy implements BalanceStrategy {
     }
 
     @Override
-    public ConnectionImpl pickConnection(LoadBalancingConnectionProxy proxy,
-            List<String> configuredHosts, Map<String, ConnectionImpl> liveConnections, long[] responseTimes,
-            int numRetries) throws SQLException {
+    public ConnectionImpl pickConnection(LoadBalancingConnectionProxy proxy, List<String> configuredHosts, Map<String, ConnectionImpl> liveConnections,
+        long[] responseTimes, int numRetries) throws SQLException {
         int numHosts = configuredHosts.size();
 
         SQLException ex = null;
@@ -59,11 +61,10 @@ public class StaticStrategy implements BalanceStrategy {
 
         whiteList.removeAll(blackList.keySet());
 
-        Map<String, Integer> whiteListMap = getArrayIndexMap(whiteList);
-
+        Map<String, Integer> whiteListMap = this.getArrayIndexMap(whiteList);
 
         for (int attempts = 0; attempts < numRetries;) {
-            if(whiteList.size() == 0){
+            if (whiteList.size() == 0) {
                 throw SQLError.createSQLException("No hosts configured", null);
             }
 
@@ -84,15 +85,16 @@ public class StaticStrategy implements BalanceStrategy {
                         // exclude this host from being picked again
                         if (whiteListIndex != null) {
                             whiteList.remove(whiteListIndex.intValue());
-                            whiteListMap = getArrayIndexMap(whiteList);
+                            whiteListMap = this.getArrayIndexMap(whiteList);
                         }
-                        proxy.addToGlobalBlacklist( hostPortSpec );
+                        proxy.addToGlobalBlacklist(hostPortSpec);
 
                         if (whiteList.size() == 0) {
                             attempts++;
                             try {
                                 Thread.sleep(250);
                             } catch (InterruptedException e) {
+                                s_logger.debug("[ignored] interupted while fail over in progres.");
                             }
 
                             // start fresh
@@ -101,7 +103,7 @@ public class StaticStrategy implements BalanceStrategy {
                             blackList = proxy.getGlobalBlacklist();
 
                             whiteList.removeAll(blackList.keySet());
-                            whiteListMap = getArrayIndexMap(whiteList);
+                            whiteListMap = this.getArrayIndexMap(whiteList);
                         }
 
                         continue;

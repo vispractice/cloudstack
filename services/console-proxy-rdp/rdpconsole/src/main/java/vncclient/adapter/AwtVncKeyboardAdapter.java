@@ -22,7 +22,6 @@ import streamer.BaseElement;
 import streamer.ByteBuffer;
 import streamer.Link;
 import vncclient.vnc.RfbConstants;
-
 import common.KeyOrder;
 
 public class AwtVncKeyboardAdapter extends BaseElement {
@@ -206,7 +205,7 @@ public class AwtVncKeyboardAdapter extends BaseElement {
         case KeyEvent.VK_N:
             return (sh ^ caps) ? 'N' : 'n';
         case KeyEvent.VK_M:
-            return (sh ^ caps) ? 'M' : 'M';
+            return (sh ^ caps) ? 'M' : 'm';
         case KeyEvent.VK_COMMA:
             return (sh) ? '<' : ',';
         case KeyEvent.VK_PERIOD:

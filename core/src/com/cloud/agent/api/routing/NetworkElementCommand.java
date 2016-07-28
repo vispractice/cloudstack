@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,6 +15,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.agent.api.routing;
 
 import java.util.HashMap;
@@ -34,19 +37,19 @@ public abstract class NetworkElementCommand extends Command {
     public static final String GUEST_BRIDGE = "guest.bridge";
     public static final String VPC_PRIVATE_GATEWAY = "vpc.gateway.private";
     public static final String FIREWALL_EGRESS_DEFAULT = "firewall.egress.default";
-    public static final String ROUTER_MONITORING_DISABLE = "router.monitor.disable";
+    public static final String ROUTER_MONITORING_ENABLE = "router.monitor.enable";
 
-
+    private String routerAccessIp;
 
     protected NetworkElementCommand() {
         super();
     }
 
-    public void setAccessDetail(String name, String value) {
+    public void setAccessDetail(final String name, final String value) {
         accessDetails.put(name, value);
     }
 
-    public String getAccessDetail(String name) {
+    public String getAccessDetail(final String name) {
         return accessDetails.get(name);
     }
 
@@ -55,4 +58,19 @@ public abstract class NetworkElementCommand extends Command {
         return false;
     }
 
+    public String getRouterAccessIp() {
+        return routerAccessIp;
+    }
+
+    public void setRouterAccessIp(final String routerAccessIp) {
+        this.routerAccessIp = routerAccessIp;
+    }
+
+    public int getAnswersCount() {
+        return 1;
+    }
+
+    public boolean isQuery() {
+        return false;
+    }
 }

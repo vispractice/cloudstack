@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.ha;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,10 +42,12 @@ import com.cloud.utils.db.SearchCriteria.Op;
 public abstract class AbstractInvestigatorImpl extends AdapterBase implements Investigator {
     private static final Logger s_logger = Logger.getLogger(AbstractInvestigatorImpl.class);
 
-    @Inject private final HostDao _hostDao = null;
-    @Inject private final AgentManager _agentMgr = null;
-    @Inject private final ResourceManager _resourceMgr = null;
-
+    @Inject
+    private final HostDao _hostDao = null;
+    @Inject
+    private final AgentManager _agentMgr = null;
+    @Inject
+    private final ResourceManager _resourceMgr = null;
 
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -63,7 +64,7 @@ public abstract class AbstractInvestigatorImpl extends AdapterBase implements In
     public boolean stop() {
         return true;
     }
-    
+
     // Host.status is up and Host.type is routing
     protected List<Long> findHostByPod(long podId, Long excludeHostId) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
@@ -71,29 +72,30 @@ public abstract class AbstractInvestigatorImpl extends AdapterBase implements In
         sc.and(sc.entity().getPodId(), Op.EQ, podId);
         sc.and(sc.entity().getStatus(), Op.EQ, Status.Up);
         List<HostVO> hosts = sc.list();
-        
+
         List<Long> hostIds = new ArrayList<Long>(hosts.size());
         for (HostVO h : hosts) {
-        	hostIds.add(h.getId());
+            hostIds.add(h.getId());
         }
-        
+
         if (excludeHostId != null) {
             hostIds.remove(excludeHostId);
         }
-        
+
         return hostIds;
     }
 
+    // Method only returns Status.Up, Status.Down and Status.Unknown
     protected Status testIpAddress(Long hostId, String testHostIp) {
         try {
             Answer pingTestAnswer = _agentMgr.send(hostId, new PingTestCommand(testHostIp));
-            if(pingTestAnswer == null) {
+            if (pingTestAnswer == null) {
                 if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("host (" + testHostIp + ") returns null answer");
+                    s_logger.debug("host (" + testHostIp + ") returns Unknown (null) answer");
                 }
-            	return null;
+                return Status.Unknown;
             }
-            
+
             if (pingTestAnswer.getResult()) {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("host (" + testHostIp + ") has been successfully pinged, returning that host is up");
@@ -102,14 +104,20 @@ public abstract class AbstractInvestigatorImpl extends AdapterBase implements In
                 return Status.Up;
             } else {
                 if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("host (" + testHostIp + ") cannot be pinged, returning null ('I don't know')");
+                    s_logger.debug("host (" + testHostIp + ") cannot be pinged, returning Unknown (I don't know) state");
                 }
-                return null;
+                return Status.Unknown;
             }
         } catch (AgentUnavailableException e) {
-            return null;
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("host (" + testHostIp + "): " + e.getLocalizedMessage() + ", trapped AgentUnavailableException returning Unknown state");
+            }
+            return Status.Unknown;
         } catch (OperationTimedoutException e) {
-            return null;
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("host (" + testHostIp + "): " + e.getLocalizedMessage() + ", trapped OperationTimedoutException returning Unknown state");
+            }
+            return Status.Unknown;
         }
     }
 }

@@ -19,6 +19,7 @@ package org.apache.cloudstack.api.response;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
@@ -27,124 +28,159 @@ import com.cloud.network.vpc.Vpc;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
-@EntityReference(value=Vpc.class)
+@EntityReference(value = Vpc.class)
 @SuppressWarnings("unused")
-public class VpcResponse extends BaseResponse implements ControlledEntityResponse{
-    @SerializedName("id") @Param(description="the id of the VPC")
+public class VpcResponse extends BaseResponse implements ControlledEntityResponse {
+    @SerializedName("id")
+    @Param(description = "the id of the VPC")
     private String id;
 
-    @SerializedName(ApiConstants.NAME) @Param(description="the name of the VPC")
+    @SerializedName(ApiConstants.NAME)
+    @Param(description = "the name of the VPC")
     private String name;
 
-    @SerializedName(ApiConstants.DISPLAY_TEXT) @Param(description="an alternate display text of the VPC.")
+    @SerializedName(ApiConstants.DISPLAY_TEXT)
+    @Param(description = "an alternate display text of the VPC.")
     private String displayText;
 
-    @SerializedName(ApiConstants.STATE) @Param(description="state of the VPC. Can be Inactive/Enabled")
+    @SerializedName(ApiConstants.STATE)
+    @Param(description = "state of the VPC. Can be Inactive/Enabled")
     private String state;
 
-    @SerializedName(ApiConstants.ZONE_ID) @Param(description="zone id of the vpc")
+    @SerializedName(ApiConstants.ZONE_ID)
+    @Param(description = "zone id of the vpc")
     private String zoneId;
 
-    @SerializedName(ApiConstants.ZONE_NAME) @Param(description="the name of the zone the VPC belongs to")
+    @SerializedName(ApiConstants.ZONE_NAME)
+    @Param(description = "the name of the zone the VPC belongs to")
     private String zoneName;
 
-    @SerializedName(ApiConstants.SERVICE) @Param(description="the list of supported services", responseObject = ServiceResponse.class)
+    @SerializedName(ApiConstants.SERVICE)
+    @Param(description = "the list of supported services", responseObject = ServiceResponse.class)
     private List<ServiceResponse> services;
 
-    @SerializedName(ApiConstants.CIDR) @Param(description="the cidr the VPC")
+    @SerializedName(ApiConstants.CIDR)
+    @Param(description = "the cidr the VPC")
     private String cidr;
 
-    @SerializedName(ApiConstants.VPC_OFF_ID) @Param(description="vpc offering id the VPC is created from")
+    @SerializedName(ApiConstants.VPC_OFF_ID)
+    @Param(description = "vpc offering id the VPC is created from")
     private String vpcOfferingId;
 
-    @SerializedName(ApiConstants.CREATED) @Param(description="the date this VPC was created")
+    @SerializedName(ApiConstants.CREATED)
+    @Param(description = "the date this VPC was created")
     private Date created;
 
-    @SerializedName(ApiConstants.ACCOUNT) @Param(description="the owner of the VPC")
+    @SerializedName(ApiConstants.ACCOUNT)
+    @Param(description = "the owner of the VPC")
     private String accountName;
 
-    @SerializedName(ApiConstants.PROJECT_ID) @Param(description="the project id of the VPC")
+    @SerializedName(ApiConstants.PROJECT_ID)
+    @Param(description = "the project id of the VPC")
     private String projectId;
 
-    @SerializedName(ApiConstants.PROJECT) @Param(description="the project name of the VPC")
+    @SerializedName(ApiConstants.PROJECT)
+    @Param(description = "the project name of the VPC")
     private String projectName;
 
-    @SerializedName(ApiConstants.DOMAIN_ID) @Param(description="the domain id of the VPC owner")
+    @SerializedName(ApiConstants.DOMAIN_ID)
+    @Param(description = "the domain id of the VPC owner")
     private String domainId;
 
-    @SerializedName(ApiConstants.DOMAIN) @Param(description="the domain name of the owner")
+    @SerializedName(ApiConstants.DOMAIN)
+    @Param(description = "the domain name of the owner")
     private String domain;
 
-    @SerializedName(ApiConstants.NETWORK) @Param(description="the list of networks belongign to the VPC", responseObject = NetworkResponse.class)
+    @SerializedName(ApiConstants.NETWORK)
+    @Param(description = "the list of networks belongign to the VPC", responseObject = NetworkResponse.class)
     private List<NetworkResponse> networks;
 
-    @SerializedName(ApiConstants.RESTART_REQUIRED) @Param(description="true VPC requires restart")
+    @SerializedName(ApiConstants.RESTART_REQUIRED)
+    @Param(description = "true VPC requires restart")
     private Boolean restartRequired;
 
-    @SerializedName(ApiConstants.NETWORK_DOMAIN) @Param(description="the network domain of the VPC")
+    @SerializedName(ApiConstants.NETWORK_DOMAIN)
+    @Param(description = "the network domain of the VPC")
     private String networkDomain;
 
-    @SerializedName(ApiConstants.TAGS)  @Param(description="the list of resource tags associated with the project", responseObject = ResourceTagResponse.class)
+    @SerializedName(ApiConstants.TAGS)
+    @Param(description = "the list of resource tags associated with the project", responseObject = ResourceTagResponse.class)
     private List<ResourceTagResponse> tags;
 
-    public void setId(String id) {
+    @SerializedName(ApiConstants.FOR_DISPLAY)
+    @Param(description = "is vpc for display to the regular user", since = "4.4", authorized = {RoleType.Admin})
+    private Boolean forDisplay;
+
+    @SerializedName(ApiConstants.DISTRIBUTED_VPC_ROUTER)
+    @Param(description = "is VPC uses distributed router for one hop forwarding and host based network ACL's", since = "4.4")
+    private boolean usesDistributedRouter;
+
+    @SerializedName(ApiConstants.REGION_LEVEL_VPC)
+    @Param(description = "true if VPC is region level", since = "4.4")
+    private Boolean regionLevelVpc;
+
+    @SerializedName(ApiConstants.REDUNDANT_VPC_ROUTER)
+    @Param(description = "if this VPC has redundant router", since = "4.6")
+    private boolean redundantRouter;
+
+    public void setId(final String id) {
         this.id = id;
     }
 
-    public void setName(String name) {
+    public void setName(final String name) {
         this.name = name;
     }
 
-    public void setDisplayText(String displayText) {
+    public void setDisplayText(final String displayText) {
         this.displayText = displayText;
     }
 
-    public void setCreated(Date created) {
+    public void setCreated(final Date created) {
         this.created = created;
     }
 
-    public void setServices(List<ServiceResponse> services) {
+    public void setServices(final List<ServiceResponse> services) {
         this.services = services;
     }
 
-    public void setState(String state) {
+    public void setState(final String state) {
         this.state = state;
     }
 
     @Override
-    public void setAccountName(String accountName) {
+    public void setAccountName(final String accountName) {
         this.accountName = accountName;
     }
 
     @Override
-    public void setProjectId(String projectId) {
+    public void setProjectId(final String projectId) {
         this.projectId = projectId;
     }
 
     @Override
-    public void setProjectName(String projectName) {
+    public void setProjectName(final String projectName) {
         this.projectName = projectName;
     }
 
     @Override
-    public void setDomainId(String domainId) {
+    public void setDomainId(final String domainId) {
         this.domainId = domainId;
     }
 
     @Override
-    public void setDomainName(String domainName) {
-        this.domain = domainName;
+    public void setDomainName(final String domainName) {
+        domain = domainName;
     }
 
-    public void setZoneId(String zoneId) {
+    public void setZoneId(final String zoneId) {
         this.zoneId = zoneId;
     }
 
-    public void setCidr(String cidr) {
+    public void setCidr(final String cidr) {
         this.cidr = cidr;
     }
 
-    public void setVpcOfferingId(String vpcOfferingId) {
+    public void setVpcOfferingId(final String vpcOfferingId) {
         this.vpcOfferingId = vpcOfferingId;
     }
 
@@ -152,23 +188,39 @@ public class VpcResponse extends BaseResponse implements ControlledEntityRespons
         return networks;
     }
 
-    public void setNetworks(List<NetworkResponse> networks) {
+    public void setNetworks(final List<NetworkResponse> networks) {
         this.networks = networks;
     }
 
-    public void setRestartRequired(Boolean restartRequired) {
+    public void setRestartRequired(final Boolean restartRequired) {
         this.restartRequired = restartRequired;
     }
 
-    public void setNetworkDomain(String networkDomain) {
+    public void setNetworkDomain(final String networkDomain) {
         this.networkDomain = networkDomain;
     }
 
-    public void setZoneName(String zoneName) {
+    public void setZoneName(final String zoneName) {
         this.zoneName = zoneName;
     }
 
-    public void setTags(List<ResourceTagResponse> tags) {
+    public void setTags(final List<ResourceTagResponse> tags) {
         this.tags = tags;
+    }
+
+    public void setForDisplay(final Boolean forDisplay) {
+        this.forDisplay = forDisplay;
+    }
+
+    public void setRegionLevelVpc(final Boolean regionLevelVpc) {
+        this.regionLevelVpc = regionLevelVpc;
+    }
+
+    public void setUsesDistributedRouter(final Boolean usesDistributedRouter) {
+        this.usesDistributedRouter = usesDistributedRouter;
+    }
+
+    public void setRedundantRouter(final Boolean redundantRouter) {
+        this.redundantRouter = redundantRouter;
     }
 }

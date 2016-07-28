@@ -21,9 +21,10 @@
 
         // Domain tree
         treeView: {
+        overflowScroll: true,
             // Details
             detailView: {
-                name: 'Domain details',
+                name: 'label.domain.details',
                 viewAll: {
                     label: 'label.accounts',
                     path: 'accounts'
@@ -99,7 +100,7 @@
                             var domainObj;
 
                             var data = {
-                                id: args.context.domains[0].id                                
+                                id: args.context.domains[0].id
                             };
 
                             if (args.data.name != null) { //args.data.name == undefined means name field is not editable (when log in as normal user or domain admin)
@@ -107,22 +108,22 @@
                                     name: args.data.name
                                 });
                             }
-                            
+
                             if (args.data.networkdomain != null) { //args.data.networkdomain == undefined means networkdomain field is not editable (when log in as normal user or domain admin)
                                 $.extend(data, {
-                                	networkdomain: args.data.networkdomain
+                                    networkdomain: args.data.networkdomain
                                 });
                             }
-                           
-                            if('name' in data || 'networkdomain' in data)  {                            
-	                            $.ajax({
-	                                url: createURL("updateDomain"),
-	                                async: false,
-	                                data: data,
-	                                success: function(json) {
-	                                    domainObj = json.updatedomainresponse.domain;
-	                                }
-	                            });
+
+                            if('name' in data || 'networkdomain' in data)  {
+                                $.ajax({
+                                    url: createURL("updateDomain"),
+                                    async: false,
+                                    data: data,
+                                    success: function(json) {
+                                        domainObj = json.updatedomainresponse.domain;
+                                    }
+                                });
                             }
 
                             if (args.data.vmLimit != null) {
@@ -312,6 +313,109 @@
                         }
                     },
 
+                    linktoldap: {
+                            label: 'label.link.domain.to.ldap',
+
+                            action: function(args) {
+                                var data = {
+                                    domainid: args.context.domains[0].id,
+                                    type: args.data.type,
+                                    name: args.data.name,
+                                    accounttype: args.data.accounttype
+                                };
+
+                                if (args.data.admin != null && args.data.admin.length > 0) {
+                                    $.extend(data, {
+                                        admin: args.data.admin
+                                    });
+                                }
+
+                                $.ajax({
+                                    url: createURL('linkDomainToLdap'),
+                                    data: data,
+                                    success: function(json) {
+                                        var item = json.linkdomaintoldapresponse.LinkDomainToLdap.domainid;
+                                        args.response.success({
+                                            data: item
+                                        });
+                                    },
+                                    error: function(XMLHttpResponse) {
+                                        var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                                        args.response.error(errorMsg);
+                                    }
+                                });
+                            },
+
+                            messages: {
+                                notification: function(args) {
+                                    return 'label.link.domain.to.ldap';
+                                }
+                            },
+
+                            createForm: {
+                                title: 'label.link.domain.to.ldap',
+                                desc: 'message.link.domain.to.ldap',
+                                fields: {
+                                    type: {
+                                        label: 'label.ldap.link.type',
+                                        docID: 'helpLdapGroupType',
+                                        validation: {
+                                            required: true
+                                        },
+                                        select: function(args) {
+                                             var items = [];
+                                             items.push({
+                                                 id: "GROUP",
+                                                 description: "GROUP"
+                                             }); //regular-user
+                                             items.push({
+                                                 id: "OU",
+                                                 description: "OU"
+                                             }); //root-admin
+                                             args.response.success({
+                                                 data: items
+                                             });
+                                        }
+                                    },
+                                    name: {
+                                        label: 'label.name',
+                                        docID: 'helpLdapGroupName',
+                                        validation: {
+                                            required: true
+                                        }
+                                    },
+                                    accounttype: {
+                                        label: 'label.account.type',
+                                        docID: 'helpAccountType',
+                                        validation: {
+                                            required: true
+                                        },
+                                        select: function(args) {
+                                             var items = [];
+                                             items.push({
+                                                 id: 0,
+                                                 description: "Normal User"
+                                             }); //regular-user
+                                             items.push({
+                                                 id: 2,
+                                                 description: "Domain Admin"
+                                             }); //root-admin
+                                             args.response.success({
+                                                 data: items
+                                             });
+                                        }
+                                    },
+                                    admin: {
+                                        label: 'label.domain.admin',
+                                        docID: 'helpLdapLinkDomainAdmin',
+                                        validation: {
+                                            required: false
+                                        }
+                                    }
+                                }
+                            }
+                    },
+
                     updateResourceCount: {
                         label: 'label.action.update.resource.count',
                         messages: {
@@ -355,7 +459,7 @@
                             }
                         }, {
                             id: {
-                                label: 'ID'
+                                label: 'label.id'
                             },
 
                             path: {
@@ -365,7 +469,7 @@
                             networkdomain: {
                                 label: 'label.network.domain',
                                 isEditable: function(args) {
-                                    if (isAdmin()) 
+                                    if (isAdmin())
                                         return true;
                                     else
                                         return false;
@@ -417,7 +521,7 @@
                                 }
                             },
                             vpcLimit: {
-                                label: 'VPC limits',
+                                label: 'label.VPC.limits',
                                 isEditable: function(args) {
                                     if (args.domains[0].id == g_domainid) //disallow to update the field on the domain you log in as
                                         return false;
@@ -488,9 +592,7 @@
                             $.ajax({
                                 url: createURL("listAccounts&domainid=" + domainObj.id),
                                 async: false,
-                                data: {
-                                    details: 'min'
-                                },
+                                data: {},
                                 success: function(json) {
                                     var items = json.listaccountsresponse.account;
                                     if (items != null) {
@@ -508,9 +610,7 @@
                             $.ajax({
                                 url: createURL("listProjects&domainid=" + domainObj.id),
                                 async: false,
-                                data: {
-                                    details: 'min'
-                                },
+                                data: {},
                                 success: function(json) {
                                     var items = json.listprojectsresponse.project;
                                     if (items != null) {
@@ -622,6 +722,11 @@
                         async: false,
                         success: function(json) {
                             var domainObjs = json.listdomainsresponse.domain;
+                            if (domainObjs != null && domainObjs.length > 0) {
+                                domainObjs.sort(function(a, b) {
+                                    return a.name.localeCompare(b.name);
+                                });
+                            }
                             args.response.success({
                                 actionFilter: domainActionfilter,
                                 data: domainObjs
@@ -635,6 +740,11 @@
                         async: false,
                         success: function(json) {
                             var domainObjs = json.listdomainchildrenresponse.domain;
+                            if (domainObjs != null && domainObjs.length > 0) {
+                                domainObjs.sort(function(a, b) {
+                                    return a.name.localeCompare(b.name);
+                                });
+                            }
                             args.response.success({
                                 actionFilter: domainActionfilter,
                                 data: domainObjs
@@ -655,10 +765,13 @@
             if (jsonObj.level != 0) { //ROOT domain (whose level is 0) is not allowed to delete
                 allowedActions.push("delete");
             }
-        } else if (isDomainAdmin()) { 
-        	if (args.context.domains[0].id != g_domainid) { 
-        		allowedActions.push("edit"); //merge updateResourceLimit into edit
-        	}
+            if(isLdapEnabled()) {
+                allowedActions.push("linktoldap")
+            }
+        } else if (isDomainAdmin()) {
+            if (args.context.domains[0].id != g_domainid) {
+                allowedActions.push("edit"); //merge updateResourceLimit into edit
+            }
         }
         allowedActions.push("updateResourceCount");
         return allowedActions;

@@ -19,7 +19,6 @@ package com.cloud.ha;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
@@ -39,22 +38,25 @@ import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.UserVmDao;
 
-@Local(value={Investigator.class})
 public class UserVmDomRInvestigator extends AbstractInvestigatorImpl {
     private static final Logger s_logger = Logger.getLogger(UserVmDomRInvestigator.class);
 
-    @Inject private final UserVmDao _userVmDao = null;
-    @Inject private final AgentManager _agentMgr = null;
-    @Inject private final NetworkModel _networkMgr = null;
-    @Inject private final VpcVirtualNetworkApplianceManager _vnaMgr = null;
+    @Inject
+    private final UserVmDao _userVmDao = null;
+    @Inject
+    private final AgentManager _agentMgr = null;
+    @Inject
+    private final NetworkModel _networkMgr = null;
+    @Inject
+    private final VpcVirtualNetworkApplianceManager _vnaMgr = null;
 
     @Override
-    public Boolean isVmAlive(VirtualMachine vm, Host host) {
+    public boolean isVmAlive(VirtualMachine vm, Host host) throws UnknownVM {
         if (vm.getType() != VirtualMachine.Type.User) {
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Not a User Vm, unable to determine state of " + vm + " returning null");
             }
-            return null;
+            throw new UnknownVM();
         }
 
         if (s_logger.isDebugEnabled()) {
@@ -66,7 +68,7 @@ public class UserVmDomRInvestigator extends AbstractInvestigatorImpl {
         List<? extends Nic> nics = _networkMgr.getNicsForTraffic(userVm.getId(), TrafficType.Guest);
 
         for (Nic nic : nics) {
-            if (nic.getIp4Address() == null) {
+            if (nic.getIPv4Address() == null) {
                 continue;
             }
 
@@ -96,7 +98,7 @@ public class UserVmDomRInvestigator extends AbstractInvestigatorImpl {
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Returning null since we're unable to determine state of " + vm);
         }
-        return null;
+        throw new UnknownVM();
     }
 
     @Override
@@ -112,24 +114,23 @@ public class UserVmDomRInvestigator extends AbstractInvestigatorImpl {
         List<Long> otherHosts = findHostByPod(agent.getPodId(), agent.getId());
 
         for (Long hostId : otherHosts) {
-
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("sending ping from (" + hostId + ") to agent's host ip address (" + agent.getPrivateIpAddress() + ")");
             }
             Status hostState = testIpAddress(hostId, agent.getPrivateIpAddress());
-            if (hostState == null) {
-                continue;
-            }
+            assert hostState != null;
+            // In case of Status.Unknown, next host will be tried
             if (hostState == Status.Up) {
                 if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("ping from (" + hostId + ") to agent's host ip address (" + agent.getPrivateIpAddress() + ") successful, returning that agent is disconnected");
+                    s_logger.debug("ping from (" + hostId + ") to agent's host ip address (" + agent.getPrivateIpAddress() +
+                        ") successful, returning that agent is disconnected");
                 }
                 return Status.Disconnected; // the computing host ip is ping-able, but the computing agent is down, report that the agent is disconnected
             } else if (hostState == Status.Down) {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("returning host state: " + hostState);
                 }
-                return hostState;
+                return Status.Down;
             }
         }
 
@@ -151,23 +152,22 @@ public class UserVmDomRInvestigator extends AbstractInvestigatorImpl {
     }
 
     private Boolean testUserVM(VirtualMachine vm, Nic nic, VirtualRouter router) {
-        String privateIp = nic.getIp4Address();
+        String privateIp = nic.getIPv4Address();
         String routerPrivateIp = router.getPrivateIpAddress();
 
         List<Long> otherHosts = new ArrayList<Long>();
-        if(vm.getHypervisorType() == HypervisorType.XenServer
-        		|| vm.getHypervisorType() == HypervisorType.KVM){
-        	otherHosts.add(router.getHostId());
-        }else{
-        	otherHosts = findHostByPod(router.getPodIdToDeployIn(), null);
+        if (vm.getHypervisorType() == HypervisorType.XenServer || vm.getHypervisorType() == HypervisorType.KVM) {
+            otherHosts.add(router.getHostId());
+        } else {
+            otherHosts = findHostByPod(router.getPodIdToDeployIn(), null);
         }
         for (Long hostId : otherHosts) {
             try {
                 Answer pingTestAnswer = _agentMgr.easySend(hostId, new PingTestCommand(routerPrivateIp, privateIp));
-                if (pingTestAnswer!=null && pingTestAnswer.getResult()) {
+                if (pingTestAnswer != null && pingTestAnswer.getResult()) {
                     if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("user vm's " + vm.getHostName() + " ip address "+ privateIp + "  has been successfully pinged from the Virtual Router "
-                                + router.getHostName() + ", returning that vm is alive");
+                        s_logger.debug("user vm's " + vm.getHostName() + " ip address " + privateIp + "  has been successfully pinged from the Virtual Router " +
+                            router.getHostName() + ", returning that vm is alive");
                     }
                     return Boolean.TRUE;
                 }

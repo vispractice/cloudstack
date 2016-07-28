@@ -24,7 +24,6 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 
 import com.cloud.dc.DataCenterVO;
-import com.cloud.exception.InternalErrorException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.StorageUnavailableException;
 import com.cloud.storage.StoragePool;
@@ -62,7 +61,6 @@ public interface TemplateManager {
      * @param srcSecStore
      * @param destZone
      * @return true if success
-     * @throws InternalErrorException
      * @throws StorageUnavailableException
      * @throws ResourceAllocationException
      */
@@ -116,7 +114,7 @@ public interface TemplateManager {
 
     TemplateInfo prepareIso(long isoId, long dcId);
 
-    
+
     /**
      * Adds ISO definition to given vm profile
      *
@@ -124,5 +122,7 @@ public interface TemplateManager {
      */
     void prepareIsoForVmProfile(VirtualMachineProfile profile);
 
+    public static final String MESSAGE_REGISTER_PUBLIC_TEMPLATE_EVENT = "Message.RegisterPublicTemplate.Event";
+    public static final String MESSAGE_RESET_TEMPLATE_PERMISSION_EVENT = "Message.ResetTemplatePermission.Event";
 
 }

@@ -16,6 +16,8 @@
 // under the License.
 package com.cloud.network;
 
+import static com.cloud.utils.AutoCloseableUtil.closeAutoCloseable;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,7 +26,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
@@ -37,15 +38,16 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@Local(value=IpAddrAllocator.class)
-public class ExternalIpAddressAllocator extends AdapterBase implements IpAddrAllocator{
+public class ExternalIpAddressAllocator extends AdapterBase implements IpAddrAllocator {
     private static final Logger s_logger = Logger.getLogger(ExternalIpAddressAllocator.class);
-    @Inject ConfigurationDao _configDao = null;
-    @Inject IPAddressDao _ipAddressDao = null;
-    @Inject VlanDao _vlanDao;
+    @Inject
+    ConfigurationDao _configDao = null;
+    @Inject
+    IPAddressDao _ipAddressDao = null;
+    @Inject
+    VlanDao _vlanDao;
     private boolean _isExternalIpAllocatorEnabled = false;
     private String _externalIpAllocatorUrl = null;
-
 
     @Override
     public IpAddr getPrivateIpAddress(String macAddr, long dcId, long podId) {
@@ -79,12 +81,7 @@ public class ExternalIpAddressAllocator extends AdapterBase implements IpAddrAll
         } catch (IOException e) {
             return new IpAddr();
         } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                }
-            }
+            closeAutoCloseable(in, "closing buffered reader");
         }
 
     }
@@ -119,12 +116,7 @@ public class ExternalIpAddressAllocator extends AdapterBase implements IpAddrAll
         } catch (IOException e) {
             return false;
         } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                }
-            }
+            closeAutoCloseable(in, "buffered reader close");
         }
     }
 

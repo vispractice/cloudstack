@@ -192,6 +192,12 @@ public class BandwidthRulesVO implements BandwidthClassRule {
 	public void setDomainId(Long domainId) {
 		this.domainId = domainId;
 	}
+
+	@Override
+	public Class<?> getEntityType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 //	@Override
 //	public Boolean isRevoked() {

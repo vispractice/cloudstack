@@ -106,17 +106,17 @@ public class Queue extends BaseElement {
 
         Element source1 = new FakeSource("source1") {
             {
-                this.delay = 100;
-                this.numBuffers = 10;
-                this.incommingBufLength = 10;
+                delay = 100;
+                numBuffers = 10;
+                incommingBufLength = 10;
             }
         };
 
         Element source2 = new FakeSource("source2") {
             {
-                this.delay = 100;
-                this.numBuffers = 10;
-                this.incommingBufLength = 10;
+                delay = 100;
+                numBuffers = 10;
+                incommingBufLength = 10;
             }
         };
 

@@ -27,8 +27,8 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 import javax.xml.ws.BindingProvider;
-import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.WebServiceException;
+import javax.xml.ws.handler.MessageContext;
 
 import org.apache.log4j.Logger;
 
@@ -54,6 +54,9 @@ import com.vmware.vim25.TraversalSpec;
 import com.vmware.vim25.UpdateSet;
 import com.vmware.vim25.VimPortType;
 import com.vmware.vim25.VimService;
+
+import org.apache.cloudstack.utils.security.SSLUtils;
+import org.apache.cloudstack.utils.security.SecureSSLSocketFactory;
 
 /**
  * A wrapper class to handle Vmware vsphere connection and disconnection.
@@ -81,21 +84,23 @@ public class VmwareClient {
             return;
         }
     }
-    
+
     static {
-    	try {
-			trustAllHttpsCertificates();
-	        HostnameVerifier hv = new HostnameVerifier() {
-	            @Override
-	            public boolean verify(String urlHostName, SSLSession session) {
-	                return true;
-	            }
-	        };
-	        HttpsURLConnection.setDefaultHostnameVerifier(hv);
-	        
-        	vimService = new VimService();
-		} catch (Exception e) {
-		}   	
+        try {
+            trustAllHttpsCertificates();
+            HostnameVerifier hv = new HostnameVerifier() {
+                @Override
+                public boolean verify(String urlHostName, SSLSession session) {
+                    return true;
+                }
+            };
+            HttpsURLConnection.setDefaultHostnameVerifier(hv);
+
+            vimService = new VimService();
+        } catch (Exception e) {
+            s_logger.info("[ignored]"
+                    + "failed to trust all certificates blindly: " + e.getLocalizedMessage());
+        }
     }
 
     private static void trustAllHttpsCertificates() throws Exception {
@@ -103,18 +108,18 @@ public class VmwareClient {
         javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[1];
         javax.net.ssl.TrustManager tm = new TrustAllTrustManager();
         trustAllCerts[0] = tm;
-        javax.net.ssl.SSLContext sc = javax.net.ssl.SSLContext.getInstance("SSL");
+        javax.net.ssl.SSLContext sc = SSLUtils.getSSLContext();
         javax.net.ssl.SSLSessionContext sslsc = sc.getServerSessionContext();
         sslsc.setSessionTimeout(0);
         sc.init(null, trustAllCerts, null);
-        javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(new SecureSSLSocketFactory(sc));
     }
 
-    private ManagedObjectReference SVC_INST_REF = new ManagedObjectReference();
+    private final ManagedObjectReference svcInstRef = new ManagedObjectReference();
     private static VimService vimService;
     private VimPortType vimPort;
     private String serviceCookie;
-    private final String SVC_INST_NAME = "ServiceInstance";
+    private final static String SVC_INST_NAME = "ServiceInstance";
     private int vCenterSessionTimeout = 1200000; // Timeout in milliseconds
 
     private boolean isConnected = false;
@@ -129,11 +134,11 @@ public class VmwareClient {
      *             the exception
      */
     public void connect(String url, String userName, String password) throws Exception {
-        SVC_INST_REF.setType(SVC_INST_NAME);
-        SVC_INST_REF.setValue(SVC_INST_NAME);
+        svcInstRef.setType(SVC_INST_NAME);
+        svcInstRef.setValue(SVC_INST_NAME);
 
         vimPort = vimService.getVimPort();
-        Map<String, Object> ctxt = ((BindingProvider) vimPort).getRequestContext();
+        Map<String, Object> ctxt = ((BindingProvider)vimPort).getRequestContext();
 
         ctxt.put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url);
         ctxt.put(BindingProvider.SESSION_MAINTAIN_PROPERTY, true);
@@ -141,19 +146,33 @@ public class VmwareClient {
         ctxt.put("com.sun.xml.internal.ws.request.timeout", vCenterSessionTimeout);
         ctxt.put("com.sun.xml.internal.ws.connect.timeout", vCenterSessionTimeout);
 
-        ServiceContent serviceContent = vimPort.retrieveServiceContent(SVC_INST_REF);
+        ServiceContent serviceContent = vimPort.retrieveServiceContent(svcInstRef);
 
         // Extract a cookie. See vmware sample program com.vmware.httpfileaccess.GetVMFiles
-        Map<String, List<String>> headers = (Map<String, List<String>>) ((BindingProvider) vimPort)
-                .getResponseContext().get(MessageContext.HTTP_RESPONSE_HEADERS);
-        List<String> cookies = (List<String>) headers.get("Set-cookie");
+        @SuppressWarnings("unchecked")
+        Map<String, List<String>> headers = (Map<String, List<String>>)((BindingProvider)vimPort).getResponseContext().get(MessageContext.HTTP_RESPONSE_HEADERS);
+        List<String> cookies = headers.get("Set-cookie");
+
+        vimPort.login(serviceContent.getSessionManager(), userName, password, null);
+
+        if (cookies == null) {
+            // Get the cookie from the response header. See vmware sample program com.vmware.httpfileaccess.GetVMFiles
+            @SuppressWarnings("unchecked")
+            Map<String, List<String>> responseHeaders = (Map<String, List<String>>)((BindingProvider)vimPort).getResponseContext().get(MessageContext.HTTP_RESPONSE_HEADERS);
+            cookies = responseHeaders.get("Set-cookie");
+            if (cookies == null) {
+                String msg = "Login successful, but failed to get server cookies from url :[" + url + "]";
+                s_logger.error(msg);
+                throw new Exception(msg);
+            }
+        }
+
         String cookieValue = cookies.get(0);
         StringTokenizer tokenizer = new StringTokenizer(cookieValue, ";");
         cookieValue = tokenizer.nextToken();
         String pathData = "$" + tokenizer.nextToken();
         serviceCookie = "$Version=\"1\"; " + cookieValue + "; " + pathData;
 
-        vimPort.login(serviceContent.getSessionManager(), userName, password, null);
         isConnected = true;
     }
 
@@ -180,11 +199,11 @@ public class VmwareClient {
      * @return Service instance content
      */
     public ServiceContent getServiceContent() {
-    	
+
         try {
-			return vimPort.retrieveServiceContent(SVC_INST_REF);
-		} catch (RuntimeFaultFaultMsg e) {
-		}
+            return vimPort.retrieveServiceContent(svcInstRef);
+        } catch (RuntimeFaultFaultMsg e) {
+        }
         return null;
     }
 
@@ -209,15 +228,15 @@ public class VmwareClient {
         return getServiceContent().getRootFolder();
     }
 
-	public boolean validate() {
-		//
-		// There is no official API to validate an open vCenter API session. This is hacking way to tell if
-		// an open vCenter API session is still valid for making calls.
-		//
-		// It will give false result if there really does not exist data-center in the inventory, however, I consider
-		// this really is not possible in production deployment
-		//
-		
+    public boolean validate() {
+        //
+        // There is no official API to validate an open vCenter API session. This is hacking way to tell if
+        // an open vCenter API session is still valid for making calls.
+        //
+        // It will give false result if there really does not exist data-center in the inventory, however, I consider
+        // this really is not possible in production deployment
+        //
+
         // Create PropertySpecs
         PropertySpec pSpec = new PropertySpec();
         pSpec.setType("Datacenter");
@@ -236,16 +255,16 @@ public class VmwareClient {
         specArr.add(spec);
 
         try {
-        	List<ObjectContent> ocary = vimPort.retrieveProperties(getPropCol(), specArr);
-        	if(ocary != null && ocary.size() > 0)
-        		return true;
-        } catch(Exception e) {
-        	return false;
+            List<ObjectContent> ocary = vimPort.retrieveProperties(getPropCol(), specArr);
+            if (ocary != null && ocary.size() > 0)
+                return true;
+        } catch (Exception e) {
+            return false;
         }
-        
+
         return false;
-	}
-    
+    }
+
     /**
      * Get the property value of a managed object.
      *
@@ -257,10 +276,11 @@ public class VmwareClient {
      * @throws Exception
      *             in case of error.
      */
-    public Object getDynamicProperty(ManagedObjectReference mor, String propertyName) throws Exception {
+    @SuppressWarnings("unchecked")
+    public <T> T getDynamicProperty(ManagedObjectReference mor, String propertyName) throws Exception {
         List<String> props = new ArrayList<String>();
         props.add(propertyName);
-        List<ObjectContent> objContent = this.retrieveMoRefProperties(mor, props);
+        List<ObjectContent> objContent = retrieveMoRefProperties(mor, props);
 
         Object propertyValue = null;
         if (objContent != null && objContent.size() > 0) {
@@ -278,16 +298,14 @@ public class VmwareClient {
                 Class dpCls = propertyValue.getClass();
                 String dynamicPropertyName = dpCls.getName();
                 if (dynamicPropertyName.indexOf("ArrayOf") != -1) {
-                    String methodName = "get"
-                            + dynamicPropertyName
-                                    .substring(dynamicPropertyName.indexOf("ArrayOf") + "ArrayOf".length(), dynamicPropertyName.length());
+                    String methodName = "get" + dynamicPropertyName.substring(dynamicPropertyName.indexOf("ArrayOf") + "ArrayOf".length(), dynamicPropertyName.length());
 
                     Method getMorMethod = dpCls.getDeclaredMethod(methodName, null);
-                    propertyValue = getMorMethod.invoke(propertyValue, (Object[]) null);
+                    propertyValue = getMorMethod.invoke(propertyValue, (Object[])null);
                 }
             }
         }
-        return propertyValue;
+        return (T)propertyValue;
     }
 
     private List<ObjectContent> retrieveMoRefProperties(ManagedObjectReference mObj, List<String> props) throws Exception {
@@ -305,7 +323,7 @@ public class VmwareClient {
         List<PropertyFilterSpec> specArr = new ArrayList<PropertyFilterSpec>();
         specArr.add(spec);
 
-        return vimPort.retrieveProperties(getPropCol(), specArr);    
+        return vimPort.retrieveProperties(getPropCol(), specArr);
     }
 
     /**
@@ -328,7 +346,7 @@ public class VmwareClient {
             // info has a property - state for state of the task
             Object[] result = waitForValues(task, new String[] { "info.state", "info.error" }, new String[] { "state" }, new Object[][] { new Object[] {
                     TaskInfoState.SUCCESS, TaskInfoState.ERROR } });
-    
+
             if (result[0].equals(TaskInfoState.SUCCESS)) {
                 retVal = true;
             }
@@ -361,8 +379,8 @@ public class VmwareClient {
      * @throws InvalidPropertyFaultMsg
      * @throws InvalidCollectorVersionFaultMsg
      */
-    private Object[] waitForValues(ManagedObjectReference objmor, String[] filterProps, String[] endWaitProps, Object[][] expectedVals)
-            throws InvalidPropertyFaultMsg, RuntimeFaultFaultMsg, InvalidCollectorVersionFaultMsg {
+    private Object[] waitForValues(ManagedObjectReference objmor, String[] filterProps, String[] endWaitProps, Object[][] expectedVals) throws InvalidPropertyFaultMsg,
+    RuntimeFaultFaultMsg, InvalidCollectorVersionFaultMsg {
         // version string is initially null
         String version = "";
         Object[] endVals = new Object[endWaitProps.length];
@@ -379,7 +397,7 @@ public class VmwareClient {
         pSpec.setType(objmor.getType());
         spec.getPropSet().add(pSpec);
 
-        ManagedObjectReference propertyCollector = this.getPropCol();
+        ManagedObjectReference propertyCollector = getPropCol();
         ManagedObjectReference filterSpecRef = vimPort.createFilter(propertyCollector, spec, true);
 
         boolean reached = false;
@@ -402,8 +420,7 @@ public class VmwareClient {
                 objupary = filtup.getObjectSet();
                 for (ObjectUpdate objup : objupary) {
                     // TODO: Handle all "kind"s of updates.
-                    if (objup.getKind() == ObjectUpdateKind.MODIFY || objup.getKind() == ObjectUpdateKind.ENTER
-                            || objup.getKind() == ObjectUpdateKind.LEAVE) {
+                    if (objup.getKind() == ObjectUpdateKind.MODIFY || objup.getKind() == ObjectUpdateKind.ENTER || objup.getKind() == ObjectUpdateKind.LEAVE) {
                         propchgary = objup.getChangeSet();
                         for (PropertyChange propchg : propchgary) {
                             updateValues(endWaitProps, endVals, propchg);
@@ -447,118 +464,117 @@ public class VmwareClient {
         SelectionSpec genericSpec = new SelectionSpec();
         genericSpec.setName(name);
         return genericSpec;
-     }
+    }
 
     /*
      * @return An array of SelectionSpec covering VM, Host, Resource pool,
      * Cluster Compute Resource and Datastore.
      */
     private List<SelectionSpec> constructCompleteTraversalSpec() {
-       // ResourcePools to VM: RP -> VM
-       TraversalSpec rpToVm = new TraversalSpec();
-       rpToVm.setName("rpToVm");
-       rpToVm.setType("ResourcePool");
-       rpToVm.setPath("vm");
-       rpToVm.setSkip(Boolean.FALSE);
+        // ResourcePools to VM: RP -> VM
+        TraversalSpec rpToVm = new TraversalSpec();
+        rpToVm.setName("rpToVm");
+        rpToVm.setType("ResourcePool");
+        rpToVm.setPath("vm");
+        rpToVm.setSkip(Boolean.FALSE);
 
-       // VirtualApp to VM: vApp -> VM
-       TraversalSpec vAppToVM = new TraversalSpec();
-       vAppToVM.setName("vAppToVM");
-       vAppToVM.setType("VirtualApp");
-       vAppToVM.setPath("vm");
+        // VirtualApp to VM: vApp -> VM
+        TraversalSpec vAppToVM = new TraversalSpec();
+        vAppToVM.setName("vAppToVM");
+        vAppToVM.setType("VirtualApp");
+        vAppToVM.setPath("vm");
 
-       // Host to VM: HostSystem -> VM
-       TraversalSpec hToVm = new TraversalSpec();
-       hToVm.setType("HostSystem");
-       hToVm.setPath("vm");
-       hToVm.setName("hToVm");
-       hToVm.getSelectSet().add(getSelectionSpec("VisitFolders"));
-       hToVm.setSkip(Boolean.FALSE);
+        // Host to VM: HostSystem -> VM
+        TraversalSpec hToVm = new TraversalSpec();
+        hToVm.setType("HostSystem");
+        hToVm.setPath("vm");
+        hToVm.setName("hToVm");
+        hToVm.getSelectSet().add(getSelectionSpec("VisitFolders"));
+        hToVm.setSkip(Boolean.FALSE);
 
-       // DataCenter to DataStore: DC -> DS
-       TraversalSpec dcToDs = new TraversalSpec();
-       dcToDs.setType("Datacenter");
-       dcToDs.setPath("datastore");
-       dcToDs.setName("dcToDs");
-       dcToDs.setSkip(Boolean.FALSE);
+        // DataCenter to DataStore: DC -> DS
+        TraversalSpec dcToDs = new TraversalSpec();
+        dcToDs.setType("Datacenter");
+        dcToDs.setPath("datastore");
+        dcToDs.setName("dcToDs");
+        dcToDs.setSkip(Boolean.FALSE);
 
-       // Recurse through all ResourcePools
-       TraversalSpec rpToRp = new TraversalSpec();
-       rpToRp.setType("ResourcePool");
-       rpToRp.setPath("resourcePool");
-       rpToRp.setSkip(Boolean.FALSE);
-       rpToRp.setName("rpToRp");
-       rpToRp.getSelectSet().add(getSelectionSpec("rpToRp"));
+        // Recurse through all ResourcePools
+        TraversalSpec rpToRp = new TraversalSpec();
+        rpToRp.setType("ResourcePool");
+        rpToRp.setPath("resourcePool");
+        rpToRp.setSkip(Boolean.FALSE);
+        rpToRp.setName("rpToRp");
+        rpToRp.getSelectSet().add(getSelectionSpec("rpToRp"));
 
-       TraversalSpec crToRp = new TraversalSpec();
-       crToRp.setType("ComputeResource");
-       crToRp.setPath("resourcePool");
-       crToRp.setSkip(Boolean.FALSE);
-       crToRp.setName("crToRp");
-       crToRp.getSelectSet().add(getSelectionSpec("rpToRp"));
+        TraversalSpec crToRp = new TraversalSpec();
+        crToRp.setType("ComputeResource");
+        crToRp.setPath("resourcePool");
+        crToRp.setSkip(Boolean.FALSE);
+        crToRp.setName("crToRp");
+        crToRp.getSelectSet().add(getSelectionSpec("rpToRp"));
 
-       TraversalSpec crToH = new TraversalSpec();
-       crToH.setSkip(Boolean.FALSE);
-       crToH.setType("ComputeResource");
-       crToH.setPath("host");
-       crToH.setName("crToH");
+        TraversalSpec crToH = new TraversalSpec();
+        crToH.setSkip(Boolean.FALSE);
+        crToH.setType("ComputeResource");
+        crToH.setPath("host");
+        crToH.setName("crToH");
 
-       TraversalSpec dcToHf = new TraversalSpec();
-       dcToHf.setSkip(Boolean.FALSE);
-       dcToHf.setType("Datacenter");
-       dcToHf.setPath("hostFolder");
-       dcToHf.setName("dcToHf");
-       dcToHf.getSelectSet().add(getSelectionSpec("VisitFolders"));
+        TraversalSpec dcToHf = new TraversalSpec();
+        dcToHf.setSkip(Boolean.FALSE);
+        dcToHf.setType("Datacenter");
+        dcToHf.setPath("hostFolder");
+        dcToHf.setName("dcToHf");
+        dcToHf.getSelectSet().add(getSelectionSpec("VisitFolders"));
 
-       TraversalSpec vAppToRp = new TraversalSpec();
-       vAppToRp.setName("vAppToRp");
-       vAppToRp.setType("VirtualApp");
-       vAppToRp.setPath("resourcePool");
-       vAppToRp.getSelectSet().add(getSelectionSpec("rpToRp"));
+        TraversalSpec vAppToRp = new TraversalSpec();
+        vAppToRp.setName("vAppToRp");
+        vAppToRp.setType("VirtualApp");
+        vAppToRp.setPath("resourcePool");
+        vAppToRp.getSelectSet().add(getSelectionSpec("rpToRp"));
 
-       TraversalSpec dcToVmf = new TraversalSpec();
-       dcToVmf.setType("Datacenter");
-       dcToVmf.setSkip(Boolean.FALSE);
-       dcToVmf.setPath("vmFolder");
-       dcToVmf.setName("dcToVmf");
-       dcToVmf.getSelectSet().add(getSelectionSpec("VisitFolders"));
+        TraversalSpec dcToVmf = new TraversalSpec();
+        dcToVmf.setType("Datacenter");
+        dcToVmf.setSkip(Boolean.FALSE);
+        dcToVmf.setPath("vmFolder");
+        dcToVmf.setName("dcToVmf");
+        dcToVmf.getSelectSet().add(getSelectionSpec("VisitFolders"));
 
-       // For Folder -> Folder recursion
-       TraversalSpec visitFolders = new TraversalSpec();
-       visitFolders.setType("Folder");
-       visitFolders.setPath("childEntity");
-       visitFolders.setSkip(Boolean.FALSE);
-       visitFolders.setName("VisitFolders");
-       List<SelectionSpec> sspecarrvf = new ArrayList<SelectionSpec>();
-       sspecarrvf.add(getSelectionSpec("crToRp"));
-       sspecarrvf.add(getSelectionSpec("crToH"));
-       sspecarrvf.add(getSelectionSpec("dcToVmf"));
-       sspecarrvf.add(getSelectionSpec("dcToHf"));
-       sspecarrvf.add(getSelectionSpec("vAppToRp"));
-       sspecarrvf.add(getSelectionSpec("vAppToVM"));
-       sspecarrvf.add(getSelectionSpec("dcToDs"));
-       sspecarrvf.add(getSelectionSpec("hToVm"));
-       sspecarrvf.add(getSelectionSpec("rpToVm"));
-       sspecarrvf.add(getSelectionSpec("VisitFolders"));
+        // For Folder -> Folder recursion
+        TraversalSpec visitFolders = new TraversalSpec();
+        visitFolders.setType("Folder");
+        visitFolders.setPath("childEntity");
+        visitFolders.setSkip(Boolean.FALSE);
+        visitFolders.setName("VisitFolders");
+        List<SelectionSpec> sspecarrvf = new ArrayList<SelectionSpec>();
+        sspecarrvf.add(getSelectionSpec("crToRp"));
+        sspecarrvf.add(getSelectionSpec("crToH"));
+        sspecarrvf.add(getSelectionSpec("dcToVmf"));
+        sspecarrvf.add(getSelectionSpec("dcToHf"));
+        sspecarrvf.add(getSelectionSpec("vAppToRp"));
+        sspecarrvf.add(getSelectionSpec("vAppToVM"));
+        sspecarrvf.add(getSelectionSpec("dcToDs"));
+        sspecarrvf.add(getSelectionSpec("hToVm"));
+        sspecarrvf.add(getSelectionSpec("rpToVm"));
+        sspecarrvf.add(getSelectionSpec("VisitFolders"));
 
-       visitFolders.getSelectSet().addAll(sspecarrvf);
+        visitFolders.getSelectSet().addAll(sspecarrvf);
 
-       List<SelectionSpec> resultspec = new ArrayList<SelectionSpec>();
-       resultspec.add(visitFolders);
-       resultspec.add(crToRp);
-       resultspec.add(crToH);
-       resultspec.add(dcToVmf);
-       resultspec.add(dcToHf);
-       resultspec.add(vAppToRp);
-       resultspec.add(vAppToVM);
-       resultspec.add(dcToDs);
-       resultspec.add(hToVm);
-       resultspec.add(rpToVm);
-       resultspec.add(rpToRp);
+        List<SelectionSpec> resultspec = new ArrayList<SelectionSpec>();
+        resultspec.add(visitFolders);
+        resultspec.add(crToRp);
+        resultspec.add(crToH);
+        resultspec.add(dcToVmf);
+        resultspec.add(dcToHf);
+        resultspec.add(vAppToRp);
+        resultspec.add(vAppToVM);
+        resultspec.add(dcToDs);
+        resultspec.add(hToVm);
+        resultspec.add(rpToVm);
+        resultspec.add(rpToRp);
 
-       return resultspec;
+        return resultspec;
     }
-
 
     /**
      * Get the ManagedObjectReference for an item under the
@@ -575,41 +591,51 @@ public class VmwareClient {
             return null;
         }
 
-        // Create PropertySpecs
-        PropertySpec pSpec = new PropertySpec();
-        pSpec.setType(type);
-        pSpec.setAll(false);
-        pSpec.getPathSet().add("name");
+        try {
+            // Create PropertySpecs
+            PropertySpec pSpec = new PropertySpec();
+            pSpec.setType(type);
+            pSpec.setAll(false);
+            pSpec.getPathSet().add("name");
 
-        ObjectSpec oSpec = new ObjectSpec();
-        oSpec.setObj(root);
-        oSpec.setSkip(false);
-        oSpec.getSelectSet().addAll(constructCompleteTraversalSpec());
+            ObjectSpec oSpec = new ObjectSpec();
+            oSpec.setObj(root);
+            oSpec.setSkip(false);
+            oSpec.getSelectSet().addAll(constructCompleteTraversalSpec());
 
-        PropertyFilterSpec spec = new PropertyFilterSpec();
-        spec.getPropSet().add(pSpec);
-        spec.getObjectSet().add(oSpec);
-        List<PropertyFilterSpec> specArr = new ArrayList<PropertyFilterSpec>();
-        specArr.add(spec);
+            PropertyFilterSpec spec = new PropertyFilterSpec();
+            spec.getPropSet().add(pSpec);
+            spec.getObjectSet().add(oSpec);
+            List<PropertyFilterSpec> specArr = new ArrayList<PropertyFilterSpec>();
+            specArr.add(spec);
 
-        List<ObjectContent> ocary = vimPort.retrieveProperties(getPropCol(), specArr);
+            ManagedObjectReference propCollector = getPropCol();
+            List<ObjectContent> ocary = vimPort.retrieveProperties(propCollector, specArr);
 
-        if (ocary == null || ocary.size() == 0) {
-            return null;
-        }
+            if (ocary == null || ocary.size() == 0) {
+                return null;
+            }
 
-        // filter through retrieved objects to get the first match.
-        for (ObjectContent oc : ocary) {
-            ManagedObjectReference mor = oc.getObj();
-            List<DynamicProperty> propary = oc.getPropSet();
-            if (type == null || type.equals(mor.getType())) {
-                if (propary.size() > 0) {
-                    String propval = (String) propary.get(0).getVal();
-                    if (propval != null && name.equalsIgnoreCase(propval))
-                        return mor;
+            // filter through retrieved objects to get the first match.
+            for (ObjectContent oc : ocary) {
+                ManagedObjectReference mor = oc.getObj();
+                List<DynamicProperty> propary = oc.getPropSet();
+                if (type == null || type.equals(mor.getType())) {
+                    if (propary.size() > 0) {
+                        String propval = (String)propary.get(0).getVal();
+                        if (propval != null && name.equalsIgnoreCase(propval))
+                            return mor;
+                    }
                 }
             }
+        } catch (InvalidPropertyFaultMsg invalidPropertyException) {
+            s_logger.debug("Failed to get Vmware ManagedObjectReference for name: " + name + " and type: " + type + " due to " + invalidPropertyException.getMessage());
+            throw invalidPropertyException;
+        } catch (RuntimeFaultFaultMsg runtimeFaultException) {
+            s_logger.debug("Failed to get Vmware ManagedObjectReference for name: " + name + " and type: " + type + " due to " + runtimeFaultException.getMessage());
+            throw runtimeFaultException;
         }
+
         return null;
     }
 
@@ -621,12 +647,12 @@ public class VmwareClient {
      * @return the ManagedObjectReference for that property.
      */
     public ManagedObjectReference getMoRefProp(ManagedObjectReference objMor, String propName) throws Exception {
-       Object props = getDynamicProperty(objMor, propName);
-       ManagedObjectReference propmor = null;
-       if (!props.getClass().isArray()) {
-          propmor = (ManagedObjectReference)props;
-       }
-       return propmor;
+        Object props = getDynamicProperty(objMor, propName);
+        ManagedObjectReference propmor = null;
+        if (!props.getClass().isArray()) {
+            propmor = (ManagedObjectReference)props;
+        }
+        return propmor;
     }
 
     public void setVcenterSessionTimeout(int vCenterSessionTimeout) {
@@ -634,7 +660,7 @@ public class VmwareClient {
     }
 
     public int getVcenterSessionTimeout() {
-        return this.vCenterSessionTimeout;
+        return vCenterSessionTimeout;
     }
 
 }

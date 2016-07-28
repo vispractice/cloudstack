@@ -35,15 +35,15 @@ public class ClipboardDataFormat {
      * Supported clipboard data formats in order of preference.
      */
     public static final Object[] supportedTextBasedFormats = new Object[] {
-            // ID's
-            CB_FORMAT_UNICODETEXT, CB_FORMAT_TEXT,
+        // ID's
+        CB_FORMAT_UNICODETEXT, CB_FORMAT_TEXT,
 
-            // Names
-            HTML_FORMAT,
+        // Names
+        HTML_FORMAT,
 
-            // RTF_AS_TEXT,
-            // RICH_TEXT_FORMAT_WITHOUT_OBJECTS,
-            // RICH_TEXT_FORMAT,
+        // RTF_AS_TEXT,
+        // RICH_TEXT_FORMAT_WITHOUT_OBJECTS,
+        // RICH_TEXT_FORMAT,
 
     };
 
@@ -129,7 +129,7 @@ public class ClipboardDataFormat {
 
     /**
      * Find first (richest) text-based data format.
-     * 
+     *
      * @return text-based data format or null, when not found
      */
     public static ClipboardDataFormat findBestTextFormat(Map<Object, ClipboardDataFormat> serverClipboardDataFormats) {

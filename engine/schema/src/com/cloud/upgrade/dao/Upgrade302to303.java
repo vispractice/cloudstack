@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 package com.cloud.upgrade.dao;
 
 /**
@@ -30,18 +29,19 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
+
 //
 import com.cloud.dc.DataCenter.NetworkType;
 import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 
-public class Upgrade302to303 implements DbUpgrade {
+public class Upgrade302to303 extends LegacyDbUpgrade {
     final static Logger s_logger = Logger.getLogger(Upgrade302to303.class);
 
     @Override
     public String[] getUpgradableVersionRange() {
-        return new String[] { "3.0.2", "3.0.3" };
+        return new String[] {"3.0.2", "3.0.3"};
     }
 
     @Override
@@ -61,7 +61,7 @@ public class Upgrade302to303 implements DbUpgrade {
             throw new CloudRuntimeException("Unable to find db/schema-302to303.sql");
         }
 
-        return new File[] { new File(script) };
+        return new File[] {new File(script)};
     }
 
     @Override
@@ -91,8 +91,9 @@ public class Upgrade302to303 implements DbUpgrade {
                 pNetworksResults = pNetworkStmt.executeQuery();
                 while (pNetworksResults.next()) {
                     long physicalNetworkId = pNetworksResults.getLong(1);
-                    PreparedStatement fetchF5NspStmt = conn.prepareStatement("SELECT id from `cloud`.`physical_network_service_providers` where physical_network_id=" + physicalNetworkId
-                            + " and provider_name = 'F5BigIp'");
+                    PreparedStatement fetchF5NspStmt =
+                        conn.prepareStatement("SELECT id from `cloud`.`physical_network_service_providers` where physical_network_id=" + physicalNetworkId +
+                            " and provider_name = 'F5BigIp'");
                     ResultSet rsF5NSP = fetchF5NspStmt.executeQuery();
                     boolean hasF5Nsp = rsF5NSP.next();
                     fetchF5NspStmt.close();
@@ -103,15 +104,17 @@ public class Upgrade302to303 implements DbUpgrade {
                         f5DevicesResult = f5DevicesStmt.executeQuery();
 
                         while (f5DevicesResult.next()) {
-                            long f5HostId = f5DevicesResult.getLong(1);;
+                            long f5HostId = f5DevicesResult.getLong(1);
+                            ;
                             // add F5BigIP provider and provider instance to physical network
                             addF5ServiceProvider(conn, physicalNetworkId, zoneId);
                             addF5LoadBalancer(conn, f5HostId, physicalNetworkId);
                         }
                     }
 
-                    PreparedStatement fetchSRXNspStmt = conn.prepareStatement("SELECT id from `cloud`.`physical_network_service_providers` where physical_network_id=" + physicalNetworkId
-                            + " and provider_name = 'JuniperSRX'");
+                    PreparedStatement fetchSRXNspStmt =
+                        conn.prepareStatement("SELECT id from `cloud`.`physical_network_service_providers` where physical_network_id=" + physicalNetworkId +
+                            " and provider_name = 'JuniperSRX'");
                     ResultSet rsSRXNSP = fetchSRXNspStmt.executeQuery();
                     boolean hasSrxNsp = rsSRXNSP.next();
                     fetchSRXNspStmt.close();
@@ -123,39 +126,27 @@ public class Upgrade302to303 implements DbUpgrade {
 
                         while (srxDevicesResult.next()) {
                             long srxHostId = srxDevicesResult.getLong(1);
-                            // add SRX provider and provider instance to physical network 
+                            // add SRX provider and provider instance to physical network
                             addSrxServiceProvider(conn, physicalNetworkId, zoneId);
                             addSrxFirewall(conn, srxHostId, physicalNetworkId);
                         }
                     }
                 }
             }
-
-            if (zoneResults != null) {
-                try {
-                    zoneResults.close();
-                } catch (SQLException e) {
-                }
-            }
-            if (zoneSearchStmt != null) {
-                try {
-                    zoneSearchStmt.close();
-                } catch (SQLException e) {
-                }
-            }
+            closeAutoCloseable(zoneResults);
+            closeAutoCloseable(zoneSearchStmt);
         } catch (SQLException e) {
             throw new CloudRuntimeException("Exception while adding PhysicalNetworks", e);
-        } finally {
-
         }
     }
 
-    private void addF5LoadBalancer(Connection conn, long hostId, long physicalNetworkId){
+    private void addF5LoadBalancer(Connection conn, long hostId, long physicalNetworkId) {
         PreparedStatement pstmtUpdate = null;
-        try{
+        try {
             s_logger.debug("Adding F5 Big IP load balancer with host id " + hostId + " in to physical network" + physicalNetworkId);
-            String insertF5 = "INSERT INTO `cloud`.`external_load_balancer_devices` (physical_network_id, host_id, provider_name, " +
-                    "device_name, capacity, is_dedicated, device_state, allocation_state, is_inline, is_managed, uuid) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String insertF5 =
+                "INSERT INTO `cloud`.`external_load_balancer_devices` (physical_network_id, host_id, provider_name, "
+                    + "device_name, capacity, is_dedicated, device_state, allocation_state, is_inline, is_managed, uuid) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             pstmtUpdate = conn.prepareStatement(insertF5);
             pstmtUpdate.setLong(1, physicalNetworkId);
             pstmtUpdate.setLong(2, hostId);
@@ -169,24 +160,20 @@ public class Upgrade302to303 implements DbUpgrade {
             pstmtUpdate.setBoolean(10, false);
             pstmtUpdate.setString(11, UUID.randomUUID().toString());
             pstmtUpdate.executeUpdate();
-        }catch (SQLException e) {
-            throw new CloudRuntimeException("Exception while adding F5 load balancer device" ,  e);
+        } catch (SQLException e) {
+            throw new CloudRuntimeException("Exception while adding F5 load balancer device", e);
         } finally {
-            if (pstmtUpdate != null) {
-                try {
-                    pstmtUpdate.close();
-                } catch (SQLException e) {
-                }
-            }
+            closeAutoCloseable(pstmtUpdate);
         }
     }
 
-    private void addSrxFirewall(Connection conn, long hostId, long physicalNetworkId){
+    private void addSrxFirewall(Connection conn, long hostId, long physicalNetworkId) {
         PreparedStatement pstmtUpdate = null;
-        try{
+        try {
             s_logger.debug("Adding SRX firewall device with host id " + hostId + " in to physical network" + physicalNetworkId);
-            String insertSrx = "INSERT INTO `cloud`.`external_firewall_devices` (physical_network_id, host_id, provider_name, " +
-                    "device_name, capacity, is_dedicated, device_state, allocation_state, uuid) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String insertSrx =
+                "INSERT INTO `cloud`.`external_firewall_devices` (physical_network_id, host_id, provider_name, "
+                    + "device_name, capacity, is_dedicated, device_state, allocation_state, uuid) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             pstmtUpdate = conn.prepareStatement(insertSrx);
             pstmtUpdate.setLong(1, physicalNetworkId);
             pstmtUpdate.setLong(2, hostId);
@@ -198,27 +185,23 @@ public class Upgrade302to303 implements DbUpgrade {
             pstmtUpdate.setString(8, "Shared");
             pstmtUpdate.setString(9, UUID.randomUUID().toString());
             pstmtUpdate.executeUpdate();
-        }catch (SQLException e) {
-            throw new CloudRuntimeException("Exception while adding SRX firewall device ",  e);
+        } catch (SQLException e) {
+            throw new CloudRuntimeException("Exception while adding SRX firewall device ", e);
         } finally {
-            if (pstmtUpdate != null) {
-                try {
-                    pstmtUpdate.close();
-                } catch (SQLException e) {
-                }
-            }
+            closeAutoCloseable(pstmtUpdate);
         }
     }
 
-    private void addF5ServiceProvider(Connection conn, long physicalNetworkId, long zoneId){
+    private void addF5ServiceProvider(Connection conn, long physicalNetworkId, long zoneId) {
         PreparedStatement pstmtUpdate = null;
-        try{
+        try {
             // add physical network service provider - F5BigIp
             s_logger.debug("Adding PhysicalNetworkServiceProvider F5BigIp" + " in to physical network" + physicalNetworkId);
-            String insertPNSP = "INSERT INTO `cloud`.`physical_network_service_providers` (`uuid`, `physical_network_id` , `provider_name`, `state` ," +
-                    "`destination_physical_network_id`, `vpn_service_provided`, `dhcp_service_provided`, `dns_service_provided`, `gateway_service_provided`," +
-                    "`firewall_service_provided`, `source_nat_service_provided`, `load_balance_service_provided`, `static_nat_service_provided`," +
-                    "`port_forwarding_service_provided`, `user_data_service_provided`, `security_group_service_provided`) VALUES (?,?,?,?,0,0,0,0,0,0,0,1,0,0,0,0)";
+            String insertPNSP =
+                "INSERT INTO `cloud`.`physical_network_service_providers` (`uuid`, `physical_network_id` , `provider_name`, `state` ,"
+                    + "`destination_physical_network_id`, `vpn_service_provided`, `dhcp_service_provided`, `dns_service_provided`, `gateway_service_provided`,"
+                    + "`firewall_service_provided`, `source_nat_service_provided`, `load_balance_service_provided`, `static_nat_service_provided`,"
+                    + "`port_forwarding_service_provided`, `user_data_service_provided`, `security_group_service_provided`) VALUES (?,?,?,?,0,0,0,0,0,0,0,1,0,0,0,0)";
 
             pstmtUpdate = conn.prepareStatement(insertPNSP);
             pstmtUpdate.setString(1, UUID.randomUUID().toString());
@@ -226,27 +209,23 @@ public class Upgrade302to303 implements DbUpgrade {
             pstmtUpdate.setString(3, "F5BigIp");
             pstmtUpdate.setString(4, "Enabled");
             pstmtUpdate.executeUpdate();
-        }catch (SQLException e) {
+        } catch (SQLException e) {
             throw new CloudRuntimeException("Exception while adding PhysicalNetworkServiceProvider F5BigIp", e);
         } finally {
-            if (pstmtUpdate != null) {
-                try {
-                    pstmtUpdate.close();
-                } catch (SQLException e) {
-                }
-            }
+            closeAutoCloseable(pstmtUpdate);
         }
     }
 
-    private void addSrxServiceProvider(Connection conn, long physicalNetworkId, long zoneId){
+    private void addSrxServiceProvider(Connection conn, long physicalNetworkId, long zoneId) {
         PreparedStatement pstmtUpdate = null;
-        try{
+        try {
             // add physical network service provider - JuniperSRX
             s_logger.debug("Adding PhysicalNetworkServiceProvider JuniperSRX");
-            String insertPNSP = "INSERT INTO `cloud`.`physical_network_service_providers` (`uuid`, `physical_network_id` , `provider_name`, `state` ," +
-                    "`destination_physical_network_id`, `vpn_service_provided`, `dhcp_service_provided`, `dns_service_provided`, `gateway_service_provided`," +
-                    "`firewall_service_provided`, `source_nat_service_provided`, `load_balance_service_provided`, `static_nat_service_provided`," +
-                    "`port_forwarding_service_provided`, `user_data_service_provided`, `security_group_service_provided`) VALUES (?,?,?,?,0,0,0,0,1,1,1,0,1,1,0,0)";
+            String insertPNSP =
+                "INSERT INTO `cloud`.`physical_network_service_providers` (`uuid`, `physical_network_id` , `provider_name`, `state` ,"
+                    + "`destination_physical_network_id`, `vpn_service_provided`, `dhcp_service_provided`, `dns_service_provided`, `gateway_service_provided`,"
+                    + "`firewall_service_provided`, `source_nat_service_provided`, `load_balance_service_provided`, `static_nat_service_provided`,"
+                    + "`port_forwarding_service_provided`, `user_data_service_provided`, `security_group_service_provided`) VALUES (?,?,?,?,0,0,0,0,1,1,1,0,1,1,0,0)";
 
             pstmtUpdate = conn.prepareStatement(insertPNSP);
             pstmtUpdate.setString(1, UUID.randomUUID().toString());
@@ -254,25 +233,21 @@ public class Upgrade302to303 implements DbUpgrade {
             pstmtUpdate.setString(3, "JuniperSRX");
             pstmtUpdate.setString(4, "Enabled");
             pstmtUpdate.executeUpdate();
-        }catch (SQLException e) {
-            throw new CloudRuntimeException("Exception while adding PhysicalNetworkServiceProvider JuniperSRX" ,  e);
+        } catch (SQLException e) {
+            throw new CloudRuntimeException("Exception while adding PhysicalNetworkServiceProvider JuniperSRX", e);
         } finally {
-            if (pstmtUpdate != null) {
-                try {
-                    pstmtUpdate.close();
-                } catch (SQLException e) {
-                }
-            }
+            closeAutoCloseable(pstmtUpdate);
         }
     }
 
-    private void encryptConfig(Connection conn){
-    	//Encrypt config params and change category to Hidden
-    	s_logger.debug("Encrypting Config values");
+    private void encryptConfig(Connection conn) {
+        //Encrypt config params and change category to Hidden
+        s_logger.debug("Encrypting Config values");
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
-            pstmt = conn.prepareStatement("select name, value from `cloud`.`configuration` where name in ('router.ram.size', 'secondary.storage.vm', 'security.hash.key') and category <> 'Hidden'");
+            pstmt =
+                conn.prepareStatement("select name, value from `cloud`.`configuration` where name in ('router.ram.size', 'secondary.storage.vm', 'security.hash.key') and category <> 'Hidden'");
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 String name = rs.getString(1);
@@ -291,20 +266,12 @@ public class Upgrade302to303 implements DbUpgrade {
         } catch (UnsupportedEncodingException e) {
             throw new CloudRuntimeException("Unable encrypt configuration values ", e);
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-
-                if (pstmt != null) {
-                    pstmt.close();
-                }
-            } catch (SQLException e) {
-            }
+            closeAutoCloseable(rs);
+            closeAutoCloseable(pstmt);
         }
-        s_logger.debug("Done encrypting Config values");    	
+        s_logger.debug("Done encrypting Config values");
     }
-    
+
     @Override
     public File[] getCleanupScripts() {
         return null;

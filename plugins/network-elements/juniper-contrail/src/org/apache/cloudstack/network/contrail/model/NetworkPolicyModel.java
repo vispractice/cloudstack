@@ -46,7 +46,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
     private static final Logger s_logger = Logger.getLogger(NetworkPolicyModel.class);
 
     private String _uuid;
-    private String _fq_name;
+    private String _fqName;
     private String _name;
     private Project _project;
     private NetworkPolicy _policy;
@@ -58,13 +58,13 @@ public class NetworkPolicyModel extends ModelObjectBase {
     }
 
      public String getQualifiedName() {
-        return _fq_name;
+        return _fqName;
     }
-    
+
     public String getName() {
         return _name;
     }
-    
+
     public NetworkVO cidrToNetwork(ModelController controller, String cidr) {
         SearchBuilder<NetworkVO> searchBuilder = controller.getNetworkDao().createSearchBuilder();
         searchBuilder.and("trafficType", searchBuilder.entity().getTrafficType(), Op.EQ);
@@ -73,7 +73,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
 
         SearchCriteria<NetworkVO> sc = searchBuilder.create();
 
-        sc.setParameters("networkOfferingId", controller.getManager().getRouterOffering().getId());
+        sc.setParameters("networkOfferingId", controller.getManager().getVpcRouterOffering().getId());
         sc.setParameters("cidr", cidr);
         sc.setParameters("trafficType", Networks.TrafficType.Guest);
 
@@ -84,19 +84,19 @@ public class NetworkPolicyModel extends ModelObjectBase {
         if (dbNets.size() > 1) {
             s_logger.warn("more than one network found with cidr: " + cidr);
         }
-        return dbNets.get(0); 
+        return dbNets.get(0);
     }
-    
+
     public void build(ModelController controller, List<? extends NetworkACLItem> rules) throws Exception {
-        String projectName = null; 
+        String projectName = null;
         if (_project != null) {
-            _fq_name = StringUtils.join(_project.getQualifiedName(), ':') + ":" + _name;
+            _fqName = StringUtils.join(_project.getQualifiedName(), ':') + ":" + _name;
             projectName = StringUtils.join(_project.getQualifiedName(), ':');
         } else {
-            _fq_name = ContrailManager.VNC_ROOT_DOMAIN + ":" + ContrailManager.VNC_DEFAULT_PROJECT + ":" + _name;
+            _fqName = ContrailManager.VNC_ROOT_DOMAIN + ":" + ContrailManager.VNC_DEFAULT_PROJECT + ":" + _name;
             projectName = ContrailManager.VNC_ROOT_DOMAIN + ":" + ContrailManager.VNC_DEFAULT_PROJECT;
         }
-        
+
         PolicyEntriesType policyMap = new PolicyEntriesType();
 
         for (NetworkACLItem rule:rules) {
@@ -104,12 +104,12 @@ public class NetworkPolicyModel extends ModelObjectBase {
                  rule.getState() != NetworkACLItem.State.Add)  {
                  continue;
             }
-                 
+
             String action = null;
             if (rule.getAction() == Action.Allow) {
-                action = "pass";            
+                action = "pass";
             } else if (rule.getAction() == Action.Deny) {
-                action = "deny";        
+                action = "deny";
             }
             List<String> cidrList = rule.getSourceCidrList();
             String protocol = rule.getProtocol();
@@ -118,22 +118,22 @@ public class NetworkPolicyModel extends ModelObjectBase {
             } else {
                 protocol = protocol.toLowerCase();
             }
-            
+
             Integer portStart = rule.getSourcePortStart();
             Integer portEnd = rule.getSourcePortEnd();
             if (portStart == null) {
-                portStart = 0;                
+                portStart = 0;
             }
             if (portEnd == null) {
                 portEnd = 65535;
             }
-            
+
             List<PolicyRuleType.AddressType> srcList = new ArrayList<PolicyRuleType.AddressType>();
             List<PolicyRuleType.AddressType> dstList = new ArrayList<PolicyRuleType.AddressType>();
-           
+
             List<PolicyRuleType.PortType> srcPorts = new ArrayList<PolicyRuleType.PortType>();
             List<PolicyRuleType.PortType> dstPorts = new ArrayList<PolicyRuleType.PortType>();
-            
+
             if (rule.getTrafficType() == NetworkACLItem.TrafficType.Egress){
                 for (String cidr: cidrList) {
                     NetworkVO net = cidrToNetwork(controller, cidr);
@@ -152,11 +152,11 @@ public class NetworkPolicyModel extends ModelObjectBase {
                 for (String cidr: cidrList) {
                     NetworkVO net = cidrToNetwork(controller, cidr);
                     String netName = projectName + ":" + controller.getManager().getCanonicalName(net);
-                    dstList.add(new PolicyRuleType.AddressType(null, netName, null));
+                    srcList.add(new PolicyRuleType.AddressType(null, netName, null));
                 }
                 dstPorts.add(new PolicyRuleType.PortType(portStart, portEnd));
 
-                srcList.add(new PolicyRuleType.AddressType(null, "any", null));
+                dstList.add(new PolicyRuleType.AddressType(null, "local", null));
                 srcPorts.add(new PolicyRuleType.PortType(0, 65535));
             }
 
@@ -165,19 +165,19 @@ public class NetworkPolicyModel extends ModelObjectBase {
                     srcList, srcPorts, null, dstList, dstPorts,
                     new PolicyRuleType.ActionListType(action, null, null, null));
             policyMap.addPolicyRule(vnRule);
-        }  
-        _policyMap = policyMap;        
+        }
+        _policyMap = policyMap;
     }
-    
+
     /* for service instance policy */
     public void build(ModelController modelController, String leftVn, String rightVn, String gatewayName,
             List<String> siList, String action) {
         if (_project != null) {
-            _fq_name = StringUtils.join(_project.getQualifiedName(), ':') + ":" + _name;
+            _fqName = StringUtils.join(_project.getQualifiedName(), ':') + ":" + _name;
         } else {
-            _fq_name = ContrailManager.VNC_ROOT_DOMAIN + ":" + ContrailManager.VNC_DEFAULT_PROJECT + ":" + _name;
+            _fqName = ContrailManager.VNC_ROOT_DOMAIN + ":" + ContrailManager.VNC_DEFAULT_PROJECT + ":" + _name;
         }
-        
+
         PolicyEntriesType policyMap = new PolicyEntriesType();
         List<PolicyRuleType.AddressType> srcList = new ArrayList<PolicyRuleType.AddressType>();
         srcList.add(new PolicyRuleType.AddressType(null, leftVn, null));
@@ -186,23 +186,22 @@ public class NetworkPolicyModel extends ModelObjectBase {
 
         List<PolicyRuleType.PortType> portAny = new ArrayList<PolicyRuleType.PortType>();
         portAny.add(new PolicyRuleType.PortType(0, 65535));
-        
+
         PolicyRuleType rule = new PolicyRuleType(
                 new PolicyRuleType.SequenceType(1, 0),  null, "<>", "any",
                 srcList, portAny, null, dstList, portAny,
                 new PolicyRuleType.ActionListType(action, gatewayName, siList, null));
         policyMap.addPolicyRule(rule);
-        _policyMap = policyMap;        
+        _policyMap = policyMap;
     }
 
-    
     public boolean hasPolicyRules() {
         if (_policyMap != null && _policyMap.getPolicyRule() != null && _policyMap.getPolicyRule().size() > 0) {
             return true;
         }
         return false;
     }
-    
+
     @Override
     public int compareTo(ModelObject o) {
         NetworkPolicyModel other;
@@ -214,7 +213,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
         }
         return _uuid.compareTo(other._uuid);
     }
-    
+
     @Override
     public void delete(ModelController controller) throws IOException {
         ApiConnector api = controller.getApiAccessor();
@@ -223,23 +222,22 @@ public class NetworkPolicyModel extends ModelObjectBase {
             _policy = null;
         }
     }
-    
+
     @Override
     public void destroy(ModelController controller) throws IOException {
     }
-    
-  
+
     public String getUuid() {
         return _uuid;
     }
-    
+
     @Override
     public void update(ModelController controller) throws InternalErrorException, IOException {
         ApiConnector api = controller.getApiAccessor();
         if (_project == null) {
             s_logger.debug("Project is null for the policy: " + _name);
             throw new IOException("Project is null for the policy: " + _name);
-        } 
+        }
 
         NetworkPolicy policy = _policy;
 
@@ -260,7 +258,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
                 return;
             }
         }
-        
+
         policy.setEntries(_policyMap);
         if (_policy == null) {
             try {
@@ -276,7 +274,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
             } catch (IOException ex) {
                 s_logger.warn("network policy update", ex);
                 throw new CloudRuntimeException("Unable to update network policy", ex);
-            }            
+            }
         }
         for (ModelObject successor: successors()) {
             successor.update(controller);
@@ -294,7 +292,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
     }
 
     public void setProperties(ModelController controller, List<? extends NetworkACLItem> rules) {
-        
+
     }
 
     public void setProject(Project project) {
@@ -304,5 +302,4 @@ public class NetworkPolicyModel extends ModelObjectBase {
     public NetworkPolicy getPolicy() {
         return _policy;
     }
-    
 }

@@ -21,7 +21,7 @@ package rdpclient.ntlmssp;
  * of the NegotiateFlags field of the NEGOTIATE_MESSAGE, CHALLENGE_MESSAGE, and
  * AUTHENTICATE_MESSAGE, unless otherwise noted. These flags define client or
  * server NTLM capabilities supported by the sender.
- * 
+ *
  * @see http://msdn.microsoft.com/en-us/library/cc236650.aspx
  */
 public class NegoFlags {
@@ -126,7 +126,7 @@ public class NegoFlags {
 
     /**
      * Domain name is provided.
-     * 
+     *
      * Sent by the client in the Type 1 message to indicate that the name of the
      * domain in which the client workstation has membership is included in the
      * message. This is used by the server to determine whether the client is
@@ -136,7 +136,7 @@ public class NegoFlags {
 
     /**
      * Connection SHOULD be anonymous.
-     * 
+     *
      * Sent by the client in the Type 3 message to indicate that an anonymous
      * context has been established. This also affects the response fields (as
      * detailed in the "Anonymous Response" section).
@@ -193,21 +193,21 @@ public class NegoFlags {
 
     /**
      * OEM character set encoding.
-     * 
+     *
      * @see NTLMSSP_NEGOTIATE_UNICODE
      */
     public static final int NTLMSSP_NEGOTIATE_OEM = 0x00000002;
 
     /**
      * Unicode character set encoding.
-     * 
+     *
      * The NTLMSSP_NEGOTIATE_UNICODE(A) and NTLM_NEGOTIATE_OEM(B) bits are
      * evaluated together as follows:
      * <ul>
      * <li>A==1: The choice of character set encoding MUST be Unicode.
-     * 
+     *
      * <li>A==0 and B==1: The choice of character set encoding MUST be OEM.
-     * 
+     *
      * <li>A==0 and B==0: The protocol MUST return SEC_E_INVALID_TOKEN.
      * <ul>
      * */
@@ -220,7 +220,7 @@ public class NegoFlags {
     }
 
     public NegoFlags() {
-        this.value = 0;
+        value = 0;
     }
 
     @Override

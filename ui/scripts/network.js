@@ -22,7 +22,8 @@
             protocol: elem.protocol,
             startport: elem.startport,
             endport: elem.endport,
-            cidr: elem.cidr ? elem.cidr : ''.concat(elem.account, ' - ', elem.securitygroupname)
+            cidr: elem.cidr ? elem.cidr : ''.concat(elem.account, ' - ', elem.securitygroupname),
+            tags: elem.tags
         };
 
         if (elemData.startport == 0 && elemData.endport) {
@@ -35,11 +36,12 @@
         return elemData;
     };
 
-    var instanceSecondaryIPSubselect = function(args) {        
+    //value of Primary IP in subselect dropdown is -1, for single VM selection (API parameter virtualmachineid + vmguestip), e.g. enableStaticNat API, createPortForwardingRule API.
+    var singleVmSecondaryIPSubselect = function(args) {
         var instance = args.context.instances[0];
         var network = args.context.networks[0];
 
-        if (args.context.ipAddresses[0].isportable) {
+        if (args.context.ipAddresses[0].isportable) { //portable IP which has multiple NICs. Each NIC has a different network ID.
             $.ajax({
                 url: createURL('listNics'),
                 data: {
@@ -50,70 +52,162 @@
                     var ipSelection = [];
 
                     $(nics).map(function(index, nic) {
-                        var ips = nic.secondaryip ? nic.secondaryip : [];
+                        var primaryIp = nic.ipaddress;
+                        var secondaryIps = nic.secondaryip ? nic.secondaryip : [];
                         var prefix = '[NIC ' + (index + 1) + '] ';
 
                         // Add primary IP as default
                         ipSelection.push({
                             id: nic.networkid + ',-1',
-                            description: prefix + nic.ipaddress + ' (Primary)'
+                            description: prefix + primaryIp + ' (Primary)'
                         });
-                        
+
                         // Add secondary IPs
-                        $(ips).map(function(index, ip) {
+                        $(secondaryIps).map(function(index, secondaryIp) {
                             ipSelection.push({
-                                id: nic.networkid + ',' + ip.ipaddress,
-                                description: prefix + ip.ipaddress
+                                id: nic.networkid + ',' + secondaryIp.ipaddress,
+                                description: prefix + secondaryIp.ipaddress
                             });
                         });
-                    });                  
-
+                    });
 
                     args.response.success({
                         data: ipSelection
                     });
                 }
             });
-            
-            return;
-        }
-        
-        var nic = $.grep(instance.nic, function(nic) {
-            return nic.networkid == network.id;
-        })[0];
 
-        // Get NIC IPs
-        $.ajax({
-            url: createURL('listNics'),
-            data: {
-                virtualmachineid: instance.id,
-                nicId: nic.id
-            },
-            success: function(json) {
-                var nic = json.listnicsresponse.nic[0];
-                var ips = nic.secondaryip ? nic.secondaryip : [];
-                var ipSelection = [];
+        } else { //non-portable IP which has only one NIC
+            /*
+            var nic = $.grep(instance.nic, function(nic) {
+                return nic.networkid == network.id;
+            })[0];
+            */
 
-                // Add primary IP as default
-                ipSelection.push({
-                    id: -1,
-                    description: nic.ipaddress + ' (Primary)'
-                });
+            // Get NIC IPs
+            $.ajax({
+                url: createURL('listNics'),
+                data: {
+                    virtualmachineid: instance.id,
+                    nicId: instance.nic[0].id
+                },
+                success: function(json) {
+                    var nic = json.listnicsresponse.nic[0];
+                    var primaryIp = nic.ipaddress;
+                    var secondaryIps = nic.secondaryip ? nic.secondaryip : [];
+                    var ipSelection = [];
 
-                // Add secondary IPs
-                $(ips).map(function(index, ip) {
+                    // Add primary IP as default
                     ipSelection.push({
-                        id: ip.ipaddress,
-                        description: ip.ipaddress
+                        id: primaryIp,
+                        description: primaryIp + ' (Primary)'
                     });
-                });
 
+                    // Add secondary IPs
+                    $(secondaryIps).map(function(index, secondaryIp) {
+                        ipSelection.push({
+                            id: secondaryIp.ipaddress,
+                            description: secondaryIp.ipaddress
+                        });
+                    });
 
-                args.response.success({
-                    data: ipSelection
-                });
-            }
-        })
+                    args.response.success({
+                        data: ipSelection
+                    });
+                }
+            });
+        }
+    };
+
+    //value of Primary IP in subselect dropdown is itself (not -1), for multiple VM selection (API parameter vmidipmap), e.g. assignToLoadBalancerRule API.
+    var multipleVmSecondaryIPSubselect = function(args) {
+        var instance = args.context.instances[0];
+        var network = args.context.networks[0];
+
+        if (args.context.ipAddresses[0].isportable) { //portable IP which has multiple NICs. Each NIC has a different network ID.
+            $.ajax({
+                url: createURL('listNics'),
+                data: {
+                    virtualmachineid: instance.id
+                },
+                success: function(json) {
+                    var nics = json.listnicsresponse.nic;
+                    var ipSelection = [];
+
+                    //portable IP has multiple NICs. Each NIC has a different network ID.
+                    $(nics).map(function(index, nic) {
+                        var primaryIp = nic.ipaddress;
+                        var secondaryIps = nic.secondaryip ? nic.secondaryip : [];
+                        var prefix = '[NIC ' + (index + 1) + '] ';
+
+                        // Add primary IP as default
+                        ipSelection.push({
+                            id: nic.networkid + ',' + primaryIp,
+                            description: prefix + primaryIp + ' (Primary)'
+                        });
+
+                        // Add secondary IPs
+                        $(secondaryIps).map(function(index, secondaryIp) {
+                            ipSelection.push({
+                                id: nic.networkid + ',' + secondaryIp.ipaddress,
+                                description: prefix + secondaryIp.ipaddress
+                            });
+                        });
+                    });
+
+                    args.response.success({
+                        data: ipSelection
+                    });
+                }
+            });
+
+        } else { //non-portable IP which has only one NIC
+            /*
+            var nic = $.grep(instance.nic, function(nic) {
+                return nic.networkid == network.id;
+            })[0];
+            */
+
+            // Get NIC IPs
+            $.ajax({
+                url: createURL('listNics'),
+                data: {
+                    virtualmachineid: instance.id,
+                    networkid: network.id
+                },
+                success: function(json) {
+                    var nic = json.listnicsresponse.nic[0];
+                    var primaryIp = nic.ipaddress;
+                    var secondaryIps = nic.secondaryip ? nic.secondaryip : [];
+                    var ipSelection = [];
+                    var existingIps = $(args.context.subItemData).map(
+                        function(index, item) { return item.itemIp; }
+                    );
+
+                    // Add primary IP as default
+                    if ($.inArray(primaryIp, existingIps) == -1) {
+                        ipSelection.push({
+                            id: primaryIp,
+                            description: primaryIp + ' (Primary)'
+                        });
+                    }
+
+                    // Add secondary IPs
+                    $(secondaryIps).map(function(index, secondaryIp) {
+                        if ($.inArray(secondaryIp.ipaddress, existingIps) == -1) {
+                            ipSelection.push({
+                                id: secondaryIp.ipaddress,
+                                description: secondaryIp.ipaddress
+                            });
+                        }
+                    });
+
+                    args.response.success({
+                        data: ipSelection
+                    });
+                }
+            });
+        }
     };
 
     var ipChangeNotice = function() {
@@ -160,100 +254,101 @@
 				//update by hai.li support deleted soureNAT ip
                 //disallowedActions.push('remove');
             } else { //non-sourceNAT IP supports staticNAT
-            	 if (ipObj.isstaticnat) {
+                disallowedActions.push('enableVPN');
+                 if (ipObj.isstaticnat) {
                      disallowedActions.push('enableStaticNAT');
                  } else {
                      disallowedActions.push('disableStaticNAT');
                  }
-            }              
+            }
             //***** apply to both Isolated Guest Network IP, VPC IP (end) *****
-            
-                       
+
+
             if (!('vpc' in args.context)) { //***** Guest Network section > Guest Network page > IP Address page *****
-	            if (args.context.networks[0].networkofferingconservemode == false) {
-	                /*
-					(1) If IP is SourceNat, no StaticNat/VPN/PortForwarding/LoadBalancer can be enabled/added.
-					*/
-	                if (ipObj.issourcenat == true) {
-	                    disallowedActions.push('enableStaticNAT');
-	                    disallowedActions.push('enableVPN');
-	                }
-	
-	                /*
-					(2) If IP is non-SourceNat, show StaticNat/VPN/PortForwarding/LoadBalancer at first.
-					1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
-					2. Once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
-					3. Once a PortForwarding rule is added, hide StaticNat/VPN/LoadBalancer.
-					4. Once a LoadBalancer rule is added, hide StaticNat/VPN/PortForwarding.
-					*/
-	                else { //ipObj.issourcenat == false
-	                    if (ipObj.isstaticnat) { //1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
-	                        disallowedActions.push('enableVPN');
-	                    }
-	                    if (ipObj.vpnenabled) { //2. Once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
-	                        disallowedActions.push('enableStaticNAT');
-	                    }
-	
-	                    //3. Once a PortForwarding rule is added, hide StaticNat/VPN/LoadBalancer.
-	                    $.ajax({
-	                        url: createURL('listPortForwardingRules'),
-	                        data: {
-	                            ipaddressid: ipObj.id,
-	                            listAll: true
-	                        },
-	                        dataType: 'json',
-	                        async: false,
-	                        success: function(json) {
-	                            var rules = json.listportforwardingrulesresponse.portforwardingrule;
-	                            if (rules != null && rules.length > 0) {
-	                                disallowedActions.push('enableVPN');
-	                                disallowedActions.push('enableStaticNAT');
-	                            }
-	                        }
-	                    });
-	
-	                    //4. Once a LoadBalancer rule is added, hide StaticNat/VPN/PortForwarding.
-	                    $.ajax({
-	                        url: createURL('listLoadBalancerRules'),
-	                        data: {
-	                            publicipid: ipObj.id,
-	                            listAll: true
-	                        },
-	                        dataType: 'json',
-	                        async: false,
-	                        success: function(json) {
-	                            var rules = json.listloadbalancerrulesresponse.loadbalancerrule;
-	                            if (rules != null && rules.length > 0) {
-	                                disallowedActions.push('enableVPN');
-	                                disallowedActions.push('enableStaticNAT');
-	                            }
-	                        }
-	                    });
-	                }
-	            }
-	
-	            if (ipObj.networkOfferingHavingVpnService == true) {
-	                if (ipObj.vpnenabled) {
-	                    disallowedActions.push('enableVPN');
-	                } else {
-	                    disallowedActions.push('disableVPN');
-	                }
-	            } else { //ipObj.networkOfferingHavingVpnService == false
-	                disallowedActions.push('disableVPN');
-	                disallowedActions.push('enableVPN');
-	            }
-            } else { //***** VPC section > Configuration VPC > Router > Public IP Addresses *****            	
-            	if (ipObj.issourcenat) { //VPC sourceNAT IP: supports VPN 
-            		if (ipObj.vpnenabled) {
-	                    disallowedActions.push('enableVPN');
-	                } else {
-	                    disallowedActions.push('disableVPN');
-	                }
-            	} else { //VPC non-sourceNAT IP: doesn't support VPN
-            		disallowedActions.push('enableVPN');
-            		disallowedActions.push('disableVPN');
-            	}
-            }                            
+                if (args.context.networks[0].networkofferingconservemode == false) {
+                    /*
+                    (1) If IP is SourceNat, no StaticNat/VPN/PortForwarding/LoadBalancer can be enabled/added.
+                    */
+                    if (ipObj.issourcenat == true) {
+                        disallowedActions.push('enableStaticNAT');
+                        disallowedActions.push('enableVPN');
+                    }
+
+                    /*
+                    (2) If IP is non-SourceNat, show StaticNat/VPN/PortForwarding/LoadBalancer at first.
+                    1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
+                    2. Once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
+                    3. Once a PortForwarding rule is added, hide StaticNat/VPN/LoadBalancer.
+                    4. Once a LoadBalancer rule is added, hide StaticNat/VPN/PortForwarding.
+                    */
+                    else { //ipObj.issourcenat == false
+                        if (ipObj.isstaticnat) { //1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
+                            disallowedActions.push('enableVPN');
+                        }
+                        if (ipObj.vpnenabled) { //2. Once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
+                            disallowedActions.push('enableStaticNAT');
+                        }
+
+                        //3. Once a PortForwarding rule is added, hide StaticNat/VPN/LoadBalancer.
+                        $.ajax({
+                            url: createURL('listPortForwardingRules'),
+                            data: {
+                                ipaddressid: ipObj.id,
+                                listAll: true
+                            },
+                            dataType: 'json',
+                            async: false,
+                            success: function(json) {
+                                var rules = json.listportforwardingrulesresponse.portforwardingrule;
+                                if (rules != null && rules.length > 0) {
+                                    disallowedActions.push('enableVPN');
+                                    disallowedActions.push('enableStaticNAT');
+                                }
+                            }
+                        });
+
+                        //4. Once a LoadBalancer rule is added, hide StaticNat/VPN/PortForwarding.
+                        $.ajax({
+                            url: createURL('listLoadBalancerRules'),
+                            data: {
+                                publicipid: ipObj.id,
+                                listAll: true
+                            },
+                            dataType: 'json',
+                            async: false,
+                            success: function(json) {
+                                var rules = json.listloadbalancerrulesresponse.loadbalancerrule;
+                                if (rules != null && rules.length > 0) {
+                                    disallowedActions.push('enableVPN');
+                                    disallowedActions.push('enableStaticNAT');
+                                }
+                            }
+                        });
+                    }
+                }
+
+                if (ipObj.networkOfferingHavingVpnService == true) {
+                    if (ipObj.vpnenabled) {
+                        disallowedActions.push('enableVPN');
+                    } else {
+                        disallowedActions.push('disableVPN');
+                    }
+                } else { //ipObj.networkOfferingHavingVpnService == false
+                    disallowedActions.push('disableVPN');
+                    disallowedActions.push('enableVPN');
+                }
+            } else { //***** VPC section > Configuration VPC > Router > Public IP Addresses *****
+                if (ipObj.issourcenat) { //VPC sourceNAT IP: supports VPN
+                    if (ipObj.vpnenabled) {
+                        disallowedActions.push('enableVPN');
+                    } else {
+                        disallowedActions.push('disableVPN');
+                    }
+                } else { //VPC non-sourceNAT IP: doesn't support VPN
+                    disallowedActions.push('enableVPN');
+                    disallowedActions.push('disableVPN');
+                }
+            }
 
             allowedActions = $.grep(allowedActions, function(item) {
                 return $.inArray(item, disallowedActions) == -1;
@@ -286,7 +381,9 @@
         sectionSelect: {
             preFilter: function(args) {
                 var sectionsToShow = ['networks'];
+                var securityGroupsEnabledFound = false; //Until we found a zone where securitygroupsenabled is true.
 
+                //This call to show VPC and VPN Customer Gateway sections, if zone is advanced.
                 $.ajax({
                     url: createURL('listZones'),
                     data: {
@@ -294,30 +391,40 @@
                     },
                     async: false,
                     success: function(json) {
-                        advZoneObjs = json.listzonesresponse.zone;
+                        advZoneObjs = json.listzonesresponse ? json.listzonesresponse.zone : null;
                         if (advZoneObjs != null && advZoneObjs.length > 0) {
                             sectionsToShow.push('vpc');
                             sectionsToShow.push('vpnCustomerGateway');
+
+                            //At the same time check if any advanced zone has securitygroupsenabled is true.
+                            //If so, show Security Group section.
+                            for (var i = 0; (i < advZoneObjs.length) && !securityGroupsEnabledFound; i++) {
+                                if (advZoneObjs[i].securitygroupsenabled) {
+                                    securityGroupsEnabledFound = true;
+                                    sectionsToShow.push('securityGroups');
+                                }
+                            }
                         }
                     }
                 });
 
-                $.ajax({
-                    url: createURL('listNetworks', {
-                        ignoreProject: true
-                    }),
-                    data: {
-                        supportedServices: 'SecurityGroup',
-                        listAll: true,
-                        details: 'min'
-                    },
-                    async: false,
-                    success: function(json) {
-                        if (json.listnetworksresponse.network != null && json.listnetworksresponse.network.length > 0) {
-                            sectionsToShow.push('securityGroups');
+                //If we didn't find any advanced zone whose securitygroupsenabled is true.
+                //Search in all Basic zones.
+                if (!securityGroupsEnabledFound) {
+                    $.ajax({
+                        url: createURL('listZones'),
+                        data: {
+                            networktype: 'Basic'
+                        },
+                        async: false,
+                        success: function(json) {
+                            var basicZoneObjs = json.listzonesresponse ? json.listzonesresponse.zone : null;
+                            if (basicZoneObjs != null && basicZoneObjs.length > 0) {
+                                sectionsToShow.push('securityGroups');
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
                 return sectionsToShow;
             },
@@ -332,7 +439,7 @@
                 listView: {
                     actions: {
                         add: {
-                            label: 'Add Isolated Network',
+                            label: 'label.add.isolated.network',
 
                             preFilter: function(args) {
                                 if (advZoneObjs != null && advZoneObjs.length > 0) {
@@ -348,7 +455,7 @@
                             },
 
                             createForm: {
-                                title: 'Add Isolated Guest Network with SourceNat',
+                                title: 'label.add.isolated.guest.network.with.sourcenat',
                                 fields: {
                                     name: {
                                         label: 'label.name',
@@ -398,44 +505,44 @@
                                         },
                                         dependsOn: 'zoneId',
                                         docID: 'helpGuestNetworkNetworkOffering',
-                                        select: function(args) {   
+                                        select: function(args) {
                                             var data = {
-                                            	zoneid: args.zoneId,
+                                                zoneid: args.zoneId,
                                                 guestiptype: 'Isolated',
                                                 supportedServices: 'SourceNat',
                                                 state: 'Enabled'
                                             };
-                                           
-                                            if ('vpc' in args.context) { //from VPC section                                            	
-                                            	$.extend(data, {
-                                            		forVpc: true
-                                            	});
+
+                                            if ('vpc' in args.context) { //from VPC section
+                                                $.extend(data, {
+                                                    forVpc: true
+                                                });
                                             }
                                             else { //from guest network section
-                                            	var vpcs;
-                                            	$.ajax({
+                                                var vpcs;
+                                                $.ajax({
                                                     url: createURL('listVPCs'),
                                                     data: {
                                                         listAll: true
                                                     },
                                                     async: false,
-                                                    success: function(json) {                                                    	
-                                                    	vpcs = json.listvpcsresponse.vpc;                                                     	
+                                                    success: function(json) {
+                                                        vpcs = json.listvpcsresponse.vpc;
                                                     }
-                                                });                                            	
+                                                });
                                                 if (vpcs == null || vpcs.length == 0) { //if there is no VPC in the system
-                                                	$.extend(data, {
-                                                		forVpc: false
-                                                	});
+                                                    $.extend(data, {
+                                                        forVpc: false
+                                                    });
                                                 }
                                             }
 
-                                            if(!isAdmin()) { //normal user is not aware of the VLANs in the system, so normal user is not allowed to create network with network offerings whose specifyvlan = true 
-                                            	$.extend(data, {
-                                            		specifyvlan: false
-                                            	});
+                                            if(!isAdmin()) { //normal user is not aware of the VLANs in the system, so normal user is not allowed to create network with network offerings whose specifyvlan = true
+                                                $.extend(data, {
+                                                    specifyvlan: false
+                                                });
                                             }
-                                            
+
                                             $.ajax({
                                                 url: createURL('listNetworkOfferings'),
                                                 data: data,
@@ -465,12 +572,12 @@
                                                         })
                                                     });
                                                 }
-                                            });   
+                                            });
                                         }
                                     },
 
                                     vlan: {
-                                        label: 'VLAN',
+                                        label: 'label.vlan',
                                         validation: {
                                             required: true
                                         },
@@ -567,6 +674,9 @@
                                                                 description: this.path
                                                             });
                                                         });
+                                                        items.sort(function(a, b) {
+                                                            return a.description.localeCompare(b.description);
+                                                        });
                                                         args.response.success({
                                                             data: items
                                                         });
@@ -585,7 +695,7 @@
                                                 data: null
                                                 });
                                             }
-                                        },
+                                        }
                                     },
                                     account: {
                                         label: 'label.account',
@@ -663,7 +773,7 @@
                             },
                             messages: {
                                 notification: function() {
-                                    return 'Add Isolated Guest Network';
+                                    return 'label.add.isolated.guest.network';
                                 }
                             }
                         },
@@ -688,13 +798,13 @@
                             label: 'label.cidr'
                         },
                         ip6cidr: {
-                            label: 'IPv6 CIDR'
+                            label: 'label.ipv6.CIDR'
                         }
                     },
 
                     advSearchFields: {
                         zoneid: {
-                            label: 'Zone',
+                            label: 'label.zone',
                             select: function(args) {
                                 $.ajax({
                                     url: createURL('listZones'),
@@ -718,7 +828,7 @@
                         },
 
                         domainid: {
-                            label: 'Domain',
+                            label: 'label.domain',
                             select: function(args) {
                                 if (isAdmin() || isDomainAdmin()) {
                                     $.ajax({
@@ -741,6 +851,9 @@
                                                     });
                                                 }
                                             }
+                                            array1.sort(function(a, b) {
+                                                return a.description.localeCompare(b.description);
+                                            });
                                             args.response.success({
                                                 data: array1
                                             });
@@ -761,7 +874,7 @@
                         },
 
                         account: {
-                            label: 'Account',
+                            label: 'label.account',
                             isHidden: function(args) {
                                 if (isAdmin() || isDomainAdmin())
                                     return false;
@@ -770,10 +883,10 @@
                             }
                         },
                         tagKey: {
-                            label: 'Tag Key'
+                            label: 'label.tag.key'
                         },
                         tagValue: {
-                            label: 'Tag Value'
+                            label: 'label.tag.value'
                         }
                     },
 
@@ -797,7 +910,7 @@
                     },
 
                     detailView: {
-                        name: 'Guest network details',
+                        name: 'label.guest.network.details',
                         viewAll: {
                             path: 'network.ipAddresses',
                             label: 'label.menu.ipaddresses',
@@ -824,7 +937,7 @@
                                     };
 
                                     //args.data.networkdomain is null when networkdomain field is hidden
-                                    if (args.data.networkdomain != null && args.data.networkdomain != args.context.networks[0].networkdomain) {
+                                    if (args.data.networkdomain != null && args.data.networkdomain.length > 0 && args.data.networkdomain != args.context.networks[0].networkdomain) {
                                         $.extend(data, {
                                             networkdomain: args.data.networkdomain
                                         });
@@ -832,7 +945,7 @@
 
                                     var oldcidr;
                                     $.ajax({
-                                        url: createURL("listNetworks&id=" + args.context.networks[0].id),
+                                        url: createURL("listNetworks&id=" + args.context.networks[0].id + "&listAll=true"),
                                         dataType: "json",
                                         async: false,
                                         success: function(json) {
@@ -856,8 +969,8 @@
 
                                         if (args.context.networks[0].type == "Isolated") { //Isolated network
                                             cloudStack.dialog.confirm({
-                                                message: 'Do you want to keep the current guest network CIDR unchanged?',
-                                                action: function() { //"Yes"	button is clicked
+                                                message: 'message.confirm.current.guest.CIDR.unchanged',
+                                                action: function() { //"Yes"    button is clicked
                                                     $.extend(data, {
                                                         changecidr: false
                                                     });
@@ -995,6 +1108,7 @@
                                     confirm: function(args) {
                                         return 'message.action.delete.network';
                                     },
+                    isWarning: true,
                                     notification: function(args) {
                                         return 'label.action.delete.network';
                                     }
@@ -1028,8 +1142,8 @@
                             var isAdvancedSGZone = false;
                             var hiddenTabs = [];
                             var isSharedNetwork;
-                          
-                            var thisNetwork = args.context.networks[0];    
+
+                            var thisNetwork = args.context.networks[0];
                             if (thisNetwork.vpcid != null) {
                                 isVPC = true;
                             }
@@ -1061,7 +1175,7 @@
                                         return true;
                                     });
                                 }
-                            });                       
+                            });
 
                             // Get zone data
                             $.ajax({
@@ -1162,12 +1276,12 @@
                                             if (args != null)
                                                 return args;
                                             else
-                                                return 'N/A';
+                                                return _l('label.na');
                                         }
                                     },
-                                    
+
                                     ispersistent: {
-                                        label: 'Persistent ',
+                                        label: 'label.persistent',
                                         converter: cloudStack.converters.toBooleanText
 
                                     },
@@ -1183,11 +1297,11 @@
                                     vlan: {
                                         label: 'label.vnet.id'
                                     },
-                                    
+
                                     broadcasturi: {
-                                    	label: 'broadcasturi'
+                                        label: 'label.broadcasturi'
                                     },
-                                    
+
                                     networkofferingid: {
                                         label: 'label.network.offering',
                                         isEditable: true,
@@ -1221,13 +1335,13 @@
                                                     });
                                                 }
                                             });
-                                                                                        
+
                                             //include currently selected network offeirng to dropdown
                                             items.push({
                                                 id: args.context.networks[0].networkofferingid,
                                                 description: args.context.networks[0].networkofferingdisplaytext
-                                            });                                                                                   
-                                          
+                                            });
+
                                             args.response.success({
                                                 data: items
                                             });
@@ -1245,20 +1359,20 @@
                                     },
 
                                     networkcidr: {
-                                        label: 'Network CIDR'
+                                        label: 'label.network.cidr'
                                     },
 
                                     ip6gateway: {
-                                        label: 'IPv6 Gateway'
+                                        label: 'label.ipv6.gateway'
                                     },
 
                                     ip6cidr: {
-                                        label: 'IPv6 CIDR'
+                                        label: 'label.ipv6.CIDR'
                                     },
 
 
                                     reservediprange: {
-                                        label: 'Reserved IP Range'
+                                        label: 'label.reserved.ip.range'
                                     },
 
 
@@ -1295,6 +1409,12 @@
                                         success: function(json) {
                                             var jsonObj = json.listnetworksresponse.network[0];
                                             addExtraPropertiesToGuestNetworkObject(jsonObj);
+
+                                            $(window).trigger('cloudStack.module.sharedFunctions.addExtraProperties', {
+                                                obj: jsonObj,
+                                                objType: "Network"
+                                            });
+
                                             args.response.success({
                                                 actionFilter: cloudStack.actionFilter.guestNetwork,
                                                 data: jsonObj
@@ -1308,6 +1428,7 @@
                                 title: 'label.egress.rules',
                                 custom: function(args) {
                                     var context = args.context;
+                                    var isConfigRulesMsgShown = false;
 
                                     return $('<div>').multiEdit({
                                         context: context,
@@ -1510,6 +1631,34 @@
                                                     });
                                                 }
                                             });
+
+                                            if (!isConfigRulesMsgShown) {
+                                                isConfigRulesMsgShown = true;
+                                                $.ajax({
+                                                    url: createURL('listNetworkOfferings'),
+                                                    data: {
+                                                        id: args.context.networks[0].networkofferingid
+                                                    },
+                                                    dataType: 'json',
+                                                    async: true,
+                                                    success: function(json) {
+                                                        var response = json.listnetworkofferingsresponse.networkoffering ?
+                                                        json.listnetworkofferingsresponse.networkoffering[0] : null;
+
+                                                        if (response != null) {
+                                                            if (response.egressdefaultpolicy == true) {
+                                                                cloudStack.dialog.notice({
+                                                                    message: _l('message.configure.firewall.rules.block.traffic')
+                                                                });
+                                                            } else {
+                                                                cloudStack.dialog.notice({
+                                                                    message: _l('message.configure.firewall.rules.allow.traffic')
+                                                                });
+                                                            }
+                                                        }
+                                                    }
+                                                });
+                                            }
                                         }
                                     });
                                 }
@@ -1588,17 +1737,25 @@
                                             'algorithm': {
                                                 label: 'label.algorithm',
                                                 select: function(args) {
-                                                    args.response.success({
-                                                        data: [{
+                                                    var data = [{
+                                                            id: 'roundrobin',
                                                             name: 'roundrobin',
-                                                            description: _l('label.round.robin')
+                                                            description: _l('label.lb.algorithm.roundrobin')
                                                         }, {
+                                                            id: 'leastconn',
                                                             name: 'leastconn',
-                                                            description: _l('label.least.connections')
+                                                            description: _l('label.lb.algorithm.leastconn')
                                                         }, {
+                                                            id: 'source',
                                                             name: 'source',
-                                                            description: _l('label.source')
-                                                        }]
+                                                            description: _l('label.lb.algorithm.source')
+                                                        }];
+                                                    if (typeof args.context != 'undefined') {
+                                                        var lbAlgs = getLBAlgorithms(args.context.networks[0]);
+                                                        data = (lbAlgs.length == 0) ? data : lbAlgs;
+                                                    }
+                                                    args.response.success({
+                                                        data: data
                                                     });
                                                 }
                                             },
@@ -1610,7 +1767,7 @@
                                                 }
                                             },
                                             'autoScale': {
-                                                label: 'AutoScale',
+                                                label: 'label.autoscale',
                                                 custom: {
                                                     requireValidation: true,
                                                     buttonLabel: 'label.configure',
@@ -1622,8 +1779,8 @@
                                                 addButton: true
                                             },
                                             'state' : {
-                                            	edit: 'ignore',
-                                            	label: 'label.state'
+                                                edit: 'ignore',
+                                                label: 'label.state'
                                             }
                                         },
 
@@ -1774,13 +1931,17 @@
                                 desc: 'message.acquire.ip.nic',
                                 fields: {
                                     ipaddress: {
-                                        label: 'label.ip.address'
+                                        label: 'label.ip.address',
+                                        validation: {
+                                            required: false,
+                                            ipv4: true
+                                        }
                                     }
                                 }
                             },
                             messages: {
                                 notification: function(args) {
-                                    return 'label.acquire.new.secondary.ip';
+                                    return _l('label.acquire.new.secondary.ip');
                                 }
                             },
                             action: function(args) {
@@ -1984,8 +2145,8 @@
                                 $.ajax({
                                     url: createURL('listZones'),
                                     data: dataObj,
-                                    //	  id: args.context.networks[0].zoneid
-                                    //	},
+                                    //      id: args.context.networks[0].zoneid
+                                    //    },
                                     async: false,
                                     success: function(json) {
                                         zoneObj = json.listzonesresponse.zone[0];
@@ -1998,35 +2159,35 @@
 
                                 if (zoneObj.networktype == 'Basic') {
                                     var havingEIP = false,
-                                        havingELB = false;     
-                                    
+                                        havingELB = false;
+
                                     var services = args.context.networks[0].service;
                                     if(services != null) {
-                                    	for(var i = 0; i < services.length; i++) {                                    		
-                                    		var thisService = services[i];
-                                    		var capabilities = thisService.capability;
-                                            if (thisService.name == "StaticNat") {                                            	
-                                            	if(capabilities != null) {
-                                            		for(var k = 0; k < capabilities.length; k++) {                                            			
-                                            			if (capabilities[k].name == "ElasticIp" && capabilities[k].value == "true") {                                            				
+                                        for(var i = 0; i < services.length; i++) {
+                                            var thisService = services[i];
+                                            var capabilities = thisService.capability;
+                                            if (thisService.name == "StaticNat") {
+                                                if(capabilities != null) {
+                                                    for(var k = 0; k < capabilities.length; k++) {
+                                                        if (capabilities[k].name == "ElasticIp" && capabilities[k].value == "true") {
                                                             havingEIP = true;
-                                                            break; 
+                                                            break;
                                                         }
-                                            		}
-                                            	}                                     	
+                                                    }
+                                                }
                                             } else if (thisService.name == "Lb") {
-                                            	if(capabilities != null) {
-                                            		for(var k = 0; k < capabilities.length; k++) {                                            			
-                                            			if (capabilities[k].name == "ElasticLb" && capabilities[k].value == "true") {                                            				
-                                            				havingELB = true;
-                                                            break; 
+                                                if(capabilities != null) {
+                                                    for(var k = 0; k < capabilities.length; k++) {
+                                                        if (capabilities[k].name == "ElasticLb" && capabilities[k].value == "true") {
+                                                            havingELB = true;
+                                                            break;
                                                         }
-                                            		}
-                                            	}     
-                                            }                                    		
-                                    	}
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
-                                    
+
                                     if (havingEIP != true || havingELB != true) { //not EIP-ELB
                                         return false; //acquire new IP is not allowed in non-EIP-ELB basic zone
                                     }
@@ -2045,7 +2206,7 @@
                                     return true; //VPC section, show Acquire IP button
                                 }
                             },
-                            messages: {                           
+                            messages: {
                                 notification: function(args) {
                                     return 'label.acquire.new.ip';
                                 }
@@ -2053,27 +2214,29 @@
                             createForm: {
                                 title: 'label.acquire.new.ip',
                                 desc: 'Please confirm that you want to acquire new IP',
-                                preFilter: function(args) {                            	
-                                	$.ajax({
-                                		url: createURL('listRegions'),
-                                		success: function(json) {
-                                		    var items = json.listregionsresponse.region;	
-                                		    if(items != null) {
-												args.$form.find('.form-item[rel=ismultiline]').css('display', 'inline-block');
-                                		    	for(var i = 0; i < items.length; i++) {
-                                		    		var region = items[0];  
-                                		    		if(region.name == 'Local') {
-	                                    		    	if(region.portableipserviceenabled == true) {
-	                                    		    		args.$form.find('.form-item[rel=isportable]').css('display', 'inline-block');
-	                                    		    	} else {
-	                                    		    		args.$form.find('.form-item[rel=isportable]').hide();
-	                                    		    	}  
-	                                    		    	break;
-                                		    		}
-                                		    	}               		    	
-                                		    }
-                                		}                                		
-                                	});                                	
+                                preFilter: function(args) {
+                                    $.ajax({
+                                        url: createURL('listRegions'),
+                                        success: function(json) {
+                                            var selectedRegionName = $(".region-switcher .title").text();
+                                            if ( selectedRegionName == undefined || selectedRegionName.length == 0) {
+                                                selectedRegionName = "Local";
+                                            }
+                                            var items = json.listregionsresponse.region;
+                                            if(items != null) {
+                                                for(var i = 0; i < items.length; i++) {
+                                                    if(items[i].name == selectedRegionName) {
+                                                        if(items[i].portableipserviceenabled == true) {
+                                                            args.$form.find('.form-item[rel=isportable]').css('display', 'inline-block');
+                                                        } else {
+                                                            args.$form.find('.form-item[rel=isportable]').hide();
+                                                        }
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
                                 },
                                 fields: {
                                     isportable: {
@@ -2128,7 +2291,6 @@
 										multilineLabel : args.data.ismultiline
                             		});                            	
                             	}
-								
                                 if ('vpc' in args.context) { //from VPC section
                                     $.extend(dataObj, {
                                         vpcid: args.context.vpc[0].id
@@ -2179,9 +2341,9 @@
                     },
 
                     dataProvider: function(args) {
-                    	var items = [];                    	
-                    	var data = {};
-                        listViewDataProvider(args, data);     
+                        var items = [];
+                        var data = {};
+                        listViewDataProvider(args, data);
                         if (args.context.networks) {
                             $.extend(data, {
                                 associatedNetworkId: args.context.networks[0].id
@@ -2191,8 +2353,8 @@
                             $.extend(data, {
                                 vpcid: args.context.vpc[0].id
                             });
-                        }  
-                        
+                        }
+
                         $.ajax({
                             url: createURL('listPublicIpAddresses'),
                             data: $.extend({}, data, {
@@ -2201,48 +2363,48 @@
                             dataType: "json",
                             async: false,
                             success: function(json) {
-                                var ips = json.listpublicipaddressesresponse.publicipaddress;                                
+                                var ips = json.listpublicipaddressesresponse.publicipaddress;
                                 if(ips != null) {
-                                	for(var i = 0; i < ips.length; i++) {                                		
-                                		getExtaPropertiesForIpObj(ips[i], args);
-                                		items.push(ips[i]);                                		
-                                	}
-                                }                                
+                                    for(var i = 0; i < ips.length; i++) {
+                                        getExtaPropertiesForIpObj(ips[i], args);
+                                        items.push(ips[i]);
+                                    }
+                                }
                             }
                         });
-                                                
-                        if (g_supportELB == "guest") {                  
-	                        $.ajax({
-	                            url: createURL('listPublicIpAddresses'),
-	                            data: $.extend({}, data, {
-	                                forvirtualnetwork: false, // ELB IPs are allocated on guest network       
-	                                forloadbalancing: true
-	                            }),
-	                            dataType: "json",
-	                            async: false,
-	                            success: function(json) {
-	                                var ips = json.listpublicipaddressesresponse.publicipaddress;	                                
-	                                if(ips != null) {
-	                                	for(var i = 0; i < ips.length; i++) {	                                		
-	                                		getExtaPropertiesForIpObj(ips[i], args);
-	                                		items.push(ips[i]);                                		
-	                                	}
-	                                }                                
-	                            }
-	                        });
+
+                        if (g_supportELB == "guest") {
+                            $.ajax({
+                                url: createURL('listPublicIpAddresses'),
+                                data: $.extend({}, data, {
+                                    forvirtualnetwork: false, // ELB IPs are allocated on guest network
+                                    forloadbalancing: true
+                                }),
+                                dataType: "json",
+                                async: false,
+                                success: function(json) {
+                                    var ips = json.listpublicipaddressesresponse.publicipaddress;
+                                    if(ips != null) {
+                                        for(var i = 0; i < ips.length; i++) {
+                                            getExtaPropertiesForIpObj(ips[i], args);
+                                            items.push(ips[i]);
+                                        }
+                                    }
+                                }
+                            });
                         }
-                         
+
                         args.response.success({
                             actionFilter: actionFilters.ipAddress,
                             data: items
-                        });                        
+                        });
                     },
 
                     // Detail view
                     detailView: {
                         name: 'IP address detail',
                         tabFilter: function(args) {
-                            var item = args.context.ipAddresses[0];                           
+                            var item = args.context.ipAddresses[0];
 
                             var disabledTabs = [];
                             var ipAddress = args.context.ipAddresses[0];
@@ -2264,15 +2426,15 @@
                             if (ipAddress.vpcid != null && ipAddress.issourcenat) { //don't show Configuration(ipRules) tab on VPC sourceNAT IP
                                 disableIpRules = true;
                             }
-                            
+
                             if (('vpc' in args.context) == false && ipAddress.vpcid != null) { //from Guest Network section, don't show Configuration(ipRules) tab on VPC IP
                                 disableIpRules = true;
                             }
 
-                            if (disableVpn) 
-                            	disabledTabs.push('vpn');
-                            if (disableIpRules) 
-                            	disabledTabs.push('ipRules');
+                            if (disableVpn)
+                                disabledTabs.push('vpn');
+                            if (disableIpRules)
+                                disabledTabs.push('ipRules');
 
                             return disabledTabs;
                         },
@@ -2293,9 +2455,14 @@
                                             args.response.success({
                                                 _custom: {
                                                     getUpdatedItem: function(json) {
+                                                        var vpnenabledAndRunning = false;
+                                                        if (json.queryasyncjobresultresponse.jobresult.remoteaccessvpn.state == "Running") {
+                                                            vpnenabledAndRunning = true;
+                                                        }
+
                                                         return {
                                                             remoteaccessvpn: json.queryasyncjobresultresponse.jobresult.remoteaccessvpn,
-                                                            vpnenabled: true
+                                                            vpnenabled: vpnenabledAndRunning
                                                         };
                                                     },
                                                     getActionFilter: function() {
@@ -2319,10 +2486,10 @@
                                     },
                                     complete: function(args) {
                                         var msg;
-                                        if (args.vpn.state == "Running") {
+                                        if (args.remoteaccessvpn.state == "Running") {
                                             msg = _l('message.enabled.vpn') + ' ' + args.remoteaccessvpn.publicip + '.' + '<br/>' + _l('message.enabled.vpn.ip.sec') + '<br/>' + args.remoteaccessvpn.presharedkey;
                                         } else {
-                                            msg = "Remote Access VPN configuration has been generated, but it failed to apply. Please check connectivity of the network element, then re-try.";
+                                            msg = _l('message.network.remote.access.vpn.configuration');
                                         }
                                         return msg;
                                     }
@@ -2423,10 +2590,11 @@
 
                                         listView: $.extend(true, {}, cloudStack.sections.instances, {
                                             listView: {
+                                                advSearchFields: null, // Not supported in dialogs right now due to display issues
                                                 filters: false,
                                                 subselect: {
                                                     label: 'label.use.vm.ip',
-                                                    dataProvider: instanceSecondaryIPSubselect
+                                                    dataProvider: singleVmSecondaryIPSubselect
                                                 },
                                                 dataProvider: function(args) {
                                                     var data = {
@@ -2434,6 +2602,10 @@
                                                         pageSize: pageSize,
                                                         listAll: true
                                                     };
+
+                                                    if (args.filterBy.search.value) {
+                                                        data.keyword = args.filterBy.search.value;
+                                                    }
 
                                                     var $tierSelect = $(".ui-dialog-content").find('.tier-select select');
 
@@ -2754,10 +2926,10 @@
                                     },
                                     associatednetworkid: {
                                         label: 'label.associated.network.id'
-                                    },                                    
+                                    },
                                     associatednetworkname: {
                                         label: 'label.network.name'
-                                    },   
+                                    },
                                     state: {
                                         label: 'label.state'
                                     },
@@ -2771,6 +2943,9 @@
                                     isstaticnat: {
                                         label: 'label.static.nat',
                                         converter: cloudStack.converters.toBooleanText
+                                    },
+                                    vmipaddress: {
+                                        label: 'label.vm.ip'
                                     },
                                     issystem: {
                                         label: 'label.is.system',
@@ -2792,7 +2967,7 @@
                                         label: 'label.zone'
                                     },
                                     vlanname: {
-                                        label: 'label.vlan'
+                                        label: 'label.vlan.only'
                                     },
 									isdefaultstaticnat: {
                                         label: 'isDefault.StaticNat',
@@ -2854,20 +3029,20 @@
                                         if (!('vpc' in args.context)) { //from Guest Network section
                                             var services = args.context.networks[0].service;
                                             if(services != null) {
-                                            	for(var i = 0; i < services.length; i++) {                                    		
-                                            		var thisService = services[i];
-                                            		if (thisService.name == "Firewall")
+                                                for(var i = 0; i < services.length; i++) {
+                                                    var thisService = services[i];
+                                                    if (thisService.name == "Firewall")
                                                         havingFirewallService = true;
                                                     if (thisService.name == "PortForwarding")
                                                         havingPortForwardingService = true;
                                                     if (thisService.name == "Lb")
                                                         havingLbService = true;
                                                     if (thisService.name == "Vpn")
-                                                        havingVpnService = true;                                                                            		
-                                            	}
-                                            }  
+                                                        havingVpnService = true;
+                                                }
+                                            }
                                         } else { //from VPC section
-                                        	//a VPC network from Guest Network section or from VPC section
+                                            //a VPC network from Guest Network section or from VPC section
                                             // Firewall is not supported in IP from VPC section
                                             // (because ACL has already supported in tier from VPC section)
                                             havingFirewallService = false;
@@ -2887,21 +3062,21 @@
                                                     },
                                                     async: false,
                                                     success: function(json) {
-                                                        var networkObj = json.listnetworksresponse.network[0];                                                    
+                                                        var networkObj = json.listnetworksresponse.network[0];
                                                         var services = networkObj.service;
                                                         if(services != null) {
-                                                        	for(var i = 0; i < services.length; i++) {
-                                                        		if (services[i].name == "PortForwarding")
+                                                            for(var i = 0; i < services.length; i++) {
+                                                                if (services[i].name == "PortForwarding")
                                                                     havingPortForwardingService = true;
                                                                 if (services[i].name == "Lb")
                                                                     havingLbService = true;
-                                                        	}
-                                                        }   
-                                                                                                                
+                                                            }
+                                                        }
+
                                                         if (networkObj.networkofferingconservemode == false) {
                                                             /*
-                					                        (1) If IP is SourceNat, no StaticNat/VPN/PortForwarding/LoadBalancer can be enabled/added.
-                					                        */
+                                                            (1) If IP is SourceNat, no StaticNat/VPN/PortForwarding/LoadBalancer can be enabled/added.
+                                                            */
                                                             if (args.context.ipAddresses[0].issourcenat) {
                                                                 if (havingFirewallService == false) { //firewall is not supported in IP from VPC section (because ACL has already supported in tier from VPC section)
                                                                     disallowedActions.push("firewall");
@@ -2912,12 +3087,12 @@
                                                             }
 
                                                             /*
-                					                        (2) If IP is non-SourceNat, show StaticNat/VPN/PortForwarding/LoadBalancer at first.
-                					                        1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
-                					                        2. If VPN service is supported (i.e. IP comes from Guest Network section, not from VPC section), once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
-                					                        3. Once a PortForwarding rule is added, hide StaticNat/VPN/LoadBalancer.
-                					                        4. Once a LoadBalancer rule is added, hide StaticNat/VPN/PortForwarding.
-                					                        */
+                                                            (2) If IP is non-SourceNat, show StaticNat/VPN/PortForwarding/LoadBalancer at first.
+                                                            1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
+                                                            2. If VPN service is supported (i.e. IP comes from Guest Network section, not from VPC section), once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
+                                                            3. Once a PortForwarding rule is added, hide StaticNat/VPN/LoadBalancer.
+                                                            4. Once a LoadBalancer rule is added, hide StaticNat/VPN/PortForwarding.
+                                                            */
                                                             else { //args.context.ipAddresses[0].issourcenat == false
                                                                 if (havingFirewallService == false)
                                                                     disallowedActions.push("firewall");
@@ -2970,11 +3145,11 @@
                                                                     }
                                                                 });
                                                             }
-                                                        }                                                       
+                                                        }
                                                     }
                                                 });
                                             }
-                                        }     
+                                        }
 
                                         return disallowedActions;
                                     },
@@ -3061,8 +3236,8 @@
                                                 addButton: true
                                             },
                                             'state' : {
-                                            	edit: 'ignore',
-                                            	label: 'label.state'
+                                                edit: 'ignore',
+                                                label: 'label.state'
                                             }
                                         },
 
@@ -3326,22 +3501,29 @@
                                                     }
                                                 },
                                                 filters: false,
+
+                                                //when server-side change of adding new parameter "vmidipmap" to assignToLoadBalancerRule API is in, uncomment the following commented 4 lines.
+                                                subselect: {
+                                                    isMultiple: true,
+                                                    label: 'label.use.vm.ips',
+                                                    dataProvider: multipleVmSecondaryIPSubselect
+                                                },
+
                                                 dataProvider: function(args) {
-                                                    var itemData = $.isArray(args.context.multiRule) && args.context.multiRule[0]['_itemData'] ?
-                                                        args.context.multiRule[0]['_itemData'] : [];
+                                                    var itemData = $.isArray(args.context.multiRule) && args.context.subItemData ? args.context.subItemData : [];
+
+                                                    var data = {};
+                                                    listViewDataProvider(args, data);
 
                                                     var networkid;
-                                                    if ('vpc' in args.context)
+                                                    if ('vpc' in args.context) {
                                                         networkid = args.context.multiData.tier;
-                                                    else
+                                                    } else {
                                                         networkid = args.context.ipAddresses[0].associatednetworkid;
-
-                                                    var data = {
-                                                        page: args.page,
-                                                        pageSize: pageSize,
-                                                        networkid: networkid,
-                                                        listAll: true
-                                                    };
+                                                    }
+                                                    $.extend(data, {
+                                                        networkid: networkid
+                                                    });
 
                                                     if (!args.context.projects) {
                                                         $.extend(data, {
@@ -3377,6 +3559,42 @@
                                                                         return item.id == instance.id;
                                                                     }).length;
 
+                                                                    // Check if there are any remaining IPs
+                                                                    if (!notExisting) {
+                                                                        $.ajax({
+                                                                            url: createURL('listNics'),
+                                                                            async: false,
+                                                                            data: {
+                                                                                virtualmachineid: instance.id
+                                                                            },
+                                                                            success: function(json) {
+                                                                                var nics = json.listnicsresponse.nic;
+
+                                                                                $(nics).map(function (index, nic) {
+                                                                                    if (nic.secondaryip) {
+                                                                                        var targetIPs = $(nic.secondaryip).map(function (index, sip) {
+                                                                                            return sip.ipaddress;
+                                                                                        });
+
+                                                                                        var lbIPs = $(itemData).map(function(index, item) { return item.itemIp; });
+
+                                                                                        targetIPs.push(nic.ipaddress);
+
+                                                                                        var matchingIPs = $.grep(targetIPs, function(item) {
+                                                                                            return $.inArray(item, lbIPs) > -1;
+                                                                                        });
+
+                                                                                        if (targetIPs.length - matchingIPs.length) {
+                                                                                            notExisting = true;
+
+                                                                                            return false;
+                                                                                        }
+                                                                                    }
+                                                                                });
+                                                                            }
+                                                                        })
+                                                                    }
+
                                                                     return nonAutoScale && isActiveState && notExisting;
                                                                 }
                                                             );
@@ -3399,6 +3617,8 @@
                                                     if ('vpc' in args.context) {
                                                         var data = {
                                                             //listAll: true,  //do not pass listAll to listNetworks under VPC
+                                                            domainid: args.context.vpc[0].domainid,
+                                                            account: args.context.vpc[0].account,
                                                             supportedservices: 'Lb'
                                                         };
                                                         if (args.context.ipAddresses[0].associatednetworkid == null) {
@@ -3435,7 +3655,7 @@
                                             }
                                         },
                                         multipleAdd: true,
-                                        
+
                                         fields: {
                                             'name': {
                                                 edit: true,
@@ -3454,20 +3674,25 @@
                                                 label: 'label.algorithm',
                                                 isEditable: true,
                                                 select: function(args) {
-                                                    args.response.success({
-                                                        data: [{
+                                                    var data = [{
                                                             id: 'roundrobin',
                                                             name: 'roundrobin',
-                                                            description: _l('label.round.robin')
+                                                            description: _l('label.lb.algorithm.roundrobin')
                                                         }, {
                                                             id: 'leastconn',
                                                             name: 'leastconn',
-                                                            description: _l('label.least.connections')
+                                                            description: _l('label.lb.algorithm.leastconn')
                                                         }, {
                                                             id: 'source',
                                                             name: 'source',
-                                                            description: _l('label.source')
-                                                        }]
+                                                            description: _l('label.lb.algorithm.source')
+                                                        }];
+                                                    if (typeof args.context != 'undefined') {
+                                                        var lbAlgs = getLBAlgorithms(args.context.networks[0]);
+                                                        data = (lbAlgs.length == 0) ? data : lbAlgs;
+                                                    }
+                                                    args.response.success({
+                                                        data: data
                                                     });
                                                 }
                                             },
@@ -3481,61 +3706,84 @@
                                             },
 
                                             'health-check': {
-                                                label: 'Health Check',
+                                                label: 'label.health.check',
                                                 custom: {
                                                     requireValidation: true,
                                                     buttonLabel: 'Configure',
                                                     action: cloudStack.uiCustom.healthCheck()
-
+                                                },
+                                                isHidden: function(args) {
+                                                    if (!('vpc' in args.context)) {  //From Guest Network section
+                                                        var lbProviderIsNetscaler = false;
+                                                        $.ajax({
+                                                            url: createURL('listNetworkOfferings'),
+                                                            data: {
+                                                                id: args.context.networks[0].networkofferingid
+                                                            },
+                                                            async: false,
+                                                            success: function(json) {
+                                                                var networkOffering = json.listnetworkofferingsresponse.networkoffering[0];
+                                                                var services = networkOffering.service;
+                                                                lbProviderIsNetscaler = checkIfNetScalerProviderIsEnabled(services);
+                                                            }
+                                                        });
+                                                        if (lbProviderIsNetscaler == true) { //Health-Check is only supported on Netscaler (but not on any other provider)
+                                                            return false; //Show Health-Check button
+                                                        } else {
+                                                            return 2; //Hide Health-Check button (Both Header and Form)
+                                                        }
+                                                    } else { //From VPC section
+                                                        var lbProviderIsNetscaler;
+                                                        var services = args.context.vpc[0].service;
+                                                        lbProviderIsNetscaler = checkIfNetScalerProviderIsEnabled(services);
+                                                        if (lbProviderIsNetscaler == true) { //Health-Check is only supported on Netscaler (but not on any other provider)
+                                                            return false; //Show Health-Check button
+                                                        } else {
+                                                            return 2; //Hide Health-Check button (both Header and Form)
+                                                        }
+                                                    }
                                                 }
                                             },
 
                                             'autoScale': {
-                                                label: 'AutoScale',
+                                                label: 'label.autoscale',
                                                 custom: {
                                                     requireValidation: true,
                                                     buttonLabel: 'label.configure',
                                                     action: cloudStack.uiCustom.autoscaler(cloudStack.autoscaler)
                                                 },
-                                                isHidden: function(args) {      
-                                                	if (!('vpc' in args.context)) {  //from Guest Network section                                       	
-	                                                	var lbProviderIsNetscaler = false;
-	                                                    $.ajax({
-	                                                    	url: createURL('listNetworkOfferings'),
-	                                                    	data: {
-	                                                    		id: args.context.networks[0].networkofferingid
-	                                                    	},
-	                                                    	async: false,
-	                                                    	success: function(json) {                                                    		
-	                                                    		var networkOffering = json.listnetworkofferingsresponse.networkoffering[0];                                                    		
-	                                                    		var services = networkOffering.service;
-	                                                    		if (services != null) {
-		                                                    		for (var i = 0; i < services.length; i++) {
-		                                                    			if (services[i].name == 'Lb') {
-		                                                    				var providers = services[i].provider;
-		                                                    				if (providers != null) {
-			                                                    				for (var k = 0; k < providers.length; k++) {
-			                                                    					if (providers[k].name == 'Netscaler') {
-			                                                    						lbProviderIsNetscaler = true;
-			                                                    						break;
-			                                                    					}
-			                                                    				}  
-		                                                    				}
-		                                                    				break;
-		                                                    			}
-		                                                    		}
-	                                                    		}
-	                                                    	}
-	                                                    });    
-	                                                    if (lbProviderIsNetscaler == true) { //AutoScale is only supported on Netscaler (but not on any other provider like VirtualRouter)
-	                                                    	return false; //show AutoScale button
-	                                                    } else {
-	                                                    	return 2; //hide Autoscale button (both header and form)
-	                                                    }     
+                                                isHidden: function(args) {
+                                                    if (!('vpc' in args.context)) {  //from Guest Network section
+                                                        var lbProviderIsNetscaler = false;
+                                                        $.ajax({
+                                                            url: createURL('listNetworkOfferings'),
+                                                            data: {
+                                                                id: args.context.networks[0].networkofferingid
+                                                            },
+                                                            async: false,
+                                                            success: function(json) {
+                                                                var networkOffering = json.listnetworkofferingsresponse.networkoffering[0];
+                                                                var services = networkOffering.service;
+                                                                lbProviderIsNetscaler = checkIfNetScalerProviderIsEnabled(services);
+                                                            }
+                                                        });
+                                                        if (lbProviderIsNetscaler == true) { //AutoScale is only supported on Netscaler (but not on any other provider like VirtualRouter)
+                                                            return false; //show AutoScale button
+                                                        } else {
+                                                            return 2; //hide Autoscale button (both header and form)
+                                                        }
                                                     } else { //from VPC section
-                                                    	//VPC doesn't support autoscale
-                                                    	return 2;
-                                                    }   
+                                                        var lbProviderIsNetscaler;
+                                                        var services = args.context.vpc[0].service;
+
+                                                        lbProviderIsNetscaler = checkIfNetScalerProviderIsEnabled(services);
+
+                                                        if (lbProviderIsNetscaler == true) { //AutoScale is only supported on Netscaler (but not on any other provider like VirtualRouter)
+                                                            return false; //show AutoScale button
+                                                        } else {
+                                                            return 2; //hide Autoscale button (both header and form)
+                                                        }
+                                                    }
                                                 }
                                             },
 
@@ -3543,10 +3791,10 @@
                                                 label: 'label.add.vms',
                                                 addButton: true
                                             },
-                                            
+
                                             'state' : {
-                                            	edit: 'ignore',
-                                            	label: 'label.state'
+                                                edit: 'ignore',
+                                                label: 'label.state'
                                             }
                                         },
 
@@ -3580,6 +3828,7 @@
 
                                                 var stickyData = $.extend(true, {}, args.data.sticky);
 
+                                              //***** create new LB rule > Add VMs *****
                                                 $.ajax({
                                                     url: createURL('createLoadBalancerRule'),
                                                     data: data,
@@ -3590,16 +3839,51 @@
                                                         var jobID = data.createloadbalancerruleresponse.jobid;
                                                         var lbID = data.createloadbalancerruleresponse.id;
 
+                                                        var inputData = {
+                                                            id: data.createloadbalancerruleresponse.id
+                                                        };
+
+                                                        /*
+                                                        var inputData = {
+                                                            id: data.createloadbalancerruleresponse.id,
+                                                            virtualmachineids: $.map(itemData, function(elem) {
+                                                                return elem.id;
+                                                            }).join(',')
+                                                        };
+                                                        */
+                                                        //virtualmachineids parameter has been replaced with vmidipmap parameter, so comment out the 6 lines above.
+
+
+                                                        /*
+                                                         * e.g. first VM(xxx) has two IPs(10.1.1.~), second VM(yyy) has three IPs(10.2.2.~):
+                                                         * vmidipmap[0].vmid=xxx  vmidipmap[0].vmip=10.1.1.11
+                                                         * vmidipmap[1].vmid=xxx  vmidipmap[1].vmip=10.1.1.12
+                                                         * vmidipmap[2].vmid=yyy  vmidipmap[2].vmip=10.2.2.77
+                                                         * vmidipmap[3].vmid=yyy  vmidipmap[3].vmip=10.2.2.78
+                                                         * vmidipmap[4].vmid=yyy  vmidipmap[4].vmip=10.2.2.79
+                                                         */
+                                                        var selectedVMs = args.itemData;
+                                                        if (selectedVMs != null) {
+                                                            var vmidipmapIndex = 0;
+                                                            for (var vmIndex = 0; vmIndex < selectedVMs.length; vmIndex++) {
+                                                                var selectedIPs = selectedVMs[vmIndex]._subselect;
+                                                                for (var ipIndex = 0; ipIndex < selectedIPs.length; ipIndex++) {
+                                                                    inputData['vmidipmap[' + vmidipmapIndex + '].vmid'] = selectedVMs[vmIndex].id;
+
+                                                                    if (args.context.ipAddresses[0].isportable) {
+                                                                        inputData['vmidipmap[' + vmidipmapIndex + '].vmip'] = selectedIPs[ipIndex].split(',')[1];
+                                                                    } else {
+                                                                        inputData['vmidipmap[' + vmidipmapIndex + '].vmip'] = selectedIPs[ipIndex];
+                                                                    }
+
+                                                                    vmidipmapIndex++;
+                                                                }
+                                                            }
+                                                        }
+
                                                         $.ajax({
                                                             url: createURL('assignToLoadBalancerRule'),
-                                                            data: {
-                                                                id: data.createloadbalancerruleresponse.id,
-                                                                virtualmachineids: $.map(itemData, function(elem) {
-                                                                    return elem.id;
-                                                                }).join(',')
-                                                            },
-                                                            dataType: 'json',
-                                                            async: true,
+                                                            data: inputData,
                                                             success: function(data) {
                                                                 var jobID = data.assigntoloadbalancerruleresponse.jobid;
                                                                 var lbStickyCreated = false;
@@ -3706,17 +3990,44 @@
                                         },
 
                                         itemActions: {
+                                            //***** update existing LB rule > Add VMs *****
                                             add: {
                                                 label: 'label.add.vms.to.lb',
                                                 action: function(args) {
+                                                    var inputData = {
+                                                        id: args.multiRule.id
+                                                    };
+
+                                                    /*
+                                                     * e.g. first VM(xxx) has two IPs(10.1.1.~), second VM(yyy) has three IPs(10.2.2.~):
+                                                     * vmidipmap[0].vmid=xxx  vmidipmap[0].vmip=10.1.1.11
+                                                     * vmidipmap[1].vmid=xxx  vmidipmap[1].vmip=10.1.1.12
+                                                     * vmidipmap[2].vmid=yyy  vmidipmap[2].vmip=10.2.2.77
+                                                     * vmidipmap[3].vmid=yyy  vmidipmap[3].vmip=10.2.2.78
+                                                     * vmidipmap[4].vmid=yyy  vmidipmap[4].vmip=10.2.2.79
+                                                     */
+                                                    var selectedVMs = args.data;
+                                                    if (selectedVMs != null) {
+                                                        var vmidipmapIndex = 0;
+                                                        for (var vmIndex = 0; vmIndex < selectedVMs.length; vmIndex++) {
+                                                            var selectedIPs = selectedVMs[vmIndex]._subselect;
+                                                            for (var ipIndex = 0; ipIndex < selectedIPs.length; ipIndex++) {
+                                                                inputData['vmidipmap[' + vmidipmapIndex + '].vmid'] = selectedVMs[vmIndex].id;
+
+                                                                if (args.context.ipAddresses[0].isportable) {
+                                                                    inputData['vmidipmap[' + vmidipmapIndex + '].vmip'] = selectedIPs[ipIndex].split(',')[1];
+                                                                } else {
+                                                                    inputData['vmidipmap[' + vmidipmapIndex + '].vmip'] = selectedIPs[ipIndex];
+                                                                }
+
+                                                                vmidipmapIndex++;
+                                                            }
+                                                        }
+                                                    }
+
                                                     $.ajax({
                                                         url: createURL('assignToLoadBalancerRule'),
-                                                        data: {
-                                                            id: args.multiRule.id,
-                                                            virtualmachineids: $.map(args.data, function(elem) {
-                                                                return elem.id;
-                                                            }).join(',')
-                                                        },
+                                                        data: inputData,
                                                         success: function(json) {
                                                             args.response.success({
                                                                 notification: {
@@ -3740,12 +4051,23 @@
                                             destroy: {
                                                 label: 'label.remove.vm.from.lb',
                                                 action: function(args) {
-                                                    $.ajax({
-                                                        url: createURL('removeFromLoadBalancerRule'),
-                                                        data: {
+                                                    var inputData;
+                                                    if (args.item.itemIp == undefined) {
+                                                        inputData = {
                                                             id: args.multiRule.id,
                                                             virtualmachineids: args.item.id
-                                                        },
+                                                        };
+                                                    } else {
+                                                        inputData = {
+                                                            id: args.multiRule.id,
+                                                            "vmidipmap[0].vmid": args.item.id,
+                                                            "vmidipmap[0].vmip": args.item.itemIp
+                                                        };
+                                                    }
+
+                                                    $.ajax({
+                                                        url: createURL('removeFromLoadBalancerRule'),
+                                                        data: inputData,
                                                         success: function(json) {
                                                             args.response.success({
                                                                 notification: {
@@ -3779,31 +4101,30 @@
                                                 dataType: 'json',
                                                 async: true,
                                                 success: function(data) {
-                                                    var loadBalancerData = data.listloadbalancerrulesresponse.loadbalancerrule;
-                                                    var loadVMTotal = loadBalancerData ? loadBalancerData.length : 0;
-                                                    var loadVMCurrent = 0;
+                                                    var loadbalancerrules = data.listloadbalancerrulesresponse.loadbalancerrule;
 
-                                                    $(loadBalancerData).each(function() {
-                                                        loadVMCurrent++;
-                                                        var item = this;
+                                                    $(loadbalancerrules).each(function() {
+                                                        var lbRule = this;
                                                         var stickyData = {};
-                                                        var lbInstances = [];
+
+                                                        //var lbInstances = [];
+                                                        var itemData = [];
 
                                                         // Passing _hideFields array will disable specified fields for this row
-                                                        //item._hideFields = ['autoScale'];
+                                                        //lbRule._hideFields = ['autoScale'];
 
                                                         $.ajax({
                                                             url: createURL('listAutoScaleVmGroups'),
                                                             data: {
                                                                 listAll: true,
-                                                                lbruleid: item.id
+                                                                lbruleid: lbRule.id
                                                             },
                                                             async: false,
                                                             success: function(json) {
                                                                 if (json.listautoscalevmgroupsresponse.autoscalevmgroup != null && json.listautoscalevmgroupsresponse.autoscalevmgroup.length > 0) { //from 'autoScale' button
-                                                                    item._hideFields = ['add-vm'];
+                                                                    lbRule._hideFields = ['add-vm'];
                                                                 } else { //from 'add-vm' button
-                                                                    item._hideFields = ['autoScale'];
+                                                                    lbRule._hideFields = ['autoScale'];
                                                                 }
                                                             }
                                                         });
@@ -3814,7 +4135,7 @@
                                                             async: false,
                                                             data: {
                                                                 listAll: true,
-                                                                lbruleid: item.id
+                                                                lbruleid: lbRule.id
                                                             },
                                                             success: function(json) {
                                                                 var stickyPolicy = json.listlbstickinesspoliciesresponse.stickinesspolicies ?
@@ -3830,12 +4151,12 @@
                                                                         methodname: stickyPolicy.methodname,
                                                                         stickyName: stickyPolicy.name,
                                                                         id: stickyPolicy.id,
-                                                                        lbRuleID: item.id
+                                                                        lbRuleID: lbRule.id
                                                                     };
                                                                     $.extend(stickyData, stickyPolicy.params);
                                                                 } else {
                                                                     stickyData = {
-                                                                        lbRuleID: item.id
+                                                                        lbRuleID: lbRule.id
                                                                     };
                                                                 }
                                                             },
@@ -3853,42 +4174,62 @@
                                                             async: false,
                                                             data: {
                                                                 listAll: true,
-                                                                id: item.id
+                                                                lbvmips: true,
+                                                                id: lbRule.id
                                                             },
                                                             success: function(data) {
-                                                                lbInstances = data.listloadbalancerruleinstancesresponse.loadbalancerruleinstance ?
-                                                                    data.listloadbalancerruleinstancesresponse.loadbalancerruleinstance : [];
+                                                                //when "lbvmips: true" is not passed to API
+                                                                //lbVMs = data.listloadbalancerruleinstancesresponse.loadbalancerruleinstance;
 
-                                                                $(lbInstances).each(function() {
-                                                                    if (this.displayname.indexOf('AutoScale-LB-') > -1) //autoscale VM is not allowed to be deleted manually. So, hide destroy button
-                                                                        this._hideActions = ['destroy'];
+                                                                //when "lbvmips: true" is passed to API
+                                                                lbrulevmidips = data.listloadbalancerruleinstancesresponse.lbrulevmidip;
 
-                                                                    if (this.servicestate) {
-                                                                        this._itemStateLabel = 'label.service.state';
-                                                                        this._itemState = this.servicestate;
+                                                                if (lbrulevmidips != null) {
+                                                                    for (var k = 0; k < lbrulevmidips.length; k++) {
+                                                                        var lbrulevmidip = lbrulevmidips[k];
+                                                                        var lbVM = lbrulevmidip.loadbalancerruleinstance;
+                                                                        if (lbVM.displayname.indexOf('AutoScale-LB-') > -1) //autoscale VM is not allowed to be deleted manually. So, hide destroy button
+                                                                            lbVM._hideActions = ['destroy'];
+
+                                                                        if (lbVM.servicestate) {
+                                                                            lbVM._itemStateLabel = 'label.service.state';
+                                                                            lbVM._itemState = lbVM.servicestate;
+                                                                        }
+
+                                                                        if (lbrulevmidip.lbvmipaddresses != null) {
+                                                                            for (var m = 0 ; m < lbrulevmidip.lbvmipaddresses.length; m++) {
+                                                                                var ip = lbrulevmidip.lbvmipaddresses[m];
+                                                                                itemData.push($.extend({}, lbVM, {
+                                                                                    itemIp: ip
+                                                                                }));
+                                                                            }
+                                                                        } else {
+                                                                            itemData.push(lbVM);
+                                                                        }
                                                                     }
-                                                                });
+                                                                }
                                                             },
                                                             error: function(data) {
                                                                 args.response.error(parseXMLHttpResponse(data));
                                                             }
                                                         });
 
-                                                        $.extend(item, {
+                                                        $.extend(lbRule, {
                                                             _itemName: 'name',
-                                                            _itemData: lbInstances,
+                                                            _itemIp: 'itemIp',
+                                                            _itemData: itemData,
                                                             _maxLength: {
                                                                 name: 7
                                                             },
                                                             sticky: stickyData,
                                                             autoScale: {
-                                                                lbRuleID: item.id
+                                                                lbRuleID: lbRule.id
                                                             }
                                                         });
                                                     });
 
                                                     args.response.success({
-                                                        data: loadBalancerData
+                                                        data: loadbalancerrules
                                                     });
                                                 }
                                             });
@@ -3933,6 +4274,8 @@
                                                     if ('vpc' in args.context) {
                                                         var data = {
                                                             //listAll: true,  //do not pass listAll to listNetworks under VPC
+                                                            domainid: args.context.vpc[0].domainid,
+                                                            account: args.context.vpc[0].account,
                                                             supportedservices: 'PortForwarding'
                                                         };
                                                         if (args.context.ipAddresses[0].associatednetworkid == null) {
@@ -3972,21 +4315,21 @@
                                                 filters: false,
                                                 subselect: {
                                                     label: 'label.use.vm.ip',
-                                                    dataProvider: instanceSecondaryIPSubselect
+                                                    dataProvider: singleVmSecondaryIPSubselect
                                                 },
                                                 dataProvider: function(args) {
-                                                    var networkid;
-                                                    if ('vpc' in args.context)
-                                                        networkid = args.context.multiData.tier;
-                                                    else
-                                                        networkid = args.context.ipAddresses[0].associatednetworkid;
+                                                    var data = {};
+                                                    listViewDataProvider(args, data);
 
-                                                    var data = {
-                                                        page: args.page,
-                                                        pageSize: pageSize,
-                                                        listAll: true,
+                                                    var networkid;
+                                                    if ('vpc' in args.context) {
+                                                        networkid = args.context.multiData.tier;
+                                                    } else {
+                                                        networkid = args.context.ipAddresses[0].associatednetworkid;
+                                                    }
+                                                    $.extend(data, {
                                                         networkid: networkid
-                                                    };
+                                                    });
 
                                                     if (!args.context.projects) {
                                                         $.extend(data, {
@@ -4050,8 +4393,8 @@
                                                 }
                                             },
                                             'state' : {
-                                            	edit: 'ignore',
-                                            	label: 'label.state'
+                                                edit: 'ignore',
+                                                label: 'label.state'
                                             },
                                             'add-vm': {
                                                 label: 'label.add.vm',
@@ -4078,7 +4421,7 @@
                                                     virtualmachineid: args.itemData[0].id,
                                                     openfirewall: false
                                                 };
-                                                
+
                                                 if (args.context.ipAddresses[0].isportable) {
                                                     var subselect = args.itemData[0]._subselect.split(',');
                                                     //var networkid = subselect[0];
@@ -4091,7 +4434,7 @@
                                                     }
                                                 } else if (args.itemData[0]._subselect && args.itemData[0]._subselect != -1) {
                                                     data.vmguestip = args.itemData[0]._subselect;
-                                                }                                                
+                                                }
 
                                                 if ('vpc' in args.context) { //from VPC section
                                                     if (args.data.tier == null) {
@@ -4114,7 +4457,7 @@
                                                         args.response.success({
                                                             _custom: {
                                                                 jobId: data.createportforwardingruleresponse.jobid,
-                                                                getUpdatedItem: function(json) {                                                        	        
+                                                                getUpdatedItem: function(json) {
                                                                     return json.queryasyncjobresultresponse.jobresult.portforwardingrule;
                                                                 }
                                                             },
@@ -4194,14 +4537,25 @@
                                                             },
                                                             success: function(data) {
                                                                 loadCurrent++;
+                                                                var vms = data.listvirtualmachinesresponse.virtualmachine;
+
+                                                                //if this VM is destroyed, data.listvirtualmachinesresponse.virtualmachine will be undefined for regular-user (CLOUDSTACK-3195)
+                                                                if (vms == undefined) {
+                                                                    vms = [{
+                                                                        "id": item.virtualmachineid,
+                                                                        "name": item.virtualmachinename,
+                                                                        "displayname": item.virtualmachinedisplayname
+                                                                    }];
+                                                                }
+
                                                                 $.extend(item, {
-                                                                    _itemData: $.map(data.listvirtualmachinesresponse.virtualmachine, function(vm) {
+                                                                    _itemData: $.map(vms, function(vm) {
                                                                         return $.extend(vm, {
                                                                             _displayName: '<p>VM: ' + vm.name + '</p>' + '<p>IP: ' + item.vmguestip + '</p>' // Also display attached IP
                                                                         });
                                                                     }),
                                                                     _context: {
-                                                                        instances: data.listvirtualmachinesresponse.virtualmachine
+                                                                        instances: vms
                                                                     }
                                                                 });
 
@@ -4252,7 +4606,7 @@
                                 })
                             },
                             vpn: {
-                                title: 'VPN',
+                                title: 'label.vpn',
                                 custom: function(args) {
                                     var ipAddress = args.context.ipAddresses[0].ipaddress;
                                     var psk = "";
@@ -4426,7 +4780,7 @@
 
                             messages: {
                                 confirm: function(args) {
-                                    return 'Are you sure you want to add ' + args.name + '?';
+                                    return _l('message.question.are.you.sure.you.want.to.add') + ' ' + args.name + '?';
                                 },
                                 notification: function(args) {
                                     return 'label.add.security.group';
@@ -4450,10 +4804,10 @@
 
                     advSearchFields: {
                         tagKey: {
-                            label: 'Tag Key'
+                            label: 'label.tag.key'
                         },
                         tagValue: {
-                            label: 'Tag Value'
+                            label: 'label.tag.value'
                         }
                     },
 
@@ -4577,11 +4931,19 @@
                                         },
                                         'startport': {
                                             edit: true,
-                                            label: 'label.start.port'
+                                            label: 'label.start.port',
+                                            validation: {
+                                                number: true,
+                                                range: [0, 65535]
+                                            }
                                         },
                                         'endport': {
                                             edit: true,
-                                            label: 'label.end.port'
+                                            label: 'label.end.port',
+                                            validation: {
+                                                number: true,
+                                                range: [0, 65535]
+                                            }
                                         },
                                         'icmptype': {
                                             edit: true,
@@ -4596,7 +4958,10 @@
                                         'cidr': {
                                             edit: true,
                                             label: 'label.cidr',
-                                            isHidden: true
+                                            isHidden: true,
+                                            validation: {
+                                                ipv4cidr: true
+                                            }
                                         },
                                         'accountname': {
                                             edit: true,
@@ -4694,6 +5059,10 @@
                                         }
                                     },
                                     ignoreEmptyFields: true,
+                                    tags: cloudStack.api.tags({
+                                        resourceType: 'SecurityGroupRule',
+                                        contextId: 'multiRule'
+                                    }),
                                     dataProvider: function(args) {
                                         $.ajax({
                                             url: createURL('listSecurityGroups'),
@@ -4772,11 +5141,19 @@
                                         },
                                         'startport': {
                                             edit: true,
-                                            label: 'label.start.port'
+                                            label: 'label.start.port',
+                                            validation: {
+                                                number: true,
+                                                range: [0, 65535]
+                                            }
                                         },
                                         'endport': {
                                             edit: true,
-                                            label: 'label.end.port'
+                                            label: 'label.end.port',
+                                            validation: {
+                                                number: true,
+                                                range: [0, 65535]
+                                            }
                                         },
                                         'icmptype': {
                                             edit: true,
@@ -4791,7 +5168,10 @@
                                         'cidr': {
                                             edit: true,
                                             label: 'label.cidr',
-                                            isHidden: true
+                                            isHidden: true,
+                                            validation: {
+                                                ipv4cidr: true
+                                            }
                                         },
                                         'accountname': {
                                             edit: true,
@@ -4889,6 +5269,10 @@
                                         }
                                     },
                                     ignoreEmptyFields: true,
+                                    tags: cloudStack.api.tags({
+                                        resourceType: 'SecurityGroupRule',
+                                        contextId: 'multiRule'
+                                    }),
                                     dataProvider: function(args) {
                                         $.ajax({
                                             url: createURL('listSecurityGroups'),
@@ -4988,10 +5372,10 @@
 
                     advSearchFields: {
                         name: {
-                            label: 'Name'
+                            label: 'label.name'
                         },
                         zoneid: {
-                            label: 'Zone',
+                            label: 'label.zone',
                             select: function(args) {
                                 $.ajax({
                                     url: createURL('listZones'),
@@ -5015,7 +5399,7 @@
                         },
 
                         domainid: {
-                            label: 'Domain',
+                            label: 'label.domain',
                             select: function(args) {
                                 if (isAdmin() || isDomainAdmin()) {
                                     $.ajax({
@@ -5038,6 +5422,9 @@
                                                     });
                                                 }
                                             }
+                                            array1.sort(function(a, b) {
+                                                return a.description.localeCompare(b.description);
+                                            });
                                             args.response.success({
                                                 data: array1
                                             });
@@ -5058,7 +5445,7 @@
                         },
 
                         account: {
-                            label: 'Account',
+                            label: 'label.account',
                             isHidden: function(args) {
                                 if (isAdmin() || isDomainAdmin())
                                     return false;
@@ -5067,10 +5454,10 @@
                             }
                         },
                         tagKey: {
-                            label: 'Tag Key'
+                            label: 'label.tag.key'
                         },
                         tagValue: {
-                            label: 'Tag Value'
+                            label: 'label.tag.value'
                         }
                     },
 
@@ -5082,11 +5469,26 @@
                             url: createURL('listVPCs'),
                             data: data,
                             success: function(json) {
-                                var items = json.listvpcsresponse.vpc;
+                                var items = json.listvpcsresponse.vpc ? json.listvpcsresponse.vpc : { };
+
+                                //If we are coming from Home > Regions, show only regional vpcs
+                                if (args.context.regions)
+                                    items = $.grep(
+                                        items,
+                                        function (vpc, i) {
+                                            return vpc.regionlevelvpc;
+                                    });
+
                                 args.response.success({
                                     data: items
                                 });
-                            }
+                            },
+                            error: function(XMLHttpResponse) {
+                                cloudStack.dialog.notice({
+                                    message: parseXMLHttpResponse(XMLHttpResponse)
+                                });
+                                args.response.error();
+                             }
                         });
                     },
                     actions: {
@@ -5126,9 +5528,7 @@
                                             required: true
                                         },
                                         select: function(args) {
-                                            var data = {
-                                                listAll: true
-                                            };
+                                            var data = {};
                                             $.ajax({
                                                 url: createURL('listZones'),
                                                 data: data,
@@ -5153,15 +5553,17 @@
                                         label: 'label.super.cidr.for.guest.networks',
                                         docID: 'helpVPCSuperCIDR',
                                         validation: {
-                                            required: true
+                                            required: true,
+                                            ipv4cidr: true
                                         }
                                     },
                                     networkdomain: {
                                         docID: 'helpVPCDomain',
                                         label: 'label.DNS.domain.for.guest.networks'
+                                        //format: FQDN
                                     },
                                     publicLoadBalancerProvider: {
-                                        label: 'Public Load Balancer Provider',
+                                        label: 'label.public.load.balancer.provider',
                                         select: function(args) {
                                             var items = [];
                                             items.push({
@@ -5176,30 +5578,45 @@
                                                 data: items
                                             });
                                         }
+                                    },
+                                    vpcoffering: {
+                                        label: 'label.vpc.offering',
+                                        validation: {
+                                            required: true
+                                        },
+
+                                        select: function(args) {
+                                            var data = {};
+                                            $.ajax({
+                                                url: createURL('listVPCOfferings'),
+                                                data: {},
+                                                success: function(json) {
+                                                      var offerings  = json.listvpcofferingsresponse.vpcoffering ? json.listvpcofferingsresponse.vpcoffering : [];
+                                                      var filteredofferings = $.grep(offerings, function(offering) {
+                                                          return offering.state == 'Enabled';
+                                                      });
+                                                    args.response.success({
+                                                        data: $.map(filteredofferings, function(vpco) {
+                                                            return {
+                                                                id: vpco.id,
+                                                                description: vpco.name
+                                                            };
+                                                        })
+                                                    });
+                                                }
+                                            });
+                                        }
                                     }
                                 }
                             },
                             action: function(args) {
-                                var vpcOfferingName;
-                                if (args.data.publicLoadBalancerProvider == 'VpcVirtualRouter')
-                                    vpcOfferingName = 'Default VPC offering';
-                                else if (args.data.publicLoadBalancerProvider == 'Netscaler')
-                                    vpcOfferingName = 'Default VPC  offering with Netscaler';
-
-                                $.ajax({
-                                    url: createURL('listVPCOfferings'),
-                                    data: {
-                                        name: vpcOfferingName
-                                    },
-                                    success: function(json) {
-                                        var vpcofferingid = json.listvpcofferingsresponse.vpcoffering[0].id;
-
+                                var vpcOfferingName = args.data.vpcoffering
                                         var dataObj = {
                                             name: args.data.name,
                                             displaytext: args.data.displaytext,
                                             zoneid: args.data.zoneid,
                                             cidr: args.data.cidr,
-                                            vpcofferingid: vpcofferingid
+                                            vpcofferingid: args.data.vpcoffering
                                         };
 
                                         if (args.data.networkdomain != null && args.data.networkdomain.length > 0)
@@ -5227,8 +5644,6 @@
                                                 args.response.error(parseXMLHttpResponse(data));
                                             }
                                         });
-                                    }
-                                });
 
                             },
                             notification: {
@@ -5294,6 +5709,50 @@
 
                             restart: {
                                 label: 'label.restart.vpc',
+                                createForm: {
+                                    title: 'label.restart.vpc',
+                                    desc: function(args) {
+                                        if (Boolean(args.context.vpc[0].redundantvpcrouter)) {
+                                           return 'message.restart.vpc';
+                                       } else {
+                                           return 'message.restart.vpc.remark';
+                                       }
+                                    },
+
+                                    preFilter: function(args) {
+                                       var zoneObj;
+                                       $.ajax({
+                                           url: createURL("listZones&id=" + args.context.vpc[0].zoneid),
+                                           dataType: "json",
+                                           async: false,
+                                           success: function(json) {
+                                               zoneObj = json.listzonesresponse.zone[0];
+                                           }
+                                       });
+
+
+                                       args.$form.find('.form-item[rel=cleanup]').find('input').attr('checked', 'checked'); //checked
+                                       args.$form.find('.form-item[rel=cleanup]').css('display', 'inline-block'); //shown
+                                       args.$form.find('.form-item[rel=makeredundant]').find('input').attr('checked', 'checked'); //checked
+                                       args.$form.find('.form-item[rel=makeredundant]').css('display', 'inline-block'); //shown
+
+                                       if (Boolean(args.context.vpc[0].redundantvpcrouter)) {
+                                           args.$form.find('.form-item[rel=makeredundant]').hide();
+                                       } else {
+                                           args.$form.find('.form-item[rel=makeredundant]').show();
+                                       }
+                                   },
+                                   fields: {
+                                       cleanup: {
+                                           label: 'label.clean.up',
+                                           isBoolean: true
+                                       },
+                                       makeredundant: {
+                                           label: 'label.make.redundant',
+                                           isBoolean: true
+                                       }
+                                   }
+                                },
                                 messages: {
                                     confirm: function(args) {
                                         return 'message.restart.vpc';
@@ -5302,11 +5761,14 @@
                                         return 'label.restart.vpc';
                                     }
                                 },
+
                                 action: function(args) {
                                     $.ajax({
                                         url: createURL("restartVPC"),
                                         data: {
-                                            id: args.context.vpc[0].id
+                                            id: args.context.vpc[0].id,
+                                            cleanup: (args.data.cleanup == "on"),
+                                            makeredundant: (args.data.makeredundant == "on")
                                         },
                                         success: function(json) {
                                             var jid = json.restartvpcresponse.jobid;
@@ -5404,15 +5866,30 @@
                                         label: 'label.state'
                                     },
                                     ispersistent: {
-                                        label: 'Persistent ',
-                                        converter: cloudStack.converters.toBooleanText
+                                        label: 'label.persistent',
+                                        converter: function(booleanValue) {
+                                            if (booleanValue == true) {
+                                                return "Yes";
+                                            }
 
+                                            return "No";
+                                        }
+                                    },
+                                    redundantvpcrouter: {
+                                        label: 'label.redundant.vpc',
+                                        converter: function(booleanValue) {
+                                            if (booleanValue == true) {
+                                                return "Yes";
+                                            }
+
+                                            return "No";
+                                        }
                                     },
                                     restartrequired: {
                                         label: 'label.restart.required',
                                         converter: function(booleanValue) {
                                             if (booleanValue == true) {
-                                                return "<font color='red'>Yes</font>";
+                                                return "Yes";
                                             }
 
                                             return "No";
@@ -5446,20 +5923,41 @@
                                 }
                             },
                             router: {
-                                title: 'VPC Router Details',
+                                title: 'label.vpc.router.details',
                                 fields: [{
                                     name: {
                                         label: 'label.name'
                                     }
                                 }, {
+                                    state: {
+                                        label: 'label.state'
+                                    },
+                                    hostname: {
+                                        label: 'label.host'
+                                    },
+                                    linklocalip: {
+                                        label: 'label.linklocal.ip'
+                                    },
+                                    isredundantrouter: {
+                                        label: 'label.redundant.router',
+                                        converter: function(booleanValue) {
+                                            if (booleanValue == true) {
+                                                return "Yes";
+                                            }
+                                            return "No";
+                                        }
+                                    },
+                                    redundantstate: {
+                                        label: 'label.redundant.state'
+                                    },
                                     id: {
                                         label: 'label.id'
                                     },
+                                    serviceofferingname: {
+                                        label: 'label.service.offering'
+                                    },
                                     zonename: {
                                         label: 'label.zone'
-                                    },
-                                    dns1: {
-                                        label: 'label.dns'
                                     },
                                     gateway: {
                                         label: 'label.gateway'
@@ -5470,23 +5968,8 @@
                                     guestipaddress: {
                                         label: 'label.guest.ip'
                                     },
-                                    linklocalip: {
-                                        label: 'label.linklocal.ip'
-                                    },
-                                    state: {
-                                        label: 'label.state'
-                                    },
-                                    serviceofferingname: {
-                                        label: 'label.service.offering'
-                                    },
-                                    isredundantrouter: {
-                                        label: 'label.redundant.router',
-                                        converter: function(booleanValue) {
-                                            if (booleanValue == true) {
-                                                return "<font color='red'>Yes</font>";
-                                            }
-                                            return "No";
-                                        }
+                                    dns1: {
+                                        label: 'label.dns'
                                     },
                                     account: {
                                         label: 'label.account'
@@ -5495,18 +5978,21 @@
                                         label: 'label.domain'
                                     }
                                 }],
+
                                 dataProvider: function(args) {
                                     $.ajax({
                                         url: createURL("listRouters&listAll=true&vpcid=" + args.context.vpc[0].id),
                                         dataType: "json",
                                         async: true,
                                         success: function(json) {
-                                            var item = json.listroutersresponse.router[0];
+                                            for (var i = 0; i < json.listroutersresponse.router.length; i++) {
+                                                var item = json.listroutersresponse.router[i];
 
-                                            args.response.success({
-                                                actionFilter: cloudStack.sections.system.routerActionFilter,
-                                                data: item
-                                            });
+                                                args.response.success({
+                                                    actionFilter: cloudStack.sections.system.routerActionFilter,
+                                                    data: item
+                                                });
+                                            }
                                         }
                                     });
                                 }
@@ -5579,8 +6065,8 @@
                                         }
                                     },
                                     cidrlist: {
-                                        label: 'CIDR list',
-                                        desc: 'Please enter a comma separated list of CIDRs if more than one',
+                                        label: 'label.CIDR.list',
+                                        desc: 'message.enter.seperated.list.multiple.cidrs',
                                         validation: {
                                             required: true
                                         }
@@ -5594,7 +6080,7 @@
                                     },
                                     cidrlist: {
                                         label: 'label.CIDR.list',
-                                        desc: 'Please enter a comma separated list of CIDRs if more than one',
+                                        desc: 'message.enter.seperated.list.multiple.cidrs',
                                         docID: 'helpVPNGatewayCIDRList',
                                         validation: {
                                             required: true
@@ -5660,7 +6146,7 @@
                                             var items = [];
                                             items.push({
                                                 id: '',
-                                                description: 'None'
+                                                description: _l('label.none')
                                             });
                                             items.push({
                                                 id: 'modp1024',
@@ -5728,7 +6214,7 @@
                                             var items = [];
                                             items.push({
                                                 id: '',
-                                                description: 'None'
+                                                description: _l('label.none')
                                             });
                                             items.push({
                                                 id: 'modp1024',
@@ -5768,6 +6254,14 @@
                                         docID: 'helpVPNGatewayDeadPeerDetection',
                                         isBoolean: true,
                                         isChecked: false
+                                    },
+
+                                    forceencap: {
+                                        label: 'label.vpn.force.encapsulation',
+                                        docID: 'helpVPNGatewayForceEncapsulation',
+                                        docID: 'helpVPNGatewayForceEncapsulation',
+                                        isBoolean: true,
+                                        isChecked: false
                                     }
                                 }
                             },
@@ -5779,7 +6273,8 @@
                                     ipsecpsk: args.data.ipsecpsk,
                                     ikelifetime: args.data.ikelifetime,
                                     esplifetime: args.data.esplifetime,
-                                    dpd: (args.data.dpd == "on")
+                                    dpd: (args.data.dpd == "on"),
+                                    forceencap: (args.data.forceencap == "on")
                                 };
 
                                 var ikepolicy = args.data.ikeEncryption + '-' + args.data.ikeHash;
@@ -5835,7 +6330,8 @@
                                         ipsecpsk: args.data.ipsecpsk,
                                         ikelifetime: args.data.ikelifetime,
                                         esplifetime: args.data.esplifetime,
-                                        dpd: (args.data.dpd == "on")
+                                        dpd: (args.data.dpd == "on"),
+                                        forceencap: (args.data.forceencap == "on")
                                     };
 
                                     var ikepolicy = args.data.ikeEncryption + '-' + args.data.ikeHash;
@@ -5858,7 +6354,7 @@
                                         url: createURL('updateVpnCustomerGateway'),
                                         data: data,
                                         success: function(json) {
-                                            var jobId = json.updatecustomergatewayresponse.jobid;
+                                            var jobId = json.updatevpncustomergatewayresponse.jobid;
                                             args.response.success({
                                                 _custom: {
                                                     jobId: jobId,
@@ -5870,6 +6366,9 @@
                                                     }
                                                 }
                                             });
+                                        },
+                                        error: function(json) {
+                                            args.response.error(parseXMLHttpResponse(json));
                                         }
                                     });
                                 },
@@ -5996,7 +6495,7 @@
                                             var items = [];
                                             items.push({
                                                 id: '',
-                                                description: 'None'
+                                                description: _l('label.none')
                                             });
                                             items.push({
                                                 id: 'modp1024',
@@ -6064,7 +6563,7 @@
                                             var items = [];
                                             items.push({
                                                 id: '',
-                                                description: 'None'
+                                                description: _l('label.none')
                                             });
                                             items.push({
                                                 id: 'modp1024',
@@ -6099,6 +6598,13 @@
 
                                     dpd: {
                                         label: 'label.dead.peer.detection',
+                                        isBoolean: true,
+                                        isEditable: true,
+                                        converter: cloudStack.converters.toBooleanText
+                                    },
+
+                                    forceencap: {
+                                        label: 'label.vpn.force.encapsulation',
                                         isBoolean: true,
                                         isEditable: true,
                                         converter: cloudStack.converters.toBooleanText
@@ -6160,58 +6666,116 @@
         }
     };
 
-    function getExtaPropertiesForIpObj(ipObj, args) {	    
-        if (!('vpc' in args.context)) { //***** Guest Network section > Guest Network page > IP Address page *****          
-			var services = args.context.networks[0].service;
-			if(services != null) {
-				for(var i = 0; i < services.length; i++) {                                    		
-					var thisService = services[i];					
-					if (thisService.name == "Vpn") {
-					    ipObj.networkOfferingHavingVpnService = true; 
-						break;
-					}
-				}
-			}		
-			if (ipObj.networkOfferingHavingVpnService == true) {
-				$.ajax({
-					url: createURL('listRemoteAccessVpns'),
-					data: {
-						listAll: true,
-						publicipid: ipObj.id
-					},
-					async: false,
-					success: function(vpnResponse) {
-						var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
-						if (isVPNEnabled) {
-							ipObj.vpnenabled = true;
-							ipObj.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
-						} else {
-							ipObj.vpnenabled = false;
-						}
-					}
-				});
-			}			
-        } else { //***** VPC section > Configuration VPC > Router > Public IP Addresses *****    
-        	if (ipObj.issourcenat) { //VPC sourceNAT IP: supports VPN 
-        		$.ajax({
-					url: createURL('listRemoteAccessVpns'),
-					data: {
-						listAll: true,
-						publicipid: ipObj.id
-					},
-					async: false,
-					success: function(vpnResponse) {
-						var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
-						if (isVPNEnabled) {
-							ipObj.vpnenabled = true;
-							ipObj.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
-						} else {
-							ipObj.vpnenabled = false;
-						}
-					}
-				});             		
-        	} 
+    function checkIfNetScalerProviderIsEnabled(services) {
+        if (services != null) {
+            for (var i = 0; i < services.length; i++) {
+                if (services[i].name == 'Lb') {
+                    var providers = services[i].provider;
+                    if (providers != null) {
+                        for (var k = 0; k < providers.length; k++) {
+                            if (providers[k].name == 'Netscaler') {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+            }
         }
+
+        return false;
+    }
+
+    function getExtaPropertiesForIpObj(ipObj, args) {
+        if (!('vpc' in args.context)) { //***** Guest Network section > Guest Network page > IP Address page *****
+            var services = args.context.networks[0].service;
+            if(services != null) {
+                for(var i = 0; i < services.length; i++) {
+                    var thisService = services[i];
+                    if (thisService.name == "Vpn") {
+                        ipObj.networkOfferingHavingVpnService = true;
+                        break;
+                    }
+                }
+            }
+            if (ipObj.networkOfferingHavingVpnService == true) {
+                $.ajax({
+                    url: createURL('listRemoteAccessVpns'),
+                    data: {
+                        listAll: true,
+                        publicipid: ipObj.id
+                    },
+                    async: false,
+                    success: function(vpnResponse) {
+                        var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
+                        if (isVPNEnabled) {
+                            ipObj.vpnenabled = true;
+                            ipObj.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
+                        } else {
+                            ipObj.vpnenabled = false;
+                        }
+                    }
+                });
+            }
+        } else { //***** VPC section > Configuration VPC > Router > Public IP Addresses *****
+            if (ipObj.issourcenat) { //VPC sourceNAT IP: supports VPN
+                $.ajax({
+                    url: createURL('listRemoteAccessVpns'),
+                    data: {
+                        listAll: true,
+                        publicipid: ipObj.id
+                    },
+                    async: false,
+                    success: function(vpnResponse) {
+                        var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
+                        if (isVPNEnabled) {
+                            ipObj.vpnenabled = true;
+                            ipObj.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
+                        } else {
+                            ipObj.vpnenabled = false;
+                        }
+                    }
+                });
+            }
+        }
+    };
+
+    var getLBAlgorithms = function(networkObj) {
+        if (!networkObj || !networkObj.service) {
+            return [];
+        }
+
+        var lbService = $.grep(networkObj.service, function(service) {
+            return service.name == 'Lb';
+        })[0];
+
+        if (!lbService || !lbService.capability) {
+            return [];
+        }
+
+        var algorithmCapabilities = $.grep(
+            lbService.capability,
+            function(capability) {
+                return capability.name == 'SupportedLbAlgorithms';
+            }
+        )[0];
+
+        if (!algorithmCapabilities) {
+            return [];
+        }
+
+        var algorithms = algorithmCapabilities.value.split(',');
+
+        if (!algorithms) {
+            return [];
+        }
+
+        var data = [];
+        $(algorithms).each(function() {
+            data.push({id: this.valueOf(), name: this.valueOf(), description: _l('label.lb.algorithm.' + this.valueOf())});
+        });
+
+        return data;
     }
 
 })(cloudStack, jQuery);

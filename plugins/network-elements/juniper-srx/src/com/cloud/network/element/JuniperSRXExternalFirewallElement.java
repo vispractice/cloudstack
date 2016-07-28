@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
@@ -66,8 +65,6 @@ import com.cloud.network.NetworkModel;
 import com.cloud.network.PhysicalNetwork;
 import com.cloud.network.PhysicalNetworkServiceProvider;
 import com.cloud.network.PublicIpAddress;
-import com.cloud.network.RemoteAccessVpn;
-import com.cloud.network.VpnUser;
 import com.cloud.network.dao.ExternalFirewallDeviceDao;
 import com.cloud.network.dao.ExternalFirewallDeviceVO;
 import com.cloud.network.dao.ExternalFirewallDeviceVO.FirewallDeviceState;
@@ -91,11 +88,8 @@ import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.VirtualMachineProfile;
 
-@Local(value = {NetworkElement.class, FirewallServiceProvider.class,
-        PortForwardingServiceProvider.class, IpDeployer.class,
-        SourceNatServiceProvider.class, RemoteAccessVPNServiceProvider.class})
 public class JuniperSRXExternalFirewallElement extends ExternalFirewallDeviceManagerImpl implements SourceNatServiceProvider, FirewallServiceProvider,
-PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, StaticNatServiceProvider {
+        PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, StaticNatServiceProvider {
 
     private static final Logger s_logger = Logger.getLogger(JuniperSRXExternalFirewallElement.class);
 
@@ -132,9 +126,8 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
 
     private boolean canHandle(Network network, Service service) {
         DataCenter zone = _entityMgr.findById(DataCenter.class, network.getDataCenterId());
-        if ((zone.getNetworkType() == NetworkType.Advanced && !(network.getGuestType() == Network.GuestType.Isolated ||
-                network.getGuestType() == Network.GuestType.Shared )) ||
-                (zone.getNetworkType() == NetworkType.Basic && network.getGuestType() != Network.GuestType.Shared)) {
+        if ((zone.getNetworkType() == NetworkType.Advanced && !(network.getGuestType() == Network.GuestType.Isolated || network.getGuestType() == Network.GuestType.Shared)) ||
+            (zone.getNetworkType() == NetworkType.Basic && network.getGuestType() != Network.GuestType.Shared)) {
             s_logger.trace("Element " + getProvider().getName() + "is not handling network type = " + network.getGuestType());
             return false;
         }
@@ -155,8 +148,8 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
     }
 
     @Override
-    public boolean implement(Network network, NetworkOffering offering, DeployDestination dest, ReservationContext context) throws ResourceUnavailableException, ConcurrentOperationException,
-    InsufficientNetworkCapacityException {
+    public boolean implement(Network network, NetworkOffering offering, DeployDestination dest, ReservationContext context) throws ResourceUnavailableException,
+        ConcurrentOperationException, InsufficientNetworkCapacityException {
         DataCenter zone = _entityMgr.findById(DataCenter.class, network.getDataCenterId());
 
         // don't have to implement network is Basic zone
@@ -180,8 +173,8 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
     }
 
     @Override
-    public boolean prepare(Network config, NicProfile nic, VirtualMachineProfile vm, DeployDestination dest, ReservationContext context) throws ConcurrentOperationException,
-    InsufficientNetworkCapacityException, ResourceUnavailableException {
+    public boolean prepare(Network config, NicProfile nic, VirtualMachineProfile vm, DeployDestination dest, ReservationContext context)
+        throws ConcurrentOperationException, InsufficientNetworkCapacityException, ResourceUnavailableException {
         return true;
     }
 
@@ -222,13 +215,12 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
             return false;
         }
 
-        if (rules != null && rules.size() == 1 ) {
+        if (rules != null && rules.size() == 1) {
             // for SRX no need to add default egress rule to DENY traffic
             if (rules.get(0).getTrafficType() == FirewallRule.TrafficType.Egress && rules.get(0).getType() == FirewallRule.FirewallRuleType.System &&
-                    ! _networkManager.getNetworkEgressDefaultPolicy(config.getId()))
+                !_networkManager.getNetworkEgressDefaultPolicy(config.getId()))
                 return true;
         }
-
 
         return applyFirewallRules(config, rules);
     }
@@ -304,7 +296,7 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
 
     @Override
     public boolean shutdownProviderInstances(PhysicalNetworkServiceProvider provider, ReservationContext context) throws ConcurrentOperationException,
-    ResourceUnavailableException {
+        ResourceUnavailableException {
         // TODO Auto-generated method stub
         return true;
     }
@@ -317,7 +309,8 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
     @Override
     @Deprecated
     // should use more generic addNetworkDevice command to add firewall
-    public Host addExternalFirewall(AddExternalFirewallCmd cmd) {
+        public
+        Host addExternalFirewall(AddExternalFirewallCmd cmd) {
         Long zoneId = cmd.getZoneId();
         DataCenterVO zone = null;
         PhysicalNetworkVO pNetwork = null;
@@ -330,13 +323,14 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
 
         List<PhysicalNetworkVO> physicalNetworks = _physicalNetworkDao.listByZone(zoneId);
         if ((physicalNetworks == null) || (physicalNetworks.size() > 1)) {
-            throw new InvalidParameterValueException("There are no physical networks or multiple physical networks configured in zone with ID: "
-                    + zoneId + " to add this device.");
+            throw new InvalidParameterValueException("There are no physical networks or multiple physical networks configured in zone with ID: " + zoneId +
+                " to add this device.");
         }
         pNetwork = physicalNetworks.get(0);
 
         String deviceType = NetworkDevice.JuniperSRXFirewall.getName();
-        ExternalFirewallDeviceVO fwDeviceVO = addExternalFirewall(pNetwork.getId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceType, new JuniperSrxResource());
+        ExternalFirewallDeviceVO fwDeviceVO =
+            addExternalFirewall(pNetwork.getId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceType, new JuniperSrxResource());
         if (fwDeviceVO != null) {
             fwHost = _hostDao.findById(fwDeviceVO.getHostId());
         }
@@ -352,7 +346,8 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
     @Override
     @Deprecated
     // should use more generic listNetworkDevice command
-    public List<Host> listExternalFirewalls(ListExternalFirewallsCmd cmd) {
+        public
+        List<Host> listExternalFirewalls(ListExternalFirewallsCmd cmd) {
         List<Host> firewallHosts = new ArrayList<Host>();
         Long zoneId = cmd.getZoneId();
         DataCenterVO zone = null;
@@ -366,8 +361,8 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
 
             List<PhysicalNetworkVO> physicalNetworks = _physicalNetworkDao.listByZone(zoneId);
             if ((physicalNetworks == null) || (physicalNetworks.size() > 1)) {
-                throw new InvalidParameterValueException("There are no physical networks or multiple physical networks configured in zone with ID: "
-                        + zoneId + " to add this device.");
+                throw new InvalidParameterValueException("There are no physical networks or multiple physical networks configured in zone with ID: " + zoneId +
+                    " to add this device.");
             }
             pNetwork = physicalNetworks.get(0);
         }
@@ -401,8 +396,7 @@ PortForwardingServiceProvider, IpDeployer, JuniperSRXFirewallElementService, Sta
         if (!deviceName.equalsIgnoreCase(NetworkDevice.JuniperSRXFirewall.getName())) {
             throw new InvalidParameterValueException("Invalid SRX firewall device type");
         }
-        return addExternalFirewall(cmd.getPhysicalNetworkId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceName,
-                new JuniperSrxResource());
+        return addExternalFirewall(cmd.getPhysicalNetworkId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceName, new JuniperSrxResource());
     }
 
     @Override

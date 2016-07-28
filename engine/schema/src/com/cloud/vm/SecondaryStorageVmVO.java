@@ -63,10 +63,11 @@ public class SecondaryStorageVmVO extends VMInstanceVO implements SecondaryStora
     @Column(name = "last_update", updatable = true, nullable = true)
     private Date lastUpdateTime;
 
-    public SecondaryStorageVmVO(long id, long serviceOfferingId, String name, long templateId, HypervisorType hypervisorType, long guestOSId, long dataCenterId, long domainId, long accountId,
-            Role role, boolean haEnabled) {
-        super(id, serviceOfferingId, name, name, Type.SecondaryStorageVm, templateId, hypervisorType, guestOSId, domainId, accountId, haEnabled);
+    public SecondaryStorageVmVO(long id, long serviceOfferingId, String name, long templateId, HypervisorType hypervisorType, long guestOSId, long dataCenterId,
+                                long domainId, long accountId, long userId, Role role, boolean haEnabled) {
+        super(id, serviceOfferingId, name, name, Type.SecondaryStorageVm, templateId, hypervisorType, guestOSId, domainId, accountId, userId, haEnabled);
         this.role = role;
+        this.dataCenterId = dataCenterId;
     }
 
     protected SecondaryStorageVmVO() {

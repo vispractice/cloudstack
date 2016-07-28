@@ -18,7 +18,6 @@ package com.cloud.network.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
 import org.springframework.stereotype.Component;
@@ -32,11 +31,12 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
-@Local(value=PhysicalNetworkDao.class) @DB()
+@DB()
 public class PhysicalNetworkDaoImpl extends GenericDaoBase<PhysicalNetworkVO, Long> implements PhysicalNetworkDao {
     final SearchBuilder<PhysicalNetworkVO> ZoneSearch;
 
-    @Inject protected PhysicalNetworkTrafficTypeDao _trafficTypeDao;
+    @Inject
+    protected PhysicalNetworkTrafficTypeDao _trafficTypeDao;
 
     protected PhysicalNetworkDaoImpl() {
         super();
@@ -74,6 +74,6 @@ public class PhysicalNetworkDaoImpl extends GenericDaoBase<PhysicalNetworkVO, Lo
         sc.setJoinParameters("trafficTypeSearch", "trafficType", trafficType);
         sc.setParameters("dataCenterId", dataCenterId);
 
-        return listBy(sc);  
+        return listBy(sc);
     }
 }

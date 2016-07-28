@@ -23,12 +23,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
+
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 
@@ -41,7 +41,6 @@ import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 
 @Component
-@Local(value = {LBHealthCheckManager.class})
 public class LBHealthCheckManagerImpl extends ManagerBase implements LBHealthCheckManager, Manager {
     private static final Logger s_logger = Logger.getLogger(LBHealthCheckManagerImpl.class);
 

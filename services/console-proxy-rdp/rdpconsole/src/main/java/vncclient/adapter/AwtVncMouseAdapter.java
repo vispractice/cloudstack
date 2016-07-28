@@ -16,14 +16,13 @@
 // under the License.
 package vncclient.adapter;
 
-import java.awt.event.MouseEvent;
-
-import common.MouseOrder;
+import java.awt.event.InputEvent;
 
 import streamer.BaseElement;
 import streamer.ByteBuffer;
 import streamer.Link;
 import vncclient.vnc.RfbConstants;
+import common.MouseOrder;
 
 public class AwtVncMouseAdapter extends BaseElement {
 
@@ -58,14 +57,14 @@ public class AwtVncMouseAdapter extends BaseElement {
      * right buttons on the mouse. On a wheel mouse, each step of the wheel
      * upwards is represented by a press and release of button 4, and each step
      * downwards is represented by a press and release of button 5.
-     * 
+     *
      * @param modifiers
      *          extended modifiers from AWT mouse event
      * @return VNC mouse button mask
      */
     public static int mapAwtModifiersToVncButtonMask(int modifiers) {
-        int mask = (((modifiers & MouseEvent.BUTTON1_DOWN_MASK) != 0) ? 0x1 : 0) | (((modifiers & MouseEvent.BUTTON2_DOWN_MASK) != 0) ? 0x2 : 0)
-                | (((modifiers & MouseEvent.BUTTON3_DOWN_MASK) != 0) ? 0x4 : 0);
+        int mask = (((modifiers & InputEvent.BUTTON1_DOWN_MASK) != 0) ? 0x1 : 0) | (((modifiers & InputEvent.BUTTON2_DOWN_MASK) != 0) ? 0x2 : 0)
+                | (((modifiers & InputEvent.BUTTON3_DOWN_MASK) != 0) ? 0x4 : 0);
         return mask;
     }
 

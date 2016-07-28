@@ -16,24 +16,28 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.loadbalancer;
 
+import java.util.List;
 
-import org.apache.cloudstack.api.response.FirewallRuleResponse;
-import org.apache.cloudstack.api.response.SslCertResponse;
-import com.cloud.network.lb.CertService;
-import com.cloud.utils.exception.CloudRuntimeException;
+import javax.inject.Inject;
+
+import org.apache.log4j.Logger;
+
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.AccountResponse;
+import org.apache.cloudstack.api.response.FirewallRuleResponse;
 import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.response.ProjectResponse;
+import org.apache.cloudstack.api.response.SslCertResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
 
-import javax.inject.Inject;
-import java.util.List;
+import com.cloud.network.lb.CertService;
+import com.cloud.utils.exception.CloudRuntimeException;
 
-@APICommand(name = "listSslCerts", description="Lists SSL certificates", responseObject=SslCertResponse.class)
+@APICommand(name = "listSslCerts", description = "Lists SSL certificates", responseObject = SslCertResponse.class,
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSslCertsCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(DeleteSslCertCmd.class.getName());
 
@@ -46,15 +50,17 @@ public class ListSslCertsCmd extends BaseCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name= ApiConstants.CERTIFICATE_ID, type=CommandType.UUID, entityType = SslCertResponse.class, required=false, description="Id of SSL certificate")
+    @Parameter(name = ApiConstants.CERTIFICATE_ID, type = CommandType.UUID, entityType = SslCertResponse.class, required = false, description = "ID of SSL certificate")
     private Long certId;
 
-    @Parameter(name= ApiConstants.ACCOUNT_ID, type=CommandType.UUID, entityType = AccountResponse.class, required=false, description="Account Id")
+    @Parameter(name = ApiConstants.ACCOUNT_ID, type = CommandType.UUID, entityType = AccountResponse.class, required = false, description = "Account ID")
     private Long accountId;
 
-    @Parameter(name= ApiConstants.LBID, type=CommandType.UUID, entityType = FirewallRuleResponse.class, required=false, description="Loadbalancer Rule Id")
+    @Parameter(name = ApiConstants.LBID, type = CommandType.UUID, entityType = FirewallRuleResponse.class, required = false, description = "Load balancer rule ID")
     private Long lbId;
 
+    @Parameter(name = ApiConstants.PROJECT_ID, type = CommandType.UUID, entityType = ProjectResponse.class, required = false, description = "Project that owns the SSL certificate")
+    private Long projectId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -68,21 +74,23 @@ public class ListSslCertsCmd extends BaseCmd {
         return accountId;
     }
 
-    public Long getLbId(){
+    public Long getLbId() {
         return lbId;
     }
 
+    public Long getProjectId() {
+        return projectId;
+    }
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
 
     @Override
-    public void execute(){
-
+    public void execute() {
 
         try {
-            List<SslCertResponse> certResponseList =  _certService.listSslCerts(this);
+            List<SslCertResponse> certResponseList = _certService.listSslCerts(this);
             ListResponse<SslCertResponse> response = new ListResponse<SslCertResponse>();
 
             response.setResponses(certResponseList);

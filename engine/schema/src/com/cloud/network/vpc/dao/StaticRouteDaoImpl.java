@@ -18,7 +18,6 @@ package com.cloud.network.vpc.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
 import org.springframework.stereotype.Component;
@@ -27,8 +26,6 @@ import com.cloud.network.vpc.StaticRoute;
 import com.cloud.network.vpc.StaticRouteVO;
 import com.cloud.server.ResourceTag.ResourceObjectType;
 import com.cloud.tags.dao.ResourceTagDao;
-import com.cloud.tags.dao.ResourceTagsDaoImpl;
-
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.GenericSearchBuilder;
@@ -39,14 +36,14 @@ import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.TransactionLegacy;
 
 @Component
-@Local(value = StaticRouteDao.class)
 @DB()
-public class StaticRouteDaoImpl extends GenericDaoBase<StaticRouteVO, Long> implements StaticRouteDao{
+public class StaticRouteDaoImpl extends GenericDaoBase<StaticRouteVO, Long> implements StaticRouteDao {
     protected final SearchBuilder<StaticRouteVO> AllFieldsSearch;
     protected final SearchBuilder<StaticRouteVO> NotRevokedSearch;
     protected final GenericSearchBuilder<StaticRouteVO, Long> RoutesByGatewayCount;
-    @Inject ResourceTagDao _tagsDao;
-    
+    @Inject
+    ResourceTagDao _tagsDao;
+
     protected StaticRouteDaoImpl() {
         super();
 
@@ -56,19 +53,18 @@ public class StaticRouteDaoImpl extends GenericDaoBase<StaticRouteVO, Long> impl
         AllFieldsSearch.and("state", AllFieldsSearch.entity().getState(), Op.EQ);
         AllFieldsSearch.and("id", AllFieldsSearch.entity().getId(), Op.EQ);
         AllFieldsSearch.done();
-        
+
         NotRevokedSearch = createSearchBuilder();
         NotRevokedSearch.and("vpcId", NotRevokedSearch.entity().getVpcId(), Op.EQ);
         NotRevokedSearch.and("state", NotRevokedSearch.entity().getState(), Op.NEQ);
         NotRevokedSearch.done();
-        
+
         RoutesByGatewayCount = createSearchBuilder(Long.class);
         RoutesByGatewayCount.select(null, Func.COUNT, RoutesByGatewayCount.entity().getId());
         RoutesByGatewayCount.and("gatewayId", RoutesByGatewayCount.entity().getVpcGatewayId(), Op.EQ);
         RoutesByGatewayCount.done();
     }
 
-    
     @Override
     public boolean setStateToAdd(StaticRouteVO rule) {
         SearchCriteria<StaticRouteVO> sc = AllFieldsSearch.create();
@@ -79,7 +75,6 @@ public class StaticRouteDaoImpl extends GenericDaoBase<StaticRouteVO, Long> impl
 
         return update(rule, sc) > 0;
     }
-
 
     @Override
     public List<? extends StaticRoute> listByVpcIdAndNotRevoked(long vpcId) {
@@ -102,7 +97,7 @@ public class StaticRouteDaoImpl extends GenericDaoBase<StaticRouteVO, Long> impl
         sc.setParameters("gatewayId", gatewayId);
         return customSearch(sc, null).get(0);
     }
-    
+
     @Override
     @DB
     public boolean remove(Long id) {

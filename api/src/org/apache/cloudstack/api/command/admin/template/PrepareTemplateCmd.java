@@ -18,19 +18,25 @@ package org.apache.cloudstack.api.command.admin.template;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
+import org.apache.cloudstack.acl.SecurityChecker.AccessType;
+import org.apache.cloudstack.api.ACL;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
+import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.response.StoragePoolResponse;
 import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
-import org.apache.log4j.Logger;
 
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 
-@APICommand(name = "prepareTemplate", responseObject=TemplateResponse.class, description="load template into primary storage")
+@APICommand(name = "prepareTemplate", responseObject = TemplateResponse.class, description = "load template into primary storage", entityType = {VirtualMachineTemplate.class},
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class PrepareTemplateCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(PrepareTemplateCmd.class.getName());
 
@@ -40,14 +46,29 @@ public class PrepareTemplateCmd extends BaseCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.UUID, entityType = ZoneResponse.class,
-            required=true, description="zone ID of the template to be prepared in primary storage(s).")
+    @Parameter(name = ApiConstants.ZONE_ID,
+               type = CommandType.UUID,
+               entityType = ZoneResponse.class,
+               required = true,
+               description = "zone ID of the template to be prepared in primary storage(s).")
     private Long zoneId;
 
-    @Parameter(name=ApiConstants.TEMPLATE_ID, type=CommandType.UUID, entityType = TemplateResponse.class,
-            required=true, description="template ID of the template to be prepared in primary storage(s).")
+    @ACL(accessType = AccessType.OperateEntry)
+    @Parameter(name = ApiConstants.TEMPLATE_ID,
+               type = CommandType.UUID,
+               entityType = TemplateResponse.class,
+               required = true,
+               description = "template ID of the template to be prepared in primary storage(s).")
     private Long templateId;
 
+    @ACL(accessType = AccessType.OperateEntry)
+    @Parameter(name = ApiConstants.STORAGE_ID,
+            type = CommandType.UUID,
+            entityType = StoragePoolResponse.class,
+            required = false,
+            description = "storage pool ID of the primary storage pool to which the template should be prepared. If it is not provided the template" +
+                    " is prepared on all the available primary storage pools.")
+    private Long storageId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -59,6 +80,10 @@ public class PrepareTemplateCmd extends BaseCmd {
 
     public Long getTemplateId() {
         return templateId;
+    }
+
+    public Long getStorageId() {
+        return storageId;
     }
 
     /////////////////////////////////////////////////////
@@ -79,11 +104,10 @@ public class PrepareTemplateCmd extends BaseCmd {
     public void execute() {
         ListResponse<TemplateResponse> response = new ListResponse<TemplateResponse>();
 
-        VirtualMachineTemplate vmTemplate = _templateService.prepareTemplate(templateId, zoneId);
-        List<TemplateResponse> templateResponses = _responseGenerator.createTemplateResponses(vmTemplate, zoneId, true);
+        VirtualMachineTemplate vmTemplate = _templateService.prepareTemplate(templateId, zoneId, storageId);
+        List<TemplateResponse> templateResponses = _responseGenerator.createTemplateResponses(ResponseView.Full, vmTemplate, zoneId, true);
         response.setResponses(templateResponses);
         response.setResponseName(getCommandName());
-        this.setResponseObject(response);
+        setResponseObject(response);
     }
 }
-

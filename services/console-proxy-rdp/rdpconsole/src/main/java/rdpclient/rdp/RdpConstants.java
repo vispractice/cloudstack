@@ -32,13 +32,13 @@ public interface RdpConstants {
 
     /**
      * Negotiate SSL protocol to use to protect RDP connection.
-     * @see http://msdn.microsoft.com/en-us/library/cc240500.aspx 
+     * @see http://msdn.microsoft.com/en-us/library/cc240500.aspx
      */
     public static final int RDP_NEG_REQ_PROTOCOL_SSL = 1;
 
     /**
      * Negotiate CredSSP protocol to use to protect RDP connection.
-     * @see http://msdn.microsoft.com/en-us/library/cc240500.aspx 
+     * @see http://msdn.microsoft.com/en-us/library/cc240500.aspx
      * When used, client must set @see RDP_NEG_REQ_PROTOCOL_SSL too.
      */
     public static final int RDP_NEG_REQ_PROTOCOL_HYBRID = 2;

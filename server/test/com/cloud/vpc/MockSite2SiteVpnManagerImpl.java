@@ -19,7 +19,6 @@ package com.cloud.vpc;
 import java.util.List;
 import java.util.Map;
 
-import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.api.command.user.vpn.CreateVpnConnectionCmd;
@@ -44,12 +43,10 @@ import com.cloud.network.dao.Site2SiteVpnConnectionVO;
 import com.cloud.network.vpn.Site2SiteVpnManager;
 import com.cloud.network.vpn.Site2SiteVpnService;
 import com.cloud.utils.Pair;
-import com.cloud.utils.component.Manager;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.vm.DomainRouterVO;
 
 @Component
-@Local(value = { Site2SiteVpnManager.class, Site2SiteVpnService.class } )
 public class MockSite2SiteVpnManagerImpl extends ManagerBase implements Site2SiteVpnManager, Site2SiteVpnService {
 
     /* (non-Javadoc)
@@ -257,6 +254,18 @@ public class MockSite2SiteVpnManagerImpl extends ManagerBase implements Site2Sit
     public void reconnectDisconnectedVpnByVpc(Long vpcId) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public Site2SiteVpnConnection updateVpnConnection(long id, String customId, Boolean forDisplay) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Site2SiteVpnGateway updateVpnGateway(Long id, String customId, Boolean forDisplay) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

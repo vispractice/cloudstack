@@ -1,3 +1,4 @@
+//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,6 +15,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//
+
 package com.cloud.resource;
 
 import com.cloud.agent.IAgentControl;
@@ -25,7 +28,6 @@ import com.cloud.host.Host;
 import com.cloud.utils.component.Manager;
 
 /**
- *
  * ServerResource is a generic container to execute commands sent
  */
 public interface ServerResource extends Manager {
@@ -33,26 +35,26 @@ public interface ServerResource extends Manager {
      * @return Host.Type type of the computing server we have.
      */
     Host.Type getType();
-    
+
     /**
      * Generate a startup command containing information regarding the resource.
      * @return StartupCommand ready to be sent to the management server.
      */
     StartupCommand[] initialize();
-        
+
     /**
      * @param id id of the server to put in the PingCommand
      * @return PingCommand
      */
     PingCommand getCurrentStatus(long id);
-    
+
     /**
      * Execute the request coming from the computing server.
      * @param cmd Command to execute.
      * @return Answer
      */
     Answer executeRequest(Command cmd);
-    
+
     /**
      * disconnected() is called when the connection is down between the
      * agent and the management server.  If there are any cleanups, this
@@ -65,6 +67,7 @@ public interface ServerResource extends Manager {
      * @return
      */
     IAgentControl getAgentControl();
-    
+
     void setAgentControl(IAgentControl agentControl);
+
 }

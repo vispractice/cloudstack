@@ -16,6 +16,12 @@
 // under the License.
 package com.cloud.vm.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+
+
+import org.springframework.stereotype.Component;
+
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.GenericSearchBuilder;
 import com.cloud.utils.db.SearchBuilder;
@@ -23,15 +29,8 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Func;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.vm.NicIpAlias;
-import org.springframework.stereotype.Component;
-
-import javax.ejb.Local;
-import java.util.ArrayList;
-import java.util.List;
-
 
 @Component
-@Local(value=NicIpAliasDao.class)
 public class NicIpAliasDaoImpl extends GenericDaoBase<NicIpAliasVO, Long> implements NicIpAliasDao {
     private final SearchBuilder<NicIpAliasVO> AllFieldsSearch;
     private final GenericSearchBuilder<NicIpAliasVO, String> IpSearch;
@@ -82,9 +81,8 @@ public class NicIpAliasDaoImpl extends GenericDaoBase<NicIpAliasVO, Long> implem
         return listBy(sc);
     }
 
-
     @Override
-    public List<NicIpAliasVO> listByNetworkIdAndState(long networkId, NicIpAlias.state state) {
+    public List<NicIpAliasVO> listByNetworkIdAndState(long networkId, NicIpAlias.State state) {
         SearchCriteria<NicIpAliasVO> sc = AllFieldsSearch.create();
         sc.setParameters("network", networkId);
         sc.setParameters("state", state);
@@ -103,7 +101,7 @@ public class NicIpAliasDaoImpl extends GenericDaoBase<NicIpAliasVO, Long> implem
     public List<NicIpAliasVO> getAliasIpForVm(long vmId) {
         SearchCriteria<NicIpAliasVO> sc = AllFieldsSearch.create();
         sc.setParameters("instanceId", vmId);
-        sc.setParameters("state", NicIpAlias.state.active);
+        sc.setParameters("state", NicIpAlias.State.active);
         return listBy(sc);
     }
 
@@ -124,7 +122,7 @@ public class NicIpAliasDaoImpl extends GenericDaoBase<NicIpAliasVO, Long> implem
         SearchCriteria<NicIpAliasVO> sc = AllFieldsSearch.create();
         sc.setParameters("network", networkId);
         sc.setParameters("instanceId", instanceId);
-        sc.setParameters("state", NicIpAlias.state.active);
+        sc.setParameters("state", NicIpAlias.State.active);
         return findOneBy(sc);
     }
 
@@ -134,7 +132,7 @@ public class NicIpAliasDaoImpl extends GenericDaoBase<NicIpAliasVO, Long> implem
     }
 
     @Override
-    public NicIpAliasVO findByGatewayAndNetworkIdAndState(String gateway, long networkId, NicIpAlias.state state) {
+    public NicIpAliasVO findByGatewayAndNetworkIdAndState(String gateway, long networkId, NicIpAlias.State state) {
         SearchCriteria<NicIpAliasVO> sc = AllFieldsSearch.create();
         sc.setParameters("gateway", gateway);
         sc.setParameters("network", networkId);
@@ -149,6 +147,7 @@ public class NicIpAliasDaoImpl extends GenericDaoBase<NicIpAliasVO, Long> implem
         sc.setParameters("instanceId", vmId);
         return findOneBy(sc);
     }
+
     @Override
     public NicIpAliasVO findByIp4AddressAndNicId(String ip4Address, long nicId) {
         SearchCriteria<NicIpAliasVO> sc = AllFieldsSearch.create();
@@ -158,8 +157,7 @@ public class NicIpAliasDaoImpl extends GenericDaoBase<NicIpAliasVO, Long> implem
     }
 
     @Override
-    public NicIpAliasVO findByIp4AddressAndNetworkIdAndInstanceId(
-            long networkId, Long vmId, String vmIp) {
+    public NicIpAliasVO findByIp4AddressAndNetworkIdAndInstanceId(long networkId, Long vmId, String vmIp) {
         SearchCriteria<NicIpAliasVO> sc = AllFieldsSearch.create();
         sc.setParameters("network", networkId);
         sc.setParameters("instanceId", vmId);
@@ -170,7 +168,7 @@ public class NicIpAliasDaoImpl extends GenericDaoBase<NicIpAliasVO, Long> implem
     @Override
     public Integer countAliasIps(long id) {
         SearchCriteria<NicIpAliasVO> sc = AllFieldsSearch.create();
-        sc.setParameters("instanceId",id);
+        sc.setParameters("instanceId", id);
         List<NicIpAliasVO> list = listBy(sc);
         return list.size();
     }

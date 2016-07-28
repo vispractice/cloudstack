@@ -18,6 +18,8 @@ package org.apache.cloudstack.api.command.admin.storage;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
@@ -25,12 +27,12 @@ import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.StoragePoolResponse;
-import org.apache.log4j.Logger;
 
 import com.cloud.storage.StoragePool;
 import com.cloud.user.Account;
 
-@APICommand(name = "updateStoragePool", description="Updates a storage pool.", responseObject=StoragePoolResponse.class, since="3.0.0")
+@APICommand(name = "updateStoragePool", description = "Updates a storage pool.", responseObject = StoragePoolResponse.class, since = "3.0.0",
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateStoragePoolCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(UpdateStoragePoolCmd.class.getName());
 
@@ -40,20 +42,21 @@ public class UpdateStoragePoolCmd extends BaseCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = StoragePoolResponse.class,
-            required=true, description="the Id of the storage pool")
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = StoragePoolResponse.class, required = true, description = "the Id of the storage pool")
     private Long id;
 
-    @Parameter(name=ApiConstants.TAGS, type=CommandType.LIST, collectionType=CommandType.STRING, description="comma-separated list of tags for the storage pool")
+    @Parameter(name = ApiConstants.TAGS, type = CommandType.LIST, collectionType = CommandType.STRING, description = "comma-separated list of tags for the storage pool")
     private List<String> tags;
 
-    @Parameter(name=ApiConstants.CAPACITY_IOPS, type=CommandType.LONG,
-               required=false, description="IOPS CloudStack can provision from this storage pool")
+    @Parameter(name = ApiConstants.CAPACITY_IOPS, type = CommandType.LONG, required = false, description = "IOPS CloudStack can provision from this storage pool")
     private Long capacityIops;
 
-    @Parameter(name=ApiConstants.CAPACITY_BYTES, type=CommandType.LONG,
-               required=false, description="bytes CloudStack can provision from this storage pool")
+    @Parameter(name = ApiConstants.CAPACITY_BYTES, type = CommandType.LONG, required = false, description = "bytes CloudStack can provision from this storage pool")
     private Long capacityBytes;
+
+    @Parameter(name = ApiConstants.ENABLED, type = CommandType.BOOLEAN, required = false, description = "false to disable the pool for allocation of new volumes, true to" +
+            " enable it back.")
+    private Boolean enabled;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -75,6 +78,10 @@ public class UpdateStoragePoolCmd extends BaseCmd {
         return capacityBytes;
     }
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -90,9 +97,9 @@ public class UpdateStoragePoolCmd extends BaseCmd {
     }
 
     @Override
-    public void execute(){
+    public void execute() {
         StoragePool result = _storageService.updateStoragePool(this);
-        if (result != null){
+        if (result != null) {
             StoragePoolResponse response = _responseGenerator.createStoragePoolResponse(result);
             response.setResponseName(getCommandName());
             this.setResponseObject(response);

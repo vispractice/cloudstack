@@ -198,7 +198,7 @@
                         title: '',
                         fields: {
                             scaleUpDuration: {
-                                label: 'Duration(in sec)',
+                                label: 'label.duration.in.sec',
                                 validation: {
                                     required: true
                                 }
@@ -217,7 +217,7 @@
                         title: '',
                         fields: {
                             scaleDownDuration: {
-                                label: 'Duration(in sec)',
+                                label: 'label.duration.in.sec',
                                 validation: {
                                     required: true
                                 }
@@ -333,7 +333,7 @@
 
             var $loading = $('<div>').addClass('loading-overlay').appendTo($autoscalerDialog);
             $autoscalerDialog.dialog({
-                title: 'AutoScale Configuration Wizard',
+                title: _l('label.autoscale.configuration.wizard'),
                 width: 825,
                 height: 600,
                 draggable: true,

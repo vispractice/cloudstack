@@ -17,11 +17,12 @@
 /var/log/cloud.log {
         rotate 4
         daily
+        size 10M
         missingok
         notifempty
         compress
-        delaycompress
-        postrotate
-                pkill socat > /dev/null
-        endscript
+        # CLOUDSTACK-9155: We cannot tell the processes that are writing to this
+        # file to use the new inode, so instead we copy the original file, truncate
+        # it and keep the same inode.
+        copytruncate
 }

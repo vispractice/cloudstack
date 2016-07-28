@@ -19,15 +19,16 @@ package org.apache.cloudstack.api.response;
 import java.util.Date;
 import java.util.List;
 
+import com.google.gson.annotations.SerializedName;
+
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
 
 import com.cloud.serializer.Param;
 import com.cloud.storage.Snapshot;
-import com.google.gson.annotations.SerializedName;
 
-@EntityReference(value=Snapshot.class)
+@EntityReference(value = Snapshot.class)
 public class SnapshotResponse extends BaseResponse implements ControlledEntityResponse {
     @SerializedName(ApiConstants.ID)
     @Param(description = "ID of the snapshot")
@@ -45,10 +46,12 @@ public class SnapshotResponse extends BaseResponse implements ControlledEntityRe
     @Param(description = "the domain name of the snapshot's account")
     private String domainName;
 
-    @SerializedName(ApiConstants.PROJECT_ID) @Param(description="the project id of the snapshot")
+    @SerializedName(ApiConstants.PROJECT_ID)
+    @Param(description = "the project id of the snapshot")
     private String projectId;
 
-    @SerializedName(ApiConstants.PROJECT) @Param(description="the project name of the snapshot")
+    @SerializedName(ApiConstants.PROJECT)
+    @Param(description = "the project name of the snapshot")
     private String projectName;
 
     @SerializedName(ApiConstants.SNAPSHOT_TYPE)
@@ -83,15 +86,20 @@ public class SnapshotResponse extends BaseResponse implements ControlledEntityRe
     @Param(description = "the state of the snapshot. BackedUp means that snapshot is ready to be used; Creating - the snapshot is being allocated on the primary storage; BackingUp - the snapshot is being backed up on secondary storage")
     private Snapshot.State state;
 
+    @SerializedName(ApiConstants.PHYSICAL_SIZE)
+    @Param(description = "physical size of backedup snapshot on image store")
+    private long physicalSize;
+
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "id of the availability zone")
     private String zoneId;
 
-    @SerializedName(ApiConstants.TAGS)  @Param(description="the list of resource tags associated with snapshot", responseObject = ResourceTagResponse.class)
+    @SerializedName(ApiConstants.TAGS)
+    @Param(description = "the list of resource tags associated with snapshot", responseObject = ResourceTagResponse.class)
     private List<ResourceTagResponse> tags;
 
     @SerializedName(ApiConstants.REVERTABLE)
-    @Param(description="indicates whether the underlying storage supports reverting the volume to this snapshot")
+    @Param(description = "indicates whether the underlying storage supports reverting the volume to this snapshot")
     private boolean revertable;
 
     @Override
@@ -160,6 +168,10 @@ public class SnapshotResponse extends BaseResponse implements ControlledEntityRe
 
     public void setState(Snapshot.State state) {
         this.state = state;
+    }
+
+    public void setPhysicaSize(long physicalSize) {
+        this.physicalSize = physicalSize;
     }
 
     @Override

@@ -33,7 +33,8 @@ import com.cloud.exception.DiscoveryException;
 import com.cloud.storage.ImageStore;
 import com.cloud.user.Account;
 
-@APICommand(name = "addSwift", description = "Adds Swift.", responseObject = ImageStoreResponse.class, since="3.0.0")
+@APICommand(name = "addSwift", description = "Adds Swift.", responseObject = ImageStoreResponse.class, since = "3.0.0",
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddSwiftCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(AddSwiftCmd.class.getName());
     private static final String s_name = "addswiftresponse";
@@ -98,7 +99,7 @@ public class AddSwiftCmd extends BaseCmd {
         try{
             ImageStore result = _storageService.discoverImageStore(null, getUrl(), "Swift", null, dm);
             ImageStoreResponse storeResponse = null;
-            if (result != null ) {
+            if (result != null) {
                 storeResponse = _responseGenerator.createImageStoreResponse(result);
                 storeResponse.setResponseName(getCommandName());
                 storeResponse.setObjectName("secondarystorage");

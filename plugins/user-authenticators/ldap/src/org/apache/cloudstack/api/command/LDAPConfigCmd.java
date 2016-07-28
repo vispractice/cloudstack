@@ -21,19 +21,27 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.cloudstack.api.*;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.log4j.Logger;
+
+import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.BaseCmd;
+import org.apache.cloudstack.api.Parameter;
+import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.LDAPConfigResponse;
-import org.apache.cloudstack.api.response.LdapConfigurationResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
 import org.apache.cloudstack.ldap.LdapConfiguration;
 import org.apache.cloudstack.ldap.LdapConfigurationVO;
 import org.apache.cloudstack.ldap.LdapManager;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.log4j.Logger;
 
-import com.cloud.exception.*;
+import com.cloud.exception.ConcurrentOperationException;
+import com.cloud.exception.InsufficientCapacityException;
+import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.exception.ResourceAllocationException;
+import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 import com.cloud.utils.Pair;
 
@@ -41,7 +49,9 @@ import com.cloud.utils.Pair;
  * @deprecated as of 4.3 use the new api {@link LdapAddConfigurationCmd}
  */
 @Deprecated
-@APICommand(name = "ldapConfig", description = "Configure the LDAP context for this site.", responseObject = LDAPConfigResponse.class, since = "3.0.0")
+@APICommand(name = "ldapConfig", description = "Configure the LDAP context for this site.", responseObject = LDAPConfigResponse.class, since = "3.0.0",
+        requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
+
 public class LDAPConfigCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(LDAPConfigCmd.class.getName());
 
@@ -71,13 +81,19 @@ public class LDAPConfigCmd extends BaseCmd {
     @Parameter(name = ApiConstants.USE_SSL, type = CommandType.BOOLEAN, description = "Check Use SSL if the external LDAP server is configured for LDAP over SSL.")
     private Boolean useSSL;
 
-    @Parameter(name = ApiConstants.SEARCH_BASE, type = CommandType.STRING, description = "The search base defines the starting point for the search in the directory tree Example:  dc=cloud,dc=com.")
+    @Parameter(name = ApiConstants.SEARCH_BASE,
+               type = CommandType.STRING,
+               description = "The search base defines the starting point for the search in the directory tree Example:  dc=cloud,dc=com.")
     private String searchBase;
 
-    @Parameter(name = ApiConstants.QUERY_FILTER, type = CommandType.STRING, description = "You specify a query filter here, which narrows down the users, who can be part of this domain.")
+    @Parameter(name = ApiConstants.QUERY_FILTER,
+               type = CommandType.STRING,
+               description = "You specify a query filter here, which narrows down the users, who can be part of this domain.")
     private String queryFilter;
 
-    @Parameter(name = ApiConstants.BIND_DN, type = CommandType.STRING, description = "Specify the distinguished name of a user with the search permission on the directory.")
+    @Parameter(name = ApiConstants.BIND_DN,
+               type = CommandType.STRING,
+               description = "Specify the distinguished name of a user with the search permission on the directory.")
     private String bindDN;
 
     @Parameter(name = ApiConstants.BIND_PASSWORD, type = CommandType.STRING, description = "Enter the password.")
@@ -102,7 +118,7 @@ public class LDAPConfigCmd extends BaseCmd {
     }
 
     public void setBindDN(String bdn) {
-        this.bindDN = bdn;
+        bindDN = bdn;
     }
 
     public String getQueryFilter() {
@@ -138,7 +154,7 @@ public class LDAPConfigCmd extends BaseCmd {
     }
 
     public Integer getPort() {
-        return port <= 0 ? 389 : port;
+        return (Integer)(port.intValue() <= 0 ? 389 : port.intValue());
     }
 
     public void setPort(Integer port) {
@@ -162,7 +178,8 @@ public class LDAPConfigCmd extends BaseCmd {
     /////////////////////////////////////////////////////
 
     @Override
-    public void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException, ResourceAllocationException {
+    public void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException,
+        ResourceAllocationException {
         if (getListAll()) {
             // return the existing conf
 
@@ -176,21 +193,21 @@ public class LDAPConfigCmd extends BaseCmd {
                 String searchBaseConfig = _ldapConfiguration.getBaseDn();
                 String bindDnConfig = _ldapConfiguration.getBindPrincipal();
                 for (LdapConfigurationVO ldapConfigurationVO : result.first()) {
-                    responses.add(this.createLDAPConfigResponse(ldapConfigurationVO.getHostname(), ldapConfigurationVO.getPort(), useSSlConfig, null, searchBaseConfig,
-                            bindDnConfig));
+                    responses.add(createLDAPConfigResponse(ldapConfigurationVO.getHostname(), ldapConfigurationVO.getPort(), useSSlConfig, null, searchBaseConfig,
+                        bindDnConfig));
                 }
             }
             response.setResponses(responses);
             response.setResponseName(getCommandName());
-            this.setResponseObject(response);
+            setResponseObject(response);
         } else if (getHostname() == null || getPort() == null) {
             throw new InvalidParameterValueException("You need to provide hostname, port to configure your LDAP server");
         } else {
-            boolean result = this.updateLDAP();
+            boolean result = updateLDAP();
             if (result) {
-                LDAPConfigResponse lr = this.createLDAPConfigResponse(getHostname(), getPort(), getUseSSL(), getQueryFilter(), getSearchBase(), getBindDN());
+                LDAPConfigResponse lr = createLDAPConfigResponse(getHostname(), getPort(), getUseSSL(), getQueryFilter(), getSearchBase(), getBindDN());
                 lr.setResponseName(getCommandName());
-                this.setResponseObject(lr);
+                setResponseObject(lr);
             }
         }
 
@@ -209,7 +226,7 @@ public class LDAPConfigCmd extends BaseCmd {
     }
 
     private boolean updateLDAP() {
-        LdapConfigurationResponse response = _ldapManager.addConfiguration(hostname, port);
+        _ldapManager.addConfiguration(hostname, port);
 
         /**
          * There is no query filter now. It is derived from ldap.user.object and ldap.search.group.principle
@@ -221,7 +238,7 @@ public class LDAPConfigCmd extends BaseCmd {
         _configDao.update(cvo.getName(), cvo.getCategory(), getSearchBase());
 
         /**
-         * There is no ssl now. it is derived from the presence of trust store and password 
+         * There is no ssl now. it is derived from the presence of trust store and password
          */
 //        cvo = _configDao.findByName(LDAPParams.usessl.toString());
 //        _configDao.update(cvo.getName(),cvo.getCategory(),getUseSSL().toString());

@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
 import org.springframework.stereotype.Component;
@@ -44,7 +43,6 @@ import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 @Component
-@Local(value=ClusterDao.class)
 public class ClusterDaoImpl extends GenericDaoBase<ClusterVO, Long> implements ClusterDao {
 
     protected final SearchBuilder<ClusterVO> PodSearch;
@@ -155,7 +153,7 @@ public class ClusterDaoImpl extends GenericDaoBase<ClusterVO, Long> implements C
     }
 
     @Override
-    public Map<Long, List<Long>> getPodClusterIdMap(List<Long> clusterIds){
+    public Map<Long, List<Long>> getPodClusterIdMap(List<Long> clusterIds) {
         TransactionLegacy txn = TransactionLegacy.currentTxn();
         PreparedStatement pstmt = null;
         Map<Long, List<Long>> result = new HashMap<Long, List<Long>>();
@@ -166,7 +164,7 @@ public class ClusterDaoImpl extends GenericDaoBase<ClusterVO, Long> implements C
                 for (Long clusterId : clusterIds) {
                     sql.append(clusterId).append(",");
                 }
-                sql.delete(sql.length()-1, sql.length());
+                sql.delete(sql.length() - 1, sql.length());
                 sql.append(GET_POD_CLUSTER_MAP_SUFFIX);
             }
 
@@ -174,7 +172,7 @@ public class ClusterDaoImpl extends GenericDaoBase<ClusterVO, Long> implements C
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 Long podId = rs.getLong(1);
-                Long clusterIdInPod  = rs.getLong(2);
+                Long clusterIdInPod = rs.getLong(2);
                 if (result.containsKey(podId)) {
                     List<Long> clusterList = result.get(podId);
                     clusterList.add(clusterIdInPod);
@@ -223,9 +221,9 @@ public class ClusterDaoImpl extends GenericDaoBase<ClusterVO, Long> implements C
 
         GenericSearchBuilder<ClusterVO, Long> clusterIdSearch = createSearchBuilder(Long.class);
         clusterIdSearch.selectFields(clusterIdSearch.entity().getId());
-        clusterIdSearch.join("disabledPodIdSearch", disabledPodIdSearch, clusterIdSearch.entity().getPodId(), disabledPodIdSearch.entity().getId(), JoinBuilder.JoinType.INNER);
+        clusterIdSearch.join("disabledPodIdSearch", disabledPodIdSearch, clusterIdSearch.entity().getPodId(), disabledPodIdSearch.entity().getId(),
+            JoinBuilder.JoinType.INNER);
         clusterIdSearch.done();
-
 
         SearchCriteria<Long> sc = clusterIdSearch.create();
         sc.setJoinParameters("disabledPodIdSearch", "dataCenterId", zoneId);

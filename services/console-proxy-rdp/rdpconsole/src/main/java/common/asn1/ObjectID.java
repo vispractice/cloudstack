@@ -27,7 +27,7 @@ public class ObjectID extends Tag {
 
     public ObjectID(String name) {
         super(name);
-        this.tagType = OBJECT_ID;
+        tagType = OBJECT_ID;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class ObjectID extends Tag {
     @Override
     public Tag copyFrom(Tag tag) {
         super.copyFrom(tag);
-        this.value = new ByteBuffer(((ObjectID)tag).value.toByteArray());
+        value = new ByteBuffer(((ObjectID)tag).value.toByteArray());
         return this;
     }
 

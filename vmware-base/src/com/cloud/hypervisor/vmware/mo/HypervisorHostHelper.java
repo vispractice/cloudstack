@@ -27,6 +27,23 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.exception.CloudException;
+import com.cloud.hypervisor.vmware.util.VmwareContext;
+import com.cloud.hypervisor.vmware.util.VmwareHelper;
+import com.cloud.network.Networks.BroadcastDomainType;
+import com.cloud.utils.ActionDelegate;
+import com.cloud.utils.Pair;
+import com.cloud.utils.cisco.n1kv.vsm.NetconfHelper;
+import com.cloud.utils.cisco.n1kv.vsm.PolicyMap;
+import com.cloud.utils.cisco.n1kv.vsm.PortProfile;
+import com.cloud.utils.cisco.n1kv.vsm.VsmCommand.BindingType;
+import com.cloud.utils.cisco.n1kv.vsm.VsmCommand.OperationType;
+import com.cloud.utils.cisco.n1kv.vsm.VsmCommand.PortProfileType;
+import com.cloud.utils.cisco.n1kv.vsm.VsmCommand.SwitchPortMode;
+import com.cloud.utils.db.GlobalLock;
+import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.net.NetUtils;
+import com.cloud.utils.nicira.nvp.plugin.NiciraNvpApiVersion;
 import com.vmware.vim25.AlreadyExistsFaultMsg;
 import com.vmware.vim25.BoolPolicy;
 import com.vmware.vim25.CustomFieldStringValue;
@@ -47,42 +64,33 @@ import com.vmware.vim25.HttpNfcLeaseState;
 import com.vmware.vim25.LocalizedMethodFault;
 import com.vmware.vim25.LongPolicy;
 import com.vmware.vim25.ManagedObjectReference;
+import com.vmware.vim25.MethodFault;
 import com.vmware.vim25.ObjectContent;
 import com.vmware.vim25.OvfCreateImportSpecParams;
 import com.vmware.vim25.OvfCreateImportSpecResult;
 import com.vmware.vim25.OvfFileItem;
+import com.vmware.vim25.ParaVirtualSCSIController;
 import com.vmware.vim25.VMwareDVSConfigSpec;
 import com.vmware.vim25.VMwareDVSPortSetting;
+import com.vmware.vim25.VMwareDVSPortgroupPolicy;
 import com.vmware.vim25.VMwareDVSPvlanConfigSpec;
 import com.vmware.vim25.VMwareDVSPvlanMapEntry;
+import com.vmware.vim25.VirtualBusLogicController;
+import com.vmware.vim25.VirtualController;
 import com.vmware.vim25.VirtualDeviceConfigSpec;
 import com.vmware.vim25.VirtualDeviceConfigSpecOperation;
+import com.vmware.vim25.VirtualIDEController;
 import com.vmware.vim25.VirtualLsiLogicController;
+import com.vmware.vim25.VirtualLsiLogicSASController;
 import com.vmware.vim25.VirtualMachineConfigSpec;
 import com.vmware.vim25.VirtualMachineFileInfo;
 import com.vmware.vim25.VirtualMachineGuestOsIdentifier;
 import com.vmware.vim25.VirtualMachineVideoCard;
+import com.vmware.vim25.VirtualSCSIController;
 import com.vmware.vim25.VirtualSCSISharing;
 import com.vmware.vim25.VmwareDistributedVirtualSwitchPvlanSpec;
 import com.vmware.vim25.VmwareDistributedVirtualSwitchVlanIdSpec;
 import com.vmware.vim25.VmwareDistributedVirtualSwitchVlanSpec;
-
-import com.cloud.exception.CloudException;
-import com.cloud.hypervisor.vmware.util.VmwareContext;
-import com.cloud.hypervisor.vmware.util.VmwareHelper;
-import com.cloud.network.Networks.BroadcastDomainType;
-import com.cloud.utils.ActionDelegate;
-import com.cloud.utils.Pair;
-import com.cloud.utils.cisco.n1kv.vsm.NetconfHelper;
-import com.cloud.utils.cisco.n1kv.vsm.PolicyMap;
-import com.cloud.utils.cisco.n1kv.vsm.PortProfile;
-import com.cloud.utils.cisco.n1kv.vsm.VsmCommand.BindingType;
-import com.cloud.utils.cisco.n1kv.vsm.VsmCommand.OperationType;
-import com.cloud.utils.cisco.n1kv.vsm.VsmCommand.PortProfileType;
-import com.cloud.utils.cisco.n1kv.vsm.VsmCommand.SwitchPortMode;
-import com.cloud.utils.db.GlobalLock;
-import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.net.NetUtils;
 
 public class HypervisorHostHelper {
     private static final Logger s_logger = Logger.getLogger(HypervisorHostHelper.class);
@@ -92,25 +100,23 @@ public class HypervisorHostHelper {
     // make vmware-base loosely coupled with cloud-specific stuff, duplicate VLAN.UNTAGGED constant here
     private static final String UNTAGGED_VLAN_NAME = "untagged";
 
-    public static VirtualMachineMO findVmFromObjectContent(VmwareContext context,
-            ObjectContent[] ocs, String name, String instanceNameCustomField) {
+    public static VirtualMachineMO findVmFromObjectContent(VmwareContext context, ObjectContent[] ocs, String name, String instanceNameCustomField) {
 
-        if(ocs != null && ocs.length > 0) {
-            for(ObjectContent oc : ocs) {
+        if (ocs != null && ocs.length > 0) {
+            for (ObjectContent oc : ocs) {
                 String vmNameInvCenter = null;
                 String vmInternalCSName = null;
                 List<DynamicProperty> objProps = oc.getPropSet();
-                if(objProps != null) {
-                    for(DynamicProperty objProp : objProps) {
-                        if(objProp.getName().equals("name")) {
+                if (objProps != null) {
+                    for (DynamicProperty objProp : objProps) {
+                        if (objProp.getName().equals("name")) {
                             vmNameInvCenter = (String)objProp.getVal();
-                        } else if(objProp.getName().contains(instanceNameCustomField)) {
-                            if(objProp.getVal() != null)
+                        } else if (objProp.getName().contains(instanceNameCustomField)) {
+                            if (objProp.getVal() != null)
                                 vmInternalCSName = ((CustomFieldStringValue)objProp.getVal()).getValue();
                         }
 
-                        if ( (vmNameInvCenter != null && name.equalsIgnoreCase(vmNameInvCenter))
-                                || (vmInternalCSName != null && name.equalsIgnoreCase(vmInternalCSName)) ) {
+                        if ((vmNameInvCenter != null && name.equalsIgnoreCase(vmNameInvCenter)) || (vmInternalCSName != null && name.equalsIgnoreCase(vmInternalCSName))) {
                             VirtualMachineMO vmMo = new VirtualMachineMO(context, oc.getObj());
                             return vmMo;
                         }
@@ -123,20 +129,20 @@ public class HypervisorHostHelper {
 
     public static ManagedObjectReference findDatastoreWithBackwardsCompatibility(VmwareHypervisorHost hyperHost, String uuidName) throws Exception {
         ManagedObjectReference morDs = hyperHost.findDatastore(uuidName.replace("-", ""));
-        if(morDs == null)
+        if (morDs == null)
             morDs = hyperHost.findDatastore(uuidName);
 
         return morDs;
     }
 
     public static DatastoreMO getHyperHostDatastoreMO(VmwareHypervisorHost hyperHost, String datastoreName) throws Exception {
-        ObjectContent[] ocs = hyperHost.getDatastorePropertiesOnHyperHost(new String[] { "name"} );
-        if(ocs != null && ocs.length > 0) {
-            for(ObjectContent oc : ocs) {
+        ObjectContent[] ocs = hyperHost.getDatastorePropertiesOnHyperHost(new String[] {"name"});
+        if (ocs != null && ocs.length > 0) {
+            for (ObjectContent oc : ocs) {
                 List<DynamicProperty> objProps = oc.getPropSet();
-                if(objProps != null) {
-                    for(DynamicProperty objProp : objProps) {
-                        if(objProp.getVal().toString().equals(datastoreName))
+                if (objProps != null) {
+                    for (DynamicProperty objProp : objProps) {
+                        if (objProp.getVal().toString().equals(datastoreName))
                             return new DatastoreMO(hyperHost.getContext(), oc.getObj());
                     }
                 }
@@ -155,7 +161,7 @@ public class HypervisorHostHelper {
 
     public static String composeCloudNetworkName(String prefix, String vlanId, String svlanId, Integer networkRateMbps, String vSwitchName) {
         StringBuffer sb = new StringBuffer(prefix);
-        if(vlanId == null || UNTAGGED_VLAN_NAME.equalsIgnoreCase(vlanId)) {
+        if (vlanId == null || UNTAGGED_VLAN_NAME.equalsIgnoreCase(vlanId)) {
             sb.append(".untagged");
         } else {
             sb.append(".").append(vlanId);
@@ -165,7 +171,7 @@ public class HypervisorHostHelper {
 
         }
 
-        if(networkRateMbps != null && networkRateMbps.intValue() > 0)
+        if (networkRateMbps != null && networkRateMbps.intValue() > 0)
             sb.append(".").append(String.valueOf(networkRateMbps));
         else
             sb.append(".0");
@@ -187,8 +193,7 @@ public class HypervisorHostHelper {
         String vsmIp = vsmCredentials.containsKey("vsmip") ? vsmCredentials.get("vsmip") : null;
         String vsmUserName = vsmCredentials.containsKey("vsmusername") ? vsmCredentials.get("vsmusername") : null;
         String vsmPassword = vsmCredentials.containsKey("vsmpassword") ? vsmCredentials.get("vsmpassword") : null;
-        if (vsmIp == null || vsmIp.isEmpty() || vsmUserName == null || vsmUserName.isEmpty() || vsmPassword == null
-                || vsmPassword.isEmpty()) {
+        if (vsmIp == null || vsmIp.isEmpty() || vsmUserName == null || vsmUserName.isEmpty() || vsmPassword == null || vsmPassword.isEmpty()) {
             msg = "Detected invalid credentials for Nexus 1000v.";
             s_logger.error(msg);
             throw new Exception(msg);
@@ -196,9 +201,8 @@ public class HypervisorHostHelper {
         return vsmCredentials;
     }
 
-    public static void createPortProfile(VmwareContext context, String ethPortProfileName, String networkName,
-            Integer vlanId, Integer networkRateMbps, long peakBandwidth, long burstSize,
-            String gateway, boolean configureVServiceInNexus) throws Exception {
+    public static void createPortProfile(VmwareContext context, String ethPortProfileName, String networkName, Integer vlanId, Integer networkRateMbps,
+            long peakBandwidth, long burstSize, String gateway, boolean configureVServiceInNexus) throws Exception {
         Map<String, String> vsmCredentials = getValidatedVsmCredentials(context);
         String vsmIp = vsmCredentials.get("vsmip");
         String vsmUserName = vsmCredentials.get("vsmusername");
@@ -211,8 +215,7 @@ public class HypervisorHostHelper {
             netconfClient = new NetconfHelper(vsmIp, vsmUserName, vsmPassword);
             s_logger.info("Successfully connected to Nexus 1000v : " + vsmIp);
         } catch (CloudRuntimeException e) {
-            msg = "Failed to connect to Nexus 1000v " + vsmIp + " with credentials of user " + vsmUserName
-                    + ". Exception: " + e.toString();
+            msg = "Failed to connect to Nexus 1000v " + vsmIp + " with credentials of user " + vsmUserName + ". Exception: " + e.toString();
             s_logger.error(msg);
             throw new CloudRuntimeException(msg);
         }
@@ -229,12 +232,12 @@ public class HypervisorHostHelper {
             // PolicyMap to long.
             if (averageBandwidth > 0) {
                 s_logger.debug("Adding policy map " + policyName);
-                netconfClient.addPolicyMap(policyName, averageBandwidth, (int) peakBandwidth, (int) burstSize);
+                netconfClient.addPolicyMap(policyName, averageBandwidth, (int)peakBandwidth, (int)burstSize);
             }
         } catch (CloudRuntimeException e) {
-            msg = "Failed to add policy map of " + policyName + " with parameters " + "committed rate = "
-                    + averageBandwidth + "peak bandwidth = " + peakBandwidth + "burst size = " + burstSize
-                    + ". Exception: " + e.toString();
+            msg =
+                    "Failed to add policy map of " + policyName + " with parameters " + "committed rate = " + averageBandwidth + "peak bandwidth = " + peakBandwidth +
+                    "burst size = " + burstSize + ". Exception: " + e.toString();
             s_logger.error(msg);
             if (netconfClient != null) {
                 netconfClient.disconnect();
@@ -252,10 +255,9 @@ public class HypervisorHostHelper {
                 netconfClient.updatePortProfile(ethPortProfileName, SwitchPortMode.trunk, params);
                 s_logger.info("Added " + vlanId + " to Ethernet port profile " + ethPortProfileName);
             } catch (CloudRuntimeException e) {
-                msg = "Failed to update Ethernet port profile " + ethPortProfileName + " with VLAN " + vlanId
-                        + ". Exception: " + e.toString();
+                msg = "Failed to update Ethernet port profile " + ethPortProfileName + " with VLAN " + vlanId + ". Exception: " + e.toString();
                 s_logger.error(msg);
-                if(netconfClient != null) {
+                if (netconfClient != null) {
                     netconfClient.disconnect();
                     s_logger.debug("Disconnected Nexus 1000v session.");
                 }
@@ -278,13 +280,14 @@ public class HypervisorHostHelper {
                     s_logger.info("Adding vservice node in Nexus VSM for VLAN : " + vlanId.toString());
                     netconfClient.addVServiceNode(vlanId.toString(), gateway);
                     s_logger.info("Adding port profile with vservice details configured over VLAN : " + vlanId.toString());
-                    netconfClient.addPortProfile(networkName, PortProfileType.vethernet, BindingType.portbindingstatic, SwitchPortMode.access, vlanId.intValue(), vdc, esp);
+                    netconfClient.addPortProfile(networkName, PortProfileType.vethernet, BindingType.portbindingstatic, SwitchPortMode.access, vlanId.intValue(), vdc,
+                            esp);
                 }
             }
         } catch (CloudRuntimeException e) {
             msg = "Failed to add vEthernet port profile " + networkName + "." + ". Exception: " + e.toString();
             s_logger.error(msg);
-            if(netconfClient != null) {
+            if (netconfClient != null) {
                 netconfClient.disconnect();
                 s_logger.debug("Disconnected Nexus 1000v session.");
             }
@@ -296,10 +299,8 @@ public class HypervisorHostHelper {
                 s_logger.info("Associating policy map " + policyName + " with port profile " + networkName + ".");
                 netconfClient.attachServicePolicy(policyName, networkName);
             }
-        }
-        catch(CloudRuntimeException e) {
-            msg = "Failed to associate policy map " + policyName + " with port profile " + networkName
-                    + ". Exception: " + e.toString();
+        } catch (CloudRuntimeException e) {
+            msg = "Failed to associate policy map " + policyName + " with port profile " + networkName + ". Exception: " + e.toString();
             s_logger.error(msg);
             throw new CloudRuntimeException(msg);
         } finally {
@@ -310,8 +311,8 @@ public class HypervisorHostHelper {
         }
     }
 
-    public static void updatePortProfile(VmwareContext context, String ethPortProfileName, String vethPortProfileName,
-            Integer vlanId, Integer networkRateMbps, long peakBandwidth, long burstRate) throws Exception {
+    public static void updatePortProfile(VmwareContext context, String ethPortProfileName, String vethPortProfileName, Integer vlanId, Integer networkRateMbps,
+            long peakBandwidth, long burstRate) throws Exception {
         NetconfHelper netconfClient = null;
         Map<String, String> vsmCredentials = getValidatedVsmCredentials(context);
         String vsmIp = vsmCredentials.get("vsmip");
@@ -322,8 +323,7 @@ public class HypervisorHostHelper {
         try {
             netconfClient = new NetconfHelper(vsmIp, vsmUserName, vsmPassword);
         } catch (CloudRuntimeException e) {
-            msg = "Failed to connect to Nexus 1000v " + vsmIp + " with credentials of user " + vsmUserName
-                    + ". Exception: " + e.toString();
+            msg = "Failed to connect to Nexus 1000v " + vsmIp + " with credentials of user " + vsmUserName + ". Exception: " + e.toString();
             s_logger.error(msg);
             throw new CloudRuntimeException(msg);
         }
@@ -338,8 +338,7 @@ public class HypervisorHostHelper {
 
         if (averageBandwidth > 0) {
             PolicyMap policyMap = netconfClient.getPolicyMapByName(portProfile.inputPolicyMap);
-            if (policyMap.committedRate == averageBandwidth && policyMap.peakRate == peakBandwidth
-                    && policyMap.burstRate == burstRate) {
+            if (policyMap.committedRate == averageBandwidth && policyMap.peakRate == peakBandwidth && policyMap.burstRate == burstRate) {
                 s_logger.debug("Detected that policy map is already applied to port profile " + vethPortProfileName);
                 if (netconfClient != null) {
                     netconfClient.disconnect();
@@ -351,11 +350,11 @@ public class HypervisorHostHelper {
                     // TODO(sateesh): Change the type of peakBandwidth &
                     // burstRate in PolicyMap to long.
                     s_logger.info("Adding policy map " + policyName);
-                    netconfClient.addPolicyMap(policyName, averageBandwidth, (int) peakBandwidth, (int) burstRate);
+                    netconfClient.addPolicyMap(policyName, averageBandwidth, (int)peakBandwidth, (int)burstRate);
                 } catch (CloudRuntimeException e) {
-                    msg = "Failed to add policy map of " + policyName + " with parameters " + "committed rate = "
-                            + averageBandwidth + "peak bandwidth = " + peakBandwidth + "burst size = " + burstRate
-                            + ". Exception: " + e.toString();
+                    msg =
+                            "Failed to add policy map of " + policyName + " with parameters " + "committed rate = " + averageBandwidth + "peak bandwidth = " + peakBandwidth +
+                            "burst size = " + burstRate + ". Exception: " + e.toString();
                     s_logger.error(msg);
                     if (netconfClient != null) {
                         netconfClient.disconnect();
@@ -365,12 +364,10 @@ public class HypervisorHostHelper {
                 }
 
                 try {
-                    s_logger.info("Associating policy map " + policyName + " with port profile " + vethPortProfileName
-                            + ".");
+                    s_logger.info("Associating policy map " + policyName + " with port profile " + vethPortProfileName + ".");
                     netconfClient.attachServicePolicy(policyName, vethPortProfileName);
                 } catch (CloudRuntimeException e) {
-                    msg = "Failed to associate policy map " + policyName + " with port profile " + vethPortProfileName
-                            + ". Exception: " + e.toString();
+                    msg = "Failed to associate policy map " + policyName + " with port profile " + vethPortProfileName + ". Exception: " + e.toString();
                     s_logger.error(msg);
                     if (netconfClient != null) {
                         netconfClient.disconnect();
@@ -382,8 +379,7 @@ public class HypervisorHostHelper {
         }
 
         if (vlanId == null) {
-            s_logger.info("Skipping update operation over ethernet port profile " + ethPortProfileName
-                    + " for untagged VLAN.");
+            s_logger.info("Skipping update operation over ethernet port profile " + ethPortProfileName + " for untagged VLAN.");
             if (netconfClient != null) {
                 netconfClient.disconnect();
                 s_logger.debug("Disconnected Nexus 1000v session.");
@@ -407,8 +403,7 @@ public class HypervisorHostHelper {
             s_logger.info("Updating vEthernet port profile with VLAN " + vlanId.toString());
             netconfClient.updatePortProfile(ethPortProfileName, SwitchPortMode.trunk, params);
         } catch (CloudRuntimeException e) {
-            msg = "Failed to update ethernet port profile " + ethPortProfileName + " with parameters "
-                    + params.toString() + ". Exception: " + e.toString();
+            msg = "Failed to update ethernet port profile " + ethPortProfileName + " with parameters " + params.toString() + ". Exception: " + e.toString();
             s_logger.error(msg);
             if (netconfClient != null) {
                 netconfClient.disconnect();
@@ -420,8 +415,7 @@ public class HypervisorHostHelper {
         try {
             netconfClient.updatePortProfile(vethPortProfileName, SwitchPortMode.access, params);
         } catch (CloudRuntimeException e) {
-            msg = "Failed to update vEthernet port profile " + vethPortProfileName + " with parameters "
-                    + params.toString() + ". Exception: " + e.toString();
+            msg = "Failed to update vEthernet port profile " + vethPortProfileName + " with parameters " + params.toString() + ". Exception: " + e.toString();
             s_logger.error(msg);
             if (netconfClient != null) {
                 netconfClient.disconnect();
@@ -445,9 +439,9 @@ public class HypervisorHostHelper {
      * @throws Exception
      */
 
-    public static Pair<ManagedObjectReference, String> prepareNetwork(String physicalNetwork, String namePrefix,
-            HostMO hostMo, String vlanId, String secondaryvlanId, Integer networkRateMbps, Integer networkRateMulticastMbps, long timeOutMs,
-            VirtualSwitchType vSwitchType, int numPorts, String gateway, boolean configureVServiceInNexus, BroadcastDomainType broadcastDomainType) throws Exception {
+    public static Pair<ManagedObjectReference, String> prepareNetwork(String physicalNetwork, String namePrefix, HostMO hostMo, String vlanId, String secondaryvlanId,
+            Integer networkRateMbps, Integer networkRateMulticastMbps, long timeOutMs, VirtualSwitchType vSwitchType, int numPorts, String gateway,
+            boolean configureVServiceInNexus, BroadcastDomainType broadcastDomainType, Map<String, String> vsmCredentials) throws Exception {
         ManagedObjectReference morNetwork = null;
         VmwareContext context = hostMo.getContext();
         ManagedObjectReference dcMor = hostMo.getHyperHostDatacenter();
@@ -470,23 +464,16 @@ public class HypervisorHostHelper {
          * prepare networks for in this function.
          */
         BroadcastDomainType[] supportedBroadcastTypes =
-                new BroadcastDomainType[] { BroadcastDomainType.Lswitch,
-                BroadcastDomainType.LinkLocal,
-                BroadcastDomainType.Native,
-                BroadcastDomainType.Pvlan,
-                BroadcastDomainType.Storage,
-                BroadcastDomainType.UnDecided,
-                BroadcastDomainType.Vlan };
+                new BroadcastDomainType[] {BroadcastDomainType.Lswitch, BroadcastDomainType.LinkLocal, BroadcastDomainType.Native, BroadcastDomainType.Pvlan,
+                BroadcastDomainType.Storage, BroadcastDomainType.UnDecided, BroadcastDomainType.Vlan, BroadcastDomainType.Vsp};
 
         if (!Arrays.asList(supportedBroadcastTypes).contains(broadcastDomainType)) {
-            throw new InvalidParameterException("BroadcastDomainType " + broadcastDomainType +
-                    " it not supported on a VMWare hypervisor at this time.");
+            throw new InvalidParameterException("BroadcastDomainType " + broadcastDomainType + " it not supported on a VMWare hypervisor at this time.");
         }
 
         if (broadcastDomainType == BroadcastDomainType.Lswitch) {
             if (vSwitchType == VirtualSwitchType.NexusDistributedVirtualSwitch) {
-                throw new InvalidParameterException("Nexus Distributed Virtualswitch is not supported with BroadcastDomainType " +
-                        broadcastDomainType);
+                throw new InvalidParameterException("Nexus Distributed Virtualswitch is not supported with BroadcastDomainType " + broadcastDomainType);
             }
             /**
              * Nicira NVP requires all vms to be connected to a single port-group.
@@ -499,7 +486,7 @@ public class HypervisorHostHelper {
         } else {
             networkName = composeCloudNetworkName(namePrefix, vlanId, secondaryvlanId, networkRateMbps, physicalNetwork);
 
-            if(vlanId != null && !UNTAGGED_VLAN_NAME.equalsIgnoreCase(vlanId)) {
+            if (vlanId != null && !UNTAGGED_VLAN_NAME.equalsIgnoreCase(vlanId)) {
                 createGCTag = true;
                 vid = Integer.parseInt(vlanId);
             }
@@ -549,8 +536,16 @@ public class HypervisorHostHelper {
                     setupPVlanPair(dvSwitchMo, morDvSwitch, vid, spvlanid);
                 }
 
+                VMwareDVSPortgroupPolicy portGroupPolicy = null;
+                if (broadcastDomainType == BroadcastDomainType.Vsp) {
+                    //If the broadcastDomainType is Vsp, then set the VMwareDVSPortgroupPolicy
+                    portGroupPolicy = new VMwareDVSPortgroupPolicy();
+                    portGroupPolicy.setVlanOverrideAllowed(true);
+                    portGroupPolicy.setBlockOverrideAllowed(true);
+                    portGroupPolicy.setPortConfigResetAtDisconnect(true);
+                }
                 // Next, create the port group. For this, we need to create a VLAN spec.
-                createPortGroup(physicalNetwork, networkName, vid, spvlanid, dataCenterMo, shapingPolicy, secPolicy, dvSwitchMo, numPorts, autoExpandSupported);
+                createPortGroup(physicalNetwork, networkName, vid, spvlanid, dataCenterMo, shapingPolicy, secPolicy, portGroupPolicy, dvSwitchMo, numPorts, autoExpandSupported);
                 bWaitPortGroupReady = true;
             }
         } else if (vSwitchType == VirtualSwitchType.NexusDistributedVirtualSwitch) {
@@ -576,9 +571,13 @@ public class HypervisorHostHelper {
             }
             // We chose 50% higher allocation than average bandwidth.
             // TODO(sateesh): Optionally let user specify the peak coefficient
-            long peakBandwidth = (long) (averageBandwidth * 1.5);
+            long peakBandwidth = (long)(averageBandwidth * 1.5);
             // TODO(sateesh): Optionally let user specify the burst coefficient
             long burstSize = 5 * averageBandwidth / 8;
+            if (vsmCredentials != null) {
+                s_logger.info("Stocking credentials of Nexus VSM");
+                context.registerStockObject("vsmcredentials", vsmCredentials);
+            }
 
             if (!dataCenterMo.hasDvPortGroup(networkName)) {
                 s_logger.info("Port profile " + networkName + " not found.");
@@ -600,7 +599,7 @@ public class HypervisorHostHelper {
             throw new Exception(msg);
         }
 
-        if(createGCTag) {
+        if (createGCTag) {
             NetworkMO networkMo = new NetworkMO(hostMo.getContext(), morNetwork);
             networkMo.setCustomFieldValue(CustomFieldConstants.CLOUD_GC_DVP, "true");
             s_logger.debug("Added custom field : " + CustomFieldConstants.CLOUD_GC_DVP);
@@ -621,8 +620,7 @@ public class HypervisorHostHelper {
         return vCenterApiVersion.compareTo(minVcenterApiVersionForFeature) >= 0 ? true : false;
     }
 
-    private static void setupPVlanPair(DistributedVirtualSwitchMO dvSwitchMo, ManagedObjectReference morDvSwitch,
-            Integer vid, Integer spvlanid) throws Exception {
+    private static void setupPVlanPair(DistributedVirtualSwitchMO dvSwitchMo, ManagedObjectReference morDvSwitch, Integer vid, Integer spvlanid) throws Exception {
         Map<Integer, HypervisorHostHelper.PvlanType> vlanmap = dvSwitchMo.retrieveVlanPvlan(vid, spvlanid, morDvSwitch);
         if (!vlanmap.isEmpty()) {
             // Then either vid or pvlanid or both are already being used. Check how.
@@ -657,7 +655,7 @@ public class HypervisorHostHelper {
             VMwareDVSPvlanConfigSpec ppvlanConfigSpec = createDVPortPvlanConfigSpec(vid, vid, PvlanType.promiscuous, PvlanOperation.add);
             dvsSpec.getPvlanConfigSpec().add(ppvlanConfigSpec);
         }
-        if ( !vid.equals(spvlanid) && !vlanmap.containsKey(spvlanid)) {
+        if (!vid.equals(spvlanid) && !vlanmap.containsKey(spvlanid)) {
             VMwareDVSPvlanConfigSpec spvlanConfigSpec = createDVPortPvlanConfigSpec(vid, spvlanid, PvlanType.isolated, PvlanOperation.add);
             dvsSpec.getPvlanConfigSpec().add(spvlanConfigSpec);
         }
@@ -685,11 +683,12 @@ public class HypervisorHostHelper {
     }
 
     private static void createPortGroup(String physicalNetwork, String networkName, Integer vid, Integer spvlanid, DatacenterMO dataCenterMo,
-            DVSTrafficShapingPolicy shapingPolicy, DVSSecurityPolicy secPolicy, DistributedVirtualSwitchMO dvSwitchMo, int numPorts, boolean autoExpandSupported) throws Exception{
+            DVSTrafficShapingPolicy shapingPolicy, DVSSecurityPolicy secPolicy, VMwareDVSPortgroupPolicy portGroupPolicy, DistributedVirtualSwitchMO dvSwitchMo, int numPorts, boolean autoExpandSupported)
+                    throws Exception {
         VmwareDistributedVirtualSwitchVlanSpec vlanSpec = null;
         VmwareDistributedVirtualSwitchPvlanSpec pvlanSpec = null;
         VMwareDVSPortSetting dvsPortSetting = null;
-        DVPortgroupConfigSpec dvPortGroupSpec;
+        DVPortgroupConfigSpec newDvPortGroupSpec;
 
         // Next, create the port group. For this, we need to create a VLAN spec.
         // NOTE - VmwareDistributedVirtualSwitchPvlanSpec extends VmwareDistributedVirtualSwitchVlanSpec.
@@ -709,39 +708,148 @@ public class HypervisorHostHelper {
             dvsPortSetting = createVmwareDVPortSettingSpec(shapingPolicy, secPolicy, pvlanSpec);
         }
 
-        dvPortGroupSpec = createDvPortGroupSpec(networkName, dvsPortSetting, numPorts, autoExpandSupported);
-
+        newDvPortGroupSpec = createDvPortGroupSpec(networkName, dvsPortSetting, numPorts, autoExpandSupported);
+        if (portGroupPolicy != null)
+        {
+            newDvPortGroupSpec.setPolicy(portGroupPolicy);
+        }
 
         if (!dataCenterMo.hasDvPortGroup(networkName)) {
             s_logger.info("Distributed Virtual Port group " + networkName + " not found.");
             // TODO(sateesh): Handle Exceptions
             try {
-                dvSwitchMo.createDVPortGroup(dvPortGroupSpec);
+                dvSwitchMo.createDVPortGroup(newDvPortGroupSpec);
             } catch (Exception e) {
                 String msg = "Failed to create distributed virtual port group " + networkName + " on dvSwitch " + physicalNetwork;
+                msg += ". " + VmwareHelper.getExceptionMessage(e);
                 throw new Exception(msg);
             }
         } else {
             s_logger.info("Found Distributed Virtual Port group " + networkName);
-            // TODO(sateesh): Handle Exceptions
-            DVPortgroupConfigInfo dvPortgroupInfo = dataCenterMo.getDvPortGroupSpec(networkName);
-            if (!isSpecMatch(dvPortgroupInfo, vid, shapingPolicy)) {
+            DVPortgroupConfigInfo currentDvPortgroupInfo = dataCenterMo.getDvPortGroupSpec(networkName);
+            if (!isSpecMatch(currentDvPortgroupInfo, newDvPortGroupSpec)) {
                 s_logger.info("Updating Distributed Virtual Port group " + networkName);
-                dvPortGroupSpec.setDefaultPortConfig(dvsPortSetting);
-                dvPortGroupSpec.setConfigVersion(dvPortgroupInfo.getConfigVersion());
+                newDvPortGroupSpec.setDefaultPortConfig(dvsPortSetting);
+                newDvPortGroupSpec.setConfigVersion(currentDvPortgroupInfo.getConfigVersion());
                 ManagedObjectReference morDvPortGroup = dataCenterMo.getDvPortGroupMor(networkName);
                 try {
-                    dvSwitchMo.updateDvPortGroup(morDvPortGroup, dvPortGroupSpec);
+                    dvSwitchMo.updateDvPortGroup(morDvPortGroup, newDvPortGroupSpec);
                 } catch (Exception e) {
                     String msg = "Failed to update distributed virtual port group " + networkName + " on dvSwitch " + physicalNetwork;
+                    msg += ". " + VmwareHelper.getExceptionMessage(e);
                     throw new Exception(msg);
                 }
             }
         }
     }
 
-    public static ManagedObjectReference waitForDvPortGroupReady(
-            DatacenterMO dataCenterMo, String dvPortGroupName, long timeOutMs) throws Exception {
+    public static boolean isSpecMatch(DVPortgroupConfigInfo currentDvPortgroupInfo, DVPortgroupConfigSpec newDvPortGroupSpec) {
+        String dvPortGroupName = newDvPortGroupSpec.getName();
+        s_logger.debug("Checking if configuration of dvPortGroup [" + dvPortGroupName + "] has changed.");
+        boolean specMatches = true;
+        DVSTrafficShapingPolicy currentTrafficShapingPolicy;
+        currentTrafficShapingPolicy = currentDvPortgroupInfo.getDefaultPortConfig().getInShapingPolicy();
+
+        assert (currentTrafficShapingPolicy != null);
+
+        LongPolicy oldAverageBandwidthPolicy = currentTrafficShapingPolicy.getAverageBandwidth();
+        LongPolicy oldBurstSizePolicy = currentTrafficShapingPolicy.getBurstSize();
+        LongPolicy oldPeakBandwidthPolicy = currentTrafficShapingPolicy.getPeakBandwidth();
+        BoolPolicy oldIsEnabledPolicy = currentTrafficShapingPolicy.getEnabled();
+        Long oldAverageBandwidth = null;
+        Long oldBurstSize = null;
+        Long oldPeakBandwidth = null;
+        Boolean oldIsEnabled = null;
+
+        if (oldAverageBandwidthPolicy != null) {
+            oldAverageBandwidth = oldAverageBandwidthPolicy.getValue();
+        }
+        if (oldBurstSizePolicy != null) {
+            oldBurstSize = oldBurstSizePolicy.getValue();
+        }
+        if (oldPeakBandwidthPolicy != null) {
+            oldPeakBandwidth = oldPeakBandwidthPolicy.getValue();
+        }
+        if (oldIsEnabledPolicy != null) {
+            oldIsEnabled = oldIsEnabledPolicy.isValue();
+        }
+
+        DVSTrafficShapingPolicy newTrafficShapingPolicyInbound = newDvPortGroupSpec.getDefaultPortConfig().getInShapingPolicy();
+        LongPolicy newAverageBandwidthPolicy = newTrafficShapingPolicyInbound.getAverageBandwidth();
+        LongPolicy newBurstSizePolicy = newTrafficShapingPolicyInbound.getBurstSize();
+        LongPolicy newPeakBandwidthPolicy = newTrafficShapingPolicyInbound.getPeakBandwidth();
+        BoolPolicy newIsEnabledPolicy = newTrafficShapingPolicyInbound.getEnabled();
+        Long newAverageBandwidth = null;
+        Long newBurstSize = null;
+        Long newPeakBandwidth = null;
+        Boolean newIsEnabled = null;
+        if (newAverageBandwidthPolicy != null) {
+            newAverageBandwidth = newAverageBandwidthPolicy.getValue();
+        }
+        if (newBurstSizePolicy != null) {
+            newBurstSize = newBurstSizePolicy.getValue();
+        }
+        if (newPeakBandwidthPolicy != null) {
+            newPeakBandwidth = newPeakBandwidthPolicy.getValue();
+        }
+        if (newIsEnabledPolicy != null) {
+            newIsEnabled = newIsEnabledPolicy.isValue();
+        }
+
+        if (!oldIsEnabled.equals(newIsEnabled)) {
+            s_logger.info("Detected change in state of shaping policy (enabled/disabled) [" + newIsEnabled + "]");
+            specMatches = false;
+        }
+
+        if (oldIsEnabled || newIsEnabled) {
+            if (oldAverageBandwidth != null && !oldAverageBandwidth.equals(newAverageBandwidth)) {
+                s_logger.info("Average bandwidth setting in new shaping policy doesn't match the existing setting.");
+                specMatches = false;
+            } else if (oldBurstSize != null && !oldBurstSize.equals(newBurstSize)) {
+                s_logger.info("Burst size setting in new shaping policy doesn't match the existing setting.");
+                specMatches = false;
+            } else if (oldPeakBandwidth != null && !oldPeakBandwidth.equals(newPeakBandwidth)) {
+                s_logger.info("Peak bandwidth setting in new shaping policy doesn't match the existing setting.");
+                specMatches = false;
+            }
+        }
+
+        boolean oldAutoExpandSetting = currentDvPortgroupInfo.isAutoExpand();
+        boolean autoExpandEnabled = newDvPortGroupSpec.isAutoExpand();
+        if (oldAutoExpandSetting != autoExpandEnabled) {
+            specMatches = false;
+        }
+        if (!autoExpandEnabled) {
+            // Allow update of number of dvports per dvPortGroup is auto expand is not enabled.
+            int oldNumPorts = currentDvPortgroupInfo.getNumPorts();
+            int newNumPorts = newDvPortGroupSpec.getNumPorts();
+            if (oldNumPorts < newNumPorts) {
+                s_logger.info("Need to update the number of dvports for dvPortGroup :[" + dvPortGroupName +
+                            "] from existing number of dvports " + oldNumPorts + " to " + newNumPorts);
+                specMatches = false;
+            } else if (oldNumPorts > newNumPorts) {
+                s_logger.warn("Detected that new number of dvports [" + newNumPorts + "] in dvPortGroup [" + dvPortGroupName +
+                        "] is less than existing number of dvports [" + oldNumPorts + "]. Attempt to update this dvPortGroup may fail!");
+                specMatches = false;
+            }
+        }
+
+        VmwareDistributedVirtualSwitchVlanIdSpec oldVlanSpec = (VmwareDistributedVirtualSwitchVlanIdSpec)((
+                VMwareDVSPortSetting)currentDvPortgroupInfo.getDefaultPortConfig()).getVlan();
+        VmwareDistributedVirtualSwitchVlanIdSpec newVlanSpec = (VmwareDistributedVirtualSwitchVlanIdSpec)((
+                VMwareDVSPortSetting)newDvPortGroupSpec.getDefaultPortConfig()).getVlan();
+        int oldVlanId = oldVlanSpec.getVlanId();
+        int newVlanId = newVlanSpec.getVlanId();
+        if (oldVlanId != newVlanId) {
+            s_logger.info("Detected that new VLAN [" + newVlanId + "] of dvPortGroup [" + dvPortGroupName +
+                        "] is different from current VLAN [" + oldVlanId + "]");
+            specMatches = false;
+        }
+
+        return specMatches;
+    }
+
+    public static ManagedObjectReference waitForDvPortGroupReady(DatacenterMO dataCenterMo, String dvPortGroupName, long timeOutMs) throws Exception {
         ManagedObjectReference morDvPortGroup = null;
 
         // if DvPortGroup is just created, we may fail to retrieve it, we
@@ -763,7 +871,7 @@ public class HypervisorHostHelper {
         DVSTrafficShapingPolicy currentTrafficShapingPolicy;
         currentTrafficShapingPolicy = configInfo.getDefaultPortConfig().getInShapingPolicy();
 
-        assert(currentTrafficShapingPolicy != null);
+        assert (currentTrafficShapingPolicy != null);
 
         LongPolicy averageBandwidth = currentTrafficShapingPolicy.getAverageBandwidth();
         LongPolicy burstSize = currentTrafficShapingPolicy.getBurstSize();
@@ -774,18 +882,18 @@ public class HypervisorHostHelper {
             return false;
         }
 
-        if(averageBandwidth != null && !averageBandwidth.equals(shapingPolicy.getAverageBandwidth())) {
-            if(s_logger.isInfoEnabled()) {
+        if (averageBandwidth != null && !averageBandwidth.equals(shapingPolicy.getAverageBandwidth())) {
+            if (s_logger.isInfoEnabled()) {
                 s_logger.info("Average bandwidth setting in shaping policy doesn't match with existing setting.");
             }
             return false;
-        } else if(burstSize != null && !burstSize.equals(shapingPolicy.getBurstSize())) {
-            if(s_logger.isInfoEnabled()) {
+        } else if (burstSize != null && !burstSize.equals(shapingPolicy.getBurstSize())) {
+            if (s_logger.isInfoEnabled()) {
                 s_logger.info("Burst size setting in shaping policy doesn't match with existing setting.");
             }
             return false;
-        } else if(peakBandwidth != null && !peakBandwidth.equals(shapingPolicy.getPeakBandwidth())) {
-            if(s_logger.isInfoEnabled()) {
+        } else if (peakBandwidth != null && !peakBandwidth.equals(shapingPolicy.getPeakBandwidth())) {
+            if (s_logger.isInfoEnabled()) {
                 s_logger.info("Peak bandwidth setting in shaping policy doesn't match with existing setting.");
             }
             return false;
@@ -805,7 +913,8 @@ public class HypervisorHostHelper {
         return spec;
     }
 
-    public static VMwareDVSPortSetting createVmwareDVPortSettingSpec(DVSTrafficShapingPolicy shapingPolicy, DVSSecurityPolicy secPolicy, VmwareDistributedVirtualSwitchVlanSpec vlanSpec) {
+    public static VMwareDVSPortSetting createVmwareDVPortSettingSpec(DVSTrafficShapingPolicy shapingPolicy, DVSSecurityPolicy secPolicy,
+            VmwareDistributedVirtualSwitchVlanSpec vlanSpec) {
         VMwareDVSPortSetting dvsPortSetting = new VMwareDVSPortSetting();
         dvsPortSetting.setVlan(vlanSpec);
         dvsPortSetting.setSecurityPolicy(secPolicy);
@@ -816,11 +925,12 @@ public class HypervisorHostHelper {
 
     public static DVSTrafficShapingPolicy getDVSShapingPolicy(Integer networkRateMbps) {
         DVSTrafficShapingPolicy shapingPolicy = new DVSTrafficShapingPolicy();
+        BoolPolicy isEnabled = new BoolPolicy();
         if (networkRateMbps == null || networkRateMbps.intValue() <= 0) {
+            isEnabled.setValue(false);
+            shapingPolicy.setEnabled(isEnabled);
             return shapingPolicy;
         }
-        shapingPolicy = new DVSTrafficShapingPolicy();
-        BoolPolicy isEnabled = new BoolPolicy();
         LongPolicy averageBandwidth = new LongPolicy();
         LongPolicy peakBandwidth = new LongPolicy();
         LongPolicy burstSize = new LongPolicy();
@@ -829,7 +939,7 @@ public class HypervisorHostHelper {
         averageBandwidth.setValue(networkRateMbps.intValue() * 1024L * 1024L);
         // We chose 50% higher allocation than average bandwidth.
         // TODO(sateesh): Also let user specify the peak coefficient
-        peakBandwidth.setValue((long) (averageBandwidth.getValue() * 1.5));
+        peakBandwidth.setValue((long)(averageBandwidth.getValue() * 1.5));
         // TODO(sateesh): Also let user specify the burst coefficient
         burstSize.setValue(5 * averageBandwidth.getValue() / 8);
 
@@ -848,15 +958,11 @@ public class HypervisorHostHelper {
     }
 
     public enum PvlanOperation {
-        add,
-        edit,
-        remove
+        add, edit, remove
     }
 
     public enum PvlanType {
-        promiscuous,
-        isolated,
-        community,  // We don't use Community
+        promiscuous, isolated, community,  // We don't use Community
     }
 
     public static VMwareDVSPvlanConfigSpec createDVPortPvlanConfigSpec(int vlanId, int secondaryVlanId, PvlanType pvlantype, PvlanOperation operation) {
@@ -888,9 +994,8 @@ public class HypervisorHostHelper {
         return secPolicy;
     }
 
-    public static Pair<ManagedObjectReference, String> prepareNetwork(String vSwitchName, String namePrefix,
-            HostMO hostMo, String vlanId, Integer networkRateMbps, Integer networkRateMulticastMbps,
-            long timeOutMs, boolean syncPeerHosts, BroadcastDomainType broadcastDomainType, String nicUuid) throws Exception {
+    public static Pair<ManagedObjectReference, String> prepareNetwork(String vSwitchName, String namePrefix, HostMO hostMo, String vlanId, Integer networkRateMbps,
+            Integer networkRateMulticastMbps, long timeOutMs, boolean syncPeerHosts, BroadcastDomainType broadcastDomainType, String nicUuid) throws Exception {
 
         HostVirtualSwitch vSwitch;
         if (vSwitchName == null) {
@@ -913,17 +1018,11 @@ public class HypervisorHostHelper {
          * prepare networks for in this function.
          */
         BroadcastDomainType[] supportedBroadcastTypes =
-                new BroadcastDomainType[] { BroadcastDomainType.Lswitch,
-                BroadcastDomainType.LinkLocal,
-                BroadcastDomainType.Native,
-                BroadcastDomainType.Pvlan,
-                BroadcastDomainType.Storage,
-                BroadcastDomainType.UnDecided,
-                BroadcastDomainType.Vlan };
+                new BroadcastDomainType[] {BroadcastDomainType.Lswitch, BroadcastDomainType.LinkLocal, BroadcastDomainType.Native, BroadcastDomainType.Pvlan,
+                BroadcastDomainType.Storage, BroadcastDomainType.UnDecided, BroadcastDomainType.Vlan, BroadcastDomainType.Vsp};
 
         if (!Arrays.asList(supportedBroadcastTypes).contains(broadcastDomainType)) {
-            throw new InvalidParameterException("BroadcastDomainType " + broadcastDomainType +
-                    " it not supported on a VMWare hypervisor at this time.");
+            throw new InvalidParameterException("BroadcastDomainType " + broadcastDomainType + " it not supported on a VMWare hypervisor at this time.");
         }
 
         if (broadcastDomainType == BroadcastDomainType.Lswitch) {
@@ -937,7 +1036,7 @@ public class HypervisorHostHelper {
         } else {
             networkName = composeCloudNetworkName(namePrefix, vlanId, null, networkRateMbps, vSwitchName);
 
-            if(vlanId != null && !UNTAGGED_VLAN_NAME.equalsIgnoreCase(vlanId) ) {
+            if (vlanId != null && !UNTAGGED_VLAN_NAME.equalsIgnoreCase(vlanId)) {
                 createGCTag = true;
                 vid = Integer.parseInt(vlanId);
             }
@@ -951,30 +1050,34 @@ public class HypervisorHostHelper {
             secPolicy.setMacChanges(Boolean.TRUE);
         }
         HostNetworkTrafficShapingPolicy shapingPolicy = null;
-        if(networkRateMbps != null && networkRateMbps.intValue() > 0) {
+        if (networkRateMbps != null && networkRateMbps.intValue() > 0) {
             shapingPolicy = new HostNetworkTrafficShapingPolicy();
             shapingPolicy.setEnabled(true);
-            shapingPolicy.setAverageBandwidth(networkRateMbps.intValue()*1024L*1024L);
+            shapingPolicy.setAverageBandwidth(networkRateMbps.intValue() * 1024L * 1024L);
 
             //
             // TODO : people may have different opinion on how to set the following
             //
 
             // give 50% premium to peek
-            shapingPolicy.setPeakBandwidth((long)(shapingPolicy.getAverageBandwidth()*1.5));
+            shapingPolicy.setPeakBandwidth((long)(shapingPolicy.getAverageBandwidth() * 1.5));
 
             // allow 5 seconds of burst transfer
-            shapingPolicy.setBurstSize(5*shapingPolicy.getAverageBandwidth()/8);
+            shapingPolicy.setBurstSize(5 * shapingPolicy.getAverageBandwidth() / 8);
         }
 
         boolean bWaitPortGroupReady = false;
         if (broadcastDomainType == BroadcastDomainType.Lswitch) {
-            if (!hostMo.hasPortGroup(vSwitch, networkName)) {
-                createNvpPortGroup(hostMo, vSwitch, networkName, shapingPolicy);
+            //if NSX API VERSION >= 4.2, connect to br-int (nsx.network), do not create portgroup else previous behaviour
+            if (NiciraNvpApiVersion.isApiVersionLowerThan("4.2")){
+              //Previous behaviour
+                if (!hostMo.hasPortGroup(vSwitch, networkName)) {
+                    createNvpPortGroup(hostMo, vSwitch, networkName, shapingPolicy);
 
-                bWaitPortGroupReady = true;
-            } else {
-                bWaitPortGroupReady = false;
+                    bWaitPortGroupReady = true;
+                } else {
+                    bWaitPortGroupReady = false;
+                }
             }
         } else {
             if (!hostMo.hasPortGroup(vSwitch, networkName)) {
@@ -982,47 +1085,52 @@ public class HypervisorHostHelper {
                 bWaitPortGroupReady = true;
             } else {
                 HostPortGroupSpec spec = hostMo.getPortGroupSpec(networkName);
-                if(!isSpecMatch(spec, vid, shapingPolicy)) {
+                if (!isSpecMatch(spec, vid, shapingPolicy)) {
                     hostMo.updatePortGroup(vSwitch, networkName, vid, secPolicy, shapingPolicy);
                     bWaitPortGroupReady = true;
                 }
             }
         }
 
-        ManagedObjectReference morNetwork;
-        if(bWaitPortGroupReady)
-            morNetwork = waitForNetworkReady(hostMo, networkName, timeOutMs);
-        else
-            morNetwork = hostMo.getNetworkMor(networkName);
-        if (morNetwork == null) {
-            String msg = "Failed to create guest network " + networkName;
-            s_logger.error(msg);
-            throw new Exception(msg);
+        ManagedObjectReference morNetwork = null;
+
+        if (broadcastDomainType != BroadcastDomainType.Lswitch ||
+                (broadcastDomainType == BroadcastDomainType.Lswitch && NiciraNvpApiVersion.isApiVersionLowerThan("4.2"))) {
+            if (bWaitPortGroupReady)
+                morNetwork = waitForNetworkReady(hostMo, networkName, timeOutMs);
+            else
+                morNetwork = hostMo.getNetworkMor(networkName);
+            if (morNetwork == null) {
+                String msg = "Failed to create guest network " + networkName;
+                s_logger.error(msg);
+                throw new Exception(msg);
+            }
+
+            if (createGCTag) {
+                NetworkMO networkMo = new NetworkMO(hostMo.getContext(), morNetwork);
+                networkMo.setCustomFieldValue(CustomFieldConstants.CLOUD_GC, "true");
+            }
         }
 
-        if(createGCTag) {
-            NetworkMO networkMo = new NetworkMO(hostMo.getContext(), morNetwork);
-            networkMo.setCustomFieldValue(CustomFieldConstants.CLOUD_GC, "true");
-        }
-
-        if(syncPeerHosts) {
+        if (syncPeerHosts) {
             ManagedObjectReference morParent = hostMo.getParentMor();
-            if(morParent != null && morParent.getType().equals("ClusterComputeResource")) {
+            if (morParent != null && morParent.getType().equals("ClusterComputeResource")) {
                 // to be conservative, lock cluster
                 GlobalLock lock = GlobalLock.getInternLock("ClusterLock." + morParent.getValue());
                 try {
-                    if(lock.lock(DEFAULT_LOCK_TIMEOUT_SECONDS)) {
+                    if (lock.lock(DEFAULT_LOCK_TIMEOUT_SECONDS)) {
                         try {
-                            List<ManagedObjectReference> hosts = (List<ManagedObjectReference>)hostMo.getContext().getVimClient().getDynamicProperty(morParent, "host");
-                            if(hosts != null) {
-                                for(ManagedObjectReference otherHost: hosts) {
-                                    if(!otherHost.getValue().equals(hostMo.getMor().getValue())) {
+                            List<ManagedObjectReference> hosts = hostMo.getContext().getVimClient().getDynamicProperty(morParent, "host");
+                            if (hosts != null) {
+                                for (ManagedObjectReference otherHost : hosts) {
+                                    if (!otherHost.getValue().equals(hostMo.getMor().getValue())) {
                                         HostMO otherHostMo = new HostMO(hostMo.getContext(), otherHost);
                                         try {
-                                            if(s_logger.isDebugEnabled())
+                                            if (s_logger.isDebugEnabled())
                                                 s_logger.debug("Prepare network on other host, vlan: " + vlanId + ", host: " + otherHostMo.getHostName());
-                                            prepareNetwork(vSwitchName, namePrefix, otherHostMo, vlanId, networkRateMbps, networkRateMulticastMbps, timeOutMs, false, broadcastDomainType, nicUuid);
-                                        } catch(Exception e) {
+                                            prepareNetwork(vSwitchName, namePrefix, otherHostMo, vlanId, networkRateMbps, networkRateMulticastMbps, timeOutMs, false,
+                                                    broadcastDomainType, nicUuid);
+                                        } catch (Exception e) {
                                             s_logger.warn("Unable to prepare network on other host, vlan: " + vlanId + ", host: " + otherHostMo.getHostName());
                                         }
                                     }
@@ -1046,36 +1154,36 @@ public class HypervisorHostHelper {
 
     private static boolean isSpecMatch(HostPortGroupSpec spec, Integer vlanId, HostNetworkTrafficShapingPolicy shapingPolicy) {
         // check VLAN configuration
-        if(vlanId != null) {
-            if(vlanId.intValue() != spec.getVlanId())
+        if (vlanId != null) {
+            if (vlanId.intValue() != spec.getVlanId())
                 return false;
         } else {
-            if(spec.getVlanId() != 0)
+            if (spec.getVlanId() != 0)
                 return false;
         }
 
         // check traffic shaping configuration
         HostNetworkTrafficShapingPolicy policyInSpec = null;
-        if(spec.getPolicy() != null)
+        if (spec.getPolicy() != null)
             policyInSpec = spec.getPolicy().getShapingPolicy();
 
-        if(policyInSpec != null && shapingPolicy == null || policyInSpec == null && shapingPolicy != null)
+        if (policyInSpec != null && shapingPolicy == null || policyInSpec == null && shapingPolicy != null)
             return false;
 
-        if(policyInSpec == null && shapingPolicy == null)
+        if (policyInSpec == null && shapingPolicy == null)
             return true;
 
         // so far policyInSpec and shapingPolicy should both not be null
-        if(policyInSpec.isEnabled() == null || !policyInSpec.isEnabled().booleanValue())
+        if (policyInSpec.isEnabled() == null || !policyInSpec.isEnabled().booleanValue())
             return false;
 
-        if(policyInSpec.getAverageBandwidth() == null || policyInSpec.getAverageBandwidth().longValue() != shapingPolicy.getAverageBandwidth().longValue())
+        if (policyInSpec.getAverageBandwidth() == null || policyInSpec.getAverageBandwidth().longValue() != shapingPolicy.getAverageBandwidth().longValue())
             return false;
 
-        if(policyInSpec.getPeakBandwidth() == null || policyInSpec.getPeakBandwidth().longValue() != shapingPolicy.getPeakBandwidth().longValue())
+        if (policyInSpec.getPeakBandwidth() == null || policyInSpec.getPeakBandwidth().longValue() != shapingPolicy.getPeakBandwidth().longValue())
             return false;
 
-        if(policyInSpec.getBurstSize() == null || policyInSpec.getBurstSize().longValue() != shapingPolicy.getBurstSize().longValue())
+        if (policyInSpec.getBurstSize() == null || policyInSpec.getBurstSize().longValue() != shapingPolicy.getBurstSize().longValue())
             return false;
 
         return true;
@@ -1101,7 +1209,7 @@ public class HypervisorHostHelper {
         // Find the first free vlanid
         int nvpVlanId = 0;
         for (nvpVlanId = 1; nvpVlanId < 4095; nvpVlanId++) {
-            if (! usedVlans.contains(nvpVlanId)) {
+            if (!usedVlans.contains(nvpVlanId)) {
                 break;
             }
         }
@@ -1119,8 +1227,7 @@ public class HypervisorHostHelper {
         hostMo.createPortGroup(vSwitch, networkName, nvpVlanId, secPolicy, shapingPolicy);
     }
 
-    public static ManagedObjectReference waitForNetworkReady(HostMO hostMo,
-            String networkName, long timeOutMs) throws Exception {
+    public static ManagedObjectReference waitForNetworkReady(HostMO hostMo, String networkName, long timeOutMs) throws Exception {
 
         ManagedObjectReference morNetwork = null;
 
@@ -1140,13 +1247,14 @@ public class HypervisorHostHelper {
         return morNetwork;
     }
 
-    public static boolean createBlankVm(VmwareHypervisorHost host, String vmName, String vmInternalCSName,
-            int cpuCount, int cpuSpeedMHz, int cpuReservedMHz, boolean limitCpuUse, int memoryMB, int memoryReserveMB, String guestOsIdentifier,
-            ManagedObjectReference morDs, boolean snapshotDirToParent) throws Exception {
+    public static boolean createBlankVm(VmwareHypervisorHost host, String vmName, String vmInternalCSName, int cpuCount, int cpuSpeedMHz, int cpuReservedMHz,
+            boolean limitCpuUse, int memoryMB, int memoryReserveMB, String guestOsIdentifier, ManagedObjectReference morDs, boolean snapshotDirToParent,
+            Pair<String, String> controllerInfo, Boolean systemVm) throws Exception {
 
-        if(s_logger.isInfoEnabled())
+        if (s_logger.isInfoEnabled())
             s_logger.info("Create blank VM. cpuCount: " + cpuCount + ", cpuSpeed(MHz): " + cpuSpeedMHz + ", mem(Mb): " + memoryMB);
 
+        VirtualDeviceConfigSpec controllerSpec = null;
         // VM config basics
         VirtualMachineConfigSpec vmConfig = new VirtualMachineConfigSpec();
         vmConfig.setName(vmName);
@@ -1155,14 +1263,33 @@ public class HypervisorHostHelper {
 
         VmwareHelper.setBasicVmConfig(vmConfig, cpuCount, cpuSpeedMHz, cpuReservedMHz, memoryMB, memoryReserveMB, guestOsIdentifier, limitCpuUse);
 
-        // Scsi controller
-        VirtualLsiLogicController scsiController = new VirtualLsiLogicController();
-        scsiController.setSharedBus(VirtualSCSISharing.NO_SHARING);
-        scsiController.setBusNumber(0);
-        scsiController.setKey(1);
-        VirtualDeviceConfigSpec scsiControllerSpec = new VirtualDeviceConfigSpec();
-        scsiControllerSpec.setDevice(scsiController);
-        scsiControllerSpec.setOperation(VirtualDeviceConfigSpecOperation.ADD);
+        String recommendedController = host.getRecommendedDiskController(guestOsIdentifier);
+        String newRootDiskController = controllerInfo.first();
+        String newDataDiskController = controllerInfo.second();
+        if (DiskControllerType.getType(controllerInfo.first()) == DiskControllerType.osdefault) {
+            newRootDiskController = recommendedController;
+        }
+        if (DiskControllerType.getType(controllerInfo.second()) == DiskControllerType.osdefault) {
+            newDataDiskController = recommendedController;
+        }
+
+        Pair<String, String> updatedControllerInfo = new Pair<String, String>(newRootDiskController, newDataDiskController);
+        String scsiDiskController = HypervisorHostHelper.getScsiController(updatedControllerInfo, recommendedController);
+        // If there is requirement for a SCSI controller, ensure to create those.
+        if (scsiDiskController != null) {
+        int busNum = 0;
+            int maxControllerCount = VmwareHelper.MAX_SCSI_CONTROLLER_COUNT;
+            if (systemVm) {
+                maxControllerCount = 1;
+            }
+            while (busNum < maxControllerCount) {
+            VirtualDeviceConfigSpec scsiControllerSpec = new VirtualDeviceConfigSpec();
+                scsiControllerSpec = getControllerSpec(DiskControllerType.getType(scsiDiskController).toString(), busNum);
+
+            vmConfig.getDeviceChange().add(scsiControllerSpec);
+            busNum++;
+            }
+        }
 
         VirtualMachineFileInfo fileInfo = new VirtualMachineFileInfo();
         DatastoreMO dsMo = new DatastoreMO(host.getContext(), morDs);
@@ -1177,9 +1304,8 @@ public class HypervisorHostHelper {
         videoDeviceSpec.setDevice(videoCard);
         videoDeviceSpec.setOperation(VirtualDeviceConfigSpecOperation.ADD);
 
-        vmConfig.getDeviceChange().add(scsiControllerSpec);
         vmConfig.getDeviceChange().add(videoDeviceSpec);
-        if(host.createVm(vmConfig)) {
+        if (host.createVm(vmConfig)) {
             // Here, when attempting to find the VM, we need to use the name
             // with which we created it. This is the only such place where
             // we need to do this. At all other places, we always use the
@@ -1188,14 +1314,14 @@ public class HypervisorHostHelper {
             // VM's custom field CLOUD_VM_INTERNAL_NAME only after we create
             // the VM.
             VirtualMachineMO vmMo = host.findVmOnHyperHost(vmName);
-            assert(vmMo != null);
+            assert (vmMo != null);
 
             vmMo.setCustomFieldValue(CustomFieldConstants.CLOUD_VM_INTERNAL_NAME, vmInternalCSName);
 
             int ideControllerKey = -1;
-            while(ideControllerKey < 0) {
+            while (ideControllerKey < 0) {
                 ideControllerKey = vmMo.tryGetIDEDeviceControllerKey();
-                if(ideControllerKey >= 0)
+                if (ideControllerKey >= 0)
                     break;
 
                 s_logger.info("Waiting for IDE controller be ready in VM: " + vmInternalCSName);
@@ -1207,19 +1333,46 @@ public class HypervisorHostHelper {
         return false;
     }
 
-    public static VirtualMachineMO createWorkerVM(VmwareHypervisorHost hyperHost,
-            DatastoreMO dsMo, String vmName) throws Exception {
+    private static VirtualDeviceConfigSpec getControllerSpec(String diskController, int busNum) {
+        VirtualDeviceConfigSpec controllerSpec = new VirtualDeviceConfigSpec();
+        VirtualController controller = null;
+
+        if (diskController.equalsIgnoreCase(DiskControllerType.ide.toString())) {
+           controller = new VirtualIDEController();
+        } else if (DiskControllerType.pvscsi == DiskControllerType.getType(diskController)) {
+            controller = new ParaVirtualSCSIController();
+        } else if (DiskControllerType.lsisas1068 == DiskControllerType.getType(diskController)) {
+            controller = new VirtualLsiLogicSASController();
+        } else if (DiskControllerType.buslogic == DiskControllerType.getType(diskController)) {
+            controller = new VirtualBusLogicController();
+        } else if (DiskControllerType.lsilogic == DiskControllerType.getType(diskController)) {
+            controller = new VirtualLsiLogicController();
+        }
+
+        if (!diskController.equalsIgnoreCase(DiskControllerType.ide.toString())) {
+            ((VirtualSCSIController)controller).setSharedBus(VirtualSCSISharing.NO_SHARING);
+        }
+
+        controller.setBusNumber(busNum);
+        controller.setKey(busNum - VmwareHelper.MAX_SCSI_CONTROLLER_COUNT);
+
+        controllerSpec.setDevice(controller);
+        controllerSpec.setOperation(VirtualDeviceConfigSpecOperation.ADD);
+
+        return controllerSpec;
+    }
+    public static VirtualMachineMO createWorkerVM(VmwareHypervisorHost hyperHost, DatastoreMO dsMo, String vmName) throws Exception {
 
         // Allow worker VM to float within cluster so that we will have better chance to
         // create it successfully
         ManagedObjectReference morCluster = hyperHost.getHyperHostCluster();
-        if(morCluster != null)
+        if (morCluster != null)
             hyperHost = new ClusterMO(hyperHost.getContext(), morCluster);
 
         VirtualMachineMO workingVM = null;
         VirtualMachineConfigSpec vmConfig = new VirtualMachineConfigSpec();
         vmConfig.setName(vmName);
-        vmConfig.setMemoryMB((long) 4);
+        vmConfig.setMemoryMB((long)4);
         vmConfig.setNumCPUs(1);
         vmConfig.setGuestId(VirtualMachineGuestOsIdentifier.OTHER_GUEST.value());
         VirtualMachineFileInfo fileInfo = new VirtualMachineFileInfo();
@@ -1235,22 +1388,22 @@ public class HypervisorHostHelper {
         scsiControllerSpec.setOperation(VirtualDeviceConfigSpecOperation.ADD);
 
         vmConfig.getDeviceChange().add(scsiControllerSpec);
-        if(hyperHost.createVm(vmConfig)) {
+        if (hyperHost.createVm(vmConfig)) {
             // Ugly work-around, it takes time for newly created VM to appear
-            for(int i = 0; i < 10 && workingVM == null; i++) {
+            for (int i = 0; i < 10 && workingVM == null; i++) {
                 workingVM = hyperHost.findVmOnHyperHost(vmName);
 
                 try {
                     Thread.sleep(1000);
-                } catch(InterruptedException e) {
+                } catch (InterruptedException e) {
+                    s_logger.debug("[ignored] interupted while waiting to config vm.");
                 }
             }
         }
 
-        if(workingVM != null) {
+        if (workingVM != null) {
             workingVM.setCustomFieldValue(CustomFieldConstants.CLOUD_WORKER, "true");
-            String workerTag = String.format("%d-%s", System.currentTimeMillis(),
-                    hyperHost.getContext().getStockObject("noderuninfo"));
+            String workerTag = String.format("%d-%s", System.currentTimeMillis(), hyperHost.getContext().getStockObject("noderuninfo"));
             workingVM.setCustomFieldValue(CustomFieldConstants.CLOUD_WORKER_TAG, workerTag);
         }
         return workingVM;
@@ -1268,23 +1421,23 @@ public class HypervisorHostHelper {
         }
 
         String host = uri.getHost();
-        if(NetUtils.isValidIp(host)) {
+        if (NetUtils.isValidIp(host)) {
             s_logger.info("host name in url is already in IP address, url: " + url);
             return url;
         }
 
         try {
             ManagedObjectReference morHost = dcMo.findHost(host);
-            if(morHost != null) {
+            if (morHost != null) {
                 HostMO hostMo = new HostMO(dcMo.getContext(), morHost);
                 String managementPortGroupName;
-                if(hostMo.getHostType() == VmwareHostType.ESXi)
+                if (hostMo.getHostType() == VmwareHostType.ESXi)
                     managementPortGroupName = (String)dcMo.getContext().getStockObject("manageportgroup");
                 else
                     managementPortGroupName = (String)dcMo.getContext().getStockObject("serviceconsole");
 
                 VmwareHypervisorHostNetworkSummary summary = hostMo.getHyperHostNetworkSummary(managementPortGroupName);
-                if(summary == null) {
+                if (summary == null) {
                     s_logger.warn("Unable to resolve host name in url through vSphere, url: " + url);
                     return url;
                 }
@@ -1297,21 +1450,21 @@ public class HypervisorHostHelper {
                     s_logger.info("url " + url + " is resolved to " + resolvedUri.toString() + " through vCenter");
                     return resolvedUri.toString();
                 } catch (URISyntaxException e) {
-                    assert(false);
+                    assert (false);
                     return url;
                 }
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             s_logger.warn("Unexpected exception ", e);
         }
 
         return url;
     }
 
-    public static void importVmFromOVF(VmwareHypervisorHost host, String ovfFilePath, String vmName, DatastoreMO dsMo, String diskOption,
-            ManagedObjectReference morRp, ManagedObjectReference morHost) throws Exception {
+    public static void importVmFromOVF(VmwareHypervisorHost host, String ovfFilePath, String vmName, DatastoreMO dsMo, String diskOption, ManagedObjectReference morRp,
+            ManagedObjectReference morHost) throws Exception {
 
-        assert(morRp != null);
+        assert (morRp != null);
 
         OvfCreateImportSpecParams importSpecParams = new OvfCreateImportSpecParams();
         importSpecParams.setHostSystem(morHost);
@@ -1323,13 +1476,11 @@ public class HypervisorHostHelper {
 
         String ovfDescriptor = HttpNfcLeaseMO.readOvfContent(ovfFilePath);
         VmwareContext context = host.getContext();
-        OvfCreateImportSpecResult ovfImportResult = context.getService().createImportSpec(
-                context.getServiceContent().getOvfManager(), ovfDescriptor, morRp,
-                dsMo.getMor(), importSpecParams);
+        OvfCreateImportSpecResult ovfImportResult =
+                context.getService().createImportSpec(context.getServiceContent().getOvfManager(), ovfDescriptor, morRp, dsMo.getMor(), importSpecParams);
 
-        if(ovfImportResult == null) {
-            String msg = "createImportSpec() failed. ovfFilePath: " + ovfFilePath + ", vmName: "
-                    + vmName + ", diskOption: " + diskOption;
+        if (ovfImportResult == null) {
+            String msg = "createImportSpec() failed. ovfFilePath: " + ovfFilePath + ", vmName: " + vmName + ", diskOption: " + diskOption;
             s_logger.error(msg);
             throw new Exception(msg);
         }
@@ -1348,20 +1499,17 @@ public class HypervisorHostHelper {
         }
 
         DatacenterMO dcMo = new DatacenterMO(context, host.getHyperHostDatacenter());
-        ManagedObjectReference morLease = context.getService().importVApp(morRp,
-                ovfImportResult.getImportSpec(), dcMo.getVmFolder(), morHost);
-        if(morLease == null) {
-            String msg = "importVApp() failed. ovfFilePath: " + ovfFilePath + ", vmName: "
-                    + vmName + ", diskOption: " + diskOption;
+        ManagedObjectReference morLease = context.getService().importVApp(morRp, ovfImportResult.getImportSpec(), dcMo.getVmFolder(), morHost);
+        if (morLease == null) {
+            String msg = "importVApp() failed. ovfFilePath: " + ovfFilePath + ", vmName: " + vmName + ", diskOption: " + diskOption;
             s_logger.error(msg);
             throw new Exception(msg);
         }
         boolean importSuccess = true;
         final HttpNfcLeaseMO leaseMo = new HttpNfcLeaseMO(context, morLease);
-        HttpNfcLeaseState state = leaseMo.waitState(
-                new HttpNfcLeaseState[] { HttpNfcLeaseState.READY, HttpNfcLeaseState.ERROR });
+        HttpNfcLeaseState state = leaseMo.waitState(new HttpNfcLeaseState[] {HttpNfcLeaseState.READY, HttpNfcLeaseState.ERROR});
         try {
-            if(state == HttpNfcLeaseState.READY) {
+            if (state == HttpNfcLeaseState.READY) {
                 final long totalBytes = HttpNfcLeaseMO.calcTotalBytes(ovfImportResult);
                 File ovfFile = new File(ovfFilePath);
 
@@ -1379,8 +1527,7 @@ public class HypervisorHostHelper {
                                 String urlToPost = deviceUrl.getUrl();
                                 urlToPost = resolveHostNameInUrl(dcMo, urlToPost);
 
-                                context.uploadVmdkFile(ovfFileItem.isCreate() ? "PUT" : "POST", urlToPost, absoluteFile,
-                                        bytesAlreadyWritten, new ActionDelegate<Long> () {
+                                context.uploadVmdkFile(ovfFileItem.isCreate() ? "PUT" : "POST", urlToPost, absoluteFile, bytesAlreadyWritten, new ActionDelegate<Long>() {
                                     @Override
                                     public void action(Long param) {
                                         progressReporter.reportProgress((int)(param * 100 / totalBytes));
@@ -1392,16 +1539,27 @@ public class HypervisorHostHelper {
                         }
                     }
                 } catch (Exception e) {
-                    s_logger.error("Failed to complete file upload task. " + e.getMessage());
-                    // Set flag to cleanup the stale template left due to failed import operation, if any
-                    importSuccess = false;
-                    throw e;
+                    String erroMsg = "File upload task failed to complete due to: " + e.getMessage();
+                    s_logger.error(erroMsg);
+                    importSuccess = false; // Set flag to cleanup the stale template left due to failed import operation, if any
+                    throw new Exception(erroMsg);
+                } catch (Throwable th) {
+                    String errorMsg = "throwable caught during file upload task: " + th.getMessage();
+                    s_logger.error(errorMsg);
+                    importSuccess = false; // Set flag to cleanup the stale template left due to failed import operation, if any
+                    throw new Exception(errorMsg, th);
                 } finally {
                     progressReporter.close();
                 }
                 if (bytesAlreadyWritten == totalBytes) {
                     leaseMo.updateLeaseProgress(100);
                 }
+            } else if (state == HttpNfcLeaseState.ERROR) {
+                LocalizedMethodFault error = leaseMo.getLeaseError();
+                MethodFault fault = error.getFault();
+                String erroMsg = "Object creation on vCenter failed due to: Exception: " + fault.getClass().getName() + ", message: " + error.getLocalizedMessage();
+                s_logger.error(erroMsg);
+                throw new Exception(erroMsg);
             }
         } finally {
             if (!importSuccess) {
@@ -1412,4 +1570,42 @@ public class HypervisorHostHelper {
             }
         }
     }
+
+    public static String getScsiController(Pair<String, String> controllerInfo, String recommendedController) {
+        String rootDiskController = controllerInfo.first();
+        String dataDiskController = controllerInfo.second();
+
+        // If "osdefault" is specified as controller type, then translate to actual recommended controller.
+        if (VmwareHelper.isControllerOsRecommended(rootDiskController)) {
+            rootDiskController = recommendedController;
+        }
+        if (VmwareHelper.isControllerOsRecommended(dataDiskController)) {
+            dataDiskController = recommendedController;
+        }
+
+        String scsiDiskController = null; //If any of the controller provided is SCSI then return it's sub-type.
+        if (isIdeController(rootDiskController) && isIdeController(dataDiskController)) {
+            //Default controllers would exist
+            return null;
+        } else if (isIdeController(rootDiskController) || isIdeController(dataDiskController)) {
+            // Only one of the controller types is IDE. Pick the other controller type to create controller.
+            if (isIdeController(rootDiskController)) {
+                scsiDiskController = dataDiskController;
+            } else {
+                scsiDiskController = rootDiskController;
+            }
+        } else if (DiskControllerType.getType(rootDiskController) != DiskControllerType.getType(dataDiskController)) {
+            // Both ROOT and DATA controllers are SCSI controllers but different sub-types, then prefer ROOT controller
+            scsiDiskController = rootDiskController;
+        } else {
+            // Both are SCSI controllers.
+            scsiDiskController = rootDiskController;
+        }
+        return scsiDiskController;
+    }
+
+    public static boolean isIdeController(String controller) {
+        return DiskControllerType.getType(controller) == DiskControllerType.ide;
+    }
+
 }

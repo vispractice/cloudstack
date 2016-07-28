@@ -21,16 +21,14 @@ package com.cloud.storage;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public enum DataStoreRole {
-    Primary("primary"),
-    Image("image"),
-    ImageCache("imagecache"),
-    Backup("backup");
+    Primary("primary"), Image("image"), ImageCache("imagecache"), Backup("backup");
 
     public boolean isImageStore() {
         return (role.equalsIgnoreCase("image") || role.equalsIgnoreCase("imagecache")) ? true : false;
     }
 
     private final String role;
+
     DataStoreRole(String type) {
         role = type;
     }

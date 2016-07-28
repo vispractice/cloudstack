@@ -14,10 +14,11 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-var g_mySession = null;
+
 var g_sessionKey = null;
 var g_role = null; // roles - root, domain-admin, ro-admin, user
 var g_username = null;
+var g_userid = null;
 var g_account = null;
 var g_domainid = null;
 var g_hostid = null;
@@ -29,8 +30,11 @@ var g_supportELB = null;
 var g_kvmsnapshotenabled =  null;
 var g_regionsecondaryenabled = null;
 var g_userPublicTemplateEnabled = "true";
+var g_allowUserExpungeRecoverVm = "false";
 var g_cloudstackversion = null;
 var g_queryAsyncJobResultInterval = 3000;
+var g_idpList = null;
+var g_appendIdpDomain = false;
 
 //keyboard keycode
 var keycode_Enter = 13;
@@ -49,7 +53,55 @@ var md5HashedLogin = false;
 var pageSize = 20;
 //var pageSize = 1; //for testing only
 
-var rootAccountId = 1;
+function to_json_array(str) {
+    var simple_array = str.split(",");
+    var json_array = [];
+
+    $.each(simple_array, function(index, value) {
+        if ($.trim(value).length > 0) {
+            var obj = {
+                          id: value,
+                          name: value
+                      };
+
+            json_array.push(obj);
+        }
+    });
+
+    return json_array;
+}
+
+function _tag_equals(tag1, tag2) {
+    return (tag1.name == tag2.name) && (tag1.id == tag2.id);
+}
+
+function _tag_array_contains(tag, tags)
+{
+    for (var i = 0; i < tags.length; i++)
+    {
+        if (_tag_equals(tags[i], tag)) return true;
+    }
+
+    return false;
+}
+
+function unique_tags(tags)
+{
+    var unique = [];
+
+    if (tags != null)
+    {
+        for (var i = 0; i < tags.length; i++)
+        {
+            if (!_tag_array_contains(tags[i], unique))
+            {
+                unique.push(tags[i]);
+            }
+        }
+    }
+
+    return unique;
+}
 
 //async action
 var pollAsyncJobResult = function(args) {
@@ -110,7 +162,7 @@ var pollAsyncJobResult = function(args) {
         },
         error: function(XMLHttpResponse) {
             args.error({
-            	message: parseXMLHttpResponse(XMLHttpResponse)
+                message: parseXMLHttpResponse(XMLHttpResponse)
             });
         }
     });
@@ -120,7 +172,10 @@ var pollAsyncJobResult = function(args) {
 
     function createURL(apiName, options) {
         if (!options) options = {};
-        var urlString = clientApiUrl + "?" + "command=" + apiName + "&response=json&sessionkey=" + g_sessionKey;
+        var urlString = clientApiUrl + "?" + "command=" + apiName + "&response=json";
+        if (g_sessionKey) {
+            urlString += "&sessionkey=" + g_sessionKey;
+        }
 
         if (cloudStack.context && cloudStack.context.projects && !options.ignoreProject) {
             urlString = urlString + '&projectid=' + cloudStack.context.projects[0].id;
@@ -241,41 +296,43 @@ var addGuestNetworkDialog = {
                             addGuestNetworkDialog.physicalNetworkObjs = args.context.physicalNetworks;
                         } else { //Network menu > guest network section > add guest network dialog
                             var selectedZoneId = args.$form.find('.form-item[rel=zoneId]').find('select').val();
-                            $.ajax({
-                                url: createURL('listPhysicalNetworks'),
-                                data: {
-                                    zoneid: selectedZoneId
-                                },
-                                async: false,
-                                success: function(json) {                                    
-                                	var items = [];
-                                	var physicalnetworks = json.listphysicalnetworksresponse.physicalnetwork;
-                                	if (physicalnetworks != null) {
-                                	    for (var i = 0; i < physicalnetworks.length; i++) {
-                                	    	$.ajax({
-                                	    		url: createURL('listTrafficTypes'),
-                                	    		data: {
-                                	    			physicalnetworkid: physicalnetworks[i].id
-                                	    		},
-                                	    		async: false,
-                                	    		success: function(json) {                                	    			
-                                	    			var traffictypes = json.listtraffictypesresponse.traffictype;
-                                	    			if (traffictypes != null) {
-                                	    				for (var k = 0; k < traffictypes.length; k++) {
-                                	    					if (traffictypes[k].traffictype == 'Guest') {
-                                	    						items.push(physicalnetworks[i]);
-                                	    						break;
-                                	    					}
-                                	    				}
-                                	    			} 
-                                	    		}
-                                	    	});
-                                	    }	
-                                	}  
-                                	
-                                	addGuestNetworkDialog.physicalNetworkObjs = items;                                	
-                                }
-                            });
+                            if (selectedZoneId != undefined && selectedZoneId.length > 0) {
+                                $.ajax({
+                                    url: createURL('listPhysicalNetworks'),
+                                    data: {
+                                        zoneid: selectedZoneId
+                                    },
+                                    async: false,
+                                    success: function(json) {
+                                        var items = [];
+                                        var physicalnetworks = json.listphysicalnetworksresponse.physicalnetwork;
+                                        if (physicalnetworks != null) {
+                                            for (var i = 0; i < physicalnetworks.length; i++) {
+                                                $.ajax({
+                                                    url: createURL('listTrafficTypes'),
+                                                    data: {
+                                                        physicalnetworkid: physicalnetworks[i].id
+                                                    },
+                                                    async: false,
+                                                    success: function(json) {
+                                                        var traffictypes = json.listtraffictypesresponse.traffictype;
+                                                        if (traffictypes != null) {
+                                                            for (var k = 0; k < traffictypes.length; k++) {
+                                                                if (traffictypes[k].traffictype == 'Guest') {
+                                                                    items.push(physicalnetworks[i]);
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        }
+
+                                        addGuestNetworkDialog.physicalNetworkObjs = items;
+                                    }
+                                });
+                            }
                         }
                         var items = [];
                         if (addGuestNetworkDialog.physicalNetworkObjs != null) {
@@ -298,7 +355,7 @@ var addGuestNetworkDialog = {
                     docID: 'helpGuestNetworkZoneVLANID'
                 },
                 isolatedpvlanId: {
-                    label: 'Secondary Isolated VLAN ID'
+                    label: 'label.secondary.isolated.vlan.id'
                 },
 
                 scope: {
@@ -320,24 +377,24 @@ var addGuestNetworkDialog = {
                         if (selectedZoneObj.networktype == "Advanced" && selectedZoneObj.securitygroupsenabled == true) {
                             array1.push({
                                 id: 'zone-wide',
-                                description: 'All'
+                                description: 'ui.listView.filters.all'
                             });
                         } else {
                             array1.push({
                                 id: 'zone-wide',
-                                description: 'All'
+                                description: 'ui.listView.filters.all'
                             });
                             array1.push({
                                 id: 'domain-specific',
-                                description: 'Domain'
+                                description: 'label.domain'
                             });
                             array1.push({
                                 id: 'account-specific',
-                                description: 'Account'
+                                description: 'label.account'
                             });
                             array1.push({
                                 id: 'project-specific',
-                                description: 'Project'
+                                description: 'label.project'
                             });
                         }
                         args.response.success({
@@ -432,6 +489,9 @@ var addGuestNetworkDialog = {
                                 }
                             });
                         }
+                        items.sort(function(a, b) {
+                            return a.description.localeCompare(b.description);
+                        });
                         args.response.success({
                             data: items
                         });
@@ -477,14 +537,14 @@ var addGuestNetworkDialog = {
                     label: 'label.network.offering',
                     docID: 'helpGuestNetworkZoneNetworkOffering',
                     dependsOn: ['zoneId', 'physicalNetworkId', 'scope'],
-                    select: function(args) {                    	
-                    	if(args.$form.find('.form-item[rel=zoneId]').find('select').val() == null || args.$form.find('.form-item[rel=zoneId]').find('select').val().length == 0) {
-                    		args.response.success({
+                    select: function(args) {
+                        if(args.$form.find('.form-item[rel=zoneId]').find('select').val() == null || args.$form.find('.form-item[rel=zoneId]').find('select').val().length == 0) {
+                            args.response.success({
                                 data: null
                             });
-                    		return;
-                    	}
-                    	
+                            return;
+                        }
+
                         var data = {
                             state: 'Enabled',
                             zoneid: args.$form.find('.form-item[rel=zoneId]').find('select').val()
@@ -585,39 +645,63 @@ var addGuestNetworkDialog = {
 
                 //IPv4 (begin)
                 ip4gateway: {
-                    label: 'IPv4 Gateway',
-                    docID: 'helpGuestNetworkZoneGateway'
+                    label: 'label.ipv4.gateway',
+                    docID: 'helpGuestNetworkZoneGateway',
+                    validation: {
+                        ipv4: true
+                    }
                 },
                 ip4Netmask: {
-                    label: 'IPv4 Netmask',
-                    docID: 'helpGuestNetworkZoneNetmask'
+                    label: 'label.ipv4.netmask',
+                    docID: 'helpGuestNetworkZoneNetmask',
+                    validation: {
+                        netmask: true
+                    }
                 },
                 startipv4: {
-                    label: 'IPv4 Start IP',
-                    docID: 'helpGuestNetworkZoneStartIP'
+                    label: 'label.ipv4.start.ip',
+                    docID: 'helpGuestNetworkZoneStartIP',
+                    validation: {
+                        ipv4: true
+                    }
                 },
                 endipv4: {
-                    label: 'IPv4 End IP',
-                    docID: 'helpGuestNetworkZoneEndIP'
+                    label: 'label.ipv4.end.ip',
+                    docID: 'helpGuestNetworkZoneEndIP',
+                    validation: {
+                        ipv4: true
+                    }
                 },
                 //IPv4 (end)
 
                 //IPv6 (begin)
                 ip6gateway: {
-                    label: 'IPv6 Gateway',
-                    docID: 'helpGuestNetworkZoneGateway'
+                    label: 'label.ipv6.gateway',
+                    docID: 'helpGuestNetworkZoneGateway',
+                    validation: {
+                        ipv6: true
+                    }
                 },
                 ip6cidr: {
-                    label: 'IPv6 CIDR'
+                    label: 'label.ipv6.CIDR',
+                    validation: {
+                        ipv6cidr: true
+                    }
                 },
                 startipv6: {
-                    label: 'IPv6 Start IP',
-                    docID: 'helpGuestNetworkZoneStartIP'
+                    label: 'label.ipv6.start.ip',
+                    docID: 'helpGuestNetworkZoneStartIP',
+                    validation: {
+                        ipv6: true
+                    }
                 },
                 endipv6: {
-                    label: 'IPv6 End IP',
-                    docID: 'helpGuestNetworkZoneEndIP'
-                },
+                    label: 'label.ipv6.end.ip',
+                    docID: 'helpGuestNetworkZoneEndIP',
+                    validation: {
+                        ipv6: true
+                    }
+               },
                 //IPv6 (end)
 
                 networkdomain: {
@@ -765,18 +849,6 @@ var addGuestNetworkDialog = {
         return (g_role == 0);
     }
 
-    function isSelfOrChildDomainUser(username, useraccounttype, userdomainid, iscallerchilddomain) {
-        if (username == g_username) { //is self
-            return true;
-        } else if (isDomainAdmin() && !iscallerchilddomain && (useraccounttype == 0)) { //domain admin to user
-            return true;
-        } else if (isDomainAdmin() && iscallerchilddomain && (userdomainid != g_domainid)) { //domain admin to subdomain admin and user
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     // FUNCTION: Handles AJAX error callbacks.  You can pass in an optional function to
     // handle errors that are not already handled by this method.
 
@@ -809,10 +881,13 @@ var addGuestNetworkDialog = {
             var property;
             for (property in json) {
                 var errorObj = json[property];
-                if (errorObj.errorcode == 401 && errorObj.errortext == "unable to verify user credentials and/or request signature")
+                if (errorObj.errorcode == 401 && errorObj.errortext == "unable to verify user credentials and/or request signature") {
+                    $('#container').hide();
+
                     return _l('label.session.expired');
-                else
+                } else {
                     return _s(errorObj.errortext);
+                }
             }
         } else {
             return "";
@@ -901,9 +976,9 @@ var roleTypeDomainAdmin = "2";
 
 cloudStack.converters = {
     convertBytes: function(bytes) {
-	    if (bytes == undefined)
-	    	return '';
-	
+        if (bytes == undefined)
+            return '';
+
         if (bytes < 1024 * 1024) {
             return (bytes / 1024).toFixed(2) + " KB";
         } else if (bytes < 1024 * 1024 * 1024) {
@@ -914,30 +989,71 @@ cloudStack.converters = {
             return (bytes / 1024 / 1024 / 1024 / 1024).toFixed(2) + " TB";
         }
     },
+    toBytes: function(str) {
+        if (str === undefined) {
+            return "0";
+        }
+
+        var res = str.split(" ");
+
+        if (res.length === 1) {
+            // assume a number in GB
+
+            return parseInt(str, 10) * 1024 * 1024 * 1024;
+        }
+
+        // assume first string is a number and second string is a unit of size
+
+        if (res[1] === "KB") {
+            return parseInt(res[0], 10) * 1024;
+        }
+
+        if (res[1] === "MB") {
+            return parseInt(res[0], 10) * 1024 * 1024;
+        }
+
+        if (res[1] === "GB") {
+            return parseInt(res[0], 10) * 1024 * 1024 * 1024;
+        }
+
+        if (res[1] === "TB") {
+            return parseInt(res[0], 10) * 1024 * 1024 * 1024 * 1024;
+        }
+
+        // assume GB
+        return parseInt(res[0], 10) * 1024 * 1024 * 1024;
+    },
     toLocalDate: function(UtcDate) {
         var localDate = "";
         if (UtcDate != null && UtcDate.length > 0) {
             var disconnected = new Date();
             disconnected.setISO8601(UtcDate);
 
-            if (g_timezoneoffset != null)
+            if (g_timezoneoffset != null) {
                 localDate = disconnected.getTimePlusTimezoneOffset(g_timezoneoffset);
-            else
-                localDate = disconnected.toUTCString();
-            // localDate = disconnected.getTimePlusTimezoneOffset(0);
+            } else {
+                var browserDate = new Date();
+                var browserTimezoneoffset = browserDate.getTimezoneOffset();
+                if (browserTimezoneoffset == undefined || isNaN(browserTimezoneoffset) ) {
+                    localDate = disconnected.toUTCString();
+                } else {
+                    g_timezoneoffset = (browserTimezoneoffset/60) * (-1);
+                    localDate = disconnected.getTimePlusTimezoneOffset(g_timezoneoffset);
+                }
+            }
         }
         return localDate;
     },
-    toBooleanText: function(booleanValue) {    	
+    toBooleanText: function(booleanValue) {
         var text1;
-    	if (booleanValue == true) {
-    		text1 = "Yes";
+        if (booleanValue == true) {
+            text1 = "Yes";
         } else if (booleanValue == false) {
-        	text1 = "No";
+            text1 = "No";
         } else { //booleanValue == undefined
-        	text1 = "";
+            text1 = "";
         }
-    	return text1;        
+        return text1;
     },
     convertHz: function(hz) {
         if (hz == null)
@@ -1021,39 +1137,39 @@ cloudStack.converters = {
 
                 // These are old values -- can be removed in the future
             case 8:
-                return "User VM";
+                return _l('label.user.vm');
             case 11:
-                return "Routing Host";
+                return _l('label.routing.host');
             case 12:
-                return "Storage";
+                return _l('label.menu.storage');
             case 13:
-                return "Usage Server";
+                return _l('label.usage.server');
             case 14:
-                return "Management Server";
+                return _l('label.management.server');
             case 15:
-                return "Domain Router";
+                return _l('label.domain.router');
             case 16:
-                return "Console Proxy";
+                return _l('label.console.proxy');
             case 17:
-                return "User VM";
+                return _l('label.user.vm');
             case 18:
-                return "VLAN";
+                return _l('label.vlan');
             case 19:
-                return "Secondary Storage VM";
+                return _l('label.secondary.storage.vm');
             case 20:
-                return "Usage Server";
+                return _l('label.usage.server');
             case 21:
-                return "Storage";
+                return _l('label.menu.storage');
             case 22:
-                return "Update Resource Count";
+                return _l('label.action.update.resource.count');
             case 23:
-                return "Usage Sanity Result";
+                return _l('label.usage.sanity.result');
             case 24:
-                return "Direct Attached Public IP";
+                return _l('label.direct.attached.public.ip');
             case 25:
-                return "Local Storage";
+                return _l('label.local.storage');
             case 26:
-                return "Resource Limit Exceeded";
+                return _l('label.resource.limit.exceeded');
         }
     },
 
@@ -1080,23 +1196,25 @@ cloudStack.converters = {
             case 9:
                 return _l('label.local.storage');
             case 10:
-                return "Routing Host";
+                return _l('label.routing.host');
             case 11:
-                return "Storage";
+                return _l('label.menu.storage');
             case 12:
-                return "Usage Server";
+                return _l('label.usage.server');
             case 13:
-                return "Management Server";
+                return _l('label.management.server');
             case 14:
-                return "Domain Router";
+                return _l('label.domain.router');
             case 15:
-                return "Console Proxy";
+                return _l('label.console.proxy');
             case 16:
-                return "User VM";
+                return _l('label.user.vm');
             case 17:
-                return "VLAN";
+                return _l('label.vlan');
             case 18:
-                return "Secondary Storage VM";
+                return _l('label.secondary.storage.vm');
+            case 19:
+                return _l('label.gpu');
         }
     },
 
@@ -1120,6 +1238,16 @@ cloudStack.converters = {
 
         return value;
     }
+}
+
+function isModuleIncluded(moduleName) {
+    for(var moduleIndex = 0; moduleIndex < cloudStack.modules.length; moduleIndex++) {
+        if (cloudStack.modules[moduleIndex] == moduleName) {
+            return true;
+            break;
+        }
+    }
+    return false;
 }
 
 //data parameter passed to API call in listView
@@ -1174,10 +1302,7 @@ var addExtraPropertiesToGuestNetworkObject = function(jsonObj) {
     jsonObj.networkofferingidText = jsonObj.networkofferingid;
 
     if (jsonObj.acltype == "Domain") {
-        if (jsonObj.domainid == rootAccountId)
-            jsonObj.scope = "All";
-        else
-            jsonObj.scope = "Domain (" + jsonObj.domain + ")";
+        jsonObj.scope = "Domain (" + jsonObj.domain + ")";
     } else if (jsonObj.acltype == "Account") {
         if (jsonObj.project != null)
             jsonObj.scope = "Account (" + jsonObj.domain + ", " + jsonObj.project + ")";
@@ -1189,26 +1314,26 @@ var addExtraPropertiesToGuestNetworkObject = function(jsonObj) {
         jsonObj.vlan = jsonObj.broadcasturi.replace("vlan://", "");
     }
     if(jsonObj.vxlan == null && jsonObj.broadcasturi != null && jsonObj.broadcasturi.substring(0,8) == "vxlan://") {
-        jsonObj.vxlan = jsonObj.broadcasturi.replace("vxlan://", "");   	
+        jsonObj.vxlan = jsonObj.broadcasturi.replace("vxlan://", "");
     }
 }
 
 //used by infrastructure page
 var addExtraPropertiesToUcsBladeObject = function(jsonObj) {
-	var array1 = jsonObj.bladedn.split('/');
-	jsonObj.chassis = array1[1];
-	jsonObj.bladeid = array1[2];
+    var array1 = jsonObj.bladedn.split('/');
+    jsonObj.chassis = array1[1];
+    jsonObj.bladeid = array1[2];
 }
 
-var processPropertiesInImagestoreObject = function(jsonObj) {	
-	if (jsonObj.url != undefined) {
-		var url = jsonObj.url; //e.g. 'cifs://10.1.1.1/aaa/aaa2/aaa3?user=bbb&password=ccc&domain=ddd'
-		var passwordIndex = url.indexOf('&password='); //38
-		var domainIndex = url.indexOf('&domain=');    //51
-		if (passwordIndex >= 0) {
-			jsonObj.url = url.substring(0, passwordIndex) + url.substring(domainIndex); //remove '&password=ccc' from jsonObj.url
-		}
-	}	
+var processPropertiesInImagestoreObject = function(jsonObj) {
+    if (jsonObj.url != undefined) {
+        var url = jsonObj.url; //e.g. 'cifs://10.1.1.1/aaa/aaa2/aaa3?user=bbb&password=ccc&domain=ddd'
+        var passwordIndex = url.indexOf('&password='); //38
+        var domainIndex = url.indexOf('&domain=');    //51
+        if (passwordIndex >= 0) {
+            jsonObj.url = url.substring(0, passwordIndex) + url.substring(domainIndex); //remove '&password=ccc' from jsonObj.url
+        }
+    }
 }
 
 //find service object in network object
@@ -1244,6 +1369,11 @@ var processPropertiesInImagestoreObject = function(jsonObj) {
 
     function nfsURL(server, path) {
         var url;
+
+        if (path.substring(0, 1) != "/") {
+            path = "/" + path;
+        }
+
         if (server.indexOf("://") == -1)
             url = "nfs://" + server + path;
         else
@@ -1253,15 +1383,20 @@ var processPropertiesInImagestoreObject = function(jsonObj) {
 
     function smbURL(server, path, smbUsername, smbPassword, smbDomain) {
         var url = '';
-        if (server.indexOf('://') == -1) {
-        	url += 'cifs://';
+
+        if (path.substring(0, 1) != "/") {
+            path = "/" + path;
         }
-        
+
+        if (server.indexOf('://') == -1) {
+            url += 'cifs://';
+        }
+
         url += (server + path);
-               
+
         return url;
     }
-    
+
     function presetupURL(server, path) {
         var url;
         if (server.indexOf("://") == -1)
@@ -1293,9 +1428,9 @@ var processPropertiesInImagestoreObject = function(jsonObj) {
         var url;
 
         /*
-	Replace the + and / symbols by - and _ to have URL-safe base64 going to the API
-	It's hacky, but otherwise we'll confuse java.net.URI which splits the incoming URI
-	*/
+    Replace the + and / symbols by - and _ to have URL-safe base64 going to the API
+    It's hacky, but otherwise we'll confuse java.net.URI which splits the incoming URI
+    */
         secret = secret.replace("+", "-");
         secret = secret.replace("/", "_");
 
@@ -1341,6 +1476,15 @@ var processPropertiesInImagestoreObject = function(jsonObj) {
         return url;
     }
 
+    function glusterURL(server, path) {
+        var url;
+        if (server.indexOf("://") == -1)
+            url = "gluster://" + server + path;
+        else
+            url = server + path;
+        return url;
+    }
+
 
     //VM Instance
 
@@ -1360,7 +1504,7 @@ var processPropertiesInImagestoreObject = function(jsonObj) {
 var timezoneMap = new Object();
 timezoneMap["Etc/GMT+12"] = "Etc/GMT+12 [GMT-12:00]";
 timezoneMap["Etc/GMT+11"] = "Etc/GMT+11 [GMT-11:00]";
-timezoneMap["Pacific/Midway"] = "Pacific/Midway [Samoa Standard Time]"; 
+timezoneMap["Pacific/Midway"] = "Pacific/Midway [Samoa Standard Time]";
 timezoneMap["Pacific/Niue"] = "Pacific/Niue [Niue Time]";
 timezoneMap["Pacific/Pago_Pago"] = "Pacific/Pago_Pago [Samoa Standard Time]";
 timezoneMap["Pacific/Samoa"] = "Pacific/Samoa [Samoa Standard Time]";
@@ -2078,42 +2222,42 @@ cloudStack.api = {
                 }
             },
             dataProvider: function(args) {
-            	args.response.success({
-                    data: args.jsonObj.tags
-                });
-            	
-            	/*
-                var resourceId = args.context[contextId][0].id;
-                var data = {
-                    resourceId: resourceId,
-                    resourceType: resourceType
-                };
+                if (args.jsonObj != undefined) {
+                    args.response.success({
+                        data: args.jsonObj.tags
+                    });
+                } else {
+                    var resourceId = args.context[contextId][0].id;
+                    var data = {
+                        resourceId: resourceId,
+                        resourceType: resourceType
+                    };
 
-                if (isAdmin() || isDomainAdmin()) {
-                    data.listAll = true;
-                }
-
-                if (args.context.projects) {
-                    data.projectid = args.context.projects[0].id;
-                }
-
-                if (args.jsonObj != null && args.jsonObj.projectid != null && data.projectid == null) {
-                    data.projectid = args.jsonObj.projectid;
-                }
-
-                $.ajax({
-                    url: createURL('listTags'),
-                    data: data,
-                    success: function(json) {
-                        args.response.success({
-                            data: json.listtagsresponse ? json.listtagsresponse.tag : []
-                        });
-                    },
-                    error: function(json) {
-                        args.response.error(parseXMLHttpResponse(json));
+                    if (isAdmin() || isDomainAdmin()) {
+                        data.listAll = true;
                     }
-                });
-                */
+
+                    if (args.context.projects) {
+                        data.projectid = args.context.projects[0].id;
+                    }
+
+                    if (args.jsonObj != null && args.jsonObj.projectid != null && data.projectid == null) {
+                        data.projectid = args.jsonObj.projectid;
+                    }
+
+                    $.ajax({
+                        url: createURL('listTags'),
+                        data: data,
+                        success: function(json) {
+                            args.response.success({
+                                data: json.listtagsresponse ? json.listtagsresponse.tag : []
+                            });
+                        },
+                        error: function(json) {
+                            args.response.error(parseXMLHttpResponse(json));
+                        }
+                    });
+                }
             }
         };
     }
@@ -2124,3 +2268,68 @@ function strOrFunc(arg, args) {
         return arg(args);
     return arg;
 }
+
+$.validator.addMethod("netmask", function(value, element) {
+    if (this.optional(element) && value.length == 0)
+        return true;
+
+    var valid = [ 255, 254, 252, 248, 240, 224, 192, 128, 0 ];
+    var octets = value.split('.');
+    if (typeof octets == 'undefined' || octets.length != 4) {
+        return false;
+    }
+    var wasAll255 = true;
+    for (index = 0; index < octets.length; index++) {
+        if (octets[index] != Number(octets[index]).toString()) //making sure that "", " ", "00", "0 ","255  ", etc. will not pass
+            return false;
+        wasAll255 = wasAll255 && octets[index] == 255;
+        if ($.inArray(Number(octets[index]), valid) < 0)
+            return false;
+        if (!wasAll255 && index > 0 && Number(octets[index]) != 0 && Number(octets[index - 1]) != 255)
+            return false;
+    }
+
+    return true;
+}, "The specified netmask is invalid.");
+
+$.validator.addMethod("ipv6cidr", function(value, element) {
+    if (this.optional(element) && value.length == 0)
+        return true;
+
+    var parts = value.split('/');
+    if (typeof parts == 'undefined' || parts.length != 2) {
+        return false;
+    }
+
+    if (!$.validator.methods.ipv6.call(this, parts[0], element))
+        return false;
+
+    if (parts[1] != Number(parts[1]).toString()) //making sure that "", " ", "00", "0 ","2  ", etc. will not pass
+        return false;
+
+    if (Number(parts[1]) < 0 || Number(parts[1] > 32))
+        return false;
+
+    return true;
+}, "The specified IPv6 CIDR is invalid.");
+
+$.validator.addMethod("ipv4cidr", function(value, element) {
+    if (this.optional(element) && value.length == 0)
+        return true;
+
+    var parts = value.split('/');
+    if (typeof parts == 'undefined' || parts.length != 2) {
+        return false;
+    }
+
+    if (!$.validator.methods.ipv4.call(this, parts[0], element))
+        return false;
+
+    if (parts[1] != Number(parts[1]).toString()) //making sure that "", " ", "00", "0 ","2  ", etc. will not pass
+        return false;
+
+    if (Number(parts[1]) < 0 || Number(parts[1] > 32))
+        return false;
+
+    return true;
+}, "The specified IPv4 CIDR is invalid.");

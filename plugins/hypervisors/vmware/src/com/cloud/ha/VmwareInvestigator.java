@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.ha;
 
-import javax.ejb.Local;
 
 import com.cloud.host.Host;
 import com.cloud.host.Status;
@@ -24,25 +23,23 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.utils.component.AdapterBase;
 import com.cloud.vm.VirtualMachine;
 
-@Local(value=Investigator.class)
 public class VmwareInvestigator extends AdapterBase implements Investigator {
     protected VmwareInvestigator() {
     }
-    
+
     @Override
     public Status isAgentAlive(Host agent) {
-    	if(agent.getHypervisorType() == HypervisorType.VMware)
-    		return Status.Disconnected;
-    	
-    	return null;
+        if (agent.getHypervisorType() == HypervisorType.VMware)
+            return Status.Disconnected;
+
+        return null;
     }
-    
+
     @Override
-    public Boolean isVmAlive(VirtualMachine vm, Host host) {
-    	if(vm.getHypervisorType() == HypervisorType.VMware)
-    		return true;
-    	
-    	return null;
+    public boolean isVmAlive(VirtualMachine vm, Host host) throws UnknownVM {
+        if (vm.getHypervisorType() == HypervisorType.VMware)
+            return true;
+
+        throw new UnknownVM();
     }
 }
-

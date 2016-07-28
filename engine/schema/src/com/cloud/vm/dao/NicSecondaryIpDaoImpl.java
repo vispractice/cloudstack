@@ -19,7 +19,6 @@ package com.cloud.vm.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -31,10 +30,10 @@ import com.cloud.utils.db.SearchCriteria.Func;
 import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
-@Local(value=NicSecondaryIpDao.class)
 public class NicSecondaryIpDaoImpl extends GenericDaoBase<NicSecondaryIpVO, Long> implements NicSecondaryIpDao {
     private final SearchBuilder<NicSecondaryIpVO> AllFieldsSearch;
     private final GenericSearchBuilder<NicSecondaryIpVO, String> IpSearch;
+    protected GenericSearchBuilder<NicSecondaryIpVO, Long> CountByNicId;
 
     protected NicSecondaryIpDaoImpl() {
         super();
@@ -50,6 +49,11 @@ public class NicSecondaryIpDaoImpl extends GenericDaoBase<NicSecondaryIpVO, Long
         IpSearch.and("network", IpSearch.entity().getNetworkId(), Op.EQ);
         IpSearch.and("address", IpSearch.entity().getIp4Address(), Op.NNULL);
         IpSearch.done();
+
+        CountByNicId = createSearchBuilder(Long.class);
+        CountByNicId.select(null, Func.COUNT, null);
+        CountByNicId.and("nic", CountByNicId.entity().getNicId(), SearchCriteria.Op.EQ);
+        CountByNicId.done();
     }
 
     @Override
@@ -118,6 +122,7 @@ public class NicSecondaryIpDaoImpl extends GenericDaoBase<NicSecondaryIpVO, Long
         // TODO Auto-generated method stub
         return null;
     }
+
     @Override
     public NicSecondaryIpVO findByIp4AddressAndNicId(String ip4Address, long nicId) {
         SearchCriteria<NicSecondaryIpVO> sc = AllFieldsSearch.create();
@@ -127,12 +132,18 @@ public class NicSecondaryIpDaoImpl extends GenericDaoBase<NicSecondaryIpVO, Long
     }
 
     @Override
-    public NicSecondaryIpVO findByIp4AddressAndNetworkIdAndInstanceId(
-            long networkId, Long vmId, String vmIp) {
+    public NicSecondaryIpVO findByIp4AddressAndNetworkIdAndInstanceId(long networkId, Long vmId, String vmIp) {
         SearchCriteria<NicSecondaryIpVO> sc = AllFieldsSearch.create();
         sc.setParameters("network", networkId);
         sc.setParameters("instanceId", vmId);
         sc.setParameters("address", vmIp);
         return findOneBy(sc);
+    }
+
+    @Override
+    public Long countByNicId(long nicId) {
+        SearchCriteria<Long> sc = CountByNicId.create();
+        sc.setParameters("nic", nicId);
+        return customSearch(sc, null).get(0);
     }
 }

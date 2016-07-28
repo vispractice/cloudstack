@@ -26,7 +26,7 @@ import com.cloud.utils.db.GenericDao;
 import com.cloud.utils.fsm.StateDao;
 
 public interface SnapshotDataStoreDao extends GenericDao<SnapshotDataStoreVO, Long>,
-StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Event, DataObjectInStore> {
+        StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Event, DataObjectInStore> {
 
     List<SnapshotDataStoreVO> listByStoreId(long id, DataStoreRole role);
 
@@ -35,11 +35,13 @@ StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Even
     void deletePrimaryRecordsForStore(long id, DataStoreRole role);
 
     SnapshotDataStoreVO findByStoreSnapshot(DataStoreRole role, long storeId, long snapshotId);
+
     SnapshotDataStoreVO findParent(DataStoreRole role, Long storeId, Long volumeId);
 
     SnapshotDataStoreVO findBySnapshot(long snapshotId, DataStoreRole role);
 
     List<SnapshotDataStoreVO> listDestroyed(long storeId);
+
     List<SnapshotDataStoreVO> findBySnapshotId(long snapshotId);
 
     void duplicateCacheRecordsOnRegionStore(long storeId);
@@ -54,4 +56,11 @@ StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Even
     void updateStoreRoleToCache(long storeId);
 
     SnapshotDataStoreVO findLatestSnapshotForVolume(Long volumeId, DataStoreRole role);
+
+    SnapshotDataStoreVO findOldestSnapshotForVolume(Long volumeId, DataStoreRole role);
+
+    void updateVolumeIds(long oldVolId, long newVolId);
+
+    SnapshotDataStoreVO findByVolume(long volumeId, DataStoreRole role);
+
 }

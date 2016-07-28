@@ -36,12 +36,10 @@ import com.cloud.exception.OperationTimedoutException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.Network;
-import com.cloud.offering.DiskOffering;
+import com.cloud.offering.DiskOfferingInfo;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.storage.StoragePool;
-import com.cloud.storage.Volume;
 import com.cloud.template.VirtualMachineTemplate;
-import com.cloud.utils.Pair;
 import com.cloud.utils.component.Manager;
 import com.cloud.utils.fsm.NoTransitionException;
 
@@ -54,10 +52,12 @@ public interface VirtualMachineManager extends Manager {
             "If set to true, StartCommand, StopCommand, CopyCommand, MigrateCommand will be synchronized on the agent side."
                     + " If set to false, these commands become asynchronous. Default value is false.", false);
 
+    static final ConfigKey<String> VmConfigDriveLabel = new ConfigKey<String>("Hidden", String.class, "vm.configdrive.label", "config",
+            "The default lable name for the config drive", false);
 
     public interface Topics {
         public static final String VM_POWER_STATE = "vm.powerstate";
-	}
+    }
 
     /**
      * Allocates a new virtual machine instance in the CloudStack DB.  This
@@ -77,25 +77,16 @@ public interface VirtualMachineManager extends Manager {
      * @param hyperType Hypervisor type
      * @throws InsufficientCapacityException If there are insufficient capacity to deploy this vm.
      */
-    void allocate(String vmInstanceName,
-        VirtualMachineTemplate template,
-        ServiceOffering serviceOffering,
-        Pair<? extends DiskOffering, Long> rootDiskOffering,
-        LinkedHashMap<? extends DiskOffering, Long> dataDiskOfferings,
-        LinkedHashMap<? extends Network, List<? extends NicProfile>> auxiliaryNetworks,
-        DeploymentPlan plan,
+    void allocate(String vmInstanceName, VirtualMachineTemplate template, ServiceOffering serviceOffering, DiskOfferingInfo rootDiskOfferingInfo,
+        List<DiskOfferingInfo> dataDiskOfferings, LinkedHashMap<? extends Network, List<? extends NicProfile>> auxiliaryNetworks, DeploymentPlan plan,
         HypervisorType hyperType) throws InsufficientCapacityException;
 
-    void allocate(String vmInstanceName,
-        VirtualMachineTemplate template,
-        ServiceOffering serviceOffering,
-        LinkedHashMap<? extends Network,List<? extends NicProfile>> networkProfiles,
-        DeploymentPlan plan,
-        HypervisorType hyperType) throws InsufficientCapacityException;
+    void allocate(String vmInstanceName, VirtualMachineTemplate template, ServiceOffering serviceOffering,
+        LinkedHashMap<? extends Network, List<? extends NicProfile>> networkProfiles, DeploymentPlan plan, HypervisorType hyperType) throws InsufficientCapacityException;
 
     void start(String vmUuid, Map<VirtualMachineProfile.Param, Object> params);
 
-    void start(String vmUuid, Map<VirtualMachineProfile.Param, Object> params, DeploymentPlan planToDeploy);
+    void start(String vmUuid, Map<VirtualMachineProfile.Param, Object> params, DeploymentPlan planToDeploy, DeploymentPlanner planner);
 
     void stop(String vmUuid) throws ResourceUnavailableException;
 
@@ -112,7 +103,7 @@ public interface VirtualMachineManager extends Manager {
             ResourceUnavailableException, ConcurrentOperationException, OperationTimedoutException;
 
     void orchestrateStart(String vmUuid, Map<VirtualMachineProfile.Param, Object> params, DeploymentPlan planToDeploy, DeploymentPlanner planner) throws InsufficientCapacityException,
-    	ResourceUnavailableException, ConcurrentOperationException, OperationTimedoutException;
+        ResourceUnavailableException, ConcurrentOperationException, OperationTimedoutException;
 
     void advanceStop(String vmUuid, boolean cleanupEvenIfUnableToStop) throws ResourceUnavailableException, OperationTimedoutException, ConcurrentOperationException;
 
@@ -120,16 +111,16 @@ public interface VirtualMachineManager extends Manager {
 
     void destroy(String vmUuid) throws AgentUnavailableException, OperationTimedoutException, ConcurrentOperationException;
 
-    void migrateAway(String vmUuid, long hostId, DeploymentPlanner planner) throws InsufficientServerCapacityException;
+    void migrateAway(String vmUuid, long hostId) throws InsufficientServerCapacityException;
 
     void migrate(String vmUuid, long srcHostId, DeployDestination dest) throws ResourceUnavailableException, ConcurrentOperationException;
 
-    void migrateWithStorage(String vmUuid, long srcId, long destId, Map<Volume, StoragePool> volumeToPool) throws ResourceUnavailableException, ConcurrentOperationException;
+    void migrateWithStorage(String vmUuid, long srcId, long destId, Map<Long, Long> volumeToPool) throws ResourceUnavailableException, ConcurrentOperationException;
 
     void reboot(String vmUuid, Map<VirtualMachineProfile.Param, Object> params) throws InsufficientCapacityException, ResourceUnavailableException;
 
     void advanceReboot(String vmUuid, Map<VirtualMachineProfile.Param, Object> params) throws InsufficientCapacityException, ResourceUnavailableException,
-            ConcurrentOperationException, OperationTimedoutException;
+        ConcurrentOperationException, OperationTimedoutException;
 
     /**
      * Check to see if a virtual machine can be upgraded to the given service offering
@@ -187,7 +178,6 @@ public interface VirtualMachineManager extends Manager {
      * @throws ConcurrentOperationException
      */
     boolean removeVmFromNetwork(VirtualMachine vm, Network network, URI broadcastUri) throws ConcurrentOperationException, ResourceUnavailableException;
-
     /**
      * @param nic
      * @param hypervisorType
@@ -206,7 +196,7 @@ public interface VirtualMachineManager extends Manager {
             InsufficientServerCapacityException;
 
     void findHostAndMigrate(String vmUuid, Long newSvcOfferingId, DeploymentPlanner.ExcludeList excludeHostList) throws InsufficientCapacityException,
-            ConcurrentOperationException, ResourceUnavailableException;
+        ConcurrentOperationException, ResourceUnavailableException;
 
     void migrateForScale(String vmUuid, long srcHostId, DeployDestination dest, Long newSvcOfferingId) throws ResourceUnavailableException, ConcurrentOperationException;
 }

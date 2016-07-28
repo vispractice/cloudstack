@@ -1,5 +1,6 @@
 /var/log/dnsmasq.log {
     daily
+    size 10M
     missingok
     rotate 5
     notifempty
@@ -8,6 +9,6 @@
     postrotate
         [ ! -f /var/run/dnsmasq/dnsmasq.pid ] || kill -USR2 `cat /var/run/dnsmasq/dnsmasq.pid`
     endscript
-    create 0640 nobody root
+    create 0640 dnsmasq root
 }
 

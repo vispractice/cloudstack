@@ -17,17 +17,17 @@ package com.cloud.server.auth;
 
 import java.util.Map;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.cloud.user.UserAccount;
 import com.cloud.user.dao.UserAccountDao;
 import com.cloud.utils.Pair;
+import com.cloud.utils.component.AdapterBase;
 
-@Local(value = {UserAuthenticator.class})
-public class PlainTextUserAuthenticator extends DefaultUserAuthenticator {
+public class PlainTextUserAuthenticator extends AdapterBase implements UserAuthenticator {
     public static final Logger s_logger = Logger.getLogger(PlainTextUserAuthenticator.class);
 
     @Inject
@@ -37,6 +37,11 @@ public class PlainTextUserAuthenticator extends DefaultUserAuthenticator {
     public Pair<Boolean, ActionOnFailedAuthentication> authenticate(String username, String password, Long domainId, Map<String, Object[]> requestParameters) {
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Retrieving user: " + username);
+        }
+
+        if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
+            s_logger.debug("Username or Password cannot be empty");
+            return new Pair<Boolean, ActionOnFailedAuthentication>(false, null);
         }
 
         UserAccount user = _userAccountDao.getUserAccount(username, domainId);
@@ -49,7 +54,6 @@ public class PlainTextUserAuthenticator extends DefaultUserAuthenticator {
             s_logger.debug("Password does not match");
             return new Pair<Boolean, ActionOnFailedAuthentication>(false, ActionOnFailedAuthentication.INCREMENT_INCORRECT_LOGIN_ATTEMPT_COUNT);
         }
-
         return new Pair<Boolean, ActionOnFailedAuthentication>(true, null);
     }
 

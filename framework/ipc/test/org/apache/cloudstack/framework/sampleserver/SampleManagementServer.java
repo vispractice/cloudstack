@@ -18,14 +18,18 @@
  */
 package org.apache.cloudstack.framework.sampleserver;
 
-public class SampleManagementServer {
+import org.apache.log4j.Logger;
 
-	public void mainLoop() {
-		while(true) {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-			}
-		}
-	}
+public class SampleManagementServer {
+    private static final Logger s_logger = Logger.getLogger(SampleManagementServer.class);
+
+    public void mainLoop() {
+        while (true) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                s_logger.debug("[ignored] .");
+            }
+        }
+    }
 }

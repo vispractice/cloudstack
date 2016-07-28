@@ -144,12 +144,17 @@ public class BaseElement implements Element {
 
     /**
      * By default, try to pull data from input links.
-     * 
+     *
      * Override this method in data source elements.
      */
     @Override
     public void poll(boolean block) {
-        for (DataSource source : inputPads.values()) {
+        // inputPads can be changed in handleData (see switchOff in OneTimeSwitch)
+        // as this results in an undefined response from the iterator on inputPads
+        // use a copy of the map to iterate over.
+        Map<String, DataSource> pads = new HashMap<String, DataSource>();
+        pads.putAll(inputPads);
+        for (DataSource source : pads.values()) {
             Link link = (Link)source;
             ByteBuffer buf = link.pull(block);
 
@@ -176,9 +181,9 @@ public class BaseElement implements Element {
      */
     protected final void pushDataToAllOuts(ByteBuffer buf) {
 
-        if (buf == null) {
+        if (buf == null)
             throw new NullPointerException();
-        }
+        //return;
 
         if (outputPads.size() == 0)
             throw new RuntimeException("Number of outgoing connection is zero. Cannot send data to output. Data: " + buf + ".");
@@ -251,7 +256,7 @@ public class BaseElement implements Element {
 
     /**
      * Send event to all outputs.
-     * 
+     *
      * @param event
      *          a event
      * @param direction
@@ -281,7 +286,7 @@ public class BaseElement implements Element {
     /**
      * Ensure that packet has required minimum and maximum length, cuts tail when
      * necessary.
-     * 
+     *
      * @param buf
      *          a buffer
      * @param minLength
@@ -386,16 +391,16 @@ public class BaseElement implements Element {
     public static void main(String args[]) {
         Element source = new FakeSource("source") {
             {
-                this.verbose = true;
-                this.numBuffers = 10;
-                this.incommingBufLength = 3;
-                this.delay = 100;
+                verbose = true;
+                numBuffers = 10;
+                incommingBufLength = 3;
+                delay = 100;
             }
         };
 
         Element sink = new FakeSink("sink") {
             {
-                this.verbose = true;
+                verbose = true;
             }
         };
 

@@ -62,8 +62,8 @@ public class Any extends Tag {
     @Override
     public Tag copyFrom(Tag tag) {
         super.copyFrom(tag);
-        this.tagType = tag.tagType;
-        this.value = new ByteBuffer(((Any)tag).value.toByteArray());
+        tagType = tag.tagType;
+        value = new ByteBuffer(((Any)tag).value.toByteArray());
         return this;
     }
 

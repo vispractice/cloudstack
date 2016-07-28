@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.user.dao;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -24,8 +23,7 @@ import com.cloud.user.UserStatsLogVO;
 import com.cloud.utils.db.GenericDaoBase;
 
 @Component
-@Local(value={UserStatsLogDao.class})
 public class UserStatsLogDaoImpl extends GenericDaoBase<UserStatsLogVO, Long> implements UserStatsLogDao {
-	public UserStatsLogDaoImpl(){
-	}
+    public UserStatsLogDaoImpl() {
+    }
 }

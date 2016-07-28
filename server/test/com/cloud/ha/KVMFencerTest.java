@@ -25,11 +25,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.cloud.agent.AgentManager;
+import com.cloud.alert.AlertManager;
 import com.cloud.agent.api.FenceAnswer;
 import com.cloud.agent.api.FenceCommand;
 import com.cloud.exception.AgentUnavailableException;
@@ -49,6 +51,8 @@ public class KVMFencerTest {
     @Mock
     AgentManager agentManager;
     @Mock
+    AlertManager alertMgr;
+    @Mock
     ResourceManager resourceManager;
 
     KVMFencer fencer;
@@ -57,6 +61,7 @@ public class KVMFencerTest {
     public void setup() {
         fencer = new KVMFencer();
         fencer._agentMgr = agentManager;
+        fencer._alertMgr = alertMgr;
         fencer._hostDao = hostDao;
         fencer._resourceMgr = resourceManager;
     }
@@ -66,12 +71,13 @@ public class KVMFencerTest {
         HostVO host = Mockito.mock(HostVO.class);
         Mockito.when(host.getClusterId()).thenReturn(1l);
         Mockito.when(host.getHypervisorType()).thenReturn(HypervisorType.KVM);
+        Mockito.when(host.getDataCenterId()).thenReturn(1l);
+        Mockito.when(host.getPodId()).thenReturn(1l);
         Mockito.when(host.getStatus()).thenReturn(Status.Up);
         Mockito.when(host.getId()).thenReturn(1l);
         VirtualMachine virtualMachine = Mockito.mock(VirtualMachine.class);
 
-        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(
-                Collections.singletonList(host));
+        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(Collections.singletonList(host));
         Assert.assertFalse(fencer.fenceOff(virtualMachine, host));
     }
 
@@ -80,98 +86,94 @@ public class KVMFencerTest {
         HostVO host = Mockito.mock(HostVO.class);
         Mockito.when(host.getClusterId()).thenReturn(1l);
         Mockito.when(host.getHypervisorType()).thenReturn(HypervisorType.KVM);
+        Mockito.when(host.getDataCenterId()).thenReturn(1l);
+        Mockito.when(host.getPodId()).thenReturn(1l);
         Mockito.when(host.getStatus()).thenReturn(Status.Down);
         Mockito.when(host.getId()).thenReturn(1l);
         VirtualMachine virtualMachine = Mockito.mock(VirtualMachine.class);
 
-        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(
-                Collections.singletonList(host));
+        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(Collections.singletonList(host));
         Assert.assertFalse(fencer.fenceOff(virtualMachine, host));
     }
 
     @Test
-    public void testWithHosts() throws AgentUnavailableException,
-            OperationTimedoutException {
+    public void testWithHosts() throws AgentUnavailableException, OperationTimedoutException {
         HostVO host = Mockito.mock(HostVO.class);
         Mockito.when(host.getClusterId()).thenReturn(1l);
         Mockito.when(host.getHypervisorType()).thenReturn(HypervisorType.KVM);
         Mockito.when(host.getStatus()).thenReturn(Status.Up);
+        Mockito.when(host.getDataCenterId()).thenReturn(1l);
+        Mockito.when(host.getPodId()).thenReturn(1l);
         Mockito.when(host.getId()).thenReturn(1l);
 
         HostVO secondHost = Mockito.mock(HostVO.class);
         Mockito.when(secondHost.getClusterId()).thenReturn(1l);
-        Mockito.when(secondHost.getHypervisorType()).thenReturn(
-                HypervisorType.KVM);
+        Mockito.when(secondHost.getHypervisorType()).thenReturn(HypervisorType.KVM);
         Mockito.when(secondHost.getStatus()).thenReturn(Status.Up);
+        Mockito.when(secondHost.getDataCenterId()).thenReturn(1l);
+        Mockito.when(secondHost.getPodId()).thenReturn(1l);
         Mockito.when(host.getId()).thenReturn(2l);
 
         VirtualMachine virtualMachine = Mockito.mock(VirtualMachine.class);
 
-        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(
-                Arrays.asList(host, secondHost));
+        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(Arrays.asList(host, secondHost));
 
         FenceAnswer answer = new FenceAnswer(null, true, "ok");
-        Mockito.when(
-                agentManager.send(Mockito.anyLong(),
-                        Mockito.any(FenceCommand.class))).thenReturn(answer);
+        Mockito.when(agentManager.send(Matchers.anyLong(), Matchers.any(FenceCommand.class))).thenReturn(answer);
 
         Assert.assertTrue(fencer.fenceOff(virtualMachine, host));
     }
 
     @Test
-    public void testWithFailingFence() throws AgentUnavailableException,
-            OperationTimedoutException {
+    public void testWithFailingFence() throws AgentUnavailableException, OperationTimedoutException {
         HostVO host = Mockito.mock(HostVO.class);
         Mockito.when(host.getClusterId()).thenReturn(1l);
         Mockito.when(host.getHypervisorType()).thenReturn(HypervisorType.KVM);
         Mockito.when(host.getStatus()).thenReturn(Status.Up);
+        Mockito.when(host.getDataCenterId()).thenReturn(1l);
+        Mockito.when(host.getPodId()).thenReturn(1l);
         Mockito.when(host.getId()).thenReturn(1l);
 
         HostVO secondHost = Mockito.mock(HostVO.class);
         Mockito.when(secondHost.getClusterId()).thenReturn(1l);
-        Mockito.when(secondHost.getHypervisorType()).thenReturn(
-                HypervisorType.KVM);
+        Mockito.when(secondHost.getHypervisorType()).thenReturn(HypervisorType.KVM);
         Mockito.when(secondHost.getStatus()).thenReturn(Status.Up);
+        Mockito.when(secondHost.getDataCenterId()).thenReturn(1l);
+        Mockito.when(secondHost.getPodId()).thenReturn(1l);
         Mockito.when(host.getId()).thenReturn(2l);
 
         VirtualMachine virtualMachine = Mockito.mock(VirtualMachine.class);
 
-        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(
-                Arrays.asList(host, secondHost));
+        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(Arrays.asList(host, secondHost));
 
-        Mockito.when(
-                agentManager.send(Mockito.anyLong(),
-                        Mockito.any(FenceCommand.class))).thenThrow(
-                new AgentUnavailableException(2l));
+        Mockito.when(agentManager.send(Matchers.anyLong(), Matchers.any(FenceCommand.class))).thenThrow(new AgentUnavailableException(2l));
 
         Assert.assertFalse(fencer.fenceOff(virtualMachine, host));
     }
 
     @Test
-    public void testWithTimeoutingFence() throws AgentUnavailableException,
-            OperationTimedoutException {
+    public void testWithTimeoutingFence() throws AgentUnavailableException, OperationTimedoutException {
         HostVO host = Mockito.mock(HostVO.class);
         Mockito.when(host.getClusterId()).thenReturn(1l);
         Mockito.when(host.getHypervisorType()).thenReturn(HypervisorType.KVM);
         Mockito.when(host.getStatus()).thenReturn(Status.Up);
+        Mockito.when(host.getDataCenterId()).thenReturn(1l);
+        Mockito.when(host.getPodId()).thenReturn(1l);
         Mockito.when(host.getId()).thenReturn(1l);
 
         HostVO secondHost = Mockito.mock(HostVO.class);
         Mockito.when(secondHost.getClusterId()).thenReturn(1l);
-        Mockito.when(secondHost.getHypervisorType()).thenReturn(
-                HypervisorType.KVM);
+        Mockito.when(secondHost.getHypervisorType()).thenReturn(HypervisorType.KVM);
         Mockito.when(secondHost.getStatus()).thenReturn(Status.Up);
+        Mockito.when(secondHost.getDataCenterId()).thenReturn(1l);
+        Mockito.when(secondHost.getPodId()).thenReturn(1l);
         Mockito.when(host.getId()).thenReturn(2l);
 
         VirtualMachine virtualMachine = Mockito.mock(VirtualMachine.class);
 
-        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(
-                Arrays.asList(host, secondHost));
+        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(Arrays.asList(host, secondHost));
 
-        Mockito.when(
-                agentManager.send(Mockito.anyLong(),
-                        Mockito.any(FenceCommand.class))).thenThrow(
-                new OperationTimedoutException(null, 2l, 0l, 0, false));
+        Mockito.when(agentManager.send(Matchers.anyLong(), Matchers.any(FenceCommand.class))).thenThrow(new OperationTimedoutException(null, 2l, 0l, 0, false));
 
         Assert.assertFalse(fencer.fenceOff(virtualMachine, host));
     }
@@ -183,10 +185,11 @@ public class KVMFencerTest {
         Mockito.when(host.getHypervisorType()).thenReturn(HypervisorType.Any);
         Mockito.when(host.getStatus()).thenReturn(Status.Down);
         Mockito.when(host.getId()).thenReturn(1l);
+        Mockito.when(host.getDataCenterId()).thenReturn(1l);
+        Mockito.when(host.getPodId()).thenReturn(1l);
         VirtualMachine virtualMachine = Mockito.mock(VirtualMachine.class);
 
-        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(
-                Collections.singletonList(host));
+        Mockito.when(resourceManager.listAllHostsInCluster(1l)).thenReturn(Collections.singletonList(host));
         Assert.assertNull(fencer.fenceOff(virtualMachine, host));
     }
 

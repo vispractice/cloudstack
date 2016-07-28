@@ -23,20 +23,6 @@
 
 package com.cloud.baremetal.networkservice;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.net.SocketTimeoutException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.DeflaterOutputStream;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
-
 import com.cloud.agent.api.SecurityGroupRuleAnswer;
 import com.cloud.agent.api.SecurityGroupRulesCmd;
 import com.cloud.agent.api.SecurityGroupRulesCmd.IpPortAndProto;
@@ -44,68 +30,69 @@ import com.cloud.baremetal.networkservice.schema.SecurityGroupRule;
 import com.cloud.baremetal.networkservice.schema.SecurityGroupVmRuleSet;
 import com.cloud.utils.Pair;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.net.NetUtils;
-
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
 import org.apache.log4j.Logger;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import java.io.StringWriter;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class SecurityGroupHttpClient {
     private static final Logger logger = Logger.getLogger(SecurityGroupHttpClient.class);
-	private static final String ARG_NAME = "args";
-	private static final String COMMAND = "command";
-	private JAXBContext context;
-	private int port;
-	private static HttpClient httpClient;
-	
-	static {
-	    MultiThreadedHttpConnectionManager connman = new MultiThreadedHttpConnectionManager();
-	    httpClient = new HttpClient(connman);
+    private static final String ARG_NAME = "args";
+    private static final String COMMAND = "command";
+    private JAXBContext context;
+    private int port;
+    private static HttpClient httpClient;
+    static {
+        MultiThreadedHttpConnectionManager connman = new MultiThreadedHttpConnectionManager();
+        httpClient = new HttpClient(connman);
         httpClient.setConnectionTimeout(5000);
-	}
+    }
 
-	private enum OpConstant {
-		setRules, echo,
-	}
+    private enum OpConstant {
+        setRules, echo,
+    }
 
-	public SecurityGroupHttpClient() {
-		try {
-			context = JAXBContext.newInstance(SecurityGroupRule.class, SecurityGroupVmRuleSet.class);
-			port = 9988;
-		} catch (Exception e) {
-			throw new CloudRuntimeException(
-					"Unable to create JAXBContext for security group", e);
-		}
-	}
+    public SecurityGroupHttpClient() {
+        try {
+            context = JAXBContext.newInstance(SecurityGroupRule.class, SecurityGroupVmRuleSet.class);
+            port = 9988;
+        } catch (Exception e) {
+            throw new CloudRuntimeException(
+                    "Unable to create JAXBContext for security group", e);
+        }
+    }
 
-	private List<SecurityGroupRule> generateRules(IpPortAndProto[] ipps) {
-		List<SecurityGroupRule> rules = new ArrayList<SecurityGroupRule>(
-				ipps.length);
-		for (SecurityGroupRulesCmd.IpPortAndProto ipp : ipps) {
-			SecurityGroupRule r = new SecurityGroupRule();
-			r.setProtocol(ipp.getProto());
-			r.setStartPort(ipp.getStartPort());
-			r.setEndPort(ipp.getEndPort());
-			for (String cidr : ipp.getAllowedCidrs()) {
-				r.getIp().add(cidr);
-			}
-			rules.add(r);
-		}
-		return rules;
-	}
+    private List<SecurityGroupRule> generateRules(IpPortAndProto[] ipps) {
+        List<SecurityGroupRule> rules = new ArrayList<SecurityGroupRule>(
+                ipps.length);
+        for (SecurityGroupRulesCmd.IpPortAndProto ipp : ipps) {
+            SecurityGroupRule r = new SecurityGroupRule();
+            r.setProtocol(ipp.getProto());
+            r.setStartPort(ipp.getStartPort());
+            r.setEndPort(ipp.getEndPort());
+            for (String cidr : ipp.getAllowedCidrs()) {
+                r.getIp().add(cidr);
+            }
+            rules.add(r);
+        }
+        return rules;
+    }
 
-	public HashMap<String, Pair<Long, Long>> sync(String vmName, Long vmId, String agentIp) {
-	    HashMap<String, Pair<Long, Long>> states = new HashMap<String, Pair<Long, Long>>();
-	    
-	    PostMethod post = new PostMethod(String.format("http://%s:%s/", agentIp, getPort()));
-	    try {
-	        post.addRequestHeader("command", "sync");
+    public HashMap<String, Pair<Long, Long>> sync(String vmName, Long vmId, String agentIp) {
+        HashMap<String, Pair<Long, Long>> states = new HashMap<String, Pair<Long, Long>>();
+        PostMethod post = new PostMethod(String.format("http://%s:%s/", agentIp, getPort()));
+        try {
+            post.addRequestHeader("command", "sync");
             if (httpClient.executeMethod(post) != 200) {
                 logger.debug(String.format("echoing baremetal security group agent on %s got error: %s", agentIp, post.getResponseBodyAsString()));
             } else {
@@ -117,7 +104,6 @@ public class SecurityGroupHttpClient {
                     states.put(vmName, new Pair<Long, Long>(vmId, -1L));
                     return states;
                 }
-                
                 Pair<Long, Long> p = new Pair<Long, Long>(Long.valueOf(rulelogs[1]), Long.valueOf(rulelogs[5]));
                 states.put(rulelogs[0], p);
                 return states;
@@ -131,9 +117,10 @@ public class SecurityGroupHttpClient {
                 post.releaseConnection();
             }
         }
-	    return states;
-	}
-	
+        return states;
+    }
+
+
     public boolean echo(String agentIp, long l, long m) {
         boolean ret = false;
         int count = 1;
@@ -145,7 +132,6 @@ public class SecurityGroupHttpClient {
                 logger.warn("", e1);
                 break;
             }
-            
             PostMethod post = new PostMethod(String.format("http://%s:%s/", agentIp, getPort()));
             try {
                 post.addRequestHeader("command", "echo");
@@ -170,51 +156,50 @@ public class SecurityGroupHttpClient {
         }
         return ret;
     }
-	
-	public SecurityGroupRuleAnswer call(String agentIp,
-			SecurityGroupRulesCmd cmd) {
-		PostMethod post = new PostMethod(String.format(
-		        "http://%s:%s", agentIp, getPort()));
-		try {
-			SecurityGroupVmRuleSet rset = new SecurityGroupVmRuleSet();
-			rset.getEgressRules().addAll(generateRules(cmd.getEgressRuleSet()));
-			rset.getIngressRules().addAll(
-					generateRules(cmd.getIngressRuleSet()));
-			rset.setVmName(cmd.getVmName());
-			rset.setVmIp(cmd.getGuestIp());
-			rset.setVmMac(cmd.getGuestMac());
-			rset.setVmId(cmd.getVmId());
-			rset.setSignature(cmd.getSignature());
-			rset.setSequenceNumber(cmd.getSeqNum());
-			Marshaller marshaller = context.createMarshaller();
-			StringWriter writer = new StringWriter();
-			marshaller.marshal(rset, writer);
-			String xmlContents = writer.toString();
-			logger.debug(xmlContents);
 
-			post.addRequestHeader("command", "set_rules");
-			StringRequestEntity entity = new StringRequestEntity(xmlContents);
-			post.setRequestEntity(entity);
-			if (httpClient.executeMethod(post) != 200) {
-				return new SecurityGroupRuleAnswer(cmd, false,
-						post.getResponseBodyAsString());
-			} else {
-				return new SecurityGroupRuleAnswer(cmd);
-			}
-		} catch (Exception e) {
-			return new SecurityGroupRuleAnswer(cmd, false, e.getMessage());
-		} finally {
-		    if (post != null) {
-		        post.releaseConnection();
-		    }
-		}
-	}
+    public SecurityGroupRuleAnswer call(String agentIp, SecurityGroupRulesCmd cmd) {
+        PostMethod post = new PostMethod(String.format(
+                "http://%s:%s", agentIp, getPort()));
+        try {
+            SecurityGroupVmRuleSet rset = new SecurityGroupVmRuleSet();
+            rset.getEgressRules().addAll(generateRules(cmd.getEgressRuleSet()));
+            rset.getIngressRules().addAll(
+                    generateRules(cmd.getIngressRuleSet()));
+            rset.setVmName(cmd.getVmName());
+            rset.setVmIp(cmd.getGuestIp());
+            rset.setVmMac(cmd.getGuestMac());
+            rset.setVmId(cmd.getVmId());
+            rset.setSignature(cmd.getSignature());
+            rset.setSequenceNumber(cmd.getSeqNum());
+            Marshaller marshaller = context.createMarshaller();
+            StringWriter writer = new StringWriter();
+            marshaller.marshal(rset, writer);
+            String xmlContents = writer.toString();
+            logger.debug(xmlContents);
 
-	public int getPort() {
-		return port;
-	}
+            post.addRequestHeader("command", "set_rules");
+            StringRequestEntity entity = new StringRequestEntity(xmlContents);
+            post.setRequestEntity(entity);
+            if (httpClient.executeMethod(post) != 200) {
+                return new SecurityGroupRuleAnswer(cmd, false,
+                        post.getResponseBodyAsString());
+            } else {
+                return new SecurityGroupRuleAnswer(cmd);
+            }
+        } catch (Exception e) {
+            return new SecurityGroupRuleAnswer(cmd, false, e.getMessage());
+        } finally {
+            if (post != null) {
+                post.releaseConnection();
+            }
+        }
+    }
 
-	public void setPort(int port) {
-		this.port = port;
-	}
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
 }

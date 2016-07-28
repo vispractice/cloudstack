@@ -19,7 +19,6 @@ package com.cloud.network.ovs.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
@@ -29,32 +28,30 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
-@Local(value = { OvsTunnelInterfaceDao.class })
-public class OvsTunnelInterfaceDaoImpl extends
-		GenericDaoBase<OvsTunnelInterfaceVO, Long> implements OvsTunnelInterfaceDao {
+public class OvsTunnelInterfaceDaoImpl extends GenericDaoBase<OvsTunnelInterfaceVO, Long> implements OvsTunnelInterfaceDao {
 
-	protected final SearchBuilder<OvsTunnelInterfaceVO> hostAndLabelSearch;
-	protected final SearchBuilder<OvsTunnelInterfaceVO> labelSearch;
-	
-	public OvsTunnelInterfaceDaoImpl() {
-		hostAndLabelSearch = createSearchBuilder();
-		hostAndLabelSearch.and("host_id", hostAndLabelSearch.entity().getHostId(), Op.EQ);
-		hostAndLabelSearch.and("label", hostAndLabelSearch.entity().getLabel(), Op.EQ);
-		hostAndLabelSearch.done();
-		
-		labelSearch = createSearchBuilder();
-		labelSearch.and("label", labelSearch.entity().getLabel(), Op.EQ);
-		labelSearch.done();
-		
-	}
-	
-	@Override
-	public OvsTunnelInterfaceVO getByHostAndLabel(long hostId, String label) {
-		SearchCriteria<OvsTunnelInterfaceVO> sc = hostAndLabelSearch.create();
+    protected final SearchBuilder<OvsTunnelInterfaceVO> hostAndLabelSearch;
+    protected final SearchBuilder<OvsTunnelInterfaceVO> labelSearch;
+
+    public OvsTunnelInterfaceDaoImpl() {
+        hostAndLabelSearch = createSearchBuilder();
+        hostAndLabelSearch.and("host_id", hostAndLabelSearch.entity().getHostId(), Op.EQ);
+        hostAndLabelSearch.and("label", hostAndLabelSearch.entity().getLabel(), Op.EQ);
+        hostAndLabelSearch.done();
+
+        labelSearch = createSearchBuilder();
+        labelSearch.and("label", labelSearch.entity().getLabel(), Op.EQ);
+        labelSearch.done();
+
+    }
+
+    @Override
+    public OvsTunnelInterfaceVO getByHostAndLabel(long hostId, String label) {
+        SearchCriteria<OvsTunnelInterfaceVO> sc = hostAndLabelSearch.create();
         sc.setParameters("host_id", hostId);
         sc.setParameters("label", label);
-		return findOneBy(sc);
-	}
+        return findOneBy(sc);
+    }
 
     @Override
     public List<OvsTunnelInterfaceVO> listByLabel(String label) {
@@ -62,6 +59,5 @@ public class OvsTunnelInterfaceDaoImpl extends
         sc.setParameters("label", label);
         return listBy(sc);
     }
-
 
 }

@@ -16,9 +16,6 @@
 // under the License.
 package rdpclient.rdp;
 
-import common.BitmapOrder;
-import common.BitmapRectangle;
-
 import streamer.BaseElement;
 import streamer.ByteBuffer;
 import streamer.Element;
@@ -26,6 +23,8 @@ import streamer.Link;
 import streamer.Pipeline;
 import streamer.PipelineImpl;
 import streamer.debug.FakeSink;
+import common.BitmapOrder;
+import common.BitmapRectangle;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/cc240624.aspx

@@ -16,6 +16,8 @@
 // under the License.
 package org.apache.cloudstack.api.command.admin.usage;
 
+import org.apache.log4j.Logger;
+
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandJobType;
 import org.apache.cloudstack.api.ApiConstants;
@@ -23,15 +25,14 @@ import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
-import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.response.TrafficTypeResponse;
-import org.apache.log4j.Logger;
 
 import com.cloud.event.EventTypes;
 import com.cloud.network.PhysicalNetworkTrafficType;
 import com.cloud.user.Account;
 
-@APICommand(name = "updateTrafficType", description="Updates traffic type of a physical network", responseObject=TrafficTypeResponse.class, since="3.0.0")
+@APICommand(name = "updateTrafficType", description = "Updates traffic type of a physical network", responseObject = TrafficTypeResponse.class, since = "3.0.0",
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateTrafficTypeCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(UpdateTrafficTypeCmd.class.getName());
 
@@ -41,21 +42,33 @@ public class UpdateTrafficTypeCmd extends BaseAsyncCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = TrafficTypeResponse.class,
-            required=true, description="traffic type id")
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = TrafficTypeResponse.class, required = true, description = "traffic type id")
     private Long id;
 
-    @Parameter(name=ApiConstants.XEN_NETWORK_LABEL, type=CommandType.STRING, description="The network name label of the physical device dedicated to this traffic on a XenServer host")
+    @Parameter(name = ApiConstants.XENSERVER_NETWORK_LABEL,
+               type = CommandType.STRING,
+               description = "The network name label of the physical device dedicated to this traffic on a XenServer host")
     private String xenLabel;
 
-    @Parameter(name=ApiConstants.KVM_NETWORK_LABEL, type=CommandType.STRING, description="The network name label of the physical device dedicated to this traffic on a KVM host")
+    @Parameter(name = ApiConstants.KVM_NETWORK_LABEL,
+               type = CommandType.STRING,
+               description = "The network name label of the physical device dedicated to this traffic on a KVM host")
     private String kvmLabel;
 
-    @Parameter(name=ApiConstants.VMWARE_NETWORK_LABEL, type=CommandType.STRING, description="The network name label of the physical device dedicated to this traffic on a VMware host")
+    @Parameter(name = ApiConstants.VMWARE_NETWORK_LABEL,
+               type = CommandType.STRING,
+               description = "The network name label of the physical device dedicated to this traffic on a VMware host")
     private String vmwareLabel;
 
-    @Parameter(name=ApiConstants.HYPERV_NETWORK_LABEL, type=CommandType.STRING, description="The network name label of the physical device dedicated to this traffic on a Hyperv host")
+    @Parameter(name = ApiConstants.HYPERV_NETWORK_LABEL,
+               type = CommandType.STRING,
+               description = "The network name label of the physical device dedicated to this traffic on a Hyperv host")
     private String hypervLabel;
+
+    @Parameter(name = ApiConstants.OVM3_NETWORK_LABEL,
+               type = CommandType.STRING,
+               description = "The network name of the physical device dedicated to this traffic on an OVM3 host")
+    private String ovm3Label;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -64,6 +77,7 @@ public class UpdateTrafficTypeCmd extends BaseAsyncCmd {
     public Long getId() {
         return id;
     }
+
     public String getXenLabel() {
         return xenLabel;
     }
@@ -79,7 +93,11 @@ public class UpdateTrafficTypeCmd extends BaseAsyncCmd {
     public String getHypervLabel() {
         return hypervLabel;
     }
-    
+
+    public String getOvm3Label() {
+        return ovm3Label;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -95,20 +113,20 @@ public class UpdateTrafficTypeCmd extends BaseAsyncCmd {
     }
 
     @Override
-    public void execute(){
-        PhysicalNetworkTrafficType result = _networkService.updatePhysicalNetworkTrafficType(getId(), getXenLabel(), getKvmLabel(), getVmwareLabel(), getHypervLabel());
+    public void execute() {
+        PhysicalNetworkTrafficType result = _networkService.updatePhysicalNetworkTrafficType(getId(), getXenLabel(), getKvmLabel(), getVmwareLabel(), getHypervLabel(), getOvm3Label());
         if (result != null) {
             TrafficTypeResponse response = _responseGenerator.createTrafficTypeResponse(result);
             response.setResponseName(getCommandName());
             this.setResponseObject(response);
-        }else {
+        } else {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update traffic type");
         }
     }
 
     @Override
     public String getEventDescription() {
-        return  "Updating Traffic Type: " + getId();
+        return "Updating Traffic Type: " + getId();
     }
 
     @Override

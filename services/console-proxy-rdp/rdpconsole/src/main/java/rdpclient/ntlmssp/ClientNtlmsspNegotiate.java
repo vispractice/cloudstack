@@ -16,8 +16,6 @@
 // under the License.
 package rdpclient.ntlmssp;
 
-import common.asn1.Tag;
-
 import rdpclient.ntlmssp.asn1.NegoItem;
 import rdpclient.ntlmssp.asn1.TSRequest;
 import rdpclient.rdp.RdpConstants;
@@ -29,6 +27,7 @@ import streamer.Pipeline;
 import streamer.PipelineImpl;
 import streamer.debug.MockSink;
 import streamer.debug.MockSource;
+import common.asn1.Tag;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/cc236641.aspx
@@ -47,7 +46,7 @@ public class ClientNtlmsspNegotiate extends OneTimeSwitch {
 
     public ClientNtlmsspNegotiate(String id, NtlmState state) {
         super(id);
-        this.ntlmState = state;
+        ntlmState = state;
     }
 
     @Override
@@ -129,38 +128,38 @@ public class ClientNtlmsspNegotiate extends OneTimeSwitch {
         // System.setProperty("streamer.Pipeline.debug", "true");
 
         /* @formatter:off */
-    byte[] packet = new byte[] {
-          // CredSSP BER header:
+        byte[] packet = new byte[] {
+                // CredSSP BER header:
 
-          (byte)0x30, // Sequence
-          (byte)0x37, // Length, 55 bytes
+                (byte)0x30, // Sequence
+                (byte)0x37, // Length, 55 bytes
 
-          (byte)0xa0, (byte)0x03, // TAG: [0] (constructed) LEN: 3 byte
-          (byte)0x02, (byte)0x01, (byte)0x02, // Version: (int, 1 byte, 0x02)
+                (byte)0xa0, (byte)0x03, // TAG: [0] (constructed) LEN: 3 byte
+                (byte)0x02, (byte)0x01, (byte)0x02, // Version: (int, 1 byte, 0x02)
 
-          // Sequence of sequence
-          (byte)0xa1, (byte)0x30, // TAG: [1] (constructed) LEN: 48 bytes
-          (byte)0x30, (byte)0x2e, // TAG: [UNIVERSAL 16] (constructed) "SEQUENCE" LEN: 46 bytes
-          (byte)0x30, (byte)0x2c, // TAG: [UNIVERSAL 16] (constructed) "SEQUENCE" LEN: 44 bytes
-          (byte)0xa0, (byte)0x2a, // TAG: [0] (constructed) LEN: 42 bytes
+                // Sequence of sequence
+                (byte)0xa1, (byte)0x30, // TAG: [1] (constructed) LEN: 48 bytes
+                (byte)0x30, (byte)0x2e, // TAG: [UNIVERSAL 16] (constructed) "SEQUENCE" LEN: 46 bytes
+                (byte)0x30, (byte)0x2c, // TAG: [UNIVERSAL 16] (constructed) "SEQUENCE" LEN: 44 bytes
+                (byte)0xa0, (byte)0x2a, // TAG: [0] (constructed) LEN: 42 bytes
 
 
-          (byte)0x04, (byte)0x28, // TAG: [UNIVERSAL 4] (primitive) "OCTET STRING" LEN: 40 bytes
+                (byte)0x04, (byte)0x28, // TAG: [UNIVERSAL 4] (primitive) "OCTET STRING" LEN: 40 bytes
 
-          // NTLM negotiate request
+                // NTLM negotiate request
 
-          (byte)0x4e, (byte)0x54, (byte)0x4c, (byte)0x4d, (byte)0x53, (byte)0x53, (byte)0x50, (byte)0x00, // "NTLMSSP\0"
+                (byte)0x4e, (byte)0x54, (byte)0x4c, (byte)0x4d, (byte)0x53, (byte)0x53, (byte)0x50, (byte)0x00, // "NTLMSSP\0"
 
-          (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, // Message type: NEGOTIATE (0x1, LE) 
+                (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, // Message type: NEGOTIATE (0x1, LE)
 
-          (byte)0xb7, (byte)0x82, (byte)0x08, (byte)0xe2, // Flags: 0xe20882b7 (LE)
+                (byte)0xb7, (byte)0x82, (byte)0x08, (byte)0xe2, // Flags: 0xe20882b7 (LE)
 
-          (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, // Domain (security buffer, 8bit, 8 bytes): length: 0x0000 (LE), allocated space: 0x0000 (LE), offset: 0x00000000 (LE)
-          (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, // Workstation  (security buffer, 8bit, 8 bytes): length: 0x0000 (LE), allocated space: 0x0000 (LE), offset: 0x00000000 (LE)
-          (byte)0x06, (byte)0x01, (byte)0xb1, (byte)0x1d, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0f, // OS Version: 6.1 (Build 7601); NTLM Current Revision 15, 8 bytes
-        
-    };
-    /* @formatter:on */
+                (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, // Domain (security buffer, 8bit, 8 bytes): length: 0x0000 (LE), allocated space: 0x0000 (LE), offset: 0x00000000 (LE)
+                (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, // Workstation  (security buffer, 8bit, 8 bytes): length: 0x0000 (LE), allocated space: 0x0000 (LE), offset: 0x00000000 (LE)
+                (byte)0x06, (byte)0x01, (byte)0xb1, (byte)0x1d, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0f, // OS Version: 6.1 (Build 7601); NTLM Current Revision 15, 8 bytes
+
+        };
+        /* @formatter:on */
 
         NtlmState state = new NtlmState();
 

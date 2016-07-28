@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.storage.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -45,6 +46,10 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
 
     List<VolumeVO> findByInstanceIdDestroyed(long vmId);
 
+    List<VolumeVO> findByPod(long podId);
+
+    List<VolumeVO> findByDc(long dcId);
+
     List<VolumeVO> findByAccountAndPod(long accountId, long podId);
 
     List<VolumeVO> findByTemplateAndZone(long templateId, long zoneId);
@@ -61,6 +66,8 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
 
     List<VolumeVO> findByPoolId(long poolId);
 
+    VolumeVO findByPoolIdName(long poolId, String name);
+
     List<VolumeVO> findByPoolId(long poolId, Volume.Type volumeType);
 
     List<VolumeVO> findByInstanceAndDeviceId(long instanceId, long deviceId);
@@ -73,15 +80,19 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
 
     List<VolumeVO> listVolumesToBeDestroyed();
 
+    List<VolumeVO> listVolumesToBeDestroyed(Date date);
+
     ImageFormat getImageFormat(Long volumeId);
 
     List<VolumeVO> findReadyRootVolumesByInstance(long instanceId);
 
     List<Long> listPoolIdsByVolumeCount(long dcId, Long podId, Long clusterId, long accountId);
+
     List<Long> listZoneWidePoolIdsByVolumeCount(long dcId, long accountId);
+
     /**
      * Gets the Total Primary Storage space allocated for an account
-     * 
+     *
      * @param account
      * @param list of ids of virtual router VMs under this account
      * @return total Primary Storage space (in bytes) used
@@ -91,7 +102,7 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
     /**
      * Gets the Total Secondary Storage space used by volumes allocated for an
      * account
-     * 
+     *
      * @param account
      * @return total Secondary Storage space (in bytes) used
      */

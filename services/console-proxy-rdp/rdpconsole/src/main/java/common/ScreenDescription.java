@@ -58,10 +58,10 @@ public class ScreenDescription {
     public void setPixelFormat(int bitsPerPixel, int depth, boolean bigEndianFlag, boolean trueColorFlag, int redMax, int greenMax, int blueMax, int redShift,
             int greenShift, int blueShift) {
 
-        this.bytesPerPixel = (bitsPerPixel + 7) / 8;
+        bytesPerPixel = (bitsPerPixel + 7) / 8;
 
         this.bitsPerPixel = bitsPerPixel;
-        this.colorDepth = depth;
+        colorDepth = depth;
         this.bigEndianFlag = bigEndianFlag;
         this.trueColorFlag = trueColorFlag;
 
@@ -107,8 +107,8 @@ public class ScreenDescription {
         if (height <= 0 || width <= 0)
             throw new RuntimeException("Incorrect framebuffer size: " + width + "x" + height + ".");
 
-        this.framebufferWidth = width;
-        this.framebufferHeight = height;
+        framebufferWidth = width;
+        framebufferHeight = height;
 
         callSizeChangeListeners(width, height);
     }

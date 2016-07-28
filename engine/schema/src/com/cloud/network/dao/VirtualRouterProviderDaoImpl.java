@@ -18,22 +18,21 @@ package com.cloud.network.dao;
 
 import java.util.List;
 
-import javax.ejb.Local;
 
 import org.springframework.stereotype.Component;
 
-import com.cloud.network.element.VirtualRouterProviderVO;
 import com.cloud.network.VirtualRouterProvider.Type;
+import com.cloud.network.element.VirtualRouterProviderVO;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
 @Component
-@Local(value=VirtualRouterProviderDao.class) @DB()
+@DB()
 public class VirtualRouterProviderDaoImpl extends GenericDaoBase<VirtualRouterProviderVO, Long> implements VirtualRouterProviderDao {
     final SearchBuilder<VirtualRouterProviderVO> AllFieldsSearch;
-    
+
     public VirtualRouterProviderDaoImpl() {
         super();
         AllFieldsSearch = createSearchBuilder();
@@ -52,7 +51,7 @@ public class VirtualRouterProviderDaoImpl extends GenericDaoBase<VirtualRouterPr
         sc.setParameters("type", type);
         return findOneBy(sc);
     }
-    
+
     @Override
     public List<VirtualRouterProviderVO> listByEnabledAndType(boolean enabled, Type type) {
         SearchCriteria<VirtualRouterProviderVO> sc = AllFieldsSearch.create();
@@ -60,7 +59,7 @@ public class VirtualRouterProviderDaoImpl extends GenericDaoBase<VirtualRouterPr
         sc.setParameters("type", type);
         return listBy(sc);
     }
-    
+
     @Override
     public VirtualRouterProviderVO findByIdAndEnabledAndType(long id, boolean enabled, Type type) {
         SearchCriteria<VirtualRouterProviderVO> sc = AllFieldsSearch.create();

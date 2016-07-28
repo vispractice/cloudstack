@@ -35,8 +35,9 @@
                 url: createURL('updateUser'),
                 data: {
                     id: cloudStack.context.users[0].userid,
-                    password: md5Hashed ? $.md5(args.data.password) : todb(args.data.password)
+                    password: md5Hashed ? $.md5(args.data.password) : args.data.password
                 },
+                type: 'POST',
                 dataType: 'json',
                 async: true,
                 success: function(data) {
@@ -287,7 +288,7 @@
                 response: {
                     success: function(args) {
                         var enableZone = function() {
-                            message('Enabling zone...');
+                            message(_l('message.enabling.zone.dots'));
                             cloudStack.zoneWizard.enableZoneAction({
                                 data: args.data,
                                 formData: args.data,
@@ -302,7 +303,7 @@
 
                         var pollSystemVMs = function() {
                             // Poll System VMs, then enable zone
-                            message('Creating system VMs (this may take a while)');
+                            message(_l('message.creating.systemVM'));
                             var poll = setInterval(function() {
                                 $.ajax({
                                     url: createURL('listSystemVms'),
@@ -314,7 +315,7 @@
                                                 return vm.state == 'Running';
                                             }).length) {
                                                 clearInterval(poll);
-                                                message('System VMs ready.');
+                                                message('message.systems.vms.ready');
                                                 setTimeout(pollBuiltinTemplates, 500);
                                             }
                                         }
@@ -325,7 +326,7 @@
 
                         // Wait for builtin template to be present -- otherwise VMs cannot launch
                         var pollBuiltinTemplates = function() {
-                            message('Waiting for builtin templates to load...');
+                            message('message.waiting.for.builtin.templates.to.load');
                             var poll = setInterval(function() {
                                 $.ajax({
                                     url: createURL('listTemplates'),
@@ -341,7 +342,7 @@
 
                                         if (builtinTemplates.length) {
                                             clearInterval(poll);
-                                            message('Your CloudStack is ready!');
+                                            message('message.your.cloudstack.is.ready');
                                             setTimeout(success, 1000);
                                         }
                                     }

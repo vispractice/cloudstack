@@ -77,7 +77,7 @@ public class MockSink extends BaseElement {
                 Object actualValue = buf.getMetadata(key);
                 if (actualValue == null)
                     throw new AssertionError("[" + this + "] Incoming buffer #" + packetNumber + " is not equal to expected buffer in metadata for key \"" + key
-                            + "\".\n  Actual metadata value: " + actualValue + ",\n  expected value: \"" + expectedValue + "\".");
+                            + "\".\n  Actual metadata value: " + ",\n  expected value: \"" + expectedValue + "\".");
 
                 if (!expectedValue.equals(actualValue))
                     throw new AssertionError("[" + this + "] Incoming buffer #" + packetNumber + " is not equal to expected buffer in metadata for key \"" + key
@@ -123,25 +123,25 @@ public class MockSink extends BaseElement {
 
         Element mockSource = new MockSource("source") {
             {
-                this.bufs = new ByteBuffer[] {new ByteBuffer(new byte[] {1, 1, 2, 3, 4, 5}), new ByteBuffer(new byte[] {2, 1, 2, 3, 4}),
+                bufs = new ByteBuffer[] {new ByteBuffer(new byte[] {1, 1, 2, 3, 4, 5}), new ByteBuffer(new byte[] {2, 1, 2, 3, 4}),
                         new ByteBuffer(new byte[] {3, 1, 2, 3}), new ByteBuffer(new byte[] {4, 1, 2}), new ByteBuffer(new byte[] {5, 1})};
-                this.verbose = true;
-                this.delay = 100;
-                this.numBuffers = this.bufs.length;
+                verbose = true;
+                delay = 100;
+                numBuffers = bufs.length;
             }
         };
 
         Element mockSink = new MockSink("sink") {
             {
-                this.bufs = new ByteBuffer[] {new ByteBuffer(new byte[] {1, 1, 2, 3, 4, 5}), new ByteBuffer(new byte[] {2, 1, 2, 3, 4}),
+                bufs = new ByteBuffer[] {new ByteBuffer(new byte[] {1, 1, 2, 3, 4, 5}), new ByteBuffer(new byte[] {2, 1, 2, 3, 4}),
                         new ByteBuffer(new byte[] {3, 1, 2, 3}), new ByteBuffer(new byte[] {4, 1, 2}), new ByteBuffer(new byte[] {5, 1})};
-                this.verbose = true;
+                verbose = true;
             }
         };
 
         Link link = new SyncLink() {
             {
-                this.verbose = true;
+                verbose = true;
             }
         };
 

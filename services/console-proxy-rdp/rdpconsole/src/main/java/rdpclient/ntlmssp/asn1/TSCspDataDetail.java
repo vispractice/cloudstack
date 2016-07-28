@@ -33,13 +33,13 @@ import common.asn1.Tag;
  * </pre>
  * <ul>
  * <li>keySpec: Defines the specification of the user's smart card.
- * 
+ *
  * <li>cardName: Specifies the name of the smart card.
- * 
+ *
  * <li>readerName: Specifies the name of the smart card reader.
- * 
+ *
  * <li>containerName: Specifies the name of the certificate container.
- * 
+ *
  * <li>cspName: Specifies the name of the CSP.
  * </ul>
  * @see http://msdn.microsoft.com/en-us/library/cc226785.aspx
@@ -87,7 +87,7 @@ public class TSCspDataDetail extends Sequence {
 
     public TSCspDataDetail(String name) {
         super(name);
-        this.tags = new Tag[] {keySpec, cardName, readerName, containerName, cspName};
+        tags = new Tag[] {keySpec, cardName, readerName, containerName, cspName};
     }
 
     @Override

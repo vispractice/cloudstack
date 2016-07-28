@@ -28,7 +28,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.PatternSyntaxException;
 
-import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
@@ -72,7 +71,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 
 @Component
-@Local(value = { MockAgentManager.class })
 public class MockAgentManagerImpl extends ManagerBase implements MockAgentManager {
     private static final Logger s_logger = Logger.getLogger(MockAgentManagerImpl.class);
     @Inject
@@ -90,13 +88,13 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
     @Inject
     ResourceManager _resourceMgr;
     @Inject private AccountManager _accountMgr;
-    
+
     SimulatorSecondaryDiscoverer discoverer;
     @Inject
     HostDao hostDao;
-    
+
     List<Discoverer> discoverers;
-    
+
     private SecureRandom random;
     private final Map<String, AgentResourceBase> _resources = new ConcurrentHashMap<String, AgentResourceBase>();
     private ThreadPoolExecutor _executor;
@@ -106,8 +104,8 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
 
             HashMap<Long, List<Object>> podMap = _podDao.getCurrentPodCidrSubnets(dcId, 0);
             List<Object> cidrPair = podMap.get(podId);
-            String cidrAddress = (String) cidrPair.get(0);
-            Long cidrSize = (Long) cidrPair.get(1);
+            String cidrAddress = (String)cidrPair.get(0);
+            Long cidrSize = (Long)cidrPair.get(1);
             return new Pair<String, Long>(cidrAddress, cidrSize);
         } catch (PatternSyntaxException e) {
             s_logger.error("Exception while splitting pod cidr");
@@ -128,7 +126,7 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
     }
 
     public synchronized int getNextAgentId(long cidrSize) {
-        return random.nextInt((int) cidrSize);
+        return random.nextInt((int)cidrSize);
     }
 
     @Override
@@ -138,14 +136,14 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
         Map<String, String> args = new HashMap<String, String>();
         Map<AgentResourceBase, Map<String, String>> newResources = new HashMap<AgentResourceBase, Map<String, String>>();
         AgentResourceBase agentResource;
-        long cpuCore = Long.parseLong((String) params.get("cpucore"));
-        long cpuSpeed = Long.parseLong((String) params.get("cpuspeed"));
-        long memory = Long.parseLong((String) params.get("memory"));
-        long localStorageSize = Long.parseLong((String) params.get("localstorage"));
+        long cpuCore = Long.parseLong((String)params.get("cpucore"));
+        long cpuSpeed = Long.parseLong((String)params.get("cpuspeed"));
+        long memory = Long.parseLong((String)params.get("memory"));
+        long localStorageSize = Long.parseLong((String)params.get("localstorage"));
         synchronized (this) {
-            long dataCenterId = Long.parseLong((String) params.get("zone"));
-            long podId = Long.parseLong((String) params.get("pod"));
-            long clusterId = Long.parseLong((String) params.get("cluster"));
+            long dataCenterId = Long.parseLong((String)params.get("zone"));
+            long podId = Long.parseLong((String)params.get("pod"));
+            long clusterId = Long.parseLong((String)params.get("cluster"));
             long cidrSize = getPodCidr(podId, dataCenterId).second();
 
             int agentId = getNextAgentId(cidrSize);
@@ -208,8 +206,7 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
         try {
             random = SecureRandom.getInstance("SHA1PRNG");
-            _executor = new ThreadPoolExecutor(1, 5, 1, TimeUnit.DAYS, new LinkedBlockingQueue<Runnable>(),
-                    new NamedThreadFactory("Simulator-Agent-Mgr"));
+            _executor = new ThreadPoolExecutor(1, 5, 1, TimeUnit.DAYS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("Simulator-Agent-Mgr"));
         } catch (NoSuchAlgorithmException e) {
             s_logger.debug("Failed to initialize random:" + e.toString());
             return false;
@@ -218,10 +215,9 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
     }
 
     @Override
-    public boolean handleSystemVMStart(long vmId, String privateIpAddress, String privateMacAddress,
-            String privateNetMask, long dcId, long podId, String name, String vmType, String url) {
-        _executor.execute(new SystemVMHandler(vmId, privateIpAddress, privateMacAddress, privateNetMask, dcId, podId,
-                name, vmType, _simulatorMgr, url));
+    public boolean handleSystemVMStart(long vmId, String privateIpAddress, String privateMacAddress, String privateNetMask, long dcId, long podId, String name,
+        String vmType, String url) {
+        _executor.execute(new SystemVMHandler(vmId, privateIpAddress, privateMacAddress, privateNetMask, dcId, podId, name, vmType, _simulatorMgr, url));
         return true;
     }
 
@@ -245,8 +241,8 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
         private final String mode;
         private String url;
 
-        public SystemVMHandler(long vmId, String privateIpAddress, String privateMacAddress, String privateNetMask,
-                long dcId, long podId, String name, String vmType, SimulatorManager mgr, String url) {
+        public SystemVMHandler(long vmId, String privateIpAddress, String privateMacAddress, String privateNetMask, long dcId, long podId, String name, String vmType,
+                SimulatorManager mgr, String url) {
             this.vmId = vmId;
             this.privateIpAddress = privateIpAddress;
             this.privateMacAddress = privateMacAddress;
@@ -265,7 +261,6 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
             this.vmId = vmId;
             this.mode = "Stop";
         }
-
 
         private void handleSystemVMStop() {
             TransactionLegacy txn = TransactionLegacy.open(TransactionLegacy.SIMULATOR_DB);
@@ -344,8 +339,7 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
                 simtxn.commit();
             } catch (Exception ex) {
                 simtxn.rollback();
-                throw new CloudRuntimeException("Unable to persist host " + mockHost.getGuid() + " due to "
-                        + ex.getMessage(), ex);
+                throw new CloudRuntimeException("Unable to persist host " + mockHost.getGuid() + " due to " + ex.getMessage(), ex);
             } finally {
                 simtxn.close();
                 simtxn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
@@ -447,8 +441,7 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
             return new GetHostStatsAnswer(cmd, hostStats);
         } catch (Exception ex) {
             vmtxn.rollback();
-            throw new CloudRuntimeException("Unable to get Vms on host " + host.getGuid() + " due to "
-                    + ex.getMessage(), ex);
+            throw new CloudRuntimeException("Unable to get Vms on host " + host.getGuid() + " due to " + ex.getMessage(), ex);
         } finally {
             vmtxn.close();
             vmtxn = TransactionLegacy.open(TransactionLegacy.CLOUD_DB);
@@ -468,14 +461,14 @@ public class MockAgentManagerImpl extends ManagerBase implements MockAgentManage
 
     @Override
     public boolean start() {
-        for ( Discoverer discoverer : discoverers ) {
-            if ( discoverer instanceof SimulatorSecondaryDiscoverer ) {
+        for (Discoverer discoverer : discoverers) {
+            if (discoverer instanceof SimulatorSecondaryDiscoverer) {
                 this.discoverer = (SimulatorSecondaryDiscoverer)discoverer;
                 break;
             }
         }
 
-        if ( this.discoverer == null ) {
+        if (this.discoverer == null) {
             throw new IllegalStateException("Failed to find SimulatorSecondaryDiscoverer");
         }
 

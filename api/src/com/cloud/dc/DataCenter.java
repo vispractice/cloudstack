@@ -16,21 +16,20 @@
 // under the License.
 package com.cloud.dc;
 
-import java.util.Map;
-
+import com.cloud.org.Grouping;
 import org.apache.cloudstack.acl.InfrastructureEntity;
 import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
 
-import com.cloud.org.Grouping;
+import java.util.Map;
 
 /**
  *
  */
 public interface DataCenter extends InfrastructureEntity, Grouping, Identity, InternalIdentity {
+
     public enum NetworkType {
-        Basic,
-        Advanced,
+        Basic, Advanced,
     }
 
     String getDns1();
