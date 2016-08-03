@@ -43,6 +43,7 @@ from cs.CsLoadBalancer import CsLoadBalancer
 from cs.CsConfig import CsConfig
 from cs.CsProcess import CsProcess
 from cs.CsStaticRoutes import CsStaticRoutes
+from cs.CsMultilineRule import CsMultilineRule
 
 
 class CsPassword(CsDataBag):
@@ -1002,6 +1003,11 @@ def main(argv):
         logging.debug("Configuring static routes")
         static_routes = CsStaticRoutes("staticroutes", config)
         static_routes.process()
+    #andrew ling add
+    if process_file in ["static_routes.json"]:
+        logging.debug("Configuring the multline route tables in the static routes operation")
+        multiline_rule = CsMultilineRule("staticroutes", config)
+        multiline_rule.process()
 
 if __name__ == "__main__":
     main(sys.argv)

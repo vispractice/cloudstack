@@ -26,6 +26,7 @@ import subprocess
 import time
 from CsRoute import CsRoute
 from CsRule import CsRule
+from CsBandwidth import CsBandwidth
 
 VRRP_TYPES = ['guest']
 
@@ -119,6 +120,8 @@ class CsAddress(CsDataBag):
                     
                     if CsDevice(dev, self.config).waitfordevice():
                         ip.configure(address)
+                        #andrew ling add
+                        CsBandwidth(dev).initDevForBandwidth()
 
 
 class CsInterface:

@@ -18,29 +18,29 @@
 import CsHelper
 import logging
 
-
-class CsRule:
-    """ Manage iprules
-    Supported Types:
-    fwmark
-    """
-
+#andrew ling add
+class CsBandwidth:
     def __init__(self, dev):
         self.dev = dev
-        self.tableNo = int(dev[3:])
-        self.table = "Table_%s" % (dev)
 
-    def addMark(self):
-        if not self.findMark():
-#            cmd = "ip rule add fwmark %s table %s" % (self.tableNo, self.table)
-            #andrew ling add
-            cmd = "ip rule add fwmark %s table %s pref %s" % (self.tableNo, self.table, self.tableNo)
+    def initDevForBandwidth(self):
+        eth0 = "eth0"
+        if not self.isInitDevForBandwidth(eth0):
+            cmd = "tc qdisc add dev %s root handle 1: htb r2q 1" % (eth0)
             CsHelper.execute(cmd)
-            logging.info("Added fwmark rule for %s" % (self.table))
+            logging.info("init the dev eth0 for bandwidth")
+        ethNum = self.dev
+        if not self.isInitDevForBandwidth(ethNum):
+            cmd = "tc qdisc add dev %s root handle 1: htb r2q 1" % (ethNum)
+            CsHelper.execute(cmd)
+            logging.info("init the dev %s for bandwidth" % (self.dev))
 
-    def findMark(self):
-        srch = "from all fwmark %s lookup %s" % (hex(self.tableNo), self.table)
-        for i in CsHelper.execute("ip rule show"):
-            if srch in i.strip():
+    def isInitDevForBandwidth(self,dev):
+        cmd = "tc qdisc show |grep %s |grep r2q" % (dev)
+        for i in CsHelper.execute(cmd):
+            if dev in i.strip():
                 return True
         return False
+
+
+
