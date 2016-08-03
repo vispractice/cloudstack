@@ -25,7 +25,6 @@ public class StaticNatRule {
     private String sourceIpAddress;
     private String sourcePortRange;
     private String destinationIpAddress;
-    private Boolean isMultiline;
     private String multilineLabelSeq;
 
     public StaticNatRule() {
@@ -41,14 +40,13 @@ public class StaticNatRule {
         this.destinationIpAddress = destinationIpAddress;
     }
     
-    public StaticNatRule(boolean revoke, String protocol, String sourceIpAddress, String sourcePortRange, String destinationIpAddress,Boolean isMultiline, String multilineLabelSeq) {
+    public StaticNatRule(boolean revoke, String protocol, String sourceIpAddress, String sourcePortRange, String destinationIpAddress, String multilineLabelSeq) {
         super();
         this.revoke = revoke;
         this.protocol = protocol;
         this.sourceIpAddress = sourceIpAddress;
         this.sourcePortRange = sourcePortRange;
         this.destinationIpAddress = destinationIpAddress;
-        this.isMultiline = isMultiline;
         this.multilineLabelSeq = multilineLabelSeq;
     }
 
@@ -98,14 +96,6 @@ public class StaticNatRule {
 
 	public void setMultilineLabelSeq(String multilineLabelSeq) {
 		this.multilineLabelSeq = multilineLabelSeq;
-	}
-
-	public Boolean getIsMultiline() {
-		return isMultiline;
-	}
-
-	public void setIsMultiline(Boolean isMultiline) {
-		this.isMultiline = isMultiline;
 	}
 
 }
