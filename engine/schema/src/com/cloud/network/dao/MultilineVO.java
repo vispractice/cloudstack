@@ -40,66 +40,66 @@ public class MultilineVO implements InternalIdentity, Multiline{
     @Column(name="id")
     long id;
 
-	@Column(name="uuid")
-	private String uuid;
-	
-	@Column(name="label")
-	private String label;
-	
-	@Column(name="name")
-	private String name;
+    @Column(name="uuid")
+    private String uuid;
+    
+    @Column(name="label")
+    private String label;
+    
+    @Column(name="name")
+    private String name;
 
-	@Column(name="is_default")
-	private boolean isDefault;
-	
-	@Column(name="route_rule")
-	private String routeRule;
+    @Column(name="is_default")
+    private boolean isDefault;
+    
+    @Column(name="route_rule")
+    private String routeRule;
 
-	public long getId() {
-		return id;
-	}
+    public long getId() {
+        return id;
+    }
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public String getUuid() {
-		return uuid;
-	}
+    public String getUuid() {
+        return uuid;
+    }
 
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 
-	public String getLabel() {
-		return label;
-	}
+    public String getLabel() {
+        return label;
+    }
 
-	public void setLabel(String label) {
-		this.label = label;
-	}
+    public void setLabel(String label) {
+        this.label = label;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public boolean getIsDefault() {
-		return isDefault;
-	}
+    public boolean getIsDefault() {
+        return isDefault;
+    }
 
-	public void setIsDefault(boolean isDefault) {
-		this.isDefault = isDefault;
-	}
+    public void setIsDefault(boolean isDefault) {
+        this.isDefault = isDefault;
+    }
 
-	public String getRouteRule() {
-		return routeRule;
-	}
+    public String getRouteRule() {
+        return routeRule;
+    }
 
-	public void setRouteRule(String routeRule) {
-		this.routeRule = routeRule;
-	}
+    public void setRouteRule(String routeRule) {
+        this.routeRule = routeRule;
+    }
 }

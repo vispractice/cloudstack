@@ -2640,17 +2640,17 @@ public class QueryManagerImpl extends ManagerBase implements QueryService, Confi
 
     //andrew ling add
     @Override
-	public ListResponse<BandwidthOfferingResponse> searchForBandwidthOfferings(ListBandwidthOfferingsCmd cmd) {
-		Pair<List<BandwidthOfferingVO>, Integer> result = searchForBandwidthOffering(cmd);
-		ListResponse<BandwidthOfferingResponse> response = new ListResponse<BandwidthOfferingResponse>();
-		List<BandwidthOfferingResponse> offeringResponses = ViewResponseHelper.createBandwidthOfferingResponse(result.first().toArray(new BandwidthOfferingVO[result.first().size()]));
+    public ListResponse<BandwidthOfferingResponse> searchForBandwidthOfferings(ListBandwidthOfferingsCmd cmd) {
+        Pair<List<BandwidthOfferingVO>, Integer> result = searchForBandwidthOffering(cmd);
+        ListResponse<BandwidthOfferingResponse> response = new ListResponse<BandwidthOfferingResponse>();
+        List<BandwidthOfferingResponse> offeringResponses = ViewResponseHelper.createBandwidthOfferingResponse(result.first().toArray(new BandwidthOfferingVO[result.first().size()]));
         response.setResponses(offeringResponses, result.second());
         return response;
-	}
+    }
     
     //andrew ling add
     private Pair<List<BandwidthOfferingVO>, Integer> searchForBandwidthOffering(ListBandwidthOfferingsCmd cmd) {
-    	Boolean isAscending = Boolean.parseBoolean(_configDao.getValue("sortkey.algorithm"));
+        Boolean isAscending = Boolean.parseBoolean(_configDao.getValue("sortkey.algorithm"));
         isAscending = (isAscending == null ? true : isAscending);
         Filter searchFilter = new Filter(BandwidthOfferingVO.class, "id", isAscending, cmd.getStartIndex(),
                 cmd.getPageSizeVal());
@@ -2660,8 +2660,8 @@ public class QueryManagerImpl extends ManagerBase implements QueryService, Confi
         Object keyword = cmd.getKeyword();
         Long zoneId = cmd.getZoneId();
         if(zoneId != null){
-        	sc.addAnd("dataCenterId", SearchCriteria.Op.EQ, zoneId);
-        	return _bandwidthOfferingDao.searchAndCount(sc, searchFilter);
+            sc.addAnd("dataCenterId", SearchCriteria.Op.EQ, zoneId);
+            return _bandwidthOfferingDao.searchAndCount(sc, searchFilter);
         }
         
         if (keyword != null) {

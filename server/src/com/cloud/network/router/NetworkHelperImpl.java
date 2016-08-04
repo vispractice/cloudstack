@@ -623,21 +623,21 @@ public class NetworkHelperImpl implements NetworkHelper {
 
         if (routerDeploymentDefinition.isPublicNetwork()) {
             //andrew ling add, multiline part
-        	List<PublicIp> sourceNatIps = routerDeploymentDefinition.getSourceNatIPs();
-        	if(!sourceNatIps.isEmpty()){
-            	final NicProfile[] defaultNics = new NicProfile[routerDeploymentDefinition.getSourceNatIPs().size()];
+            List<PublicIp> sourceNatIps = routerDeploymentDefinition.getSourceNatIPs();
+            if(!sourceNatIps.isEmpty()){
+                final NicProfile[] defaultNics = new NicProfile[routerDeploymentDefinition.getSourceNatIPs().size()];
                 final NetworkOffering publicOffering = _networkModel.getSystemAccountNetworkOfferings(NetworkOffering.SystemPublicNetwork).get(0);
                 final List<? extends Network> publicNetworks = _networkMgr.setupNetwork(s_systemAccount, publicOffering, routerDeploymentDefinition.getPlan(), null, null, false);
-            	int defaultNicNum = 0;
-        		for (PublicIp sourceNatIp : sourceNatIps){
-            		s_logger.debug("Adding nic for Virtual Router in Public network ");
+                int defaultNicNum = 0;
+                for (PublicIp sourceNatIp : sourceNatIps){
+                    s_logger.debug("Adding nic for Virtual Router in Public network ");
                     // if source nat service is supported by the network, get the source
                     // nat ip address
                     final NicProfile defaultNic = new NicProfile();
                     if(sourceNatIp.isDefault()){
-                    	defaultNic.setDefaultNic(true);
+                        defaultNic.setDefaultNic(true);
                     } else {
-                    	defaultNic.setDefaultNic(false);
+                        defaultNic.setDefaultNic(false);
                     }
 //                    final PublicIp sourceNatIp = routerDeploymentDefinition.getSourceNatIP();
                     defaultNic.setIPv4Address(sourceNatIp.getAddress().addr());
@@ -671,10 +671,10 @@ public class NetworkHelperImpl implements NetworkHelper {
                     }
                     defaultNics[defaultNicNum] = defaultNic;
                     defaultNicNum++;
-        		}
+                }
                 publicConfig.put(publicNetworks.get(0), new ArrayList<NicProfile>(Arrays.asList(defaultNics)));
-        	} else {
-            	s_logger.debug("Adding nic for Virtual Router in Public network ");
+            } else {
+                s_logger.debug("Adding nic for Virtual Router in Public network ");
                 // if source nat service is supported by the network, get the source
                 // nat ip address
                 final NicProfile defaultNic = new NicProfile();
@@ -712,7 +712,7 @@ public class NetworkHelperImpl implements NetworkHelper {
                     defaultNic.setMacAddress(peerNic.getMacAddress());
                 }
                 publicConfig.put(publicNetworks.get(0), new ArrayList<NicProfile>(Arrays.asList(defaultNic)));
-        	}
+            }
         }
 
         return publicConfig;

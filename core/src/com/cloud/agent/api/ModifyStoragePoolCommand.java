@@ -30,24 +30,24 @@ public class ModifyStoragePoolCommand extends Command {
     boolean add;
     StorageFilerTO pool;
     String localPath;
-	String [] options;
-	public static final String LOCAL_PATH_PREFIX="/mnt/";
-	String isReboot;
+    String [] options;
+    public static final String LOCAL_PATH_PREFIX="/mnt/";
+    String isReboot;
 
     public ModifyStoragePoolCommand() {
 
     }
 
     public ModifyStoragePoolCommand(boolean add, StoragePool pool, String localPath, String isReboot) {
-    	this.add = add;
-    	this.pool = new StorageFilerTO(pool);
+        this.add = add;
+        this.pool = new StorageFilerTO(pool);
         this.localPath = localPath;
         this.isReboot = isReboot;
     }
     
     public ModifyStoragePoolCommand(boolean add, StoragePool pool, String isReboot) {
-		this(add, pool, LOCAL_PATH_PREFIX + File.separator + UUID.nameUUIDFromBytes((pool.getHostAddress() + pool.getPath()).getBytes()), isReboot);
-	}
+        this(add, pool, LOCAL_PATH_PREFIX + File.separator + UUID.nameUUIDFromBytes((pool.getHostAddress() + pool.getPath()).getBytes()), isReboot);
+    }
 
     public StorageFilerTO getPool() {
         return pool;
@@ -70,10 +70,10 @@ public class ModifyStoragePoolCommand extends Command {
         return localPath;
     }
 
-	public String getIsReboot() {
-		return isReboot;
-	}
-	
+    public String getIsReboot() {
+        return isReboot;
+    }
+    
     public void setOptions(String[] options) {
         this.options = options;
     }

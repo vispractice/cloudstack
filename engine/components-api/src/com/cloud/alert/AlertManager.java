@@ -35,7 +35,7 @@ public interface AlertManager extends Manager, AlertService {
         "Alert", "0.75", "Percentage (as a value between 0 and 1) of allocated storage utilization above which alerts will be sent about low storage available.", true,
         ConfigKey.Scope.Cluster, null);
     static final ConfigKey<Boolean> IsAllowRebootHost = new ConfigKey<Boolean>(Boolean.class, "cluster.allow.agent.reboot", "Alert", "true",
-        	"If the NFS service is interrupted, do you allow the proxy to restart the host? true is allowed, false is not allowed.", true, ConfigKey.Scope.Cluster, null);
+            "If the NFS service is interrupted, do you allow the proxy to restart the host? true is allowed, false is not allowed.", true, ConfigKey.Scope.Cluster, null);
     void clearAlert(AlertType alertType, long dataCenterId, long podId);
 
     void recalculateCapacity();

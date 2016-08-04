@@ -206,7 +206,7 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd {
     }
 
     public String getGuestOsId() {
-    	return guestOsId;
+        return guestOsId;
     }
 
     public String getKeyPairName() {

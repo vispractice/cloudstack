@@ -11,9 +11,9 @@ import org.apache.log4j.Logger;
 
 @APICommand(name = "listBandwidthRules", description="Lists all bandwidth rules", responseObject=BandwidthRulesResponse.class)
 public class ListBandwidthRulesCmd  extends BaseListTaggedResourcesCmd {
-	public static final Logger s_logger = Logger.getLogger(ListBandwidthRulesCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(ListBandwidthRulesCmd.class.getName());
     private static final String s_name = "listbandwidthrulesresponse";
-	
+    
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
@@ -29,28 +29,28 @@ public class ListBandwidthRulesCmd  extends BaseListTaggedResourcesCmd {
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public Long getNetworkId() {
-		return networkId;
-	}
+    public Long getNetworkId() {
+        return networkId;
+    }
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-	
-	@Override
-	public void execute(){
-		ListResponse<BandwidthRulesResponse> response = _bandwidthService.searchForBandwidthRules(this);
-		response.setResponseName(getCommandName());
+    
+    @Override
+    public void execute(){
+        ListResponse<BandwidthRulesResponse> response = _bandwidthService.searchForBandwidthRules(this);
+        response.setResponseName(getCommandName());
         this.setResponseObject(response);
-	}
+    }
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
 }

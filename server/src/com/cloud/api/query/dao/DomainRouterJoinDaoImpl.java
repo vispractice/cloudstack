@@ -194,7 +194,7 @@ public class DomainRouterJoinDaoImpl extends GenericDaoBase<DomainRouterJoinVO, 
             if (ty != null) {
                 // legacy code, public/control/guest nic info is kept in
                 // nics response object
-            	//Andrew Ling add, only show the default public IP in the response.and in the nic response will show the all.
+                //Andrew Ling add, only show the default public IP in the response.and in the nic response will show the all.
                 if (ty == TrafficType.Public && vr.isDefaultNic()) {
                     vrData.setPublicIp(vr.getIpAddress());
                     vrData.setPublicMacAddress(vr.getMacAddress());

@@ -355,7 +355,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     @Inject
     BandwidthRulesDao _bandwidthRulesDao;
     @Inject
-	BandwidthDao _bandwidthDao;
+    BandwidthDao _bandwidthDao;
     @Inject
     BandwidthManager _bandwidthManager;
     @Inject
@@ -1864,9 +1864,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                 } else if (offering.getTrafficType() == TrafficType.Control) {
                     broadcastDomainType = BroadcastDomainType.LinkLocal;
                 } else if (offering.getTrafficType() == TrafficType.Public) {
-                	//andrew ling add, change the default network ,when use the security group and public service .
+                    //andrew ling add, change the default network ,when use the security group and public service .
                     if ((zone.getNetworkType() == NetworkType.Advanced && zone.isSecurityGroupEnabled() && zone.isPublicServiceInSGEnabled()) 
-                    	    || (zone.getNetworkType() == NetworkType.Advanced && !zone.isSecurityGroupEnabled())
+                            || (zone.getNetworkType() == NetworkType.Advanced && !zone.isSecurityGroupEnabled())
                             || zone.getNetworkType() == NetworkType.Basic) {
                         broadcastDomainType = BroadcastDomainType.Vlan;
                     } else {
@@ -1907,7 +1907,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
         // andrew ling add, check the parameters about the isSecurityGroupEnabled and isPublicServiceInSGEnabled relation
         if(!isSecurityGroupEnabled && isPublicServiceInSGEnabled){
-        	throw new InvalidParameterValueException("when the public service is enabled, the security group must been enabled.");
+            throw new InvalidParameterValueException("when the public service is enabled, the security group must been enabled.");
         }
         
         if (allocationState == null) {
@@ -2841,7 +2841,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         MultilineVO multiline = getMultilineLabl(multilineLabel);
         
         if(multiline == null || multiline.getLabel().equals("")){
-        	 throw new InvalidParameterValueException("multiline labe is not exist : " + multilineLabel);
+             throw new InvalidParameterValueException("multiline labe is not exist : " + multilineLabel);
         }
         
         return commitVlan(zoneId, podId, startIP, endIP, newVlanGateway, newVlanNetmask, vlanId, forVirtualNetwork, networkId, physicalNetworkId, startIPv6, endIPv6, ip6Gateway,
@@ -5087,7 +5087,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         
         final MultilineVO multiline = getMultilineLabl(multilineLabel);
         if(multiline == null || multiline.getLabel().equals("")){
-        	 throw new InvalidParameterValueException("multiline labe is not exist : " + multilineLabel);
+             throw new InvalidParameterValueException("multiline labe is not exist : " + multilineLabel);
         }
         
         final GlobalLock portableIpLock = GlobalLock.getInternLock("PortablePublicIpRange");
@@ -5584,11 +5584,11 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
      * @throws InvalidParameterValueException
      */
     private MultilineVO getMultilineLabl(String multilineLabel) throws InvalidParameterValueException{
-    	
+        
         String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
         if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
-    	     if (multilineLabel != null && !multilineLabel.equals("")) {
-         	     return _multilineDao.getMultilineByLabel(multilineLabel);
+             if (multilineLabel != null && !multilineLabel.equals("")) {
+                  return _multilineDao.getMultilineByLabel(multilineLabel);
              } 
         } 
         return _multilineDao.getDefaultMultiline();        
@@ -5598,29 +5598,29 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_CREATE, eventDescription = "creating bandwidth offering")
     public BandwidthOffering createBandwidthOffering(CreateBandwidthOfferingCmd cmd){
-    	Long zoneId = cmd.getZoneId();
-    	String name = cmd.getBandwidthOfferingName();
-		String displayText = cmd.getDisplayText();
-		Integer rate = cmd.getRate();
-		Integer ceil = cmd.getCeil();
-		
-		//check the parameters
-		if(zoneId == null || name.isEmpty() || displayText.isEmpty()){
-			throw new InvalidParameterValueException("It need the parameters, like name, display etc.");
-		}
-		if(rate < 0 || ceil < 0){
-			throw new InvalidParameterValueException("The rate or ceil must more than zero.");
-		}
-    	return createBandwidthOffering(zoneId, name, displayText, rate, ceil);
-    	
+        Long zoneId = cmd.getZoneId();
+        String name = cmd.getBandwidthOfferingName();
+        String displayText = cmd.getDisplayText();
+        Integer rate = cmd.getRate();
+        Integer ceil = cmd.getCeil();
+        
+        //check the parameters
+        if(zoneId == null || name.isEmpty() || displayText.isEmpty()){
+            throw new InvalidParameterValueException("It need the parameters, like name, display etc.");
+        }
+        if(rate < 0 || ceil < 0){
+            throw new InvalidParameterValueException("The rate or ceil must more than zero.");
+        }
+        return createBandwidthOffering(zoneId, name, displayText, rate, ceil);
+        
     }
     
     //andrew ling add
     protected BandwidthOfferingVO createBandwidthOffering(Long zoneId, String name, String displayText, Integer rate, Integer ceil){
-    	BandwidthOfferingVO newBandwidthOffering = new BandwidthOfferingVO(zoneId, name, displayText, rate ,ceil);
-    	newBandwidthOffering.setCreated(new Date(-1l));
-    	CallContext.current().setEventDetails("bandwidth offering id=" + newBandwidthOffering.getId());
-    	BandwidthOfferingVO offering = _bandwidthOfferingDao.persist(newBandwidthOffering);
+        BandwidthOfferingVO newBandwidthOffering = new BandwidthOfferingVO(zoneId, name, displayText, rate ,ceil);
+        newBandwidthOffering.setCreated(new Date(-1l));
+        CallContext.current().setEventDetails("bandwidth offering id=" + newBandwidthOffering.getId());
+        BandwidthOfferingVO offering = _bandwidthOfferingDao.persist(newBandwidthOffering);
         if (offering != null) {
             CallContext.current().setEventDetails("Bandwidth offering id=" + newBandwidthOffering.getId());
             return offering;
@@ -5633,16 +5633,16 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_EDIT, eventDescription = "updating bandwidth offering")
     public BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd) throws ResourceUnavailableException {
-    	Long bandwidthOfferingId = cmd.getId();
-    	String updateName = cmd.getBandwidthOfferingName();
-		String updateDisplayText = cmd.getDisplayText();
-		Integer updateRate = cmd.getRate();
-		Integer updateCeil = cmd.getCeil();
-		if(updateRate < 0 || updateCeil < 0){
-			throw new InvalidParameterValueException("The rate or ceil must more than zero.");
-		}
-		// Check if bandwidthOffering exists
-		BandwidthOffering bandwidthOfferingHandle = _entityMgr.findById(BandwidthOffering.class, bandwidthOfferingId);
+        Long bandwidthOfferingId = cmd.getId();
+        String updateName = cmd.getBandwidthOfferingName();
+        String updateDisplayText = cmd.getDisplayText();
+        Integer updateRate = cmd.getRate();
+        Integer updateCeil = cmd.getCeil();
+        if(updateRate < 0 || updateCeil < 0){
+            throw new InvalidParameterValueException("The rate or ceil must more than zero.");
+        }
+        // Check if bandwidthOffering exists
+        BandwidthOffering bandwidthOfferingHandle = _entityMgr.findById(BandwidthOffering.class, bandwidthOfferingId);
 
         if (bandwidthOfferingHandle == null) {
             throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
@@ -5655,89 +5655,89 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         }
         //check if the rate or ceil changed.
         if(updateRate != null || updateCeil != null){
-        	if(updateRate == null){
-            	updateRate = bandwidthOfferingHandle.getRate();
+            if(updateRate == null){
+                updateRate = bandwidthOfferingHandle.getRate();
             }
             if(updateCeil == null){
-            	updateCeil = bandwidthOfferingHandle.getCeil();
+                updateCeil = bandwidthOfferingHandle.getCeil();
             }
             
             //rate or ceil changed, then refresh the bandwidth rules which used this bandwidth offering.
             BandwidthOfferingVO oldBandwidthOfferingVO = _bandwidthOfferingDao.findById(bandwidthOfferingId);
             if(!oldBandwidthOfferingVO.getRate().equals(updateRate) || !oldBandwidthOfferingVO.getCeil().equals(updateCeil)){
-            	
-            	if(oldBandwidthOfferingVO.getRate() < updateRate){
-            		//check the new parameter rate, if it has enough capacity.
-                	//find all the rules which used the offering, and count the bandwidth capacity
-            		List<BandwidthRulesVO> bandwidthRules = _bandwidthRulesDao.listByBandwidthOfferingId(cmd.getId());
-            		Map<Long, Integer> addInRulesClassStatistics = new HashMap<Long, Integer>();
-            		Map<Long, Integer> addOutRulesClassStatistics = new HashMap<Long, Integer>();
-            		//统计各类别增加的总量
-            		//统计每个类别还可以使用的总量
-            		//比较两个总量，超出可用容量，就抛出错误。
-            		int addCapatity = updateRate - oldBandwidthOfferingVO.getRate();
-            		int addInRuleCapatitys = 0;
-            		int addOutRuleCapatitys = 0;
-            		for(BandwidthRulesVO bandwidthRule : bandwidthRules){
-            			if(bandwidthRule.getType().equals(BandwidthType.InTraffic)){
-            				addInRuleCapatitys += addCapatity;
-            				addInRulesClassStatistics.put(bandwidthRule.getBandwidthId(), addInRuleCapatitys);
-            			} else if (bandwidthRule.getType().equals(BandwidthType.OutTraffic)){
-            				addOutRuleCapatitys += addCapatity;
-            				addOutRulesClassStatistics.put(bandwidthRule.getBandwidthId(), addOutRuleCapatitys);
-            			} else {
-            				s_logger.error("The bandwidth only support two type: in traffic and out traffic");
-            				throw new CloudRuntimeException("The bandwidth only support two type: in traffic and out traffic.");
-            			}
-            		}
-            		if(addInRulesClassStatistics != null && !addInRulesClassStatistics.isEmpty()){
-            			for(Map.Entry<Long, Integer> entry : addInRulesClassStatistics.entrySet()){
-            				//type = InTraffic and bandwidth_id is same
-            				//get all the rule which match type = InTraffic and this bandwidth_id
-            				int bandwidthCapacity = 0;
-            				BandwidthVO bandwidthVO = _bandwidthDao.findById(entry.getKey());
-            				bandwidthCapacity = bandwidthVO.getInTraffic();
-            				List<BandwidthRulesVO> BandwidthRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(entry.getKey(), BandwidthType.InTraffic);
-            				int sumOfRuleUsed = 0;
-            				for(BandwidthRulesVO vo : BandwidthRulesList){
-            					sumOfRuleUsed += vo.getRate();
-            				}
-            				int nowSumOfRuleUsed = 0;
-            				nowSumOfRuleUsed = sumOfRuleUsed + entry.getValue();
-            				if(bandwidthCapacity < nowSumOfRuleUsed){
-            					s_logger.error("The parameter rate in the bandwidth offering is out of the bandwidth capacity.more "+ (nowSumOfRuleUsed-bandwidthCapacity) + "Kbit.");
-            					throw new InvalidParameterValueException("The parameter rate in the bandwidth offering is out of the bandwidth capacity.");
-            				}
-            			}
-            		}
-            		if(addOutRulesClassStatistics != null && !addOutRulesClassStatistics.isEmpty()){
-            			for(Map.Entry<Long, Integer> entry : addOutRulesClassStatistics.entrySet()){
-            				//type = OutTraffic and bandwidth_id is same
-            				//get all the rule which match type = OutTraffic and this bandwidth_id
-            				int bandwidthCapacity = 0;
-            				BandwidthVO bandwidthVO = _bandwidthDao.findById(entry.getKey());
-            				bandwidthCapacity = bandwidthVO.getInTraffic();
-            				List<BandwidthRulesVO> BandwidthRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(entry.getKey(), BandwidthType.OutTraffic);
-            				int sumOfRuleUsed = 0;
-            				for(BandwidthRulesVO vo : BandwidthRulesList){
-            					sumOfRuleUsed += vo.getRate();
-            				}
-            				int nowSumOfRuleUsed = 0;
-            				nowSumOfRuleUsed = sumOfRuleUsed + entry.getValue();
-            				if(bandwidthCapacity < nowSumOfRuleUsed){
-            					s_logger.error("The parameter rate in the bandwidth offering is out of the bandwidth capacity.more "+ (nowSumOfRuleUsed-bandwidthCapacity) + "Kbit.");
-            					throw new InvalidParameterValueException("The parameter rate in the bandwidth offering is out of the bandwidth capacity.");
-            				}
-            			}
-            		}
-            	}
-            	
-            	//go to re-execute the bandwidth rules which used this bandwidth offering.
-            	boolean refreshRulesOK = _bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
-            	if(!refreshRulesOK){
-            		s_logger.error("When update the bandwidth offering, there are run wrong in refresh the bandwidth rule part. ");
-            		throw new CloudRuntimeException("When update the bandwidth offering , It run wrong.");
-            	}
+                
+                if(oldBandwidthOfferingVO.getRate() < updateRate){
+                    //check the new parameter rate, if it has enough capacity.
+                    //find all the rules which used the offering, and count the bandwidth capacity
+                    List<BandwidthRulesVO> bandwidthRules = _bandwidthRulesDao.listByBandwidthOfferingId(cmd.getId());
+                    Map<Long, Integer> addInRulesClassStatistics = new HashMap<Long, Integer>();
+                    Map<Long, Integer> addOutRulesClassStatistics = new HashMap<Long, Integer>();
+                    //统计各类别增加的总量
+                    //统计每个类别还可以使用的总量
+                    //比较两个总量，超出可用容量，就抛出错误。
+                    int addCapatity = updateRate - oldBandwidthOfferingVO.getRate();
+                    int addInRuleCapatitys = 0;
+                    int addOutRuleCapatitys = 0;
+                    for(BandwidthRulesVO bandwidthRule : bandwidthRules){
+                        if(bandwidthRule.getType().equals(BandwidthType.InTraffic)){
+                            addInRuleCapatitys += addCapatity;
+                            addInRulesClassStatistics.put(bandwidthRule.getBandwidthId(), addInRuleCapatitys);
+                        } else if (bandwidthRule.getType().equals(BandwidthType.OutTraffic)){
+                            addOutRuleCapatitys += addCapatity;
+                            addOutRulesClassStatistics.put(bandwidthRule.getBandwidthId(), addOutRuleCapatitys);
+                        } else {
+                            s_logger.error("The bandwidth only support two type: in traffic and out traffic");
+                            throw new CloudRuntimeException("The bandwidth only support two type: in traffic and out traffic.");
+                        }
+                    }
+                    if(addInRulesClassStatistics != null && !addInRulesClassStatistics.isEmpty()){
+                        for(Map.Entry<Long, Integer> entry : addInRulesClassStatistics.entrySet()){
+                            //type = InTraffic and bandwidth_id is same
+                            //get all the rule which match type = InTraffic and this bandwidth_id
+                            int bandwidthCapacity = 0;
+                            BandwidthVO bandwidthVO = _bandwidthDao.findById(entry.getKey());
+                            bandwidthCapacity = bandwidthVO.getInTraffic();
+                            List<BandwidthRulesVO> BandwidthRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(entry.getKey(), BandwidthType.InTraffic);
+                            int sumOfRuleUsed = 0;
+                            for(BandwidthRulesVO vo : BandwidthRulesList){
+                                sumOfRuleUsed += vo.getRate();
+                            }
+                            int nowSumOfRuleUsed = 0;
+                            nowSumOfRuleUsed = sumOfRuleUsed + entry.getValue();
+                            if(bandwidthCapacity < nowSumOfRuleUsed){
+                                s_logger.error("The parameter rate in the bandwidth offering is out of the bandwidth capacity.more "+ (nowSumOfRuleUsed-bandwidthCapacity) + "Kbit.");
+                                throw new InvalidParameterValueException("The parameter rate in the bandwidth offering is out of the bandwidth capacity.");
+                            }
+                        }
+                    }
+                    if(addOutRulesClassStatistics != null && !addOutRulesClassStatistics.isEmpty()){
+                        for(Map.Entry<Long, Integer> entry : addOutRulesClassStatistics.entrySet()){
+                            //type = OutTraffic and bandwidth_id is same
+                            //get all the rule which match type = OutTraffic and this bandwidth_id
+                            int bandwidthCapacity = 0;
+                            BandwidthVO bandwidthVO = _bandwidthDao.findById(entry.getKey());
+                            bandwidthCapacity = bandwidthVO.getInTraffic();
+                            List<BandwidthRulesVO> BandwidthRulesList = _bandwidthRulesDao.listByBandwidthIdAndType(entry.getKey(), BandwidthType.OutTraffic);
+                            int sumOfRuleUsed = 0;
+                            for(BandwidthRulesVO vo : BandwidthRulesList){
+                                sumOfRuleUsed += vo.getRate();
+                            }
+                            int nowSumOfRuleUsed = 0;
+                            nowSumOfRuleUsed = sumOfRuleUsed + entry.getValue();
+                            if(bandwidthCapacity < nowSumOfRuleUsed){
+                                s_logger.error("The parameter rate in the bandwidth offering is out of the bandwidth capacity.more "+ (nowSumOfRuleUsed-bandwidthCapacity) + "Kbit.");
+                                throw new InvalidParameterValueException("The parameter rate in the bandwidth offering is out of the bandwidth capacity.");
+                            }
+                        }
+                    }
+                }
+                
+                //go to re-execute the bandwidth rules which used this bandwidth offering.
+                boolean refreshRulesOK = _bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
+                if(!refreshRulesOK){
+                    s_logger.error("When update the bandwidth offering, there are run wrong in refresh the bandwidth rule part. ");
+                    throw new CloudRuntimeException("When update the bandwidth offering , It run wrong.");
+                }
             }
             
         }
@@ -5746,19 +5746,19 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.createForUpdate(bandwidthOfferingId);
 
         if (updateName != null) {
-        	bandwidthOffering.setName(updateName);
+            bandwidthOffering.setName(updateName);
         }
 
         if (updateDisplayText != null) {
-        	bandwidthOffering.setDisplayText(updateDisplayText);
+            bandwidthOffering.setDisplayText(updateDisplayText);
         }
         
         if (updateRate != null) {
-        	bandwidthOffering.setRate(updateRate);
+            bandwidthOffering.setRate(updateRate);
         }
         
         if (updateCeil != null) {
-        	bandwidthOffering.setCeil(updateCeil);
+            bandwidthOffering.setCeil(updateCeil);
         }
         
         if (_bandwidthOfferingDao.update(bandwidthOfferingId, bandwidthOffering)) {
@@ -5774,26 +5774,26 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_DELETE, eventDescription = "deleting bandwidth offering")
     public boolean deleteBandwidthOffering(DeleteBandwidthOfferingCmd cmd) {
-    	Long bandwidthOfferingId = cmd.getId();
-    	BandwidthOfferingVO offering = _bandwidthOfferingDao.findById(bandwidthOfferingId);
-    	
-    	if (offering == null){
-    		throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
-    	}
-    	
-    	List<BandwidthRulesVO> rules = _bandwidthRulesDao.listByBandwidthOfferingId(bandwidthOfferingId);
-    	if(!rules.isEmpty()){
-    		throw new InvalidParameterValueException("Unable to delete the bandwidth offering by id " + bandwidthOfferingId + ", because it was used.");
-    	}
-    	
-    	offering.setState(BandwidthOfferingState.Inactive);
-    	offering.setRemoved(new Date(-1l));
-    	if(_bandwidthOfferingDao.update(bandwidthOfferingId, offering)){
-    		CallContext.current().setEventDetails("Disk offering id=" + bandwidthOfferingId);
+        Long bandwidthOfferingId = cmd.getId();
+        BandwidthOfferingVO offering = _bandwidthOfferingDao.findById(bandwidthOfferingId);
+        
+        if (offering == null){
+            throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
+        }
+        
+        List<BandwidthRulesVO> rules = _bandwidthRulesDao.listByBandwidthOfferingId(bandwidthOfferingId);
+        if(!rules.isEmpty()){
+            throw new InvalidParameterValueException("Unable to delete the bandwidth offering by id " + bandwidthOfferingId + ", because it was used.");
+        }
+        
+        offering.setState(BandwidthOfferingState.Inactive);
+        offering.setRemoved(new Date(-1l));
+        if(_bandwidthOfferingDao.update(bandwidthOfferingId, offering)){
+            CallContext.current().setEventDetails("Disk offering id=" + bandwidthOfferingId);
             return true;
-    	} else {
-    		return false;
-    	}
+        } else {
+            return false;
+        }
     }
     
 }

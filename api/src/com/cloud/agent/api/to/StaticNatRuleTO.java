@@ -32,14 +32,14 @@ public class StaticNatRuleTO extends FirewallRuleTO {
     Boolean isMultiline;
     
     public Boolean IsMultiline() {
-		return isMultiline;
-	}
+        return isMultiline;
+    }
 
-	public String getMultilineLabelSeq() {
-		return multilineLabelSeq;
-	}
+    public String getMultilineLabelSeq() {
+        return multilineLabelSeq;
+    }
 
-	protected StaticNatRuleTO() {
+    protected StaticNatRuleTO() {
     }
 
     public StaticNatRuleTO(StaticNatRule rule, String srcVlanTag, String srcIp, String dstIp) {

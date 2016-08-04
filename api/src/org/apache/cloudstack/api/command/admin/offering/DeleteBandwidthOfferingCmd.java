@@ -13,7 +13,7 @@ import com.cloud.user.Account;
 
 @APICommand(name = "deleteBandwidthOffering", description="Updates a bandwidth offering.", responseObject=SuccessResponse.class)
 public class DeleteBandwidthOfferingCmd extends BaseCmd {
-	public static final Logger s_logger = Logger.getLogger(DeleteBandwidthOfferingCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(DeleteBandwidthOfferingCmd.class.getName());
     private static final String s_name = "deletebandwidthofferingresponse";
 
     /////////////////////////////////////////////////////
@@ -37,27 +37,27 @@ public class DeleteBandwidthOfferingCmd extends BaseCmd {
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-	
-	
-	@Override
-	public void execute() {
-		boolean result = _configService.deleteBandwidthOffering(this);
-		if (result) {
-			SuccessResponse response = new SuccessResponse(getCommandName());
+    
+    
+    @Override
+    public void execute() {
+        boolean result = _configService.deleteBandwidthOffering(this);
+        if (result) {
+            SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
-		} else {
+        } else {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete bandwidth offering");
         }
-	}
+    }
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		return Account.ACCOUNT_ID_SYSTEM;
-	}
+    @Override
+    public long getEntityOwnerId() {
+        return Account.ACCOUNT_ID_SYSTEM;
+    }
 
 }

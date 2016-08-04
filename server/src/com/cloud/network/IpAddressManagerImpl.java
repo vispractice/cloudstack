@@ -2074,7 +2074,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
     @Override
     public IpAddress allocateIp(final Account ipOwner, final boolean isSystem, Account caller, long callerUserId, final DataCenter zone,final String multilineLabel, final Boolean displayIp) throws ConcurrentOperationException,
         ResourceAllocationException, InsufficientAddressCapacityException {
-    	
+        
         final VlanType vlanType = VlanType.VirtualNetwork;
         final boolean assign = false;
 
@@ -2189,7 +2189,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                 sc.setParameters("dc", dcId);
                 
                 if (multilineLabel != null &&  !multilineLabel.equals("")) {
-                	sc.setParameters("multilineLabel", multilineLabel);
+                    sc.setParameters("multilineLabel", multilineLabel);
                     errorMessage.append(": requested multilineLabel " + multilineLabel + " is not available");
                 }
 
@@ -2230,7 +2230,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                         ex.addProxyObject(ApiDBUtils.findPodById(podId).getUuid());
                         throw ex;
                     }
-            		s_logger.warn(errorMessage.toString());
+                    s_logger.warn(errorMessage.toString());
                     InsufficientAddressCapacityException ex = new InsufficientAddressCapacityException("Insufficient address capacity", DataCenter.class, dcId);
                     ex.addProxyObject(ApiDBUtils.findZoneById(dcId).getUuid());
                     throw ex;
@@ -2285,18 +2285,18 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
     
     @Override
     public PublicIp assignSourceNatIpAddressToGuestNetwork(Account owner, Network guestNetwork, String multilineLabel) {
-    	PublicIp ipToReturn = null;
-    	try {
-    		    assert (guestNetwork.getTrafficType() != null) : "You're asking for a source nat but your network can't participate in source nat.  What do you have to say for yourself?";
-    		  
-				long dcId = guestNetwork.getDataCenterId();
-				IPAddressVO sourceNatIp = getExistMmultilineSourceNatInNetwork(owner.getId(), guestNetwork.getId(), multilineLabel);
-				
-				if (sourceNatIp != null) {
-					ipToReturn = PublicIp.createFromAddrAndVlan(sourceNatIp, _vlanDao.findById(sourceNatIp.getVlanId()));
-				} else {
-					ipToReturn = assignDedicateIpAddress(owner, guestNetwork.getId(), null, dcId, true,multilineLabel);
-				}
+        PublicIp ipToReturn = null;
+        try {
+                assert (guestNetwork.getTrafficType() != null) : "You're asking for a source nat but your network can't participate in source nat.  What do you have to say for yourself?";
+              
+                long dcId = guestNetwork.getDataCenterId();
+                IPAddressVO sourceNatIp = getExistMmultilineSourceNatInNetwork(owner.getId(), guestNetwork.getId(), multilineLabel);
+                
+                if (sourceNatIp != null) {
+                    ipToReturn = PublicIp.createFromAddrAndVlan(sourceNatIp, _vlanDao.findById(sourceNatIp.getVlanId()));
+                } else {
+                    ipToReturn = assignDedicateIpAddress(owner, guestNetwork.getId(), null, dcId, true,multilineLabel);
+                }
        } catch (ConcurrentOperationException e) {
              s_logger.error("Unable to get source nat ip address ", e);
        }catch (Exception e) {
@@ -2426,12 +2426,12 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
         
         //update by hai.li 2015.08.19
         if (!sharedSourceNat) {
-        	  /*if (getExistingSourceNatInNetwork(owner.getId(), networkId) == null) {
-	             if (network.getGuestType() == GuestType.Isolated && network.getVpcId() == null && !ipToAssoc.isPortable()) {
-	                isSourceNat = true;
-	            }
-        	  }*/
-    		 if (getExistMmultilineSourceNatInNetwork(owner.getId(), networkId, multilineLabel) == null) {
+              /*if (getExistingSourceNatInNetwork(owner.getId(), networkId) == null) {
+                 if (network.getGuestType() == GuestType.Isolated && network.getVpcId() == null && !ipToAssoc.isPortable()) {
+                    isSourceNat = true;
+                }
+              }*/
+             if (getExistMmultilineSourceNatInNetwork(owner.getId(), networkId, multilineLabel) == null) {
                  if (network.getGuestType() == GuestType.Isolated && network.getVpcId() == null && !ipToAssoc.isPortable()) {
                      isSourceNat = true;
                  }

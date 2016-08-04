@@ -11,14 +11,14 @@ import org.apache.log4j.Logger;
 
 @APICommand(name = "listBandwidthOfferings", description="Lists all available Bandwidth offerings.", responseObject=BandwidthOfferingResponse.class)
 public class ListBandwidthOfferingsCmd extends BaseListCmd {
-	public static final Logger s_logger = Logger.getLogger(ListBandwidthOfferingsCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(ListBandwidthOfferingsCmd.class.getName());
 
     private static final String s_name = "listbandwidthofferingsresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-	
+    
     @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = BandwidthOfferingResponse.class,
             description="ID of the bandwidth offering")
     private Long id;
@@ -34,29 +34,29 @@ public class ListBandwidthOfferingsCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     
     public Long getId() {
-		return id;
-	}
+        return id;
+    }
 
-	public String getBandwidthOfferingName() {
-		return bandwidthOfferingName;
-	}
-	
+    public String getBandwidthOfferingName() {
+        return bandwidthOfferingName;
+    }
+    
     public Long getZoneId() {
-		return zoneId;
-	}
-	/////////////////////////////////////////////////////
+        return zoneId;
+    }
+    /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
     @Override
-	public void execute() {
-    	ListResponse<BandwidthOfferingResponse> response = _queryService.searchForBandwidthOfferings(this);
+    public void execute() {
+        ListResponse<BandwidthOfferingResponse> response = _queryService.searchForBandwidthOfferings(this);
         response.setResponseName(getCommandName());
         this.setResponseObject(response);
-	}
+    }
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
-	
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
+    
 }

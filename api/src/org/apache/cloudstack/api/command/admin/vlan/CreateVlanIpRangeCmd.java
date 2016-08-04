@@ -236,11 +236,11 @@ public class CreateVlanIpRangeCmd extends BaseCmd {
         }
     }
 
-	public String getMultilineLabel() {
-		return multilineLabel;
-	}
+    public String getMultilineLabel() {
+        return multilineLabel;
+    }
 
-	public void setMultilineLabel(String multilineLabel) {
-		this.multilineLabel = multilineLabel;
-	}
+    public void setMultilineLabel(String multilineLabel) {
+        this.multilineLabel = multilineLabel;
+    }
 }

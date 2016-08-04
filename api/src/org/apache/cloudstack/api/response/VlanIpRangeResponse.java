@@ -216,16 +216,16 @@ public class VlanIpRangeResponse extends BaseResponse implements ControlledEntit
         this.ip6Gateway = ip6Gateway;
     }
 
-	public void setIp6Cidr(String ip6Cidr) {
-		this.ip6Cidr = ip6Cidr;
-	}
+    public void setIp6Cidr(String ip6Cidr) {
+        this.ip6Cidr = ip6Cidr;
+    }
 
-	public String getMultilineLabel() {
-		return multilineLabel;
-	}
+    public String getMultilineLabel() {
+        return multilineLabel;
+    }
 
-	public void setMultilineLabel(String multilineLabel) {
-		this.multilineLabel = multilineLabel;
-	}
-	
+    public void setMultilineLabel(String multilineLabel) {
+        this.multilineLabel = multilineLabel;
+    }
+    
 }

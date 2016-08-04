@@ -290,12 +290,12 @@ public class AssociateIPAddrCmd extends BaseAsyncCreateCmd {
             IpAddress ip = null;
 
             if (!isPortable()) {
-            	//andrew ling add fix the conflict about the same function but had different parameter in the same place.
-            	ip = _networkService.allocateIP(_accountService.getAccount(getEntityOwnerId()),  getZoneId(), getNetworkId(),getMultilineLabel(), getDisplayIp());
+                //andrew ling add fix the conflict about the same function but had different parameter in the same place.
+                ip = _networkService.allocateIP(_accountService.getAccount(getEntityOwnerId()),  getZoneId(), getNetworkId(),getMultilineLabel(), getDisplayIp());
 //                ip = _networkService.allocateIP(_accountService.getAccount(getEntityOwnerId()), getZoneId(), getNetworkId(), getDisplayIp());
             } else {
                 //ip = _networkService.allocatePortableIP(_accountService.getAccount(getEntityOwnerId()), 1, getZoneId(), getNetworkId(), getVpcId());
-            	ip = _networkService.allocatePortableIP(_accountService.getAccount(getEntityOwnerId()), 1, getZoneId(), getNetworkId(), getVpcId(), getMultilineLabel());
+                ip = _networkService.allocatePortableIP(_accountService.getAccount(getEntityOwnerId()), 1, getZoneId(), getNetworkId(), getVpcId(), getMultilineLabel());
             }
 
             if (ip != null) {
@@ -324,7 +324,7 @@ public class AssociateIPAddrCmd extends BaseAsyncCreateCmd {
             result = _vpcService.associateIPToVpc(getEntityId(), getVpcId());
         } else if (getNetworkId() != null) {
              //result = _networkService.associateIPToNetwork(getEntityId(), getNetworkId());
-        	 result = _networkService.associateIPToNetwork(getEntityId(), getNetworkId(),getMultilineLabel());
+             result = _networkService.associateIPToNetwork(getEntityId(), getNetworkId(),getMultilineLabel());
         }
 
         if (result != null) {
@@ -351,12 +351,12 @@ public class AssociateIPAddrCmd extends BaseAsyncCreateCmd {
         return ApiCommandJobType.IpAddress;
     }
 
-	public String getMultilineLabel() {
-		return multilineLabel;
-	}
+    public String getMultilineLabel() {
+        return multilineLabel;
+    }
 
-	public void setMultilineLabel(String multilineLabel) {
-		this.multilineLabel = multilineLabel;
-	}
+    public void setMultilineLabel(String multilineLabel) {
+        this.multilineLabel = multilineLabel;
+    }
 
 }

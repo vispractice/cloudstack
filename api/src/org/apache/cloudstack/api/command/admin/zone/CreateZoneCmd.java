@@ -151,10 +151,10 @@ public class CreateZoneCmd extends BaseCmd {
     }
 
     public Boolean getPublicServiceInSGEnabled(){
-    	  if(publicServiceInSGEnabled == null){
-    		  return false;
-    	 }
-    	  return publicServiceInSGEnabled;
+          if(publicServiceInSGEnabled == null){
+              return false;
+         }
+          return publicServiceInSGEnabled;
     }
     public Boolean getLocalStorageEnabled() {
         if (localStorageEnabled == null) {

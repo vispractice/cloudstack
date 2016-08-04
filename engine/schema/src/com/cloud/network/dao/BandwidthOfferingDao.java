@@ -6,5 +6,5 @@ import com.cloud.offering.BandwidthOffering.BandwidthOfferingState;
 import com.cloud.utils.db.GenericDao;
 
 public interface BandwidthOfferingDao extends GenericDao<BandwidthOfferingVO, Long> {
-	List<BandwidthOfferingVO> listByState(BandwidthOfferingState state);
+    List<BandwidthOfferingVO> listByState(BandwidthOfferingState state);
 }

@@ -135,13 +135,13 @@ public class IpAddressTO {
         return networkRate;
     }
 
-	public int getDeviceId() {
-		return deviceId;
-	}
+    public int getDeviceId() {
+        return deviceId;
+    }
 
-	public void setDeviceId(int deviceId) {
-		this.deviceId = deviceId;
-	}
+    public void setDeviceId(int deviceId) {
+        this.deviceId = deviceId;
+    }
 
     public Integer getNicDevId() {
         return nicDevId;

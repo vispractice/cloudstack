@@ -113,7 +113,7 @@ public class PortableIpDaoImpl extends GenericDaoBase<PortableIpVO, Long> implem
         sc.setParameters("regionId", regionId);
         sc.setParameters("state", state);
         if(multilineLabel !=null && !multilineLabel.equals("")){
-        	sc.setParameters("multilineLabel", multilineLabel);
+            sc.setParameters("multilineLabel", multilineLabel);
         }
         return listBy(sc);
     }

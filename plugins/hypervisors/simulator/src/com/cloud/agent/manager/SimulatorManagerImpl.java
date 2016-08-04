@@ -419,9 +419,9 @@ public class SimulatorManagerImpl extends ManagerBase implements SimulatorManage
                         cmd instanceof SecStorageFirewallCfgCommand) {
                     answer = new Answer(cmd);
                 }  else if (cmd instanceof SetMultilineRouteCommand) {
-            		return _mockNetworkMgr.setMultilineRoute((SetMultilineRouteCommand) cmd);
+                    return _mockNetworkMgr.setMultilineRoute((SetMultilineRouteCommand) cmd);
                 }  else if (cmd instanceof SetBandwidthRulesCommand) {
-            		return _mockNetworkMgr.SetBandwidthRules((SetBandwidthRulesCommand) cmd);
+                    return _mockNetworkMgr.SetBandwidthRules((SetBandwidthRulesCommand) cmd);
                 } else {
                     s_logger.error("Simulator does not implement command of type " + cmd.toString());
                     answer = Answer.createUnsupportedCommandAnswer(cmd);

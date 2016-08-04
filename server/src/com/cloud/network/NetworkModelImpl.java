@@ -287,20 +287,20 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
                             services.add(Service.SourceNat);
                             networkSNAT.add(ip.getAssociatedWithNetworkId());
                         } else {
-                        	//update by hai.li 2015.08.19
-                        	Set<String> networkGW = new HashSet<String>();
+                            //update by hai.li 2015.08.19
+                            Set<String> networkGW = new HashSet<String>();
                             boolean checkGW = Boolean.TRUE;
-                    		String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-                        	if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
-                        		if(!networkGW.contains(ip.getGateway())){
-                        			services.add(Service.SourceNat);
-                            		networkGW.add(ip.getGateway());
-                            		checkGW = Boolean.FALSE;
-                            	} 
-                        	} 
-                        	
-                        	if(checkGW){
-                        		CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
+                            String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+                            if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
+                                if(!networkGW.contains(ip.getGateway())){
+                                    services.add(Service.SourceNat);
+                                    networkGW.add(ip.getGateway());
+                                    checkGW = Boolean.FALSE;
+                                } 
+                            } 
+                            
+                            if(checkGW){
+                                CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
                                 // see the IPAddressVO.java class.
                                 IPAddressVO ipAddr = ApiDBUtils.findIpAddressById(ip.getAssociatedWithNetworkId());
                                 String ipAddrUuid = ip.getAssociatedWithNetworkId().toString();
@@ -309,7 +309,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
                                 }
                                 ex.addProxyObject(ipAddrUuid, "networkId");
                                 throw ex;
-                        	}
+                            }
                         }
                     }
                     ipToServices.put(ip, services);
@@ -1080,7 +1080,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
         List<NetworkOfferingServiceMapVO> map = _ntwkOfferingSrvcDao.listByNetworkOfferingId(networkOfferingId);
 
         for (NetworkOfferingServiceMapVO instance : map) {
-        	String service = instance.getService();
+            String service = instance.getService();
             Set<Provider> providers;
             providers = serviceProviderMap.get(Service.getService(service));
             if (providers == null) {
@@ -2295,9 +2295,9 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
         }
     }
     
-  	@Override
-	public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long associatedNetworkId, Boolean sourceNat, String multilineLabel) {
-		SearchCriteria<IPAddressVO> sc = IpAddressSearch.create();
+      @Override
+    public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long associatedNetworkId, Boolean sourceNat, String multilineLabel) {
+        SearchCriteria<IPAddressVO> sc = IpAddressSearch.create();
         sc.setParameters("associatedWithNetworkId", associatedNetworkId);
         sc.setParameters("multilineLabel", multilineLabel);
         if (sourceNat != null) {
@@ -2305,10 +2305,10 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
         }
         sc.setJoinParameters("virtualNetworkVlanSB", "vlanType", VlanType.VirtualNetwork);
         return _ipAddressDao.search(sc, null);
-	}
-  	
-  	@Override
-  	public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long accountId, long associatedNetworkId, Boolean sourceNat,String multilineLabel) {
+    }
+      
+      @Override
+      public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long accountId, long associatedNetworkId, Boolean sourceNat,String multilineLabel) {
           SearchCriteria<IPAddressVO> sc = IpAddressSearch.create();
           sc.setParameters("accountId", accountId);
           sc.setParameters("associatedWithNetworkId", associatedNetworkId);
@@ -2318,7 +2318,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
           }
           sc.setJoinParameters("virtualNetworkVlanSB", "vlanType", VlanType.VirtualNetwork);
           return _ipAddressDao.search(sc, null);
-  	}
+      }
 
     @Override
     public List<String[]> generateVmData(String userData, String serviceOffering, String zoneName,

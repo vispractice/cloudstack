@@ -15,7 +15,7 @@ import com.cloud.user.Account;
 
 @APICommand(name = "updateBandwidthOffering", description="Updates a bandwidth offering.", responseObject=BandwidthOfferingResponse.class)
 public class UpdateBandwidthOfferingCmd extends BaseCmd{
-	public static final Logger s_logger = Logger.getLogger(UpdateBandwidthOfferingCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(UpdateBandwidthOfferingCmd.class.getName());
     private static final String s_name = "updatebandwidthofferingresponse";
 
     /////////////////////////////////////////////////////
@@ -34,57 +34,57 @@ public class UpdateBandwidthOfferingCmd extends BaseCmd{
     
     @Parameter(name=ApiConstants.BANDWIDTH_RATE, type=CommandType.INTEGER, description="the rate of the bandwidth offering in Kbit.")
     private Integer rate;
-	
-	@Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, description="the ceil of the bandwidth offering in Kbit.")
+    
+    @Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, description="the ceil of the bandwidth offering in Kbit.")
     private Integer ceil;
-	
-	/////////////////////////////////////////////////////
-	/////////////////// Accessors ///////////////////////
-	/////////////////////////////////////////////////////
+    
+    /////////////////////////////////////////////////////
+    /////////////////// Accessors ///////////////////////
+    /////////////////////////////////////////////////////
 
-	public String getDisplayText() {
-		return displayText;
-	}
+    public String getDisplayText() {
+        return displayText;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public String getBandwidthOfferingName() {
-		return bandwidthOfferingName;
-	}
+    public String getBandwidthOfferingName() {
+        return bandwidthOfferingName;
+    }
 
-	public Integer getRate() {
-		return rate;
-	}
+    public Integer getRate() {
+        return rate;
+    }
 
-	public Integer getCeil() {
-		return ceil;
-	}
-	
-	/////////////////////////////////////////////////////
-	/////////////// API Implementation///////////////////
-	/////////////////////////////////////////////////////
-	
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    public Integer getCeil() {
+        return ceil;
+    }
+    
+    /////////////////////////////////////////////////////
+    /////////////// API Implementation///////////////////
+    /////////////////////////////////////////////////////
+    
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		return Account.ACCOUNT_ID_SYSTEM;
-	}
-	
-	@Override
-	public void execute() throws ResourceUnavailableException {
-		BandwidthOffering result = _configService.updateBandwidthOffering(this);
-		if (result != null){
-			BandwidthOfferingResponse response = _responseGenerator.createBandwidthOfferingResponse(result);
+    @Override
+    public long getEntityOwnerId() {
+        return Account.ACCOUNT_ID_SYSTEM;
+    }
+    
+    @Override
+    public void execute() throws ResourceUnavailableException {
+        BandwidthOffering result = _configService.updateBandwidthOffering(this);
+        if (result != null){
+            BandwidthOfferingResponse response = _responseGenerator.createBandwidthOfferingResponse(result);
             response.setResponseName(getCommandName());
             this.setResponseObject(response);
-		} else {
+        } else {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update bandwidth offering");
         }
-	}
+    }
 }

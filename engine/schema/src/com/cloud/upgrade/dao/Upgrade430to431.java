@@ -69,7 +69,7 @@ public class Upgrade430to431 implements DbUpgrade {
     private void updateVlanUris(Connection conn) {
         s_logger.debug("updating vlan URIs");
         CloudRuntimeException thrown = null;
-    	PreparedStatement selectstatement = null;
+        PreparedStatement selectstatement = null;
         ResultSet results = null;
         try{
             selectstatement = conn.prepareStatement("SELECT id, vlan_id FROM `cloud`.`vlan` where vlan_id not like '%:%'");
@@ -82,7 +82,7 @@ public class Upgrade430to431 implements DbUpgrade {
                     continue;
                 }
                 String vlanUri = BroadcastDomainType.Vlan.toUri(vlan).toString();
-            	PreparedStatement updatestatement = conn.prepareStatement("update `cloud`.`vlan` set vlan_id=? where id=?");
+                PreparedStatement updatestatement = conn.prepareStatement("update `cloud`.`vlan` set vlan_id=? where id=?");
                 try {
                     updatestatement.setString(1, vlanUri);
                     updatestatement.setLong(2, id);
@@ -96,7 +96,7 @@ public class Upgrade430to431 implements DbUpgrade {
                         if(thrown == null) {
                             thrown =  new CloudRuntimeException("Unable to close update statement vlan URI " + vlanUri + " for vlan record " + id, e);
                         } //else don't obfuscate the original exception
-                	}
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -116,7 +116,7 @@ public class Upgrade430to431 implements DbUpgrade {
             }
             try {
                 if (selectstatement != null)
-                  	selectstatement.close();
+                      selectstatement.close();
             } catch (SQLException e) {
                 if(thrown == null) {
                     thrown = new CloudRuntimeException("Unable to update vlan URIs ", e);

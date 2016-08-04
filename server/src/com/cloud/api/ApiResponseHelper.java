@@ -404,14 +404,14 @@ public class ApiResponseHelper implements ResponseGenerator {
     //andrew ling add
     @Override
     public BandwidthOfferingResponse createBandwidthOfferingResponse(BandwidthOffering offering) {
-    	BandwidthOfferingResponse bandwidthOfferingResponse = new BandwidthOfferingResponse();
-    	bandwidthOfferingResponse.setId(offering.getUuid());
-    	bandwidthOfferingResponse.setName(offering.getName());
-    	bandwidthOfferingResponse.setDisplayText(offering.getDisplayText());
-    	bandwidthOfferingResponse.setRate(offering.getRate());
-    	bandwidthOfferingResponse.setCeil(offering.getCeil());
-    	bandwidthOfferingResponse.setCreated(offering.getCreated());
-    	bandwidthOfferingResponse.setObjectName("bandwidthoffering");
+        BandwidthOfferingResponse bandwidthOfferingResponse = new BandwidthOfferingResponse();
+        bandwidthOfferingResponse.setId(offering.getUuid());
+        bandwidthOfferingResponse.setName(offering.getName());
+        bandwidthOfferingResponse.setDisplayText(offering.getDisplayText());
+        bandwidthOfferingResponse.setRate(offering.getRate());
+        bandwidthOfferingResponse.setCeil(offering.getCeil());
+        bandwidthOfferingResponse.setCreated(offering.getCreated());
+        bandwidthOfferingResponse.setObjectName("bandwidthoffering");
         return bandwidthOfferingResponse;
     }
     
@@ -741,7 +741,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         ipResponse.setStaticNat(ipAddr.isOneToOneNat());
 
         if(!ipAddr.getMultilineLabel().isEmpty()){
-        	ipResponse.setMultilineLabel(ipAddr.getMultilineLabel());
+            ipResponse.setMultilineLabel(ipAddr.getMultilineLabel());
         }
         ipResponse.setIsDefaultStaticNat(ipAddr.getIsDefaultStaticNat());
         
@@ -3729,14 +3729,14 @@ public class ApiResponseHelper implements ResponseGenerator {
         return response;
     }
     
-	@Override
-	public MultilineResponse createMultilineResponse(Multiline result) {
-		MultilineResponse response = new MultilineResponse();
+    @Override
+    public MultilineResponse createMultilineResponse(Multiline result) {
+        MultilineResponse response = new MultilineResponse();
         response.setId(result.getUuid());
         response.setMultilineLabel(result.getLabel());
         response.setName(result.getName());
         return response;
-	}
+    }
 
     @Override
     public SSHKeyPairResponse createSSHKeyPairResponse(SSHKeyPair sshkeyPair, boolean privatekey) {

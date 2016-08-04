@@ -164,19 +164,19 @@ public class IPAddressVO implements IpAddress {
     }
     
     public  IPAddressVO(Ip address, long dataCenterId, Long networkId, Long vpcId, long physicalNetworkId, long sourceNetworkId,
-	            long vlanDbId, boolean portable, String multilineLabel, Boolean isDefaultStaticNat) {
-		this.address = address;
-		this.dataCenterId = dataCenterId;
-		this.associatedWithNetworkId = networkId;
-		this.vpcId = vpcId;
-		this.physicalNetworkId = physicalNetworkId;
-		this.sourceNetworkId = sourceNetworkId;
-		this.vlanId = vlanDbId;
-		this.portable = portable;
-		this.uuid = UUID.randomUUID().toString();
-		this.multilineLabel = multilineLabel;
-		this.isDefaultStaticNat = isDefaultStaticNat;
-	}
+                long vlanDbId, boolean portable, String multilineLabel, Boolean isDefaultStaticNat) {
+        this.address = address;
+        this.dataCenterId = dataCenterId;
+        this.associatedWithNetworkId = networkId;
+        this.vpcId = vpcId;
+        this.physicalNetworkId = physicalNetworkId;
+        this.sourceNetworkId = sourceNetworkId;
+        this.vlanId = vlanDbId;
+        this.portable = portable;
+        this.uuid = UUID.randomUUID().toString();
+        this.multilineLabel = multilineLabel;
+        this.isDefaultStaticNat = isDefaultStaticNat;
+    }
 
     public long getMacAddress() {
         return macAddress;
@@ -365,21 +365,21 @@ public class IPAddressVO implements IpAddress {
         return sourceNetworkId;
     }
     @Override
-	public String getMultilineLabel() {
-		return multilineLabel;
-	}
+    public String getMultilineLabel() {
+        return multilineLabel;
+    }
 
-	public void setMultilineLabel(String multilineLabel) {
-		this.multilineLabel = multilineLabel;
-	}
-	@Override
-	public Boolean getIsDefaultStaticNat() {
-		return isDefaultStaticNat;
-	}
+    public void setMultilineLabel(String multilineLabel) {
+        this.multilineLabel = multilineLabel;
+    }
+    @Override
+    public Boolean getIsDefaultStaticNat() {
+        return isDefaultStaticNat;
+    }
 
-	public void setIsDefaultStaticNat(Boolean isDefaultStaticNat) {
-		this.isDefaultStaticNat = isDefaultStaticNat;
-	}
+    public void setIsDefaultStaticNat(Boolean isDefaultStaticNat) {
+        this.isDefaultStaticNat = isDefaultStaticNat;
+    }
 
     @Override
     public boolean isDisplay() {

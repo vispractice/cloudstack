@@ -39,40 +39,40 @@ public class MultilineDaoImpl extends GenericDaoBase<MultilineVO, Long> implemen
     final SearchBuilder<MultilineVO> isDefaultSearch;
 
     protected MultilineDaoImpl() {
-    	super();
-    	labelSearch = createSearchBuilder();
-    	labelSearch.and("label", labelSearch.entity().getLabel(), Op.EQ);
-    	labelSearch.done();
-    	
-    	isDefaultSearch = createSearchBuilder();
-    	isDefaultSearch.and("isDefault", isDefaultSearch.entity().getIsDefault(), Op.EQ);
-    	isDefaultSearch.done();
+        super();
+        labelSearch = createSearchBuilder();
+        labelSearch.and("label", labelSearch.entity().getLabel(), Op.EQ);
+        labelSearch.done();
+        
+        isDefaultSearch = createSearchBuilder();
+        isDefaultSearch.and("isDefault", isDefaultSearch.entity().getIsDefault(), Op.EQ);
+        isDefaultSearch.done();
     }
     
-	@Override
-	public List<MultilineVO> getAllMultiline() {
-		  SearchCriteria<MultilineVO> sc = labelSearch.create();
-	      return listBy(sc);
-	}
+    @Override
+    public List<MultilineVO> getAllMultiline() {
+          SearchCriteria<MultilineVO> sc = labelSearch.create();
+          return listBy(sc);
+    }
 
-	@Override
-	public MultilineVO getMultilineByLabel(String label) {
-		  SearchCriteria<MultilineVO> sc = labelSearch.create();
-	      sc.setParameters("label", label);
-	      return findOneBy(sc);
-	}
+    @Override
+    public MultilineVO getMultilineByLabel(String label) {
+          SearchCriteria<MultilineVO> sc = labelSearch.create();
+          sc.setParameters("label", label);
+          return findOneBy(sc);
+    }
 
-	@Override
-	public MultilineVO getDefaultMultiline() {
-		  SearchCriteria<MultilineVO> sc = isDefaultSearch.create();
-	      sc.setParameters("isDefault", Boolean.TRUE);
-	      return findOneBy(sc);
-	}
+    @Override
+    public MultilineVO getDefaultMultiline() {
+          SearchCriteria<MultilineVO> sc = isDefaultSearch.create();
+          sc.setParameters("isDefault", Boolean.TRUE);
+          return findOneBy(sc);
+    }
 
-	@Override
-	public List<MultilineVO> getNoDefaultMultiline() {
-		 SearchCriteria<MultilineVO> sc = isDefaultSearch.create();
-	     sc.setParameters("isDefault", Boolean.FALSE);
-	     return search(sc, null);
-	}
+    @Override
+    public List<MultilineVO> getNoDefaultMultiline() {
+         SearchCriteria<MultilineVO> sc = isDefaultSearch.create();
+         sc.setParameters("isDefault", Boolean.FALSE);
+         return search(sc, null);
+    }
 }

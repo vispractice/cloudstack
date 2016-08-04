@@ -39,13 +39,13 @@ public class SetStaticNatRulesConfigItem extends AbstractConfigItemFacade {
 
         final LinkedList<StaticNatRule> rules = new LinkedList<>();
         for (final StaticNatRuleTO rule : command.getRules()) {
-        	if(rule.IsMultiline()){
+            if(rule.IsMultiline()){
                 final StaticNatRule staticNatRule = new StaticNatRule(rule.revoked(), rule.getProtocol(), rule.getSrcIp(), rule.getStringSrcPortRange(), rule.getDstIp(), rule.getMultilineLabelSeq());
                 rules.add(staticNatRule);
-        	} else {
+            } else {
                 final StaticNatRule staticNatRule = new StaticNatRule(rule.revoked(), rule.getProtocol(), rule.getSrcIp(), rule.getStringSrcPortRange(), rule.getDstIp(), "none");
                 rules.add(staticNatRule);
-        	}
+            }
         }
         final StaticNatRules staticNatRules = new StaticNatRules(rules);
 

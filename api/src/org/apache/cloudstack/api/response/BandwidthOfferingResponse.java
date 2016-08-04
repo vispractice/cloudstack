@@ -10,8 +10,8 @@ import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 @EntityReference(value=BandwidthOffering.class)
 public class BandwidthOfferingResponse extends BaseResponse {
-	//id, name, display_text, rate, ceil, created
-	@SerializedName("id") @Param(description="the id of the bandwidth offering")
+    //id, name, display_text, rate, ceil, created
+    @SerializedName("id") @Param(description="the id of the bandwidth offering")
     private String id;
 
     @SerializedName("name") @Param(description="the name of the bandwidth offering")
@@ -32,52 +32,52 @@ public class BandwidthOfferingResponse extends BaseResponse {
 //    @SerializedName("zoneId") @Param(description="the zone ID this bandwidth offering belong to. Ignore this information as it is not must need when all in the same zone.")
 //    private String zoneId;
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getDisplayText() {
-		return displayText;
-	}
+    public String getDisplayText() {
+        return displayText;
+    }
 
-	public void setDisplayText(String displayText) {
-		this.displayText = displayText;
-	}
+    public void setDisplayText(String displayText) {
+        this.displayText = displayText;
+    }
 
-	public Integer getRate() {
-		return rate;
-	}
+    public Integer getRate() {
+        return rate;
+    }
 
-	public void setRate(Integer rate) {
-		this.rate = rate;
-	}
+    public void setRate(Integer rate) {
+        this.rate = rate;
+    }
 
-	public Integer getCeil() {
-		return ceil;
-	}
+    public Integer getCeil() {
+        return ceil;
+    }
 
-	public void setCeil(Integer ceil) {
-		this.ceil = ceil;
-	}
+    public void setCeil(Integer ceil) {
+        this.ceil = ceil;
+    }
 
-	public Date getCreated() {
-		return created;
-	}
+    public Date getCreated() {
+        return created;
+    }
 
-	public void setCreated(Date created) {
-		this.created = created;
-	}
+    public void setCreated(Date created) {
+        this.created = created;
+    }
 
 }

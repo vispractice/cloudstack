@@ -234,24 +234,24 @@ public class PublicIp implements PublicIpAddress {
         return  _addr.getMacAddress();
     }
 
-	public boolean isDefault() {
-		return isDefault;
-	}
+    public boolean isDefault() {
+        return isDefault;
+    }
 
-	public void setDefault(boolean isDefault) {
-		this.isDefault = isDefault;
-	}
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
+    }
 
-	@Override
-	public String getMultilineLabel() {
-		return _addr.getMultilineLabel();
-	}
+    @Override
+    public String getMultilineLabel() {
+        return _addr.getMultilineLabel();
+    }
 
-	@Override
-	public Boolean getIsDefaultStaticNat() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public Boolean getIsDefaultStaticNat() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     @Override
     public boolean isDisplay() {

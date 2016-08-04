@@ -482,15 +482,15 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     
    /* @Override
     public IPAddressVO findByAssociatedVmIdAndPortableVmIp(long vmId, String vmIp,boolean isPortable,String vlanTag) {
-    	SearchCriteria<IPAddressVO> sc = portableSearchAllocated.create();
-    	sc.setParameters("associatedWithVmId", vmId);
+        SearchCriteria<IPAddressVO> sc = portableSearchAllocated.create();
+        sc.setParameters("associatedWithVmId", vmId);
         sc.setParameters("associatedVmIp", vmIp);
         sc.setParameters("portable", isPortable);
         sc.setJoinParameters("vlan", "vlanTag", vlanTag);
 
         List<IPAddressVO> ips = listBy(sc) ;
         if(ips != null && ips.size()>0){
-        	return ips.get(0);
+            return ips.get(0);
         }
         return null;
     }*/
@@ -517,71 +517,71 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     }
     
     @Override
-	public IPAddressVO findByIp(String ipAddress) {
-		SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+    public IPAddressVO findByIp(String ipAddress) {
+        SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
         sc.setParameters("ipAddress", ipAddress);
         return findOneBy(sc);
-	}
+    }
 
-	@Override
-	public List<IPAddressVO> listSourceNatPublicIps(long networkId,long vlanDbId, Boolean isSourceNat,State state) {
-		 SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
-	     sc.setParameters("network", networkId);
-	     sc.setParameters("vlan", vlanDbId);
-	     sc.setParameters("sourceNat", isSourceNat);
-	     sc.setParameters("state", state);
-	     return listBy(sc);
-	}
+    @Override
+    public List<IPAddressVO> listSourceNatPublicIps(long networkId,long vlanDbId, Boolean isSourceNat,State state) {
+         SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+         sc.setParameters("network", networkId);
+         sc.setParameters("vlan", vlanDbId);
+         sc.setParameters("sourceNat", isSourceNat);
+         sc.setParameters("state", state);
+         return listBy(sc);
+    }
 
-	@Override
-	public List<IPAddressVO> listStaticNatIps(long networkId, long vmId, Boolean isStaticNat) {
-		 SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
-		 sc.setParameters("network", networkId);
-	     sc.setParameters("associatedWithVmId", vmId);
-	     sc.setParameters("oneToOneNat", isStaticNat);
-	     Filter filter = new Filter(IPAddressVO.class, "isDefaultStaticNat", Boolean.FALSE, null, null);
-	     return search(sc, filter);
-	}
-	
-	@Override
-	public IPAddressVO findDefaultStaticNat(long networkId, long vmId, Boolean isDefaultStaticNat) {
-		 SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
-		 sc.setParameters("network", networkId);
-	     sc.setParameters("associatedWithVmId", vmId);
-	     sc.setParameters("oneToOneNat", Boolean.TRUE);
-	     sc.setParameters("isDefaultStaticNat", isDefaultStaticNat);
-	     List<IPAddressVO> ips = listBy(sc) ;
-	     
+    @Override
+    public List<IPAddressVO> listStaticNatIps(long networkId, long vmId, Boolean isStaticNat) {
+         SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+         sc.setParameters("network", networkId);
+         sc.setParameters("associatedWithVmId", vmId);
+         sc.setParameters("oneToOneNat", isStaticNat);
+         Filter filter = new Filter(IPAddressVO.class, "isDefaultStaticNat", Boolean.FALSE, null, null);
+         return search(sc, filter);
+    }
+    
+    @Override
+    public IPAddressVO findDefaultStaticNat(long networkId, long vmId, Boolean isDefaultStaticNat) {
+         SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+         sc.setParameters("network", networkId);
+         sc.setParameters("associatedWithVmId", vmId);
+         sc.setParameters("oneToOneNat", Boolean.TRUE);
+         sc.setParameters("isDefaultStaticNat", isDefaultStaticNat);
+         List<IPAddressVO> ips = listBy(sc) ;
+         
          if(ips != null && ips.size()>0){
-        	return ips.get(0);
+            return ips.get(0);
          }
          return null;
-	}
+    }
 
-	@Override
-	public IPAddressVO findByNetworkAndLine(long networkId, Boolean isSourceNat,String multilineLabel) {
-		SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+    @Override
+    public IPAddressVO findByNetworkAndLine(long networkId, Boolean isSourceNat,String multilineLabel) {
+        SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
         sc.setParameters("network", networkId);
         sc.setParameters("sourceNat", isSourceNat);
         sc.setParameters("multilineLabel", multilineLabel);
         return findOneBy(sc);
-	}
-	
-	/*@Override
-	public boolean updatePublicIPRange(long networkId,long vmId,int staticNatSeq) {
+    }
+    
+    /*@Override
+    public boolean updatePublicIPRange(long networkId,long vmId,int staticNatSeq) {
         String updateSql = "UPDATE `cloud`.`user_ip_address` set static_nat_seq=static_nat_seq-1 where one_to_one_nat=1 and network_id=? and vm_id=? and  static_nat_seq>? ";
         try {
-        	TransactionLegacy txn = TransactionLegacy.currentTxn();
-        	Connection conn = txn.getConnection();
-        	PreparedStatement stmt = conn.prepareStatement(updateSql);
-        	stmt.setLong(1, networkId);
+            TransactionLegacy txn = TransactionLegacy.currentTxn();
+            Connection conn = txn.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(updateSql);
+            stmt.setLong(1, networkId);
             stmt.setLong(2, vmId);
             stmt.setInt(3, staticNatSeq);
             stmt.executeUpdate();
             stmt.close();
         } catch (SQLException e) {
-        	s_logger.error("Failed to execute update ip address sql.",e);
-        	return false;
+            s_logger.error("Failed to execute update ip address sql.",e);
+            return false;
         }
         return true;
     }*/

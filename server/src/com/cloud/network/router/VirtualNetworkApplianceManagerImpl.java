@@ -381,9 +381,9 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
     @Inject
     MultilineDao _multilineLabelDao;
     @Inject
-	BandwidthDao _bandwidthDao;
+    BandwidthDao _bandwidthDao;
     @Inject
-	BandwidthRulesDao _bandwidthRulesDao;
+    BandwidthRulesDao _bandwidthRulesDao;
     @Inject
     BandwidthIPPortMapDao _bandwidthIPPortMapDao;
     
@@ -1768,41 +1768,41 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
      * @param profile
      */
     private void finalizeMultilineOnStrat(Commands cmds, VirtualMachineProfile profile){
-    	String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-    	if(isMultiline == null || !isMultiline.equalsIgnoreCase("true")){
-    		s_logger.info("This network doesn't multiline. " );
-        	return;
-    	}
-    	
-    	HashMap<String, HashMap<String, String>> routeRules = new HashMap<String, HashMap<String, String>>();
-    	
-    	SetMultilineRouteCommand setMultilineRouteCommand = new SetMultilineRouteCommand();
+        String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+        if(isMultiline == null || !isMultiline.equalsIgnoreCase("true")){
+            s_logger.info("This network doesn't multiline. " );
+            return;
+        }
+        
+        HashMap<String, HashMap<String, String>> routeRules = new HashMap<String, HashMap<String, String>>();
+        
+        SetMultilineRouteCommand setMultilineRouteCommand = new SetMultilineRouteCommand();
         for (NicProfile nic : profile.getNics()) {
             if (nic.getTrafficType() == TrafficType.Public) {
                  IPAddressVO ipAddressVO = _ipAddressDao.findByIp(nic.getIPv4Address());
-    			 if(ipAddressVO == null || ipAddressVO.getMultilineLabel() == null){
-    				 s_logger.error("Cannot find public ip : "+ nic.getIPv4Address()+" in userIpAddress.");
-    				 continue;
-    			 }
-    			 
-    			 MultilineVO multiline = _multilineLabelDao.getMultilineByLabel(ipAddressVO.getMultilineLabel());
-    			 if(multiline == null || multiline.getLabel() == null ){
-    				 throw new CloudRuntimeException("Cannot find multiline label : "+ multiline.getLabel()+" for userIpAddress.");
-    			 }
-    			 
-    			 if(nic.isDefaultNic()){
-     				setMultilineRouteCommand.setVRLabelToDefaultGateway(multiline.getLabel()+"-"+nic.getIPv4Gateway());
-     			 }
-    			 
-    			 HashMap<String, String> netmasks = new HashMap<String, String>();
-    			 String rules = multiline.getRouteRule().replaceAll(" ", "").replaceAll("\n", "");
-    			 netmasks.put(nic.getIPv4Gateway(),rules);
-     			 routeRules.put(multiline.getLabel(),netmasks);
-     			 
+                 if(ipAddressVO == null || ipAddressVO.getMultilineLabel() == null){
+                     s_logger.error("Cannot find public ip : "+ nic.getIPv4Address()+" in userIpAddress.");
+                     continue;
+                 }
+                 
+                 MultilineVO multiline = _multilineLabelDao.getMultilineByLabel(ipAddressVO.getMultilineLabel());
+                 if(multiline == null || multiline.getLabel() == null ){
+                     throw new CloudRuntimeException("Cannot find multiline label : "+ multiline.getLabel()+" for userIpAddress.");
+                 }
+                 
+                 if(nic.isDefaultNic()){
+                     setMultilineRouteCommand.setVRLabelToDefaultGateway(multiline.getLabel()+"-"+nic.getIPv4Gateway());
+                  }
+                 
+                 HashMap<String, String> netmasks = new HashMap<String, String>();
+                 String rules = multiline.getRouteRule().replaceAll(" ", "").replaceAll("\n", "");
+                 netmasks.put(nic.getIPv4Gateway(),rules);
+                  routeRules.put(multiline.getLabel(),netmasks);
+                  
             } else if (nic.getTrafficType() == TrafficType.Control) {
                  setMultilineRouteCommand.setAccessDetail(NetworkElementCommand.ROUTER_IP, nic.getIPv4Address());
             } else {
-            	s_logger.info("Cannot find nic traffic type : " + nic.getTrafficType());
+                s_logger.info("Cannot find nic traffic type : " + nic.getTrafficType());
             }
         }
         
@@ -1940,15 +1940,15 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
         //Andrew Ling,if the firewall egress rules did not get some one from the DB,it means that the VR not have the egress rules which 
         //set by the user,but it must want to be set the default firewall egress rule in the VR,which be determined by the VR network offering. 
         else {
-        	NetworkVO network = _networkDao.findById(guestNetworkId);
-        	NetworkOfferingVO offering =  _networkOfferingDao.findById(network.getNetworkOfferingId());
+            NetworkVO network = _networkDao.findById(guestNetworkId);
+            NetworkOfferingVO offering =  _networkOfferingDao.findById(network.getNetworkOfferingId());
             Boolean defaultEgressPolicy = offering.getEgressDefaultPolicy();
             if(defaultEgressPolicy){
-            	List<String> sourceCidr = new ArrayList<String>();
-            	sourceCidr.add(NetUtils.ALL_CIDRS);
-            	FirewallRule ruleVO = new FirewallRuleVO(null, null, null, null, "all", guestNetworkId, network.getAccountId(), network.getDomainId(), Purpose.Firewall, sourceCidr,
+                List<String> sourceCidr = new ArrayList<String>();
+                sourceCidr.add(NetUtils.ALL_CIDRS);
+                FirewallRule ruleVO = new FirewallRuleVO(null, null, null, null, "all", guestNetworkId, network.getAccountId(), network.getDomainId(), Purpose.Firewall, sourceCidr,
                         null, null, null, FirewallRule.TrafficType.Egress, FirewallRule.FirewallRuleType.System);
-            	firewallRulesEgress.add(ruleVO);
+                firewallRulesEgress.add(ruleVO);
                 _commandSetupHelper.createFirewallRulesCommands(firewallRulesEgress, router, cmds, guestNetworkId);
             }
         }
@@ -2073,25 +2073,25 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
         List<BandwidthRule> rulesList = new ArrayList<BandwidthRule>();
         List<BandwidthRulesVO> classRulesList = _bandwidthRulesDao.listByNetworksId(guestNetworkId);
         for(BandwidthRulesVO classRule : classRulesList){
-        	//reload the filter rules
-    		List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
-    		List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(classRule.getId());
-    		for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
-    			String ip = bandwidthIPPortMap.getIpAddress();
-    			String protocol = bandwidthIPPortMap.getProtocol();
-    			Integer startPort = bandwidthIPPortMap.getBandwidthPortStart();
-    			Integer endPort = bandwidthIPPortMap.getBandwidthPortEnd();
-    			boolean revoke = false;
-    			boolean alreadyAdded = false;
-    			BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, protocol, startPort, endPort, revoke, alreadyAdded);
-    			bandwidthFilterRules.add(bandwidthFilterRule);
-    		}
-    		
-    		BandwidthRule reapplyBandwidthRule = new BandwidthRule(classRule, bandwidthFilterRules);
-    		reapplyBandwidthRule.setClassRuleRevoked(false);
-    		reapplyBandwidthRule.setClassRuleKeepState(false);
-    		reapplyBandwidthRule.setClassRuleAlreadyAdded(false);
-    		rulesList.add(reapplyBandwidthRule);
+            //reload the filter rules
+            List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
+            List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(classRule.getId());
+            for(BandwidthIPPortMapVO bandwidthIPPortMap : bandwidthIPPortMapList){
+                String ip = bandwidthIPPortMap.getIpAddress();
+                String protocol = bandwidthIPPortMap.getProtocol();
+                Integer startPort = bandwidthIPPortMap.getBandwidthPortStart();
+                Integer endPort = bandwidthIPPortMap.getBandwidthPortEnd();
+                boolean revoke = false;
+                boolean alreadyAdded = false;
+                BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, protocol, startPort, endPort, revoke, alreadyAdded);
+                bandwidthFilterRules.add(bandwidthFilterRule);
+            }
+            
+            BandwidthRule reapplyBandwidthRule = new BandwidthRule(classRule, bandwidthFilterRules);
+            reapplyBandwidthRule.setClassRuleRevoked(false);
+            reapplyBandwidthRule.setClassRuleKeepState(false);
+            reapplyBandwidthRule.setClassRuleAlreadyAdded(false);
+            rulesList.add(reapplyBandwidthRule);
         }
         //build the commands
         createApplyBandwidthRulesCommands(rulesList, router, cmds, guestNetworkId);
@@ -2147,12 +2147,12 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
             // ignore the account id for the shared network
             userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(guestNetworkId, null);
         } else {
-        	//andrew ling add multilines part.
-        	String isMultilines = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+            //andrew ling add multilines part.
+            String isMultilines = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
             if(!isMultilines.isEmpty() && isMultilines.equalsIgnoreCase("true")){
-            	userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null);
+                userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null);
             } else {
-            	userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null ,_multilineLabelDao.getDefaultMultiline().getLabel());
+                userIps = _networkModel.listPublicIpsAssignedToGuestNtwk(ownerId, guestNetworkId, null ,_multilineLabelDao.getDefaultMultiline().getLabel());
             }
         }
 
@@ -2795,24 +2795,24 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
     }
 
     //andrew ling add
-	@Override
-	public boolean applyBandwidthRules(Network network, final List<? extends BandwidthRule> rules, List<? extends VirtualRouter> routers) throws ResourceUnavailableException {
+    @Override
+    public boolean applyBandwidthRules(Network network, final List<? extends BandwidthRule> rules, List<? extends VirtualRouter> routers) throws ResourceUnavailableException {
         s_logger.debug("APPLYING BANDWIDTH RULES");
-		if (rules == null || rules.isEmpty()) {
+        if (rules == null || rules.isEmpty()) {
             s_logger.debug("No bandwidth rules to be applied for network " + network.getId());
             return true;
         }
-		
+        
         if (routers.isEmpty()) {
             s_logger.warn("Unable to apply bandwidth rules, virtual router doesn't exist in the network " + network.getId());
             throw new ResourceUnavailableException("Unable to apply bandwidth rules.", DataCenter.class, network.getDataCenterId());
         }
-		
+        
         boolean result = true;
         for (final VirtualRouter router : routers) {
             if (router.getState() == State.Running) {
-            	
-            	result = result && applyBandwidthRule(router, rules, network.getId());
+                
+                result = result && applyBandwidthRule(router, rules, network.getId());
             
             } else if (router.getState() == State.Stopped || router.getState() == State.Stopping) {
                 s_logger.debug("Router " + router.getInstanceName() + " is in " + router.getState() + ", so not sending bandwidth rules command to the backend");
@@ -2823,78 +2823,78 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
                         router.getDataCenterId());
             }
         }
-		return result;
-	}
-	
+        return result;
+    }
+    
     //andrew ling add
-	protected boolean applyBandwidthRule(VirtualRouter router, List<? extends BandwidthRule> rules, long guestNetworkId) throws ResourceUnavailableException {
+    protected boolean applyBandwidthRule(VirtualRouter router, List<? extends BandwidthRule> rules, long guestNetworkId) throws ResourceUnavailableException {
         Commands cmds = new Commands(Command.OnError.Continue);
         createApplyBandwidthRulesCommands(rules, router, cmds, guestNetworkId);
         return _nwHelper.sendCommandsToRouter(router, cmds);
     }
-	
+    
     //andrew ling add
-	private void createApplyBandwidthRulesCommands(List<? extends BandwidthRule> rules, VirtualRouter router, Commands cmds, long guestNetworkId) {
-		List<BandwidthRuleTO> rulesTO = null;
-		if (rules != null) {
-			rulesTO = new ArrayList<BandwidthRuleTO>();
-			// 组合RuleTO数据里面的嵌套FilterTO数据,根据bandwidth_rules_id查询数据表bandwidth_ip_port_map获取这个id之下的所以filter数据信息
-			// 组合command里面的RuleTO数据
-			// 组合command
-			for (BandwidthRule rule : rules) {
-				int deviceId = -1;
-				// need to find device id by the IP when the type is out traffic
-				if (rule.getType().equals(BandwidthType.OutTraffic)) {
-					Long bandwidthId = rule.getBandwidthId();
-					BandwidthVO bandwidthVO = _bandwidthDao.findById(bandwidthId);
-					Long multilineId = bandwidthVO.getMultilineId();
-					String mutilineLabel = _multilineLabelDao.findById(multilineId).getLabel();
+    private void createApplyBandwidthRulesCommands(List<? extends BandwidthRule> rules, VirtualRouter router, Commands cmds, long guestNetworkId) {
+        List<BandwidthRuleTO> rulesTO = null;
+        if (rules != null) {
+            rulesTO = new ArrayList<BandwidthRuleTO>();
+            // 组合RuleTO数据里面的嵌套FilterTO数据,根据bandwidth_rules_id查询数据表bandwidth_ip_port_map获取这个id之下的所以filter数据信息
+            // 组合command里面的RuleTO数据
+            // 组合command
+            for (BandwidthRule rule : rules) {
+                int deviceId = -1;
+                // need to find device id by the IP when the type is out traffic
+                if (rule.getType().equals(BandwidthType.OutTraffic)) {
+                    Long bandwidthId = rule.getBandwidthId();
+                    BandwidthVO bandwidthVO = _bandwidthDao.findById(bandwidthId);
+                    Long multilineId = bandwidthVO.getMultilineId();
+                    String mutilineLabel = _multilineLabelDao.findById(multilineId).getLabel();
 
-					NicVO nic = null;
-					IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(guestNetworkId, Boolean.TRUE, mutilineLabel);
-					if (ip != null) {
-						nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(), router.getId());
-					}
-					if (nic != null) {
-						deviceId = nic.getDeviceId();
-					} else {
-						deviceId = -1;
-					}
-				} else if (rule.getType().equals(BandwidthType.InTraffic)) {
-					deviceId = 0;
-				} else {
-					s_logger.error("The bandwidth rule command execute wrong, Because type is not right, Only support InTraffic and OutTraffic.");
-					throw new InvalidParameterValueException("The bandwidth rule parameter: type is not right, Only support InTraffic and OutTraffic.");
-				}
+                    NicVO nic = null;
+                    IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(guestNetworkId, Boolean.TRUE, mutilineLabel);
+                    if (ip != null) {
+                        nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(), router.getId());
+                    }
+                    if (nic != null) {
+                        deviceId = nic.getDeviceId();
+                    } else {
+                        deviceId = -1;
+                    }
+                } else if (rule.getType().equals(BandwidthType.InTraffic)) {
+                    deviceId = 0;
+                } else {
+                    s_logger.error("The bandwidth rule command execute wrong, Because type is not right, Only support InTraffic and OutTraffic.");
+                    throw new InvalidParameterValueException("The bandwidth rule parameter: type is not right, Only support InTraffic and OutTraffic.");
+                }
 
-				if (deviceId == -1) {
-					s_logger.error("The bandwidth rule command execute wrong, Because can not find the right device id in the VR.");
-					throw new InvalidParameterValueException("The bandwidth rule parameter: public ip address is not right.");
-				}
+                if (deviceId == -1) {
+                    s_logger.error("The bandwidth rule command execute wrong, Because can not find the right device id in the VR.");
+                    throw new InvalidParameterValueException("The bandwidth rule parameter: public ip address is not right.");
+                }
 
-				BandwidthType type = rule.getType();
-				int rate = rule.getRate();
-				int ceil = rule.getCeil();
-				int trafficRuleId = rule.getTrafficRuleId();
-				int prio = rule.getPrio();
-				boolean revoked = rule.isClassRuleRevoked();
-				boolean alreadyAdded = rule.isClassRuleAlreadyAdded();
-				boolean keepState = rule.isClassRuleKeepState();
-				List<BandwidthFilterRules> bandwidthFilters = rule.getBandwidthFilterRules();
-				BandwidthRuleTO bandwidthRule = new BandwidthRuleTO(deviceId, type, rate, ceil, trafficRuleId, prio, revoked, alreadyAdded, keepState, bandwidthFilters);
-				rulesTO.add(bandwidthRule);
-			}
-			
-		}
+                BandwidthType type = rule.getType();
+                int rate = rule.getRate();
+                int ceil = rule.getCeil();
+                int trafficRuleId = rule.getTrafficRuleId();
+                int prio = rule.getPrio();
+                boolean revoked = rule.isClassRuleRevoked();
+                boolean alreadyAdded = rule.isClassRuleAlreadyAdded();
+                boolean keepState = rule.isClassRuleKeepState();
+                List<BandwidthFilterRules> bandwidthFilters = rule.getBandwidthFilterRules();
+                BandwidthRuleTO bandwidthRule = new BandwidthRuleTO(deviceId, type, rate, ceil, trafficRuleId, prio, revoked, alreadyAdded, keepState, bandwidthFilters);
+                rulesTO.add(bandwidthRule);
+            }
+            
+        }
 
-		SetBandwidthRulesCommand cmd = new SetBandwidthRulesCommand(rulesTO);
-		cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, _routerControlHelper.getRouterControlIp(router.getId()));
-		cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, _routerControlHelper.getRouterIpInNetwork(guestNetworkId, router.getId()));
-		cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
-		DataCenterVO dcVo = _dcDao.findById(router.getDataCenterId());
-		cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
-		cmds.addCommand(cmd);
-	}
+        SetBandwidthRulesCommand cmd = new SetBandwidthRulesCommand(rulesTO);
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, _routerControlHelper.getRouterControlIp(router.getId()));
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, _routerControlHelper.getRouterIpInNetwork(guestNetworkId, router.getId()));
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
+        DataCenterVO dcVo = _dcDao.findById(router.getDataCenterId());
+        cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
+        cmds.addCommand(cmd);
+    }
 
     protected boolean aggregationExecution(final AggregationControlCommand.Action action, final Network network, final List<DomainRouterVO> routers)
             throws AgentUnavailableException, ResourceUnavailableException {

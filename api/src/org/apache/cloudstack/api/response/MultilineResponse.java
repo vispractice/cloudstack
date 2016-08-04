@@ -37,28 +37,28 @@ public class MultilineResponse extends BaseResponse {
     @SerializedName(ApiConstants.MULTILINE_LABEL) @Param(description="the multiline label")
     private String multilineLabel;
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public String getMultilineLabel() {
-		return multilineLabel;
-	}
+    public String getMultilineLabel() {
+        return multilineLabel;
+    }
 
-	public void setMultilineLabel(String multilineLabel) {
-		this.multilineLabel = multilineLabel;
-	}
+    public void setMultilineLabel(String multilineLabel) {
+        this.multilineLabel = multilineLabel;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
 }

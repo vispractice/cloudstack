@@ -90,12 +90,12 @@ public class StaticNatRule {
         this.destinationIpAddress = destinationIpAddress;
     }
 
-	public String getMultilineLabelSeq() {
-		return multilineLabelSeq;
-	}
+    public String getMultilineLabelSeq() {
+        return multilineLabelSeq;
+    }
 
-	public void setMultilineLabelSeq(String multilineLabelSeq) {
-		this.multilineLabelSeq = multilineLabelSeq;
-	}
+    public void setMultilineLabelSeq(String multilineLabelSeq) {
+        this.multilineLabelSeq = multilineLabelSeq;
+    }
 
 }

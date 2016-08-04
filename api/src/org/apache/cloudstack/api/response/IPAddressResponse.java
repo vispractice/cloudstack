@@ -291,21 +291,21 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
         this.isPortable = portable;
     }
 
-	public String getMultilineLabel() {
-		return multilineLabel;
-	}
+    public String getMultilineLabel() {
+        return multilineLabel;
+    }
 
-	public void setMultilineLabel(String multilineLabel) {
-		this.multilineLabel = multilineLabel;
-	}
+    public void setMultilineLabel(String multilineLabel) {
+        this.multilineLabel = multilineLabel;
+    }
 
-	public Boolean getIsDefaultStaticNat() {
-		return isDefaultStaticNat;
-	}
+    public Boolean getIsDefaultStaticNat() {
+        return isDefaultStaticNat;
+    }
 
-	public void setIsDefaultStaticNat(Boolean isDefaultStaticNat) {
-		this.isDefaultStaticNat = isDefaultStaticNat;
-	}
+    public void setIsDefaultStaticNat(Boolean isDefaultStaticNat) {
+        this.isDefaultStaticNat = isDefaultStaticNat;
+    }
     
     public void setForDisplay(Boolean forDisplay) {
         this.forDisplay = forDisplay;

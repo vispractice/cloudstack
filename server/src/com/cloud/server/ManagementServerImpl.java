@@ -4086,7 +4086,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     @Override
     public Pair<List<? extends Multiline>, Integer> searchForMultiline(ListMultilineCmd cmd) {
-    	
+        
          Account caller = CallContext.current().getCallingAccount();
          String label = cmd.getMultilineLabel();
          Object keyword = cmd.getKeyword();
@@ -4103,15 +4103,15 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
          
          SearchCriteria<MultilineVO> sc = sb.create();
          if(label != null && !label.isEmpty()){
-        	 sc.setParameters("label",label);
+             sc.setParameters("label",label);
          }
          
         String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-     	if(isMultiline != null && !isMultiline.equalsIgnoreCase("true")){
-     		sc.setParameters("isDefault", Boolean.TRUE);
-     	}
+         if(isMultiline != null && !isMultiline.equalsIgnoreCase("true")){
+             sc.setParameters("isDefault", Boolean.TRUE);
+         }
         if(!listAll){
-        	 sc.setParameters("isDefault", Boolean.TRUE);
+             sc.setParameters("isDefault", Boolean.TRUE);
         }
          
         Pair<List<MultilineVO>, Integer> result = _multilineDao.searchAndCount(sc, searchFilter);

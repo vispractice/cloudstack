@@ -7,7 +7,7 @@ import com.cloud.network.Network;
 import com.cloud.network.rules.BandwidthRule;
 
 public interface BandwidthServiceProvider extends NetworkElement, IpDeployingRequester {
-	/**
+    /**
      * Apply rules
      *
      * @param network

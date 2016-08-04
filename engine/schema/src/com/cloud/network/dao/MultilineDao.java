@@ -27,12 +27,12 @@ import com.cloud.utils.db.GenericDao;
  */
 public interface MultilineDao extends GenericDao<MultilineVO, Long> {
 
-	List<MultilineVO>  getAllMultiline();
+    List<MultilineVO>  getAllMultiline();
 
-	MultilineVO  getMultilineByLabel(String label);
+    MultilineVO  getMultilineByLabel(String label);
 
-	MultilineVO  getDefaultMultiline();
+    MultilineVO  getDefaultMultiline();
 
-	List<MultilineVO>  getNoDefaultMultiline();
-	
+    List<MultilineVO>  getNoDefaultMultiline();
+    
 }

@@ -271,13 +271,13 @@ public class MockVpcVirtualNetworkApplianceManager extends ManagerBase implement
         return false;
     }
     
-	@Override
-	public boolean applyBandwidthRules(Network network,
-			List<? extends BandwidthRule> rules,
-			List<? extends VirtualRouter> routers)
-			throws ResourceUnavailableException {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean applyBandwidthRules(Network network,
+            List<? extends BandwidthRule> rules,
+            List<? extends VirtualRouter> routers)
+            throws ResourceUnavailableException {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
 }

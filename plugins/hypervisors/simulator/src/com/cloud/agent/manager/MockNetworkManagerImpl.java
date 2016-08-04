@@ -241,9 +241,9 @@ public class MockNetworkManagerImpl extends ManagerBase implements MockNetworkMa
         return new Answer(cmd);
     }
 
-	@Override
-	public SetBandwidthRulesAnswer SetBandwidthRules(SetBandwidthRulesCommand cmd) {
-		String[] results = new String[cmd.getRules().length];
-		return new SetBandwidthRulesAnswer(cmd, true, results);
-	}
+    @Override
+    public SetBandwidthRulesAnswer SetBandwidthRules(SetBandwidthRulesCommand cmd) {
+        String[] results = new String[cmd.getRules().length];
+        return new SetBandwidthRulesAnswer(cmd, true, results);
+    }
 }

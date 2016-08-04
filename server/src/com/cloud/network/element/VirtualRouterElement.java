@@ -1212,23 +1212,23 @@ NetworkMigrationResponder,  BandwidthServiceProvider, AggregatedCommandExecutor 
     }
     
     //andrew ling add
-	@Override
-	public boolean applyBandwidthRules(Network network, List<BandwidthRule> rules)
-			throws ResourceUnavailableException {
-		List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(network.getId(), Role.VIRTUAL_ROUTER);
-		if (routers == null || routers.isEmpty()) {
-			s_logger.debug("Virtual router elemnt doesn't need to apply bandwidth rules on the backend; virtual "
-					+ "router doesn't exist in the network " + network.getId());
-			return true;
-		}
+    @Override
+    public boolean applyBandwidthRules(Network network, List<BandwidthRule> rules)
+            throws ResourceUnavailableException {
+        List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(network.getId(), Role.VIRTUAL_ROUTER);
+        if (routers == null || routers.isEmpty()) {
+            s_logger.debug("Virtual router elemnt doesn't need to apply bandwidth rules on the backend; virtual "
+                    + "router doesn't exist in the network " + network.getId());
+            return true;
+        }
 
-		if (!_routerMgr.applyBandwidthRules(network, rules, routers)) {
-			throw new CloudRuntimeException("Failed to apply bandwidth rules in network " + network.getId());
-		} else {
-			return true;
-		}
+        if (!_routerMgr.applyBandwidthRules(network, rules, routers)) {
+            throw new CloudRuntimeException("Failed to apply bandwidth rules in network " + network.getId());
+        } else {
+            return true;
+        }
 
-	}
+    }
 
     @Override
     public boolean prepareAggregatedExecution(final Network network, final DeployDestination dest) throws ResourceUnavailableException {

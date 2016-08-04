@@ -592,10 +592,10 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
                 isIpReadyForStaticNat(vmId, ipAddress, dstIp, caller, ctx.getCallingUserId());
             }
             //update by hai.li 2015.09.09
-        	IPAddressVO staticNatIp = _ipAddressDao.findDefaultStaticNat(ipAddress.getAssociatedWithNetworkId(), vmId, Boolean.TRUE);
-        	if(staticNatIp == null){
-        		ipAddress.setIsDefaultStaticNat(true);
-        	}
+            IPAddressVO staticNatIp = _ipAddressDao.findDefaultStaticNat(ipAddress.getAssociatedWithNetworkId(), vmId, Boolean.TRUE);
+            if(staticNatIp == null){
+                ipAddress.setIsDefaultStaticNat(true);
+            }
             ipAddress.setOneToOneNat(true);
             ipAddress.setAssociatedWithVmId(vmId);
             ipAddress.setVmIp(dstIp);
@@ -1245,13 +1245,13 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
 
         List<IPAddressVO> staticNatIps = _ipAddressDao.listStaticNatIps(ipAddress.getAssociatedWithNetworkId(), ipAddress.getAssociatedWithVmId(), Boolean.TRUE);
         if(staticNatIps != null && staticNatIps.size()>1){
-        	for (IPAddressVO ip : staticNatIps) {
-    			if(ip.getIsDefaultStaticNat() && ip.getId() == ipAddress.getId()){
-    				 InvalidParameterValueException ex = new InvalidParameterValueException("Cannot disable the default staticNAT,because there is not default staticNAT is in used");
-    	             ex.addProxyObject(ipAddress.getUuid(), "ipId");
-    	             throw ex;
-				}
-			}
+            for (IPAddressVO ip : staticNatIps) {
+                if(ip.getIsDefaultStaticNat() && ip.getId() == ipAddress.getId()){
+                     InvalidParameterValueException ex = new InvalidParameterValueException("Cannot disable the default staticNAT,because there is not default staticNAT is in used");
+                     ex.addProxyObject(ipAddress.getUuid(), "ipId");
+                     throw ex;
+                }
+            }
         }
         
         // if network has elastic IP functionality supported, we first have to disable static nat on old ip in order to
@@ -1418,7 +1418,7 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
         // create new static nat rule
         // Get nic IP4 address
         if(vm != null){
-        	Nic guestNic = _networkModel.getNicInNetworkIncludingRemoved(vm.getId(), networkId);
+            Nic guestNic = _networkModel.getNicInNetworkIncludingRemoved(vm.getId(), networkId);
             if (guestNic == null) {
                 throw new InvalidParameterValueException("Vm doesn't belong to the network with specified id");
             }
@@ -1541,61 +1541,61 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
         return result;
     }
 
-	@Override
-	public boolean updateStaticNat(long ipId, boolean isDefaultStatic) throws  ResourceUnavailableException, NetworkRuleConflictException {
-			
-			CallContext ctx = CallContext.current();
-			Account caller = ctx.getCallingAccount();
-	        final IPAddressVO ipAddress = _ipAddressDao.findById(ipId);
-	        checkIpAndUserVm(ipAddress, null, caller, false);
+    @Override
+    public boolean updateStaticNat(long ipId, boolean isDefaultStatic) throws  ResourceUnavailableException, NetworkRuleConflictException {
+            
+            CallContext ctx = CallContext.current();
+            Account caller = ctx.getCallingAccount();
+            final IPAddressVO ipAddress = _ipAddressDao.findById(ipId);
+            checkIpAndUserVm(ipAddress, null, caller, false);
 
-	        if (ipAddress.getSystem()) {
-	            InvalidParameterValueException ex = new InvalidParameterValueException("Can't update static nat for system IP address with specified id");
-	            ex.addProxyObject(ipAddress.getUuid(), "ipId");
-	            throw ex;
-	        }
+            if (ipAddress.getSystem()) {
+                InvalidParameterValueException ex = new InvalidParameterValueException("Can't update static nat for system IP address with specified id");
+                ex.addProxyObject(ipAddress.getUuid(), "ipId");
+                throw ex;
+            }
 
-	        final Long vmId = ipAddress.getAssociatedWithVmId();
-	        if (vmId == null) {
-	            InvalidParameterValueException ex = new InvalidParameterValueException("Specified IP address id is not associated with any vm Id");
-	            ex.addProxyObject(ipAddress.getUuid(), "ipId");
-	            throw ex;
-	        }
+            final Long vmId = ipAddress.getAssociatedWithVmId();
+            if (vmId == null) {
+                InvalidParameterValueException ex = new InvalidParameterValueException("Specified IP address id is not associated with any vm Id");
+                ex.addProxyObject(ipAddress.getUuid(), "ipId");
+                throw ex;
+            }
 
-	        if (!ipAddress.isOneToOneNat()) {
-	            InvalidParameterValueException ex = new InvalidParameterValueException("One to one nat is not enabled for the specified ip id");
-	            ex.addProxyObject(ipAddress.getUuid(), "ipId");
-	            throw ex;
-	        }
-	        
-	        if (ipAddress.getIsDefaultStaticNat() == isDefaultStatic) {
-	            InvalidParameterValueException ex = new InvalidParameterValueException("This staticNat already exists : "+ isDefaultStatic +"  for the specified ip =" +ipAddress.getAddress());
-	            ex.addProxyObject(ipAddress.getUuid(), "ipId");
-	            throw ex;
-	        }
-	        
-	        if(!isDefaultStatic){
-	        	InvalidParameterValueException ex = new InvalidParameterValueException("You must specify a default static nat.");
-	            ex.addProxyObject(ipAddress.getUuid(), "ipId");
-	            throw ex;
-	        }
-	        
-	        Transaction.execute(new TransactionCallbackWithExceptionNoReturn<NetworkRuleConflictException>() {
-	            @Override
-	            public void doInTransactionWithoutResult(TransactionStatus status) throws NetworkRuleConflictException {
-	            	IPAddressVO staticNatIp = _ipAddressDao.findDefaultStaticNat(ipAddress.getAssociatedWithNetworkId(), vmId, Boolean.TRUE);
-	            	if(staticNatIp != null  && staticNatIp.getId() != ipAddress.getId()){
-	            		staticNatIp.setIsDefaultStaticNat(false);
-		            	_ipAddressDao.update(staticNatIp.getId(), staticNatIp);
-	            	} 
-	            	ipAddress.setIsDefaultStaticNat(true);
-			        _ipAddressDao.update(ipAddress.getId(),ipAddress);
-	            }
-	        });
-	        
-	        return true;
-	}
-	
+            if (!ipAddress.isOneToOneNat()) {
+                InvalidParameterValueException ex = new InvalidParameterValueException("One to one nat is not enabled for the specified ip id");
+                ex.addProxyObject(ipAddress.getUuid(), "ipId");
+                throw ex;
+            }
+            
+            if (ipAddress.getIsDefaultStaticNat() == isDefaultStatic) {
+                InvalidParameterValueException ex = new InvalidParameterValueException("This staticNat already exists : "+ isDefaultStatic +"  for the specified ip =" +ipAddress.getAddress());
+                ex.addProxyObject(ipAddress.getUuid(), "ipId");
+                throw ex;
+            }
+            
+            if(!isDefaultStatic){
+                InvalidParameterValueException ex = new InvalidParameterValueException("You must specify a default static nat.");
+                ex.addProxyObject(ipAddress.getUuid(), "ipId");
+                throw ex;
+            }
+            
+            Transaction.execute(new TransactionCallbackWithExceptionNoReturn<NetworkRuleConflictException>() {
+                @Override
+                public void doInTransactionWithoutResult(TransactionStatus status) throws NetworkRuleConflictException {
+                    IPAddressVO staticNatIp = _ipAddressDao.findDefaultStaticNat(ipAddress.getAssociatedWithNetworkId(), vmId, Boolean.TRUE);
+                    if(staticNatIp != null  && staticNatIp.getId() != ipAddress.getId()){
+                        staticNatIp.setIsDefaultStaticNat(false);
+                        _ipAddressDao.update(staticNatIp.getId(), staticNatIp);
+                    } 
+                    ipAddress.setIsDefaultStaticNat(true);
+                    _ipAddressDao.update(ipAddress.getId(),ipAddress);
+                }
+            });
+            
+            return true;
+    }
+    
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_NET_RULE_MODIFY, eventDescription = "updating forwarding rule", async = true)
     public PortForwardingRule updatePortForwardingRule(long id, Integer privatePort, Long virtualMachineId, Ip vmGuestIp, String customId, Boolean forDisplay) {

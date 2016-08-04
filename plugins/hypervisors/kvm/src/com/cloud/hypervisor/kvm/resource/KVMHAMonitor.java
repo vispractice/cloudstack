@@ -133,10 +133,10 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                      */
                     s_logger.debug("The parameter _isReboot in the nfs servier was worked :" + primaryStoragePool._isReboot);
                     if (result != null) {
-                    	String isReboot = primaryStoragePool._isReboot;
-                    	if (isReboot != null && isReboot != "") {
-                    		if ("true".equals(isReboot)) {
-                    			s_logger.warn("write heartbeat failed: " + result
+                        String isReboot = primaryStoragePool._isReboot;
+                        if (isReboot != null && isReboot != "") {
+                            if ("true".equals(isReboot)) {
+                                s_logger.warn("write heartbeat failed: " + result
                                         + "; reboot the host");
                                 Script cmd = new Script(s_heartBeatPath,
                                         _heartBeatUpdateTimeout, s_logger);
@@ -145,12 +145,12 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                                 cmd.add("-m", primaryStoragePool._mountDestPath);
                                 cmd.add("-c");
                                 result = cmd.execute();
-                    		} else {
-                    			s_logger.warn("The NFS service is interrupted, but don't allow the agent to restart the host.");
-                    		}
-                    	} else {
-                			s_logger.warn("The NFS service is interrupted, but don't allow the agent to restart the host.");
-                		}
+                            } else {
+                                s_logger.warn("The NFS service is interrupted, but don't allow the agent to restart the host.");
+                            }
+                        } else {
+                            s_logger.warn("The NFS service is interrupted, but don't allow the agent to restart the host.");
+                        }
                     }
                 }
 

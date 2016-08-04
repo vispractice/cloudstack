@@ -18,7 +18,7 @@ import com.cloud.user.Account;
 
 @APICommand(name = "updateBandwidthRule", description="Update a bandwidth rule", responseObject=SuccessResponse.class)
 public class UpdateBandwidthRuleCmd extends BaseAsyncCmd {
-	public static final Logger s_logger = Logger.getLogger(UpdateBandwidthRuleCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(UpdateBandwidthRuleCmd.class.getName());
     private static final String s_name = "updatebandwidthruleresponse";
     
     /////////////////////////////////////////////////////
@@ -29,82 +29,82 @@ public class UpdateBandwidthRuleCmd extends BaseAsyncCmd {
     
     @Parameter(name=ApiConstants.BANDWIDTH_RATE, type=CommandType.INTEGER, required=true, description="the rate of the bandwidth rule in Kbit.")
     private Integer rate;
-	
-	@Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, required=true, description="the ceil of the bandwidth rule in Kbit.")
+    
+    @Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, required=true, description="the ceil of the bandwidth rule in Kbit.")
     private Integer ceil;
-	
-	@Parameter(name=ApiConstants.BANDWIDTH_PRIO, type=CommandType.INTEGER, required=true, description="the prio of the bandwidth rule.")
+    
+    @Parameter(name=ApiConstants.BANDWIDTH_PRIO, type=CommandType.INTEGER, required=true, description="the prio of the bandwidth rule.")
     private Integer prio;
-	
+    
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-	public Long getBandwidthRuleId() {
-		return bandwidthRuleId;
-	}
+    public Long getBandwidthRuleId() {
+        return bandwidthRuleId;
+    }
 
-	public Integer getRate() {
-		return rate;
-	}
+    public Integer getRate() {
+        return rate;
+    }
 
-	public Integer getCeil() {
-		return ceil;
-	}
+    public Integer getCeil() {
+        return ceil;
+    }
 
-	public Integer getPrio() {
-		return prio;
-	}
-	
+    public Integer getPrio() {
+        return prio;
+    }
+    
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-	@Override
-	public String getEventType() {
-		return EventTypes.EVENT_BANDWIDTH_RULE_EDIT;
-	}
+    @Override
+    public String getEventType() {
+        return EventTypes.EVENT_BANDWIDTH_RULE_EDIT;
+    }
 
 
-	@Override
-	public String getEventDescription() {
-		return ("Update the bandwidth rule id=" + bandwidthRuleId);
-	}
+    @Override
+    public String getEventDescription() {
+        return ("Update the bandwidth rule id=" + bandwidthRuleId);
+    }
 
-	@Override
-	public void execute() throws ResourceUnavailableException {
-		CallContext.current().setEventDetails("Bandwidth Rule Id: " + bandwidthRuleId);
-		if (rate < 0 || ceil < 0) {
-			throw new InvalidParameterValueException("The bandwidth rule parameter: rate, ceil can not less than zore.");
-		}
-		if (rate > ceil) {
-			throw new InvalidParameterValueException("The bandwidth rule parameter: rate must  less than or equal ceil.");
-		}
-		if(prio < 1 || prio > 7){
-			throw new InvalidParameterValueException("The bandwidth rule parameter: prio available scope is 1~7.");
-		}
-		boolean result = _bandwidthService.updateBandwidthRule(this);
-		if (result) {
-			SuccessResponse response = new SuccessResponse(getCommandName());
-			this.setResponseObject(response);
-		} else {
-			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR,"Failed to update bandwidth rule");
-		}
+    @Override
+    public void execute() throws ResourceUnavailableException {
+        CallContext.current().setEventDetails("Bandwidth Rule Id: " + bandwidthRuleId);
+        if (rate < 0 || ceil < 0) {
+            throw new InvalidParameterValueException("The bandwidth rule parameter: rate, ceil can not less than zore.");
+        }
+        if (rate > ceil) {
+            throw new InvalidParameterValueException("The bandwidth rule parameter: rate must  less than or equal ceil.");
+        }
+        if(prio < 1 || prio > 7){
+            throw new InvalidParameterValueException("The bandwidth rule parameter: prio available scope is 1~7.");
+        }
+        boolean result = _bandwidthService.updateBandwidthRule(this);
+        if (result) {
+            SuccessResponse response = new SuccessResponse(getCommandName());
+            this.setResponseObject(response);
+        } else {
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR,"Failed to update bandwidth rule");
+        }
 
-	}
+    }
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		Account account = CallContext.current().getCallingAccount();
+    @Override
+    public long getEntityOwnerId() {
+        Account account = CallContext.current().getCallingAccount();
 
         if (account != null) {
             return account.getId();
         }
 
         return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are tracked
-	}
+    }
 }

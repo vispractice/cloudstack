@@ -46,68 +46,68 @@ public class AssignToBandwidthRuleCmd extends BaseAsyncCmd {
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-	public Long getBandwidthRuleId() {
-		return bandwidthRuleId;
-	}
+    public Long getBandwidthRuleId() {
+        return bandwidthRuleId;
+    }
 
-	public String getIp() {
-		return ip;
-	}
+    public String getIp() {
+        return ip;
+    }
 
-	public String getProtocol() {
-		if(protocol != null){
-			return protocol.trim();
-		}
-		return protocol;
-	}
+    public String getProtocol() {
+        if(protocol != null){
+            return protocol.trim();
+        }
+        return protocol;
+    }
 
-	public Integer getStartPort() {
-		return startPort;
-	}
+    public Integer getStartPort() {
+        return startPort;
+    }
 
-	public Integer getEndPort() {
-		return endPort;
-	}
-	
+    public Integer getEndPort() {
+        return endPort;
+    }
+    
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-	
-	@Override
-	public String getEventType() {
-		return EventTypes.EVENT_ASSIGN_TO_BANDWIDTH_RULE;
-	}
+    
+    @Override
+    public String getEventType() {
+        return EventTypes.EVENT_ASSIGN_TO_BANDWIDTH_RULE;
+    }
 
-	@Override
-	public String getEventDescription() {
-		return ("Assign bandwidth filter rule: IP="+getIp()+", start port="+getStartPort()+" and end port="+getEndPort()+" to the bandwidth rule id="+ getBandwidthRuleId());
-	}
+    @Override
+    public String getEventDescription() {
+        return ("Assign bandwidth filter rule: IP="+getIp()+", start port="+getStartPort()+" and end port="+getEndPort()+" to the bandwidth rule id="+ getBandwidthRuleId());
+    }
 
-	@Override
-	public void execute() throws ResourceUnavailableException{
-		CallContext.current().setEventDetails("bandwidth filter rule Id= "+getBandwidthRuleId()+" IP="+getIp()+ " protocol="+getProtocol()+", start port="+getStartPort()+" and end port="+getEndPort());
-		boolean result = _bandwidthService.assignToBandwidthRule(this);
+    @Override
+    public void execute() throws ResourceUnavailableException{
+        CallContext.current().setEventDetails("bandwidth filter rule Id= "+getBandwidthRuleId()+" IP="+getIp()+ " protocol="+getProtocol()+", start port="+getStartPort()+" and end port="+getEndPort());
+        boolean result = _bandwidthService.assignToBandwidthRule(this);
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to assign bandwidth filter rule");
         }
-	}
+    }
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		Account account = CallContext.current().getCallingAccount();
+    @Override
+    public long getEntityOwnerId() {
+        Account account = CallContext.current().getCallingAccount();
 
         if (account != null) {
             return account.getId();
         }
 
         return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are tracked
-	}
+    }
 }

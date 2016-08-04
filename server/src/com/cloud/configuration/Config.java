@@ -286,14 +286,14 @@ public enum Config {
 
     //andrew ling add bandwidth traffic class rule id range.
     NetworkRouterBandwidthTrafficIdRange(
-    		"Network",
-    		ManagementServer.class,
-    		Integer.class,
-    		"network.bandwidth.traffic.id.maximum",
-    		"9999",
-    		"The bandwidth traffic rule id max number can be use for any one of the virtual router, now only support the max number can up to 9999.",
-    		null),
-        	
+            "Network",
+            ManagementServer.class,
+            Integer.class,
+            "network.bandwidth.traffic.id.maximum",
+            "9999",
+            "The bandwidth traffic rule id max number can be use for any one of the virtual router, now only support the max number can up to 9999.",
+            null),
+            
     GuestVlanBits(
             "Network",
             ManagementServer.class,
@@ -1994,8 +1994,8 @@ public enum Config {
     SSVMPSK("Hidden", ManagementServer.class, String.class, "upload.post.secret.key", "", "PSK with SSVM", null),
     
     //Add multilines to initialize switch label (if true is multiline,false is the one line)
-	NetworkAllowMmultiLine("Network", ManagementServer.class, Boolean.class, "allow.networks.multiline", "true", "Allow networks to use multiline", null);
-	
+    NetworkAllowMmultiLine("Network", ManagementServer.class, Boolean.class, "allow.networks.multiline", "true", "Allow networks to use multiline", null);
+    
     private final String _category;
     private final Class<?> _componentClass;
     private final Class<?> _type;

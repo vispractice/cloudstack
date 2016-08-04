@@ -386,14 +386,14 @@ public class ViewResponseHelper {
     public static List<BandwidthOfferingResponse> createBandwidthOfferingResponse(BandwidthOfferingVO... offerings) {
         List<BandwidthOfferingResponse> respList = new ArrayList<BandwidthOfferingResponse>();
         for (BandwidthOfferingVO vo : offerings){
-        	BandwidthOfferingResponse bandwidthOfferingResponse = new BandwidthOfferingResponse();
-        	bandwidthOfferingResponse.setId(vo.getUuid());
-        	bandwidthOfferingResponse.setName(vo.getName());
-        	bandwidthOfferingResponse.setDisplayText(vo.getDisplayText());
-        	bandwidthOfferingResponse.setRate(vo.getRate());
-        	bandwidthOfferingResponse.setCeil(vo.getCeil());
-        	bandwidthOfferingResponse.setCreated(vo.getCreated());
-        	bandwidthOfferingResponse.setObjectName("bandwidthoffering");
+            BandwidthOfferingResponse bandwidthOfferingResponse = new BandwidthOfferingResponse();
+            bandwidthOfferingResponse.setId(vo.getUuid());
+            bandwidthOfferingResponse.setName(vo.getName());
+            bandwidthOfferingResponse.setDisplayText(vo.getDisplayText());
+            bandwidthOfferingResponse.setRate(vo.getRate());
+            bandwidthOfferingResponse.setCeil(vo.getCeil());
+            bandwidthOfferingResponse.setCreated(vo.getCreated());
+            bandwidthOfferingResponse.setObjectName("bandwidthoffering");
             respList.add(bandwidthOfferingResponse);
         }
         return respList;

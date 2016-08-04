@@ -1662,9 +1662,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 }
                 //andrew ling add, when the multiline part was work,and the vlan tagged is untagged,the nic number must been send from manager
                 if(ip.getBroadcastUri().equalsIgnoreCase(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString())){
-                	nicNum = ip.getDeviceId();
+                    nicNum = ip.getDeviceId();
                 } else {
-                	nicNum = broadcastUriAllocatedToVM.get(ip.getBroadcastUri());
+                    nicNum = broadcastUriAllocatedToVM.get(ip.getBroadcastUri());
                 }
 //                nicNum = broadcastUriAllocatedToVM.get(ip.getBroadcastUri());
                 networkUsage(routerIp, "addVif", "eth" + nicNum);

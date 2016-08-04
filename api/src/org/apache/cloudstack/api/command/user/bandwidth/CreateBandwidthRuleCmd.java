@@ -20,7 +20,7 @@ import com.cloud.network.Network;
 
 @APICommand(name = "createBandwidthRule", description="create a bandwidth offering.", responseObject=SuccessResponse.class)
 public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{
-	public static final Logger s_logger = Logger.getLogger(CreateBandwidthRuleCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(CreateBandwidthRuleCmd.class.getName());
 
     private static final String s_name = "createbandwidthruleresponse";
     /////////////////////////////////////////////////////
@@ -37,125 +37,125 @@ public class CreateBandwidthRuleCmd extends BaseAsyncCreateCmd{
     
     @Parameter(name=ApiConstants.BANDWIDTH_RATE, type=CommandType.INTEGER, description="the rate of the bandwidth rule in Kbit.")
     private Integer rate;
-	
-	@Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, description="the ceil of the bandwidth rule in Kbit.")
+    
+    @Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, description="the ceil of the bandwidth rule in Kbit.")
     private Integer ceil;
-	
-	@Parameter(name=ApiConstants.BANDWIDTH_PRIO, type=CommandType.INTEGER, required=true, description="the prio of the bandwidth rule.")
+    
+    @Parameter(name=ApiConstants.BANDWIDTH_PRIO, type=CommandType.INTEGER, required=true, description="the prio of the bandwidth rule.")
     private Integer prio;
-	
-	@Parameter(name=ApiConstants.BANDWIDTH_TYPE, type=CommandType.STRING, required=true, description="the type of the bandwidth rule. Values are inTraffic and outTraffic")
+    
+    @Parameter(name=ApiConstants.BANDWIDTH_TYPE, type=CommandType.STRING, required=true, description="the type of the bandwidth rule. Values are inTraffic and outTraffic")
     private String type;
-	
-	@Parameter(name=ApiConstants.MULTILINE_ID, type=CommandType.STRING, required=true, description= "the ID of the multiline")
+    
+    @Parameter(name=ApiConstants.MULTILINE_ID, type=CommandType.STRING, required=true, description= "the ID of the multiline")
     private String multilineId;
     
-	/////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-	public Long getNetworkId() {
-		return networkId;
-	}
+    public Long getNetworkId() {
+        return networkId;
+    }
     
-	public Long getBandwidthOfferingId() {
-		return bandwidthOfferingId;
-	}
+    public Long getBandwidthOfferingId() {
+        return bandwidthOfferingId;
+    }
 
-	public Integer getRate() {
-		return rate;
-	}
+    public Integer getRate() {
+        return rate;
+    }
 
-	public Integer getCeil() {
-		return ceil;
-	}
+    public Integer getCeil() {
+        return ceil;
+    }
 
-	public Integer getPrio() {
-		return prio;
-	}
+    public Integer getPrio() {
+        return prio;
+    }
 
-	public String getType() {
-		return type;
-	}
-	
-	public String getMultilineId() {
-		return multilineId;
-	}
+    public String getType() {
+        return type;
+    }
+    
+    public String getMultilineId() {
+        return multilineId;
+    }
 
-	// ///////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
     // ///////////// API Implementation///////////////////
-    // ///////////////////////////////////////////////////	
-	private boolean checkType(){
-		if(type.equalsIgnoreCase("InTraffic") || type.equalsIgnoreCase("OutTraffic")){
-			return true;
-		} else {
-			return false;
-		}
-			
-	}
-	
-	@Override
-	public void create() throws ResourceAllocationException {
-		if(!checkType()){
-			throw new InvalidParameterValueException("The bandwidth rule type must be inTraffic or outTraffic.");
-		}
-		if(bandwidthOfferingId == null && (rate == null || ceil == null)){
-			throw new InvalidParameterValueException("You must input the bandwidth offering id or rate and ceil to create the bandwidth rule.");
-		}
-		if(bandwidthOfferingId == null){
-			if(rate < 0 || ceil < 0){
-				throw new InvalidParameterValueException("The bandwidth rule parameter: rate, ceil can not less than zore.");
-			}
-			if(rate > ceil){
-				throw new InvalidParameterValueException("The bandwidth rule parameter: rate must  less than or equal ceil.");
-			}
-		}
-		if(bandwidthOfferingId != null && (rate != null || ceil != null)){
-			throw new InvalidParameterValueException("You must input the bandwidth offering id or rate and ceil to create the bandwidth rule.");
-		}
-		if(prio < 1 || prio > 7){
-			throw new InvalidParameterValueException("The bandwidth rule parameter: prio available scope is 1~7.");
-		}
-		
-		Long ruleId = _bandwidthService.createBandwidthRule(this);
-		if(ruleId == null){
-			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create bandwidth rule");
-		}
-		setEntityId(ruleId);
-	}
+    // ///////////////////////////////////////////////////    
+    private boolean checkType(){
+        if(type.equalsIgnoreCase("InTraffic") || type.equalsIgnoreCase("OutTraffic")){
+            return true;
+        } else {
+            return false;
+        }
+            
+    }
     
-	@Override
-	public void execute() throws ResourceUnavailableException{
-		boolean result = _bandwidthService.applyBandwidthRule(getEntityId());
-		if (result) {
+    @Override
+    public void create() throws ResourceAllocationException {
+        if(!checkType()){
+            throw new InvalidParameterValueException("The bandwidth rule type must be inTraffic or outTraffic.");
+        }
+        if(bandwidthOfferingId == null && (rate == null || ceil == null)){
+            throw new InvalidParameterValueException("You must input the bandwidth offering id or rate and ceil to create the bandwidth rule.");
+        }
+        if(bandwidthOfferingId == null){
+            if(rate < 0 || ceil < 0){
+                throw new InvalidParameterValueException("The bandwidth rule parameter: rate, ceil can not less than zore.");
+            }
+            if(rate > ceil){
+                throw new InvalidParameterValueException("The bandwidth rule parameter: rate must  less than or equal ceil.");
+            }
+        }
+        if(bandwidthOfferingId != null && (rate != null || ceil != null)){
+            throw new InvalidParameterValueException("You must input the bandwidth offering id or rate and ceil to create the bandwidth rule.");
+        }
+        if(prio < 1 || prio > 7){
+            throw new InvalidParameterValueException("The bandwidth rule parameter: prio available scope is 1~7.");
+        }
+        
+        Long ruleId = _bandwidthService.createBandwidthRule(this);
+        if(ruleId == null){
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create bandwidth rule");
+        }
+        setEntityId(ruleId);
+    }
+    
+    @Override
+    public void execute() throws ResourceUnavailableException{
+        boolean result = _bandwidthService.applyBandwidthRule(getEntityId());
+        if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
-        	_bandwidthService.revokeRelatedBandwidthRule(getEntityId());
+            _bandwidthService.revokeRelatedBandwidthRule(getEntityId());
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create bandwidth rule");
         }
-		
-	}
-	
-	@Override
-	public String getEventType() {
-		return EventTypes.EVENT_BANDWIDTH_RULE_CREATE;
-	}
+        
+    }
+    
+    @Override
+    public String getEventType() {
+        return EventTypes.EVENT_BANDWIDTH_RULE_CREATE;
+    }
 
-	@Override
-	public String getEventDescription() {
-		Network network = _networkService.getNetwork(networkId);
+    @Override
+    public String getEventDescription() {
+        Network network = _networkService.getNetwork(networkId);
         return ("Creating bandwidth rule for network: " + network);
-	}
+    }
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		Network network = _networkService.getNetwork(networkId);
+    @Override
+    public long getEntityOwnerId() {
+        Network network = _networkService.getNetwork(networkId);
         return network.getAccountId();
-	}
+    }
 
 }

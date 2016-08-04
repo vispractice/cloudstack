@@ -96,7 +96,7 @@ public class CreateNetworkOfferingTest extends TestCase {
     @Override
     @Before
     public void setUp() {
-//    	ComponentContext.initComponentsLifeCycle();
+//        ComponentContext.initComponentsLifeCycle();
 //        ConfigurationVO configVO = new ConfigurationVO("200", "200","200","200","200","200");
 //        Mockito.when(configDao.findByName(Mockito.anyString())).thenReturn(configVO);
 //        

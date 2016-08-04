@@ -64,21 +64,21 @@ public class DefaultHostListener implements HypervisorHostListener {
     
     @Override
     public boolean hostConnect(long hostId, long poolId) throws StorageConflictException {
-    	/*
+        /*
          * add by l.gao
          */
         //begin
         String isreboot = "";
         HostVO host = hostDao.findById(hostId);
         if (host != null) {
-        	Long clusterId = host.getClusterId();
-        	String nameParam = "cluster.allow.agent.reboot";
-        	if (clusterId != null) {
-        		ClusterDetailsVO clusterDetails = clusterDetailsDao.findDetail(clusterId, nameParam);
-        		if (clusterDetails != null) {
-        			isreboot = clusterDetails.getValue();
-        		}
-        	}
+            Long clusterId = host.getClusterId();
+            String nameParam = "cluster.allow.agent.reboot";
+            if (clusterId != null) {
+                ClusterDetailsVO clusterDetails = clusterDetailsDao.findDetail(clusterId, nameParam);
+                if (clusterDetails != null) {
+                    isreboot = clusterDetails.getValue();
+                }
+            }
         }
         //end
         StoragePool pool = (StoragePool) this.dataStoreMgr.getDataStore(poolId, DataStoreRole.Primary);

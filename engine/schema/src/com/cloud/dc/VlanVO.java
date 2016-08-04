@@ -85,43 +85,43 @@ public class VlanVO implements Vlan {
     @Column(name = GenericDao.CREATED_COLUMN)
     private Date created;
     
-	public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId,
-			String ip6Gateway, String ip6Cidr, String ip6Range) {
-		this.vlanType = vlanType;
-		this.vlanTag = vlanTag;
-		this.vlanGateway = vlanGateway;
-		this.vlanNetmask = vlanNetmask;
-		this.ip6Gateway = ip6Gateway;
-		this.ip6Cidr = ip6Cidr;
-		this.dataCenterId = dataCenterId;
-		this.ipRange = ipRange;
-		this.ip6Range = ip6Range;
-		this.networkId = networkId;
-		this.uuid = UUID.randomUUID().toString();
-		this.physicalNetworkId = physicalNetworkId;
-	}
-	
-	public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId, String ip6Gateway, String ip6Cidr, String ip6Range, String multilineLabel) {
-		this.vlanType = vlanType;
-		this.vlanTag = vlanTag;
-		this.vlanGateway = vlanGateway;
-		this.vlanNetmask = vlanNetmask;
-		this.ip6Gateway = ip6Gateway;
-		this.ip6Cidr = ip6Cidr;
-		this.dataCenterId = dataCenterId;
-		this.ipRange = ipRange;
-		this.ip6Range = ip6Range;
-		this.networkId = networkId;
-		this.uuid = UUID.randomUUID().toString();
-		this.physicalNetworkId = physicalNetworkId;
-		this.multilineLabel = multilineLabel;
-	}
+    public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId,
+            String ip6Gateway, String ip6Cidr, String ip6Range) {
+        this.vlanType = vlanType;
+        this.vlanTag = vlanTag;
+        this.vlanGateway = vlanGateway;
+        this.vlanNetmask = vlanNetmask;
+        this.ip6Gateway = ip6Gateway;
+        this.ip6Cidr = ip6Cidr;
+        this.dataCenterId = dataCenterId;
+        this.ipRange = ipRange;
+        this.ip6Range = ip6Range;
+        this.networkId = networkId;
+        this.uuid = UUID.randomUUID().toString();
+        this.physicalNetworkId = physicalNetworkId;
+    }
+    
+    public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId, String ip6Gateway, String ip6Cidr, String ip6Range, String multilineLabel) {
+        this.vlanType = vlanType;
+        this.vlanTag = vlanTag;
+        this.vlanGateway = vlanGateway;
+        this.vlanNetmask = vlanNetmask;
+        this.ip6Gateway = ip6Gateway;
+        this.ip6Cidr = ip6Cidr;
+        this.dataCenterId = dataCenterId;
+        this.ipRange = ipRange;
+        this.ip6Range = ip6Range;
+        this.networkId = networkId;
+        this.uuid = UUID.randomUUID().toString();
+        this.physicalNetworkId = physicalNetworkId;
+        this.multilineLabel = multilineLabel;
+    }
 
-	public VlanVO() {
-		this.uuid = UUID.randomUUID().toString();
-	}
+    public VlanVO() {
+        this.uuid = UUID.randomUUID().toString();
+    }
 
-	@Override
+    @Override
     public long getId() {
         return id;
     }
@@ -255,16 +255,16 @@ public class VlanVO implements Vlan {
         this.ip6Range = ipRange;
     }
     @Override
-	public String getMultilineLabel() {
-		return multilineLabel;
-	}
+    public String getMultilineLabel() {
+        return multilineLabel;
+    }
 
-	public void setMultilineLabel(String multilineLabel) {
-		this.multilineLabel = multilineLabel;
-	}
+    public void setMultilineLabel(String multilineLabel) {
+        this.multilineLabel = multilineLabel;
+    }
 
-	public void setVlanTag(String vlanTag) {
-		this.vlanTag = vlanTag;
-	}
+    public void setVlanTag(String vlanTag) {
+        this.vlanTag = vlanTag;
+    }
     
 }

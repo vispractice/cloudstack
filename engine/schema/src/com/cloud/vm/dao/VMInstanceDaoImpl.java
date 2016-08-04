@@ -847,10 +847,10 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
         });
     }
     
-	@Override
-	public VMInstanceVO findVMByIpAddress(String ipAddress) {
-		SearchCriteria<VMInstanceVO> sc = InstanceIpAddressSearch.create();
-		sc.setParameters("privateIpAddress", ipAddress);
-		return findOneBy(sc);
-	}
+    @Override
+    public VMInstanceVO findVMByIpAddress(String ipAddress) {
+        SearchCriteria<VMInstanceVO> sc = InstanceIpAddressSearch.create();
+        sc.setParameters("privateIpAddress", ipAddress);
+        return findOneBy(sc);
+    }
 }

@@ -526,25 +526,25 @@ public class MockConfigurationManagerImpl extends ManagerBase implements Configu
         return false;
     }
 
-	@Override
-	public BandwidthOffering createBandwidthOffering(
-			CreateBandwidthOfferingCmd cmd) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public BandwidthOffering createBandwidthOffering(
+            CreateBandwidthOfferingCmd cmd) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public BandwidthOffering updateBandwidthOffering(
-			UpdateBandwidthOfferingCmd cmd) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public BandwidthOffering updateBandwidthOffering(
+            UpdateBandwidthOfferingCmd cmd) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public boolean deleteBandwidthOffering(DeleteBandwidthOfferingCmd cmd) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean deleteBandwidthOffering(DeleteBandwidthOfferingCmd cmd) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
     @Override
     public Domain getVlanDomain(long vlanId) {
@@ -552,17 +552,17 @@ public class MockConfigurationManagerImpl extends ManagerBase implements Configu
         return null;
     }
 
-	@Override
-	public Vlan createVlanAndPublicIpRange(long zoneId, long networkId,
-			long physicalNetworkId, boolean forVirtualNetwork, Long podId,
-			String startIP, String endIP, String vlanGateway,
-			String vlanNetmask, String vlanId, Domain domain,
-			Account vlanOwner, String startIPv6, String endIPv6,
-			String vlanIp6Gateway, String vlanIp6Cidr, String multilineLabel)
-			throws InsufficientCapacityException, ConcurrentOperationException,
-			InvalidParameterValueException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public Vlan createVlanAndPublicIpRange(long zoneId, long networkId,
+            long physicalNetworkId, boolean forVirtualNetwork, Long podId,
+            String startIP, String endIP, String vlanGateway,
+            String vlanNetmask, String vlanId, Domain domain,
+            Account vlanOwner, String startIPv6, String endIPv6,
+            String vlanIp6Gateway, String vlanIp6Cidr, String multilineLabel)
+            throws InsufficientCapacityException, ConcurrentOperationException,
+            InvalidParameterValueException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

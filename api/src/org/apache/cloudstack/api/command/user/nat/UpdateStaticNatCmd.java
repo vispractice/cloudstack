@@ -59,63 +59,63 @@ public class UpdateStaticNatCmd extends BaseAsyncCmd{
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-	
-	public Long getIpAddress() {
-		return ipAddressId;
-	}
-	
-	/////////////////////////////////////////////////////
-	/////////////// API Implementation///////////////////
-	/////////////////////////////////////////////////////
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
-	
-	@Override
-	public String getEventType() {
-		return EventTypes.EVENT_UPDATE_STATIC_NAT;
-	}
-	
-	@Override
-	public String getEventDescription() {
-		return  ("updatling static nat for ip id=" + ipAddressId);
-	}
-	
-	@Override
-	public long getEntityOwnerId() {
-		return _entityMgr.findById(IpAddress.class, ipAddressId).getAccountId();
-	}
-	
-	@Override
-	public void execute() throws ResourceUnavailableException , NetworkRuleConflictException{
-		boolean result = _rulesService.updateStaticNat(ipAddressId, isDefaultStaticNat);
-		
-		if (result) {
-			SuccessResponse response = new SuccessResponse(getCommandName());
-			this.setResponseObject(response);
-		 } else {
-			throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update static nat");
-		}
-	}
-	
-	
-	@Override
-	public String getSyncObjType() {
-		return BaseAsyncCmd.networkSyncObject;
-	}
-	
-	@Override
-	public Long getSyncObjId() {
-		return getIp().getAssociatedWithNetworkId();
-	}
-	
-	private IpAddress getIp() {
-		IpAddress ip = _networkService.getIp(ipAddressId);
-		if (ip == null) {
-			throw new InvalidParameterValueException("Unable to find ip address by id " + ipAddressId);
-		}
-		return ip;
-	}
+    
+    public Long getIpAddress() {
+        return ipAddressId;
+    }
+    
+    /////////////////////////////////////////////////////
+    /////////////// API Implementation///////////////////
+    /////////////////////////////////////////////////////
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
+    
+    @Override
+    public String getEventType() {
+        return EventTypes.EVENT_UPDATE_STATIC_NAT;
+    }
+    
+    @Override
+    public String getEventDescription() {
+        return  ("updatling static nat for ip id=" + ipAddressId);
+    }
+    
+    @Override
+    public long getEntityOwnerId() {
+        return _entityMgr.findById(IpAddress.class, ipAddressId).getAccountId();
+    }
+    
+    @Override
+    public void execute() throws ResourceUnavailableException , NetworkRuleConflictException{
+        boolean result = _rulesService.updateStaticNat(ipAddressId, isDefaultStaticNat);
+        
+        if (result) {
+            SuccessResponse response = new SuccessResponse(getCommandName());
+            this.setResponseObject(response);
+         } else {
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update static nat");
+        }
+    }
+    
+    
+    @Override
+    public String getSyncObjType() {
+        return BaseAsyncCmd.networkSyncObject;
+    }
+    
+    @Override
+    public Long getSyncObjId() {
+        return getIp().getAssociatedWithNetworkId();
+    }
+    
+    private IpAddress getIp() {
+        IpAddress ip = _networkService.getIp(ipAddressId);
+        if (ip == null) {
+            throw new InvalidParameterValueException("Unable to find ip address by id " + ipAddressId);
+        }
+        return ip;
+    }
 
 }

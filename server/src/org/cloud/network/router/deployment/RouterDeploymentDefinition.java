@@ -368,28 +368,28 @@ public class RouterDeploymentDefinition {
         sourceNatIp = null;
         sourceNatIps = new ArrayList<PublicIp>();
         if (isPublicNetwork) {
-        	//get multiline sourceNatIps
+            //get multiline sourceNatIps
             String isMultilines = configDao.getValue(Config.NetworkAllowMmultiLine.key());
             if(isMultilines !=null && isMultilines.equalsIgnoreCase("true")){
-            	List<MultilineVO> multilines = multilineLabelDao.getAllMultiline();
-            	if(multilines == null || multilines.size() <= 0){
-            		//sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
-           		 	throw new CloudRuntimeException("Cannot find one multiline label.");
-            	}
-            	for (MultilineVO multiline : multilines) {
-                		sourceNatIp = ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork,multiline.getLabel());
-                		if(sourceNatIp == null){
-                			logger.info("Don't use the multiline network :" + multiline.getLabel());
-                			continue;
-                		}
-                		if(multiline.getIsDefault()){
-                			sourceNatIp.setDefault(Boolean.TRUE);
-            			}
-                		sourceNatIps.add(sourceNatIp);
-				}
+                List<MultilineVO> multilines = multilineLabelDao.getAllMultiline();
+                if(multilines == null || multilines.size() <= 0){
+                    //sourceNatIp = _ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
+                        throw new CloudRuntimeException("Cannot find one multiline label.");
+                }
+                for (MultilineVO multiline : multilines) {
+                        sourceNatIp = ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork,multiline.getLabel());
+                        if(sourceNatIp == null){
+                            logger.info("Don't use the multiline network :" + multiline.getLabel());
+                            continue;
+                        }
+                        if(multiline.getIsDefault()){
+                            sourceNatIp.setDefault(Boolean.TRUE);
+                        }
+                        sourceNatIps.add(sourceNatIp);
+                }
              } else {
-            	 sourceNatIp = ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork, multilineLabelDao.getDefaultMultiline().getLabel());
-//            	 sourceNatIp = ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
+                 sourceNatIp = ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork, multilineLabelDao.getDefaultMultiline().getLabel());
+//                 sourceNatIp = ipAddrMgr.assignSourceNatIpAddressToGuestNetwork(owner, guestNetwork);
              }
         }
     }

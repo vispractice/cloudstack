@@ -7,19 +7,19 @@ import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
 
 public interface BandwidthOffering extends InfrastructureEntity, Identity, InternalIdentity {
-	public enum BandwidthOfferingState{
-		Inactive,
-		Active,
-	}
-	String getUniqueName();
-	
-	String getName();
-	
-	String getDisplayText();
-	
-	Date getCreated();
-	
-	/**
+    public enum BandwidthOfferingState{
+        Inactive,
+        Active,
+    }
+    String getUniqueName();
+    
+    String getName();
+    
+    String getDisplayText();
+    
+    Date getCreated();
+    
+    /**
      * @return rate in Kbit
      */
     Integer getRate();

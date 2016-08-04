@@ -551,21 +551,21 @@ public class CommandSetupHelper {
                 StringBuffer multilineLabelSeq = new StringBuffer();
                 String multiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
                 boolean isMultiline = Boolean.FALSE;
-            	if(!multiline.isEmpty() && multiline.equalsIgnoreCase("true")){
-            		isMultiline = Boolean.TRUE;
-            		List<IPAddressVO> staticNatIps = _ipAddressDao.listStaticNatIps(guestNetworkId,sourceIp.getAssociatedWithVmId(), Boolean.TRUE);
-            		int i = 1;
+                if(!multiline.isEmpty() && multiline.equalsIgnoreCase("true")){
+                    isMultiline = Boolean.TRUE;
+                    List<IPAddressVO> staticNatIps = _ipAddressDao.listStaticNatIps(guestNetworkId,sourceIp.getAssociatedWithVmId(), Boolean.TRUE);
+                    int i = 1;
                     for (IPAddressVO staticNatIp : staticNatIps) {
-                    	if(rule.isForRevoke() && staticNatIp.getAddress().equals(sourceIp.getAddress().addr())){
-                    		continue;
-                    	}
-                    	if(i!=1){
-                    		multilineLabelSeq.append("_");
-                    	}
-                    	multilineLabelSeq.append(staticNatIp.getMultilineLabel());
-                    	i++;
-        			}
-            	}
+                        if(rule.isForRevoke() && staticNatIp.getAddress().equals(sourceIp.getAddress().addr())){
+                            continue;
+                        }
+                        if(i!=1){
+                            multilineLabelSeq.append("_");
+                        }
+                        multilineLabelSeq.append(staticNatIp.getMultilineLabel());
+                        i++;
+                    }
+                }
                 final StaticNatRuleTO ruleTO = new StaticNatRuleTO(0, sourceIp.getAddress().addr(), null, null, rule.getDestIpAddress(), null, null, null, rule.isForRevoke(),
                         false, multilineLabelSeq.toString(),isMultiline);
 //                final StaticNatRuleTO ruleTO = new StaticNatRuleTO(0, sourceIp.getAddress().addr(), null, null, rule.getDestIpAddress(), null, null, null, rule.isForRevoke(),
@@ -760,7 +760,7 @@ public class CommandSetupHelper {
             String vlanTag = ipAddress.getVlanTag();
             //andrew ling add, multiline part.
             if(vlanTag.contains(Vlan.UNTAGGED)){
-            	vlanTag +="-"+ getDeviceId(ipAddress, router.getId());
+                vlanTag +="-"+ getDeviceId(ipAddress, router.getId());
             }
             ArrayList<PublicIpAddress> ipList = vlanIpMap.get(vlanTag);
             if (ipList == null) {
@@ -835,10 +835,10 @@ public class CommandSetupHelper {
                 int deviceId = 0;
                 //update by hai.li support UNTAGGED vlan
                 if(vlanId.contains(Vlan.UNTAGGED)){
-                	 deviceId = getDeviceId(ipAddr, router.getId());
-                	 if(deviceId == 0){
-                		 throw new InvalidParameterValueException("When you try to one line change for multiline,you must recreate the routing.");
-                	 }
+                     deviceId = getDeviceId(ipAddr, router.getId());
+                     if(deviceId == 0){
+                         throw new InvalidParameterValueException("When you try to one line change for multiline,you must recreate the routing.");
+                     }
                 }
                 
                 final IpAddressTO ip = new IpAddressTO(ipAddr.getAccountId(), ipAddr.getAddress().addr(), add, firstIP, sourceNat, vlanId, vlanGateway, vlanNetmask,
@@ -1091,24 +1091,24 @@ public class CommandSetupHelper {
     
     //add by hai.li get device id for nics
     private int getDeviceId(PublicIpAddress ipAddress,long routerId){
-     	NicVO nic = null;
-     	if(ipAddress.isSourceNat()){
-     		nic = _nicDao.findByIp4AddressAndVmId(ipAddress.getAddress().addr(),routerId);
-     		if(nic != null){
-     			return nic.getDeviceId();
-     		}
-     	}
-     	
-     	if(ipAddress.isOneToOneNat()){
-     		IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(ipAddress.getAssociatedWithNetworkId(),Boolean.TRUE,ipAddress.getMultilineLabel());
-     		if(ip != null){
-     			nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(),routerId);
-     		}
-     		if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
-         		return nic.getDeviceId();
+         NicVO nic = null;
+         if(ipAddress.isSourceNat()){
+             nic = _nicDao.findByIp4AddressAndVmId(ipAddress.getAddress().addr(),routerId);
+             if(nic != null){
+                 return nic.getDeviceId();
+             }
+         }
+         
+         if(ipAddress.isOneToOneNat()){
+             IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(ipAddress.getAssociatedWithNetworkId(),Boolean.TRUE,ipAddress.getMultilineLabel());
+             if(ip != null){
+                 nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(),routerId);
+             }
+             if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
+                 return nic.getDeviceId();
             } 
         }
-     	return 0;
+         return 0;
     }
     
     

@@ -398,14 +398,14 @@ public class DataCenterVO implements DataCenter {
     }
     @Override
     public boolean isPublicServiceInSGEnabled() {
-		return publicServiceInSGEnabled;
-	}
-
-    public void setPublicServiceInSGEnabled(boolean publicServiceInSGEnabled) {
-		this.publicServiceInSGEnabled = publicServiceInSGEnabled;
+        return publicServiceInSGEnabled;
     }
 
-	@Override
+    public void setPublicServiceInSGEnabled(boolean publicServiceInSGEnabled) {
+        this.publicServiceInSGEnabled = publicServiceInSGEnabled;
+    }
+
+    @Override
     public boolean isLocalStorageEnabled() {
         return localStorageEnabled;
     }

@@ -6,22 +6,22 @@ import com.cloud.agent.api.to.BandwidthRuleTO;
 
 public class SetBandwidthRulesCommand extends NetworkElementCommand {
     
-	BandwidthRuleTO[] rules;
-	
-	protected SetBandwidthRulesCommand(){
-		
-	}
-	
-	public SetBandwidthRulesCommand(List <? extends BandwidthRuleTO> bandwidthRules){
-		rules = new BandwidthRuleTO[bandwidthRules.size()];
-		int i = 0;
-		for(BandwidthRuleTO rule : bandwidthRules){
-			rules[i++] = rule;
-		}
-	}
+    BandwidthRuleTO[] rules;
+    
+    protected SetBandwidthRulesCommand(){
+        
+    }
+    
+    public SetBandwidthRulesCommand(List <? extends BandwidthRuleTO> bandwidthRules){
+        rules = new BandwidthRuleTO[bandwidthRules.size()];
+        int i = 0;
+        for(BandwidthRuleTO rule : bandwidthRules){
+            rules[i++] = rule;
+        }
+    }
 
-	public BandwidthRuleTO[] getRules() {
-		return rules;
-	}
-	
+    public BandwidthRuleTO[] getRules() {
+        return rules;
+    }
+    
 }

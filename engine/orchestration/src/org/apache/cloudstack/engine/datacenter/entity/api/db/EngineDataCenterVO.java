@@ -425,11 +425,11 @@ public class EngineDataCenterVO implements EngineDataCenter, Identity {
 
     @Override
     public boolean isPublicServiceInSGEnabled() {
-		return publicServiceInSGEnabled;
-	}
+        return publicServiceInSGEnabled;
+    }
 
     public void setPublicServiceInSGEnabled(boolean publicServiceInSGEnabled) {
-		this.publicServiceInSGEnabled = publicServiceInSGEnabled;
+        this.publicServiceInSGEnabled = publicServiceInSGEnabled;
     }
     
     @Override

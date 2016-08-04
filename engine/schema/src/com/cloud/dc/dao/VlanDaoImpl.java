@@ -371,11 +371,11 @@ public class VlanDaoImpl extends GenericDaoBase<VlanVO, Long> implements VlanDao
         return listBy(sc);
     }
 
-	@Override
-	public List<VlanVO> listByMultilineLabel(String multiline) {
-		 SearchCriteria<VlanVO> sc = labelVlanSearch.create();
-	     sc.setParameters("multilineLabel", multiline);
-	     return listBy(sc);
-	}
+    @Override
+    public List<VlanVO> listByMultilineLabel(String multiline) {
+         SearchCriteria<VlanVO> sc = labelVlanSearch.create();
+         sc.setParameters("multilineLabel", multiline);
+         return listBy(sc);
+    }
 
 }

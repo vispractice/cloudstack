@@ -296,11 +296,11 @@ public class SecurityGroupRulesCmd extends Command {
     }
 
     public Boolean IsPublicServiceInSGEnabled() {
-	  return publicServiceInSGEnabled;
-	}
+      return publicServiceInSGEnabled;
+    }
 
     public void setPublicServiceInSGEnabled(Boolean publicServiceInSGEnabled) {
-    	  this.publicServiceInSGEnabled = publicServiceInSGEnabled;
-	}
+          this.publicServiceInSGEnabled = publicServiceInSGEnabled;
+    }
 
 }

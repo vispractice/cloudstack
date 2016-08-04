@@ -15,7 +15,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addBandwidth",description = "add a bandwidth", responseObject = SuccessResponse.class)
 public class AddBandwidthCmd extends BaseCmd{
 
-	public static final Logger s_logger = Logger.getLogger(AddBandwidthCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(AddBandwidthCmd.class.getName());
 
     private static final String s_name = "addbandwidthresponse";
 
@@ -30,59 +30,59 @@ public class AddBandwidthCmd extends BaseCmd{
 
     @Parameter(name=ApiConstants.BANDWIDTH_IN, type=CommandType.INTEGER, required=true, description="the in traffic of the bandwidth offering in Kbit.")
     private Integer inTraffic;
-	
-	@Parameter(name=ApiConstants.BANDWIDTH_OUT, type=CommandType.INTEGER, required=true, description="the out traffic of the bandwidth offering in Kbit.")
+    
+    @Parameter(name=ApiConstants.BANDWIDTH_OUT, type=CommandType.INTEGER, required=true, description="the out traffic of the bandwidth offering in Kbit.")
     private Integer outTraffic;
-	
+    
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-	
-	public String getMultilineId() {
-		return multilineId;
-	}
+    
+    public String getMultilineId() {
+        return multilineId;
+    }
 
-	public Long getZoneId() {
-		return zoneId;
-	}
+    public Long getZoneId() {
+        return zoneId;
+    }
 
-	public Integer getInTraffic() {
-		return inTraffic;
-	}
+    public Integer getInTraffic() {
+        return inTraffic;
+    }
 
-	public Integer getOutTraffic() {
-		return outTraffic;
-	}
+    public Integer getOutTraffic() {
+        return outTraffic;
+    }
     
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-	
-	@Override
-	public void execute() {
-		boolean result = _bandwidthService.addBandwidth(this);
-		if (result) {
+    
+    @Override
+    public void execute() {
+        boolean result = _bandwidthService.addBandwidth(this);
+        if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create bandwidth.");
         }
-	}
+    }
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		Account account = CallContext.current().getCallingAccount();
+    @Override
+    public long getEntityOwnerId() {
+        Account account = CallContext.current().getCallingAccount();
 
         if (account != null) {
             return account.getId();
         }
 
         return Account.ACCOUNT_ID_SYSTEM;
-	}
+    }
 
 }

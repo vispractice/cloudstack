@@ -176,21 +176,21 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
         return state;
     }
     
-	public String getMultilineLabel() {
-		return multilineLabel;
-	}
+    public String getMultilineLabel() {
+        return multilineLabel;
+    }
 
-	public void setMultilineLabel(String multilineLabel) {
-		this.multilineLabel = multilineLabel;
-	}
+    public void setMultilineLabel(String multilineLabel) {
+        this.multilineLabel = multilineLabel;
+    }
 
-	public String getIsDefaultStaticNat() {
-		return isDefaultStaticNat;
-	}
+    public String getIsDefaultStaticNat() {
+        return isDefaultStaticNat;
+    }
 
-	public void setIsDefaultStaticNat(String isDefaultStaticNat) {
-		this.isDefaultStaticNat = isDefaultStaticNat;
-	}
+    public void setIsDefaultStaticNat(String isDefaultStaticNat) {
+        this.isDefaultStaticNat = isDefaultStaticNat;
+    }
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////

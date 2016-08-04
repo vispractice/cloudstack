@@ -55,24 +55,24 @@ public class ListMultilineCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
 
     public Long getId() {
-		return id;
-	}
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public String getMultilineLabel() {
-		return multilineLabel;
-	}
+    public String getMultilineLabel() {
+        return multilineLabel;
+    }
 
-	public void setMultilineLabel(String multilineLabel) {
-		this.multilineLabel = multilineLabel;
-	}
+    public void setMultilineLabel(String multilineLabel) {
+        this.multilineLabel = multilineLabel;
+    }
 
-	public static String getsName() {
-		return s_name;
-	}
+    public static String getsName() {
+        return s_name;
+    }
 
     public boolean listAll() {
         return listAll == null ? true : listAll;
@@ -81,21 +81,21 @@ public class ListMultilineCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-	   
-	@Override
+       
+    @Override
     public String getCommandName() {
         return s_name;
     }
-	
+    
     @Override
     public void execute(){
         Pair<List<? extends Multiline>, Integer> result = _mgr.searchForMultiline(this);
         ListResponse<MultilineResponse> response = new ListResponse<MultilineResponse>();
         List<MultilineResponse> multilineResponse = new ArrayList<MultilineResponse>();
         for (Multiline multiline : result.first()) {
-        	MultilineResponse multilineRes = _responseGenerator.createMultilineResponse(multiline);
-        	multilineRes.setObjectName("multilines");
-        	multilineResponse.add(multilineRes);
+            MultilineResponse multilineRes = _responseGenerator.createMultilineResponse(multiline);
+            multilineRes.setObjectName("multilines");
+            multilineResponse.add(multilineRes);
         }
         response.setResponses(multilineResponse, result.second());
         response.setResponseName(getCommandName());

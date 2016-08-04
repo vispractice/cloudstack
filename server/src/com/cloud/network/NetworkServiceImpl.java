@@ -352,20 +352,20 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
                         services.add(Service.SourceNat);
                         networkSNAT.add(ip.getAssociatedWithNetworkId());
                     } else {
-                    	//update by hai.li 2015.08.19
-                    	Set<String> networkGW = new HashSet<String>();
+                        //update by hai.li 2015.08.19
+                        Set<String> networkGW = new HashSet<String>();
                         boolean checkGW = Boolean.TRUE;
-                		String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-                    	if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
-                    		if(!networkGW.contains(ip.getGateway())){
-                    			services.add(Service.SourceNat);
-                        		networkGW.add(ip.getGateway());
-                        		checkGW = Boolean.FALSE;
-                        	} 
-                    	} 
-                    	
-                    	if(checkGW){
-                    		CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
+                        String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+                        if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
+                            if(!networkGW.contains(ip.getGateway())){
+                                services.add(Service.SourceNat);
+                                networkGW.add(ip.getGateway());
+                                checkGW = Boolean.FALSE;
+                            } 
+                        } 
+                        
+                        if(checkGW){
+                            CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
                             // see the IPAddressVO.java class.
                             IPAddressVO ipAddr = ApiDBUtils.findIpAddressById(ip.getAssociatedWithNetworkId());
                             String ipAddrUuid = ip.getAssociatedWithNetworkId().toString();
@@ -374,7 +374,7 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
                             }
                             ex.addProxyObject(ipAddrUuid, "networkId");
                             throw ex;
-                    	}
+                        }
                     }
                 }
                 ipToServices.put(ip, services);
@@ -594,7 +594,7 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
     @ActionEvent(eventType = EventTypes.EVENT_PORTABLE_IP_ASSIGN, eventDescription = "allocating portable public Ip", create = true)
     public IpAddress allocatePortableIP(Account ipOwner, int regionId, Long zoneId, Long networkId, Long vpcId) throws ResourceAllocationException,
             InsufficientAddressCapacityException, ConcurrentOperationException {
-    	return this.allocateIP(ipOwner, zoneId, networkId, null, null);
+        return this.allocateIP(ipOwner, zoneId, networkId, null, null);
     }
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_PORTABLE_IP_ASSIGN, eventDescription = "allocating portable public Ip", create = true)
@@ -950,32 +950,32 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
         }
 
         if (ipVO.isOneToOneNat() && ipVO.getIsDefaultStaticNat()) {
-        	throw new IllegalArgumentException("the default static nat ip address can't be disassociated.");
+            throw new IllegalArgumentException("the default static nat ip address can't be disassociated.");
         }
         
         if (ipVO.isSourceNat()) {
             //throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
-        	//update by hai.li 2015.09.07
-        	//In the multiline ,support delete the source IP
-        	String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-        	if(isMultiline == null || !isMultiline.equalsIgnoreCase("true")){
-        		throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
-        	}
-        	
-        	MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
-        	if(multiline != null && multiline.getLabel().equals(ipVO.getMultilineLabel())){
-        		throw new IllegalArgumentException("source nat ip address is the default multiline can't be disassociated.");
-        	}
-        	
-        	List<IPAddressVO> networkIpVOs = _ipAddressDao.listByAssociatedNetwork(ipVO.getAssociatedWithNetworkId(), Boolean.TRUE);
-        	if(networkIpVOs == null || networkIpVOs.size() < 2){
-        		throw new IllegalArgumentException("One source nat ip address at least can't be disassociated.");
-        	}
-        	
-        	List<IPAddressVO> sourceIpVOs = _ipAddressDao.listSourceNatPublicIps(ipVO.getAssociatedWithNetworkId(), ipVO.getVlanId(), Boolean.FALSE, State.Allocated);
-        	if(sourceIpVOs == null || sourceIpVOs.size() > 0){
-        		throw new IllegalArgumentException("Before disassociated source nat ip address must disassociated vlan public IP.");
-        	}
+            //update by hai.li 2015.09.07
+            //In the multiline ,support delete the source IP
+            String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+            if(isMultiline == null || !isMultiline.equalsIgnoreCase("true")){
+                throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
+            }
+            
+            MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
+            if(multiline != null && multiline.getLabel().equals(ipVO.getMultilineLabel())){
+                throw new IllegalArgumentException("source nat ip address is the default multiline can't be disassociated.");
+            }
+            
+            List<IPAddressVO> networkIpVOs = _ipAddressDao.listByAssociatedNetwork(ipVO.getAssociatedWithNetworkId(), Boolean.TRUE);
+            if(networkIpVOs == null || networkIpVOs.size() < 2){
+                throw new IllegalArgumentException("One source nat ip address at least can't be disassociated.");
+            }
+            
+            List<IPAddressVO> sourceIpVOs = _ipAddressDao.listSourceNatPublicIps(ipVO.getAssociatedWithNetworkId(), ipVO.getVlanId(), Boolean.FALSE, State.Allocated);
+            if(sourceIpVOs == null || sourceIpVOs.size() > 0){
+                throw new IllegalArgumentException("Before disassociated source nat ip address must disassociated vlan public IP.");
+            }
         }
 
         VlanVO vlan = _vlanDao.findById(ipVO.getVlanId());
@@ -2251,34 +2251,34 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
                 if (!NetUtils.isNetworkAWithinNetworkB(guestVmCidr, network.getCidr())) {
                     throw new InvalidParameterValueException("Invalid value of Guest VM CIDR. For IP Reservation, Guest VM CIDR  should be a subset of network CIDR :  "
                             + network.getCidr());
-				}
-			}
+                }
+            }
 
-			// This check makes sure there are no active IPs existing outside
-			// the guestVmCidr in the network
-			String[] guestVmCidrPair = guestVmCidr.split("\\/");
-			Long size = Long.valueOf(guestVmCidrPair[1]);
-			List<NicVO> nicsPresent = _nicDao.listByNetworkId(networkId);
+            // This check makes sure there are no active IPs existing outside
+            // the guestVmCidr in the network
+            String[] guestVmCidrPair = guestVmCidr.split("\\/");
+            Long size = Long.valueOf(guestVmCidrPair[1]);
+            List<NicVO> nicsPresent = _nicDao.listByNetworkId(networkId);
 
-			String cidrIpRange[] = NetUtils.getIpRangeFromCidr(
-					guestVmCidrPair[0], size);
-			s_logger.info("The start IP of the specified guest vm cidr is: " + cidrIpRange[0] + " and end IP is: " + cidrIpRange[1]);
-			long startIp = NetUtils.ip2Long(cidrIpRange[0]);
-			long endIp = NetUtils.ip2Long(cidrIpRange[1]);
-			long range = endIp - startIp + 1;
-			s_logger.info("The specified guest vm cidr has " + range + " IPs");
+            String cidrIpRange[] = NetUtils.getIpRangeFromCidr(
+                    guestVmCidrPair[0], size);
+            s_logger.info("The start IP of the specified guest vm cidr is: " + cidrIpRange[0] + " and end IP is: " + cidrIpRange[1]);
+            long startIp = NetUtils.ip2Long(cidrIpRange[0]);
+            long endIp = NetUtils.ip2Long(cidrIpRange[1]);
+            long range = endIp - startIp + 1;
+            s_logger.info("The specified guest vm cidr has " + range + " IPs");
 
-			for (NicVO nic : nicsPresent) {
-				long nicIp = NetUtils.ip2Long(nic.getIPv4Address());
-				// check if nic IP is outside the guest vm cidr
-				if (nicIp < startIp || nicIp > endIp) {
-					if (!(nic.getState() == Nic.State.Deallocating)) {
-						throw new InvalidParameterValueException("Active IPs like " + nic.getIPv4Address() + " exist outside the Guest VM CIDR. Cannot apply reservation ");
-					}
-				}
-			}
+            for (NicVO nic : nicsPresent) {
+                long nicIp = NetUtils.ip2Long(nic.getIPv4Address());
+                // check if nic IP is outside the guest vm cidr
+                if (nicIp < startIp || nicIp > endIp) {
+                    if (!(nic.getState() == Nic.State.Deallocating)) {
+                        throw new InvalidParameterValueException("Active IPs like " + nic.getIPv4Address() + " exist outside the Guest VM CIDR. Cannot apply reservation ");
+                    }
+                }
+            }
 
-			// In some scenarios even though guesVmCidr and network CIDR do not appear similar but
+            // In some scenarios even though guesVmCidr and network CIDR do not appear similar but
             // the IP ranges exactly matches, in these special cases make sure no Reservation gets applied
             if (network.getNetworkCidr() == null) {
                 if (NetUtils.isSameIpRange(guestVmCidr, network.getCidr()) && !guestVmCidr.equals(network.getCidr())) {
@@ -4244,15 +4244,15 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
      * @throws InvalidParameterValueException
      */
     private String getMultilineLabl(String multilineLabel) throws InvalidParameterValueException{
-    	 if (multilineLabel != null && !multilineLabel.equals("")) {
-    		 return multilineLabel;
+         if (multilineLabel != null && !multilineLabel.equals("")) {
+             return multilineLabel;
          }
-    	 MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
-      	 if(multiline != null && multiline.getLabel() != null){
-      		return multiline.getLabel();
-      	 } else {
-      		throw new InvalidParameterValueException("Can't assign ip to the default multiline, Not exist one default multiline label.");
-      	 }
+         MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
+           if(multiline != null && multiline.getLabel() != null){
+              return multiline.getLabel();
+           } else {
+              throw new InvalidParameterValueException("Can't assign ip to the default multiline, Not exist one default multiline label.");
+           }
     }
 
     @Override

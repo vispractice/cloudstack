@@ -15,7 +15,7 @@ import com.cloud.user.Account;
 
 @APICommand(name = "deleteBandwidth", description="Delete a bandwidth", responseObject=SuccessResponse.class)
 public class DeleteBandwidthCmd extends BaseCmd{
-	public static final Logger s_logger = Logger.getLogger(DeleteBandwidthCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(DeleteBandwidthCmd.class.getName());
     private static final String s_name = "deletebandwidthresponse";
 
     /////////////////////////////////////////////////////
@@ -30,39 +30,39 @@ public class DeleteBandwidthCmd extends BaseCmd{
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
     
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-	
-	@Override
-	public void execute() {
-		boolean result = _bandwidthService.deleteBandwidth(this);
-		if (result) {
+    
+    @Override
+    public void execute() {
+        boolean result = _bandwidthService.deleteBandwidth(this);
+        if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete bandwidth.");
         }
-	}
+    }
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		Account account = CallContext.current().getCallingAccount();
+    @Override
+    public long getEntityOwnerId() {
+        Account account = CallContext.current().getCallingAccount();
 
         if (account != null) {
             return account.getId();
         }
 
         return Account.ACCOUNT_ID_SYSTEM;
-	}
+    }
 
 }
