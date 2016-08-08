@@ -10977,10 +10977,6 @@
                                                         }
                                                     }
                                                 });
-                                            } else {
-                                            	args.response.success({
-                                                    data: []
-                                                });
                                             }
                                         }
                                         args.response.success({
