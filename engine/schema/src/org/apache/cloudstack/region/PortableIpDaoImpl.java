@@ -106,7 +106,7 @@ public class PortableIpDaoImpl extends GenericDaoBase<PortableIpVO, Long> implem
         address.setPhysicalNetworkId(null);
         update(ipAddressId, address);
     }
-    
+
     @Override
     public List<PortableIpVO> listByRegionIdAndState(int regionId, PortableIp.State state, String multilineLabel) {
         SearchCriteria<PortableIpVO> sc = listByRegionIDAndStateSearch.create();

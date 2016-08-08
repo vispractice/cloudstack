@@ -78,7 +78,7 @@ public class PortableIpVO implements PortableIp {
 
     @Column(name = "vpc_id")
     private Long vpcId;
-    
+
     @Column(name="multiline_label")
     private String multilineLabel;
 
@@ -95,7 +95,7 @@ public class PortableIpVO implements PortableIp {
         state = State.Free;
         this.rangeId = rangeId;
     }
-    
+
     public PortableIpVO(int regionId, Long rangeId, String vlan, String gateway, String netmask, String address, String multilineLabel) {
         this.regionId =regionId;
         this.vlan = vlan;
@@ -244,6 +244,5 @@ public class PortableIpVO implements PortableIp {
     public void setMultilineLabel(String multilineLabel) {
         this.multilineLabel = multilineLabel;
     }
-    
-    
+
 }

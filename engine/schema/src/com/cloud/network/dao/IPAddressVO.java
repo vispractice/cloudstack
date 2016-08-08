@@ -113,13 +113,13 @@ public class IPAddressVO implements IpAddress {
 
     @Column(name = "is_portable")
     private boolean portable = false;
-    
+
     @Column(name="multiline_label")
     private String multilineLabel;
-    
+
     @Column(name="is_default_static_nat")
     private Boolean isDefaultStaticNat;
-    
+
     @Column(name = "display", updatable = true, nullable = false)
     protected boolean display = true;
 
@@ -162,7 +162,7 @@ public class IPAddressVO implements IpAddress {
         this.portable = portable;
         uuid = UUID.randomUUID().toString();
     }
-    
+
     public  IPAddressVO(Ip address, long dataCenterId, Long networkId, Long vpcId, long physicalNetworkId, long sourceNetworkId,
                 long vlanDbId, boolean portable, String multilineLabel, Boolean isDefaultStaticNat) {
         this.address = address;

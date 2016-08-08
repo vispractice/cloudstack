@@ -70,13 +70,13 @@ public class ListTemplatesCmd extends BaseListTaggedResourcesCmd {
 
     @Parameter(name=ApiConstants.SHOW_REMOVED, type=CommandType.BOOLEAN, description="show removed templates as well")
     private Boolean showRemoved;
-    
+
     @Parameter(name=ApiConstants.GUEST_OS_ID, type=CommandType.STRING, description="operation system id")
     private String guestOsId;
-    
+
     @Parameter(name=ApiConstants.IS_READY, type=CommandType.BOOLEAN, description="true if this template is ready to be deployed")
     private Boolean ready;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////

@@ -31,13 +31,13 @@ public class UpdateBandwidthOfferingCmd extends BaseCmd{
 
     @Parameter(name=ApiConstants.NAME, type=CommandType.STRING, description="updates name of the bandwidth offering with this value")
     private String bandwidthOfferingName;
-    
+
     @Parameter(name=ApiConstants.BANDWIDTH_RATE, type=CommandType.INTEGER, description="the rate of the bandwidth offering in Kbit.")
     private Integer rate;
-    
+
     @Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, description="the ceil of the bandwidth offering in Kbit.")
     private Integer ceil;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -61,11 +61,11 @@ public class UpdateBandwidthOfferingCmd extends BaseCmd{
     public Integer getCeil() {
         return ceil;
     }
-    
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-    
+
     @Override
     public String getCommandName() {
         return s_name;
@@ -75,7 +75,7 @@ public class UpdateBandwidthOfferingCmd extends BaseCmd{
     public long getEntityOwnerId() {
         return Account.ACCOUNT_ID_SYSTEM;
     }
-    
+
     @Override
     public void execute() throws ResourceUnavailableException {
         BandwidthOffering result = _configService.updateBandwidthOffering(this);

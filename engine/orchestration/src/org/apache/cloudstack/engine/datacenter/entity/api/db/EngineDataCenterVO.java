@@ -142,7 +142,7 @@ public class EngineDataCenterVO implements EngineDataCenter, Identity {
     //andrew ling add
     @Column(name="is_public_service_in_sg_enabled")
     boolean publicServiceInSGEnabled;
-    
+
     @Column(name = "is_local_storage_enabled")
     boolean localStorageEnabled;
 
@@ -256,7 +256,7 @@ public class EngineDataCenterVO implements EngineDataCenter, Identity {
         this.uuid = UUID.randomUUID().toString();
         this.state = State.Disabled;
     }
-    
+
     public EngineDataCenterVO(String name, String description, String dns1, String dns2, String dns3, String dns4, String guestCidr, String domain, Long domainId, NetworkType zoneType, String zoneToken, String domainSuffix, boolean securityGroupEnabled, boolean publicServiceInSGEnabled, boolean localStorageEnabled, String ip6Dns1, String ip6Dns2) {
         this.name = name;
         this.description = description;
@@ -431,7 +431,7 @@ public class EngineDataCenterVO implements EngineDataCenter, Identity {
     public void setPublicServiceInSGEnabled(boolean publicServiceInSGEnabled) {
         this.publicServiceInSGEnabled = publicServiceInSGEnabled;
     }
-    
+
     @Override
     public boolean isLocalStorageEnabled() {
         return localStorageEnabled;

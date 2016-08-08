@@ -610,7 +610,7 @@ public class ApiConstants {
     public static final String PASSIVE = "passive";
     public static final String VERSION = "version";
     public static final String START = "start";
-    
+
     public static final String NAME_OR_IP = "nameorip";
     public static final String GUEST_OS_ID = "guestosid";
     public static final String MULTILINE_ID = "multilineid";
@@ -627,7 +627,7 @@ public class ApiConstants {
     public static final String BANDWIDTH_RULE_IP = "bandwidthruleip";
     public static final String BANDWIDTH_OFFERING_ID = "bandwidthofferingid";
     public static final String BANDWIDTH_FILTER_ID = "bandwidthfilterid";
-    
+
     public static final String GPUGROUP = "gpugroup";
     public static final String GPUGROUPNAME = "gpugroupname";
     public static final String VGPU = "vgpu";

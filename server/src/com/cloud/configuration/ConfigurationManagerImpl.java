@@ -1865,7 +1865,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                     broadcastDomainType = BroadcastDomainType.LinkLocal;
                 } else if (offering.getTrafficType() == TrafficType.Public) {
                     //andrew ling add, change the default network ,when use the security group and public service .
-                    if ((zone.getNetworkType() == NetworkType.Advanced && zone.isSecurityGroupEnabled() && zone.isPublicServiceInSGEnabled()) 
+                    if ((zone.getNetworkType() == NetworkType.Advanced && zone.isSecurityGroupEnabled() && zone.isPublicServiceInSGEnabled())
                             || (zone.getNetworkType() == NetworkType.Advanced && !zone.isSecurityGroupEnabled())
                             || zone.getNetworkType() == NetworkType.Basic) {
                         broadcastDomainType = BroadcastDomainType.Vlan;
@@ -1909,7 +1909,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         if(!isSecurityGroupEnabled && isPublicServiceInSGEnabled){
             throw new InvalidParameterValueException("when the public service is enabled, the security group must been enabled.");
         }
-        
+
         if (allocationState == null) {
             allocationState = Grouping.AllocationState.Disabled.toString();
         }
@@ -2837,13 +2837,13 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         if (ipv4) {
             checkOverlapPrivateIpRange(zoneId, startIP, endIP);
         }
-        
+
         MultilineVO multiline = getMultilineLabl(multilineLabel);
-        
+
         if(multiline == null || multiline.getLabel().equals("")){
              throw new InvalidParameterValueException("multiline labe is not exist : " + multilineLabel);
         }
-        
+
         return commitVlan(zoneId, podId, startIP, endIP, newVlanGateway, newVlanNetmask, vlanId, forVirtualNetwork, networkId, physicalNetworkId, startIPv6, endIPv6, ip6Gateway,
                 ip6Cidr, domain, vlanOwner, network, sameSubnet, multiline.getLabel());
     }
@@ -5084,12 +5084,12 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             }
 
         }
-        
+
         final MultilineVO multiline = getMultilineLabl(multilineLabel);
         if(multiline == null || multiline.getLabel().equals("")){
              throw new InvalidParameterValueException("multiline labe is not exist : " + multilineLabel);
         }
-        
+
         final GlobalLock portableIpLock = GlobalLock.getInternLock("PortablePublicIpRange");
         portableIpLock.lock(5);
         try {
@@ -5233,7 +5233,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {SystemVMUseLocalStorage};
     }
-    
+
     private Vlan commitVlan(final Long zoneId, final Long podId, final String startIP, final String endIP, final String newVlanGatewayFinal, final String newVlanNetmaskFinal,
             final String vlanId, final Boolean forVirtualNetwork, final Long networkId, final Long physicalNetworkId, final String startIPv6, final String endIPv6,
             final String ip6Gateway, final String ip6Cidr, final Domain domain, final Account vlanOwner, final Network network, final Pair<Boolean, Pair<String, String>> sameSubnet, final String multilineLabel) {
@@ -5267,8 +5267,8 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             }
         });
     }
-    
-    
+
+
     @Override
     @DB
     public Vlan createVlanAndPublicIpRange(final long zoneId, final long networkId, final long physicalNetworkId, final boolean forVirtualNetwork, final Long podId, final String startIP, final String endIP,
@@ -5509,7 +5509,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
         return vlan;
     }
-    
+
     private VlanVO commitVlanAndIpRange(final long zoneId, final long networkId, final long physicalNetworkId, final Long podId, final String startIP, final String endIP,
             final String vlanGateway, final String vlanNetmask, final String vlanId, final Domain domain, final Account vlanOwner, final String vlanIp6Gateway, final String vlanIp6Cidr,
             final boolean ipv4, final DataCenterVO zone, final VlanType vlanType, final String ipv6Range, final String ipRange, final String multilineLabel) {
@@ -5557,7 +5557,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         });
 
     }
-    
+
     @DB
     protected boolean savePublicIPRange(String startIP, String endIP, final long zoneId, final long vlanDbId, final long sourceNetworkid,
             final long physicalNetworkId,final String multilineLabel) {
@@ -5575,8 +5575,8 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
         return problemIps != null && problemIps.size() == 0;
     }
-    
-    
+
+
     /**
      * get default multiline label
      * @param multilineLabel
@@ -5584,16 +5584,16 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
      * @throws InvalidParameterValueException
      */
     private MultilineVO getMultilineLabl(String multilineLabel) throws InvalidParameterValueException{
-        
+
         String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
         if(isMultiline != null && isMultiline.equalsIgnoreCase("true")){
              if (multilineLabel != null && !multilineLabel.equals("")) {
                   return _multilineDao.getMultilineByLabel(multilineLabel);
-             } 
-        } 
-        return _multilineDao.getDefaultMultiline();        
+             }
+        }
+        return _multilineDao.getDefaultMultiline();
     }
-    
+
     //andrew ling add
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_CREATE, eventDescription = "creating bandwidth offering")
@@ -5603,7 +5603,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         String displayText = cmd.getDisplayText();
         Integer rate = cmd.getRate();
         Integer ceil = cmd.getCeil();
-        
+
         //check the parameters
         if(zoneId == null || name.isEmpty() || displayText.isEmpty()){
             throw new InvalidParameterValueException("It need the parameters, like name, display etc.");
@@ -5612,9 +5612,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             throw new InvalidParameterValueException("The rate or ceil must more than zero.");
         }
         return createBandwidthOffering(zoneId, name, displayText, rate, ceil);
-        
+
     }
-    
+
     //andrew ling add
     protected BandwidthOfferingVO createBandwidthOffering(Long zoneId, String name, String displayText, Integer rate, Integer ceil){
         BandwidthOfferingVO newBandwidthOffering = new BandwidthOfferingVO(zoneId, name, displayText, rate ,ceil);
@@ -5628,7 +5628,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             return null;
         }
     }
-    
+
     //TODO andrew ling add
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_BANDWIDTH_OFFERING_EDIT, eventDescription = "updating bandwidth offering")
@@ -5647,7 +5647,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         if (bandwidthOfferingHandle == null) {
             throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
         }
-        
+
         //if all the parameter is not input ,then return the old offering.
         boolean updateNeeded = (updateName != null || updateDisplayText != null || updateRate != null || updateCeil != null);
         if (!updateNeeded) {
@@ -5661,11 +5661,11 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             if(updateCeil == null){
                 updateCeil = bandwidthOfferingHandle.getCeil();
             }
-            
+
             //rate or ceil changed, then refresh the bandwidth rules which used this bandwidth offering.
             BandwidthOfferingVO oldBandwidthOfferingVO = _bandwidthOfferingDao.findById(bandwidthOfferingId);
             if(!oldBandwidthOfferingVO.getRate().equals(updateRate) || !oldBandwidthOfferingVO.getCeil().equals(updateCeil)){
-                
+
                 if(oldBandwidthOfferingVO.getRate() < updateRate){
                     //check the new parameter rate, if it has enough capacity.
                     //find all the rules which used the offering, and count the bandwidth capacity
@@ -5731,7 +5731,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                         }
                     }
                 }
-                
+
                 //go to re-execute the bandwidth rules which used this bandwidth offering.
                 boolean refreshRulesOK = _bandwidthManager.updateOfferingRefreshRules(updateRate, updateCeil, oldBandwidthOfferingVO);
                 if(!refreshRulesOK){
@@ -5739,9 +5739,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                     throw new CloudRuntimeException("When update the bandwidth offering , It run wrong.");
                 }
             }
-            
+
         }
-        
+
         //store the update bandwidth offering to the DB.
         BandwidthOfferingVO bandwidthOffering = _bandwidthOfferingDao.createForUpdate(bandwidthOfferingId);
 
@@ -5752,22 +5752,22 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         if (updateDisplayText != null) {
             bandwidthOffering.setDisplayText(updateDisplayText);
         }
-        
+
         if (updateRate != null) {
             bandwidthOffering.setRate(updateRate);
         }
-        
+
         if (updateCeil != null) {
             bandwidthOffering.setCeil(updateCeil);
         }
-        
+
         if (_bandwidthOfferingDao.update(bandwidthOfferingId, bandwidthOffering)) {
             CallContext.current().setEventDetails("Bandwidth offering id=" + bandwidthOffering.getId());
             return _bandwidthOfferingDao.findById(bandwidthOfferingId);
         } else {
             return null;
         }
-        
+
     }
 
     //andrew ling add
@@ -5776,16 +5776,16 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     public boolean deleteBandwidthOffering(DeleteBandwidthOfferingCmd cmd) {
         Long bandwidthOfferingId = cmd.getId();
         BandwidthOfferingVO offering = _bandwidthOfferingDao.findById(bandwidthOfferingId);
-        
+
         if (offering == null){
             throw new InvalidParameterValueException("Unable to find bandwidth offering by id " + bandwidthOfferingId);
         }
-        
+
         List<BandwidthRulesVO> rules = _bandwidthRulesDao.listByBandwidthOfferingId(bandwidthOfferingId);
         if(!rules.isEmpty()){
             throw new InvalidParameterValueException("Unable to delete the bandwidth offering by id " + bandwidthOfferingId + ", because it was used.");
         }
-        
+
         offering.setState(BandwidthOfferingState.Inactive);
         offering.setRemoved(new Date(-1l));
         if(_bandwidthOfferingDao.update(bandwidthOfferingId, offering)){
@@ -5795,5 +5795,5 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             return false;
         }
     }
-    
+
 }

@@ -54,7 +54,7 @@ public class PortableIpRangeVO implements PortableIpRange {
 
     @Column(name = "end_ip")
     String endIp;
-    
+
     @Column(name="multiline_label")
     private String multilineLabel;
 
@@ -82,7 +82,7 @@ public class PortableIpRangeVO implements PortableIpRange {
         this.endIp = endIp;
         this.multilineLabel = multilineLabel;
     }
-    
+
     @Override
     public long getId() {
         return id;
@@ -125,7 +125,7 @@ public class PortableIpRangeVO implements PortableIpRange {
     public String getIpRange() {
         return startIp + "-" + endIp;
     }
-    
+
     @Override
     public String getMultilineLabel() {
         return multilineLabel;
@@ -134,5 +134,5 @@ public class PortableIpRangeVO implements PortableIpRange {
     public void setMultilineLabel(String multilineLabel) {
         this.multilineLabel = multilineLabel;
     }
-    
+
 }

@@ -128,12 +128,12 @@ public class VirtualRoutingResource {
                 //TODO: Deal with group answer as well
                 return new Answer(cmd);
             }
-            
+
             //andrew ling add
             if(cmd instanceof SetMultilineRouteCommand){
                 return execute((SetMultilineRouteCommand)cmd);
             }
-            
+
             if(cmd instanceof SetBandwidthRulesCommand){
                 return execute((SetBandwidthRulesCommand)cmd);
             }
@@ -417,7 +417,7 @@ public class VirtualRoutingResource {
         }
         return new Answer(cmd, false, "Fail to recongize aggregation action " + action.toString());
     }
-    
+
     //Andrew ling add
     private Answer execute(SetMultilineRouteCommand cmd){
 //        String script = "route_rules.sh";
@@ -463,7 +463,7 @@ public class VirtualRoutingResource {
         //创建路由表的规则
         String tableLabelGroupToRouteRulesCmd = virtualRoutingMutilineSetup.getTableLabelGroupToRouteRulesCmd();
         String[] tableLabelGroupToRouteRulesCmdToArray = splitScripteParameter(tableLabelGroupToRouteRulesCmd, ";", _maxParamterNum);
-        
+
         for(String mainTableToRouteRules : mainTableToRouteRulesCmdToArray){
 //            final ExecutionResult result = _vrDeployer.executeInVR(cmd.getRouterAccessIp(), VRScripts.VERSION, null);
             final ExecutionResult result = _vrDeployer.executeInVR(cmd.getRouterAccessIp(), VRScripts.MULTILINE_ROUTE_RULES, mainTableToRouteRules);
@@ -472,14 +472,14 @@ public class VirtualRoutingResource {
                 return new Answer( cmd, false, "SetMultilineRouteCommand failed besause can not create main route table rules.");
             }
         }
-        
+
 //        script = "none.sh";
         final ExecutionResult result = _vrDeployer.executeInVR(cmd.getRouterAccessIp(), VRScripts.NONE_SCRIPTE, createRouteTableLableRulesCmd);
 //        String result = routerProxy(script, routerIp, createRouteTableLableRulesCmd);
         if (!result.isSuccess()){
             return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables.");
         }
-        
+
         for(String tableLabelGroupToRouteRules : tableLabelGroupToRouteRulesCmdToArray){
             final ExecutionResult resultSecondary = _vrDeployer.executeInVR(cmd.getRouterAccessIp(), VRScripts.NONE_SCRIPTE, tableLabelGroupToRouteRules);
 //            result = routerProxy(script, routerIp, tableLabelGroupToRouteRules);
@@ -489,7 +489,7 @@ public class VirtualRoutingResource {
         }
         return new Answer(cmd);
     }
-    
+
     private String[] splitScripteParameter(String scripteParameters, String regex, int maxNumPerLine){
         String[] scripteParametersToArray = scripteParameters.split(regex);
         int scripteParameterNO = 0;
@@ -514,14 +514,13 @@ public class VirtualRoutingResource {
                 }
                 scripteParametersResult[scripteParameterNO] += scripteParametersToArray[i] + ";";
             }
-            
         }else{
             scripteParametersResult[0] = scripteParameters;
             return scripteParametersResult;
         }
         return scripteParametersResult;
     }
-    
+
     //Andrew ling add
     private SetBandwidthRulesAnswer execute(SetBandwidthRulesCommand cmd){
 //        tc qdisc add dev eth0 root handle 1: htb r2q 1 这一段在网卡创建的时候执行。
@@ -560,7 +559,7 @@ public class VirtualRoutingResource {
                         result = _vrDeployer.executeInVR(cmd.getRouterAccessIp(), VRScripts.NONE_SCRIPTE, executeRules);
 //                        result = routerProxy(script, routerIp, executeRules);
                     }
-                    
+
                     if (!deleteResult.isSuccess() || (result != null && !result.isSuccess())) {
                         results[i++] = "Failed";
                         endResult = false;
@@ -591,7 +590,7 @@ public class VirtualRoutingResource {
 //                    String deleteResult = routerProxy(script, routerIp, deleteAllFilterRule);
                     // tc qdisc del dev eth0 parent 1:2 handle 2: sfq perturb 10
                     //tc class del dev eth0 parent 1: classid 1:2 htb rate 1000kbit ceil 2000kbit prio 2
-                    executeRules +=  "tc qdisc del dev eth"+ deviceId + " parent 1:" + trafficRuleId+ " handle " + trafficRuleId + ": sfq perturb 10;" 
+                    executeRules +=  "tc qdisc del dev eth"+ deviceId + " parent 1:" + trafficRuleId+ " handle " + trafficRuleId + ": sfq perturb 10;"
                             + "tc class del dev eth" + deviceId+ " parent 1: classid 1:" + trafficRuleId+ " htb rate " + rate + "kbit ceil " + ceil
                             + "kbit prio " + prio + ";";
 //                    script = "none.sh";
@@ -622,7 +621,7 @@ public class VirtualRoutingResource {
         }
         return new SetBandwidthRulesAnswer(cmd, endResult, results);
     }
-    
+
     private boolean checkFiltersIncludeDel(BandwidthFilterTO[] bandwidthFilters){
         for (BandwidthFilterTO filters : bandwidthFilters) {
             if(filters.isRevoke()){
@@ -631,7 +630,7 @@ public class VirtualRoutingResource {
         }
         return false;
     }
-    
+
     private String buildFilterRules(BandwidthFilterTO[] bandwidthFilters, boolean isDel, boolean isAddAll, BandwidthType type, int deviceId, int prio, int trafficRuleId){
         String filterRules = "";
         if(isAddAll){
@@ -664,7 +663,7 @@ public class VirtualRoutingResource {
         }
         return null;
     }
-    
+
     private String buildFilterRule(BandwidthFilterTO bandwidthFilter, BandwidthType type, int deviceId, int prio, int trafficRuleId){
         String filterRule = "";
         String ip = bandwidthFilter.getIp();
@@ -698,13 +697,13 @@ public class VirtualRoutingResource {
         Map<Integer, String> portRangeParams = createBandwidthPortRangeParams(startPort, endPort);
         for (Map.Entry<Integer, String> entry : portRangeParams.entrySet()) {
             // tc filter add dev eth3 protocol ip prio 2 u32 match ip protocol 6 0xff match ip sport 8090 0xffff match ip src 122.13.159.230 flowid 1:4;
-            filterRule += "tc filter add dev eth" + deviceId + " protocol ip prio " + prio 
-                    + " u32 match ip protocol " + protocolNum + " 0xff match ip " + portType + " " + entry.getKey() + " "+ entry.getValue() 
+            filterRule += "tc filter add dev eth" + deviceId + " protocol ip prio " + prio
+                    + " u32 match ip protocol " + protocolNum + " 0xff match ip " + portType + " " + entry.getKey() + " "+ entry.getValue()
                     + " match ip " + trafficType + " " + ip + " flowid 1:"+ trafficRuleId + ";" ;
         }
         return filterRule;
     }
-    
+
     private  Map<Integer, String> createBandwidthPortRangeParams(int startPort, int endPort){
         Map<Integer, String> mask = new HashMap<Integer, String>();
         mask.put(1, "0xffff");
@@ -724,7 +723,7 @@ public class VirtualRoutingResource {
         mask.put(16384, "0xc000");
         mask.put(32768, "0x8000");
         mask.put(65536, "0x0000");
-        
+
         Map<Integer, String> result = new HashMap<Integer, String>();
         if(startPort == endPort){
             result.put(startPort, mask.get(1));
@@ -743,17 +742,17 @@ public class VirtualRoutingResource {
             result.put(startPort, mask.get(1));
             return result;
         }
-        
+
         ////////////////会循环部分/////////////////
         endPort++;
         while(startPort != endPort){
             int portDifference = endPort - startPort;
             //开始端口能达到的最大区间值A
             int startPort2IntervalTop = getTop2Exponentiation(startPort);
-            
+
             //结束端口和开始端口之差能达到的最大区间值B
             int portDifference2intervalTop = getTop2Exponentiation(portDifference);
-            
+
             //最大区间值B只能
             if(portDifference2intervalTop >= startPort2IntervalTop){
                 result.put(startPort, mask.get(startPort2IntervalTop));
@@ -765,7 +764,7 @@ public class VirtualRoutingResource {
         }
         return result;
     }
-    
+
     //开始端口的最大能取到的区间值
     private  int getTop2Exponentiation(int value){
         int i = 0;
@@ -777,5 +776,5 @@ public class VirtualRoutingResource {
         Top2Exponentiation = Math.pow(2, i-2);
         return (int)Top2Exponentiation;
     }
-    
+
 }

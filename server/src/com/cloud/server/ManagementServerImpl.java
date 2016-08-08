@@ -3000,7 +3000,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(ListBandwidthRulesCmd.class);
         cmdList.add(AssignToBandwidthRuleCmd.class);
         cmdList.add(RemoveFromBandwidthRuleCmd.class);
-        
+
         cmdList.add(UpdateEgressFirewallRuleCmd.class);
         cmdList.add(UpdateFirewallRuleCmd.class);
         cmdList.add(UpdateNetworkACLListCmd.class);
@@ -4086,7 +4086,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     @Override
     public Pair<List<? extends Multiline>, Integer> searchForMultiline(ListMultilineCmd cmd) {
-        
+
          Account caller = CallContext.current().getCallingAccount();
          String label = cmd.getMultilineLabel();
          Object keyword = cmd.getKeyword();
@@ -4094,18 +4094,18 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
          Long id = cmd.getId();
 
          Filter searchFilter = new Filter(MultilineVO.class, "isDefault", false, cmd.getStartIndex(), cmd.getPageSizeVal());
-        
+
          SearchBuilder<MultilineVO> sb = _multilineDao.createSearchBuilder();
          sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
          sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
          sb.and("label", sb.entity().getLabel(), SearchCriteria.Op.EQ);
          sb.and("isDefault", sb.entity().getIsDefault(), SearchCriteria.Op.EQ);
-         
+
          SearchCriteria<MultilineVO> sc = sb.create();
          if(label != null && !label.isEmpty()){
              sc.setParameters("label",label);
          }
-         
+
         String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
          if(isMultiline != null && !isMultiline.equalsIgnoreCase("true")){
              sc.setParameters("isDefault", Boolean.TRUE);
@@ -4113,7 +4113,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         if(!listAll){
              sc.setParameters("isDefault", Boolean.TRUE);
         }
-         
+
         Pair<List<MultilineVO>, Integer> result = _multilineDao.searchAndCount(sc, searchFilter);
         return new Pair<List<? extends Multiline>, Integer>(result.first(), result.second());
     }

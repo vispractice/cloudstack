@@ -11,19 +11,19 @@ public class BandwidthResponse  extends BaseResponse {
     //id, multilineId, dataCenterId, inTraffic, outTraffic
     @SerializedName("id") @Param(description="the id of the bandwidth rule")
     private String id;
-    
+
     @SerializedName("multilineId") @Param(description="the multiline id of the bandwidth")
     private String multilineId;
-    
+
     @SerializedName("multilineLabel") @Param(description="the multiline label of the bandwidth")
     private String multilineLabel;
-    
+
     @SerializedName("zoneId") @Param(description="the zone id of the bandwidth")
     private String zoneId;
-    
+
     @SerializedName("inTraffic") @Param(description="the inTraffic of the bandwidth in Kbit")
     private Integer inTraffic;
-        
+
     @SerializedName("outTraffic") @Param(description="the outTraffic of the bandwidth in Kbit")
     private Integer outTraffic;
 
@@ -74,5 +74,5 @@ public class BandwidthResponse  extends BaseResponse {
     public void setMultilineLabel(String multilineLabel) {
         this.multilineLabel = multilineLabel;
     }
-    
+
 }

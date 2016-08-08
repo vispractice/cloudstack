@@ -274,7 +274,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
     @Override
     public Map<PublicIpAddress, Set<Service>> getIpToServices(List<? extends PublicIpAddress> publicIps, boolean postApplyRules, boolean includingFirewall) {
             Map<PublicIpAddress, Set<Service>> ipToServices = new HashMap<PublicIpAddress, Set<Service>>();
-    
+
             if (publicIps != null && !publicIps.isEmpty()) {
                 Set<Long> networkSNAT = new HashSet<Long>();
                 for (PublicIpAddress ip : publicIps) {
@@ -296,9 +296,9 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
                                     services.add(Service.SourceNat);
                                     networkGW.add(ip.getGateway());
                                     checkGW = Boolean.FALSE;
-                                } 
-                            } 
-                            
+                                }
+                            }
+
                             if(checkGW){
                                 CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
                                 // see the IPAddressVO.java class.
@@ -313,13 +313,13 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
                         }
                     }
                     ipToServices.put(ip, services);
-    
+
                     // if IP in allocating state then it will not have any rules attached so skip IPAssoc to network service
                     // provider
                     if (ip.getState() == State.Allocating) {
                         continue;
                     }
-    
+
                     // check if any active rules are applied on the public IP
                     Set<Purpose> purposes = getPublicIpPurposeInRules(ip, false, includingFirewall);
                     // Firewall rules didn't cover static NAT
@@ -332,7 +332,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
                     if (purposes == null || purposes.isEmpty()) {
                         // since no active rules are there check if any rules are applied on the public IP but are in
                         // revoking state
-                        
+
                         purposes = getPublicIpPurposeInRules(ip, true, includingFirewall);
                         if (ip.isOneToOneNat()) {
                             if (purposes == null) {
@@ -2294,7 +2294,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
             throw ex;
         }
     }
-    
+
       @Override
     public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long associatedNetworkId, Boolean sourceNat, String multilineLabel) {
         SearchCriteria<IPAddressVO> sc = IpAddressSearch.create();
@@ -2306,7 +2306,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel {
         sc.setJoinParameters("virtualNetworkVlanSB", "vlanType", VlanType.VirtualNetwork);
         return _ipAddressDao.search(sc, null);
     }
-      
+
       @Override
       public List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long accountId, long associatedNetworkId, Boolean sourceNat,String multilineLabel) {
           SearchCriteria<IPAddressVO> sc = IpAddressSearch.create();

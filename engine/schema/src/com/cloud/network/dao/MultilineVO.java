@@ -42,16 +42,16 @@ public class MultilineVO implements InternalIdentity, Multiline{
 
     @Column(name="uuid")
     private String uuid;
-    
+
     @Column(name="label")
     private String label;
-    
+
     @Column(name="name")
     private String name;
 
     @Column(name="is_default")
     private boolean isDefault;
-    
+
     @Column(name="route_rule")
     private String routeRule;
 

@@ -115,7 +115,7 @@ public class VlanIpRangeResponse extends BaseResponse implements ControlledEntit
     @SerializedName(ApiConstants.IP6_CIDR)
     @Param(description = "the cidr of IPv6 network")
     private String ip6Cidr;
-    
+
     @SerializedName(ApiConstants.MULTILINE_LABEL) @Param(description="the multiline tabel")
     private String multilineLabel;
 
@@ -227,5 +227,5 @@ public class VlanIpRangeResponse extends BaseResponse implements ControlledEntit
     public void setMultilineLabel(String multilineLabel) {
         this.multilineLabel = multilineLabel;
     }
-    
+
 }

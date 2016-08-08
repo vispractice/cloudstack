@@ -21,16 +21,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.inject.Inject;
-
 import org.apache.cloudstack.api.command.user.firewall.ListPortForwardingRulesCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.log4j.Logger;
-
 import com.cloud.configuration.ConfigurationManager;
-import com.cloud.dc.VlanVO;
 import com.cloud.dc.dao.VlanDao;
 import com.cloud.domain.dao.DomainDao;
 import com.cloud.event.ActionEvent;
@@ -652,7 +648,7 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
         //IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp);
         //update portableIp and publicIP static nat
         IPAddressVO oldIP = _ipAddressDao.findByAssociatedVmIdAndVmIp(vmId, vmIp,ipAddress.getMultilineLabel());
-                
+
         if (oldIP != null) {
             // If elasticIP functionality is supported in the network, we always have to disable static nat on the old
             // ip in order to re-enable it on the new one
@@ -859,7 +855,7 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
         if (ipId != null) {
             sc.setParameters("ip", ipId);
         }
-        
+
         if (networkId != null) {
             sc.setParameters("networkId", networkId);
         }
@@ -1253,7 +1249,7 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
                 }
             }
         }
-        
+
         // if network has elastic IP functionality supported, we first have to disable static nat on old ip in order to
         // re-enable it on the new one enable static nat takes care of that
         Network guestNetwork = _networkModel.getNetwork(ipAddress.getAssociatedWithNetworkId());
@@ -1543,7 +1539,7 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
 
     @Override
     public boolean updateStaticNat(long ipId, boolean isDefaultStatic) throws  ResourceUnavailableException, NetworkRuleConflictException {
-            
+
             CallContext ctx = CallContext.current();
             Account caller = ctx.getCallingAccount();
             final IPAddressVO ipAddress = _ipAddressDao.findById(ipId);
@@ -1567,19 +1563,19 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
                 ex.addProxyObject(ipAddress.getUuid(), "ipId");
                 throw ex;
             }
-            
+
             if (ipAddress.getIsDefaultStaticNat() == isDefaultStatic) {
                 InvalidParameterValueException ex = new InvalidParameterValueException("This staticNat already exists : "+ isDefaultStatic +"  for the specified ip =" +ipAddress.getAddress());
                 ex.addProxyObject(ipAddress.getUuid(), "ipId");
                 throw ex;
             }
-            
+
             if(!isDefaultStatic){
                 InvalidParameterValueException ex = new InvalidParameterValueException("You must specify a default static nat.");
                 ex.addProxyObject(ipAddress.getUuid(), "ipId");
                 throw ex;
             }
-            
+
             Transaction.execute(new TransactionCallbackWithExceptionNoReturn<NetworkRuleConflictException>() {
                 @Override
                 public void doInTransactionWithoutResult(TransactionStatus status) throws NetworkRuleConflictException {
@@ -1587,15 +1583,15 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
                     if(staticNatIp != null  && staticNatIp.getId() != ipAddress.getId()){
                         staticNatIp.setIsDefaultStaticNat(false);
                         _ipAddressDao.update(staticNatIp.getId(), staticNatIp);
-                    } 
+                    }
                     ipAddress.setIsDefaultStaticNat(true);
                     _ipAddressDao.update(ipAddress.getId(),ipAddress);
                 }
             });
-            
+
             return true;
     }
-    
+
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_NET_RULE_MODIFY, eventDescription = "updating forwarding rule", async = true)
     public PortForwardingRule updatePortForwardingRule(long id, Integer privatePort, Long virtualMachineId, Ip vmGuestIp, String customId, Boolean forDisplay) {

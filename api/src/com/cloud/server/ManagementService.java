@@ -435,7 +435,7 @@ public interface ManagementService {
     ConcurrentOperationException;
 
     void cleanupVMReservations();
-    
+
     Pair<List<? extends Multiline>, Integer> searchForMultiline(ListMultilineCmd cmd);
 
 }

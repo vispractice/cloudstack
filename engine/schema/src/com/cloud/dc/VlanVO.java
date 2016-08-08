@@ -75,16 +75,16 @@ public class VlanVO implements Vlan {
 
     @Column(name = "uuid")
     String uuid;
-    
+
     @Column(name="multiline_label")
     String multilineLabel;
-    
+
     @Column(name= GenericDao.REMOVED_COLUMN)
     private Date removed;
 
     @Column(name = GenericDao.CREATED_COLUMN)
     private Date created;
-    
+
     public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId,
             String ip6Gateway, String ip6Cidr, String ip6Range) {
         this.vlanType = vlanType;
@@ -100,7 +100,7 @@ public class VlanVO implements Vlan {
         this.uuid = UUID.randomUUID().toString();
         this.physicalNetworkId = physicalNetworkId;
     }
-    
+
     public VlanVO(VlanType vlanType, String vlanTag, String vlanGateway, String vlanNetmask, long dataCenterId, String ipRange, Long networkId, Long physicalNetworkId, String ip6Gateway, String ip6Cidr, String ip6Range, String multilineLabel) {
         this.vlanType = vlanType;
         this.vlanTag = vlanTag;
@@ -266,5 +266,5 @@ public class VlanVO implements Vlan {
     public void setVlanTag(String vlanTag) {
         this.vlanTag = vlanTag;
     }
-    
+
 }

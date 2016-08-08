@@ -1,17 +1,13 @@
 package com.cloud.network.dao;
 
 import java.util.UUID;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
 import org.apache.cloudstack.api.InternalIdentity;
-
-import com.cloud.utils.net.NetUtils;
 
 @Entity
 @Table(name="bandwidth_ip_port_map")
@@ -21,29 +17,29 @@ public class BandwidthIPPortMapVO implements InternalIdentity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id")
     private long id;
-    
+
     @Column(name="uuid")
     private String uuid;
-    
+
     @Column(name="bandwidth_rules_id")
     private Long bandwidthRulesId;
 
     @Column(name="ip_address")
     private String ipAddress;
-    
+
     @Column(name="protocol")
     String protocol;
-    
+
     @Column(name="start_port")
     private Integer bandwidthPortStart;
 
     @Column(name="end_port")
     private Integer bandwidthPortEnd;
-    
+
     public BandwidthIPPortMapVO(){
         uuid = UUID.randomUUID().toString();
     }
-    
+
     public BandwidthIPPortMapVO(long bandwidthRulesId, String ipAddress, String protocol, Integer bandwidthPortStart, Integer bandwidthPortEnd){
         uuid = UUID.randomUUID().toString();
         this.bandwidthRulesId = bandwidthRulesId;
@@ -52,7 +48,7 @@ public class BandwidthIPPortMapVO implements InternalIdentity {
         this.bandwidthPortStart = bandwidthPortStart;
         this.bandwidthPortEnd = bandwidthPortEnd;
     }
-    
+
     public long getBandwidthRulesId() {
         return bandwidthRulesId;
     }

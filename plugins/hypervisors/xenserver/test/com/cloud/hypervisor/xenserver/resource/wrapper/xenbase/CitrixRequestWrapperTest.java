@@ -391,7 +391,7 @@ public class CitrixRequestWrapperTest {
         final StoragePoolVO poolVO = Mockito.mock(StoragePoolVO.class);
         final XsHost xsHost = Mockito.mock(XsHost.class);
 
-        final ModifyStoragePoolCommand modifyStorageCommand = new ModifyStoragePoolCommand(false, poolVO);
+        final ModifyStoragePoolCommand modifyStorageCommand = new ModifyStoragePoolCommand(false, poolVO, "");
 
         final CitrixRequestWrapper wrapper = CitrixRequestWrapper.getInstance();
         assertNotNull(wrapper);

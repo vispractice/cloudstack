@@ -30,5 +30,5 @@ public interface BandwidthService {
     boolean deleteBandwidth(DeleteBandwidthCmd cmd);
     boolean updateBandwidth(UpdateBandwidthCmd cmd);
     ListResponse<BandwidthResponse> searchForBandwidths(ListBandwidthsCmd cmd);
-    
+
 }

@@ -39,7 +39,7 @@ public class Upgrade432to433  implements DbUpgrade {
 
     @Override
     public void performDataMigration(Connection conn) {
-        
+
     }
 
     @Override

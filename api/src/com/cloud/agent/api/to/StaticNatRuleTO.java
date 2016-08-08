@@ -30,7 +30,7 @@ public class StaticNatRuleTO extends FirewallRuleTO {
     String dstIp;
     String multilineLabelSeq;
     Boolean isMultiline;
-    
+
     public Boolean IsMultiline() {
         return isMultiline;
     }
@@ -96,5 +96,5 @@ public class StaticNatRuleTO extends FirewallRuleTO {
         this.multilineLabelSeq = multilineLabelSeq;
         this.isMultiline = isMultiline;
     }
-    
+
 }

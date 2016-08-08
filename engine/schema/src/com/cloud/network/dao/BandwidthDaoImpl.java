@@ -15,7 +15,7 @@ import com.cloud.utils.db.SearchCriteria;
 public class BandwidthDaoImpl extends GenericDaoBase<BandwidthVO, Long> implements BandwidthDao {
     private final SearchBuilder<BandwidthVO> bandwidthMultilineIdSearch;
     private final SearchBuilder<BandwidthVO> bandwidthZoneIdSearch;
-    
+
     protected BandwidthDaoImpl(){
         bandwidthMultilineIdSearch = createSearchBuilder();
         bandwidthMultilineIdSearch.and("multilineId", bandwidthMultilineIdSearch.entity().getMultilineId(), SearchCriteria.Op.EQ);
@@ -23,10 +23,10 @@ public class BandwidthDaoImpl extends GenericDaoBase<BandwidthVO, Long> implemen
         bandwidthZoneIdSearch = createSearchBuilder();
         bandwidthZoneIdSearch.and("dataCenterId", bandwidthZoneIdSearch.entity().getDataCenterId(), SearchCriteria.Op.EQ);
         bandwidthZoneIdSearch.done();
-        
+
     }
-    
-    
+
+
     @Override
     public BandwidthVO getBandwidthByMultilineId(Long multilineId) {
         SearchCriteria<BandwidthVO> sc = bandwidthMultilineIdSearch.create();

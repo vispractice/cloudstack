@@ -14,31 +14,31 @@ import com.cloud.network.rules.Bandwidth;
 @Table(name="bandwidth")
 public class BandwidthVO implements Bandwidth{
     //bandwidth(uuid,id,multiline_id,date_center_id, in_traffic, out_traffic)
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id")
     private long id;
-    
+
     @Column(name="uuid")
     private String uuid;
-    
+
     @Column(name="multiline_id")
     private Long multilineId;
-    
+
     @Column(name="data_center_id")
     private Long dataCenterId;
-    
+
     @Column(name="in_traffic")
     private Integer inTraffic;
 
     @Column(name="out_traffic")
     private Integer outTraffic;
-    
+
     public BandwidthVO(){
         uuid = UUID.randomUUID().toString();
     }
-    
+
     public BandwidthVO(Long multilineId, Long dataCenterId, Integer inTraffic, Integer outTraffic){
         uuid = UUID.randomUUID().toString();
         this.multilineId = multilineId;
@@ -46,7 +46,7 @@ public class BandwidthVO implements Bandwidth{
         this.inTraffic = inTraffic;
         this.outTraffic = outTraffic;
     }
-    
+
     public void setId(long id) {
         this.id = id;
     }
@@ -55,7 +55,7 @@ public class BandwidthVO implements Bandwidth{
     public long getId() {
         return id;
     }
-    
+
     public String getUuid() {
         return uuid;
     }

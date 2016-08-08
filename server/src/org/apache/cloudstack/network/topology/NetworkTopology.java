@@ -28,7 +28,6 @@ import com.cloud.network.RemoteAccessVpn;
 import com.cloud.network.VpnUser;
 import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.router.VirtualRouter;
-import com.cloud.network.rules.BandwidthRule;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.RuleApplier;
 import com.cloud.network.rules.RuleApplierWrapper;
@@ -88,5 +87,5 @@ public interface NetworkTopology {
 
     boolean applyRules(final Network network, final VirtualRouter router, final String typeString, final boolean isPodLevelException, final Long podId,
             final boolean failWhenDisconnect, RuleApplierWrapper<RuleApplier> ruleApplier) throws ResourceUnavailableException;
-    
+
 }

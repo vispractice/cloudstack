@@ -50,7 +50,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
     private static synchronized void configureHeartBeatPath(String scriptPath) {
         KVMHABase.s_heartBeatPath = scriptPath;
     }
-    
+
     public void addStoragePool(NfsStoragePool pool) {
         synchronized (_storagePool) {
             _storagePool.put(pool._poolUUID, pool);

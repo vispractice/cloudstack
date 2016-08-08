@@ -34,7 +34,7 @@ public interface PortableIpRange extends InfrastructureEntity, InternalIdentity,
     public int getRegionId();
 
     public String getIpRange();
-    
+
     public String getMultilineLabel();
 
 }

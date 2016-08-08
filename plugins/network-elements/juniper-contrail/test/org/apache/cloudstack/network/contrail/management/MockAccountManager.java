@@ -99,12 +99,6 @@ public class MockAccountManager extends ManagerBase implements AccountManager {
     }
 
     @Override
-    public UserAccount getUserAccountById(Long userId) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public void checkAccess(Account arg0, AccessType arg1, boolean arg2, ControlledEntity... arg3) throws PermissionDeniedException {
         // TODO Auto-generated method stub
     }

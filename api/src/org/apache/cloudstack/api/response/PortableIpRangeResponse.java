@@ -61,7 +61,7 @@ public class PortableIpRangeResponse extends BaseResponse {
 
     @SerializedName(ApiConstants.MULTILINE_LABEL) @Param(description="the multiline label")
     private String multilineLabel;
-    
+
     @SerializedName(ApiConstants.PORTABLE_IP_ADDRESS)
     @Param(description = "List of portable IP and association with zone/network/vpc details that are part of GSLB rule", responseObject = PortableIpResponse.class)
     private List<PortableIpResponse> portableIpResponses;

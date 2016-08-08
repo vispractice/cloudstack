@@ -86,19 +86,19 @@ public interface IPAddressDao extends GenericDao<IPAddressVO, Long> {
     boolean deletePublicIPRange(long vlanDbId);
 
     void lockRange(long vlandbId);
-    
+
     IPAddressVO findByIp(String ipAddress);
-    
+
     IPAddressVO findByAssociatedVmIdAndVmIp(long vmId, String vmIp, String multilineLabel);
-    
+
     List<IPAddressVO> listSourceNatPublicIps(long networkId,long vlanDbId, Boolean isSourceNat,State state);
-    
+
     List<IPAddressVO> listStaticNatIps(long networkId,long vmId, Boolean isStaticNat);
-    
+
     IPAddressVO findDefaultStaticNat(long networkId, long vmId, Boolean isDefaultStaticNat);
-    
+
     IPAddressVO findByNetworkAndLine(long networkId,Boolean isSourceNat, String multilineLabel);
-    
+
     List<IPAddressVO> listByAssociatedVmId(long vmId);
 
     IPAddressVO findByVmIdAndNetworkId(long networkId, long vmId);

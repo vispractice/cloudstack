@@ -20,22 +20,22 @@ import com.cloud.user.Account;
 public class UpdateBandwidthRuleCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(UpdateBandwidthRuleCmd.class.getName());
     private static final String s_name = "updatebandwidthruleresponse";
-    
+
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name=ApiConstants.ID, type=CommandType.UUID, required=true, entityType=BandwidthRulesResponse.class, description="list by network id")
     private Long bandwidthRuleId;
-    
+
     @Parameter(name=ApiConstants.BANDWIDTH_RATE, type=CommandType.INTEGER, required=true, description="the rate of the bandwidth rule in Kbit.")
     private Integer rate;
-    
+
     @Parameter(name=ApiConstants.BANDWIDTH_CEIL, type=CommandType.INTEGER, required=true, description="the ceil of the bandwidth rule in Kbit.")
     private Integer ceil;
-    
+
     @Parameter(name=ApiConstants.BANDWIDTH_PRIO, type=CommandType.INTEGER, required=true, description="the prio of the bandwidth rule.")
     private Integer prio;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ public class UpdateBandwidthRuleCmd extends BaseAsyncCmd {
     public Integer getPrio() {
         return prio;
     }
-    
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////

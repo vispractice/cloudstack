@@ -187,7 +187,7 @@ public class RouterDeploymentDefinition {
     public PublicIp getSourceNatIP() {
         return sourceNatIp;
     }
-    
+
     public List<PublicIp> getSourceNatIPs() {
         return sourceNatIps;
     }

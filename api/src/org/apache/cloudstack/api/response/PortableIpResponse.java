@@ -70,7 +70,7 @@ public class PortableIpResponse extends BaseResponse {
     @SerializedName(ApiConstants.STATE)
     @Param(description = "State of the ip address. Can be: Allocatin, Allocated and Releasing")
     private String state;
-    
+
     @SerializedName(ApiConstants.MULTILINE_LABEL) @Param(description="the multiline label")
     private String multilineLabel;
 
@@ -121,6 +121,5 @@ public class PortableIpResponse extends BaseResponse {
     public void setMultilineLabel(String multilineLabel) {
         this.multilineLabel = multilineLabel;
     }
-    
-    
+
 }

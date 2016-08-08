@@ -39,7 +39,7 @@ public class StaticNatRule {
         this.sourcePortRange = sourcePortRange;
         this.destinationIpAddress = destinationIpAddress;
     }
-    
+
     public StaticNatRule(boolean revoke, String protocol, String sourceIpAddress, String sourcePortRange, String destinationIpAddress, String multilineLabelSeq) {
         super();
         this.revoke = revoke;

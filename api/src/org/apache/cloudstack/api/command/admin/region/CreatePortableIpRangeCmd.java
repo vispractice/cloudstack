@@ -67,7 +67,7 @@ public class CreatePortableIpRangeCmd extends BaseAsyncCreateCmd {
 
     @Parameter(name = ApiConstants.VLAN, type = CommandType.STRING, description = "VLAN id, if not specified defaulted to untagged")
     private String vlan;
-    
+
     @Parameter(name=ApiConstants.MULTILINE_LABEL, type=CommandType.STRING,required=false, description="The net of multiline label.")
     private String multilineLabel;
 
@@ -98,7 +98,7 @@ public class CreatePortableIpRangeCmd extends BaseAsyncCreateCmd {
     public String getNetmask() {
         return netmask;
     }
-    
+
     public String getMultilineLabel() {
         return multilineLabel;
     }
@@ -111,7 +111,6 @@ public class CreatePortableIpRangeCmd extends BaseAsyncCreateCmd {
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
 
-   
     @Override
     public String getCommandName() {
         return s_name;

@@ -20,8 +20,6 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
 import org.apache.cloudstack.api.command.admin.multiline.Multiline;
-
-import com.cloud.dc.Vlan;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
@@ -30,7 +28,7 @@ import com.google.gson.annotations.SerializedName;
 public class MultilineResponse extends BaseResponse {
     @SerializedName(ApiConstants.ID) @Param(description="the ID of the VLAN IP range")
     private String id;
-    
+
     @SerializedName(ApiConstants.NAME) @Param(description="the multiline name")
     private String name;
 

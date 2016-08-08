@@ -1020,7 +1020,6 @@ public class SecurityGroupManagerImpl extends ManagerBase implements SecurityGro
                             DataCenterVO dcVo = dcDao.findById(hostVo.getDataCenterId());
                             Boolean publicServiceInSGEnabled = dcVo.isPublicServiceInSGEnabled();
                             cmd.setPublicServiceInSGEnabled(publicServiceInSGEnabled);
-                            
                             Commands cmds = new Commands(cmd);
                             try {
                                 _agentMgr.send(agentId, cmds, _answerListener);

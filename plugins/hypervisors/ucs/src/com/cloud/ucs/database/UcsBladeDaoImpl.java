@@ -17,9 +17,6 @@
 //
 package com.cloud.ucs.database;
 
-
-import org.springframework.stereotype.Component;
-
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
 

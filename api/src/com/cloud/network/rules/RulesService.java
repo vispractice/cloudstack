@@ -80,7 +80,7 @@ public interface RulesService {
     StaticNatRule buildStaticNatRule(FirewallRule rule, boolean forRevoke);
 
     boolean disableStaticNat(long ipId) throws ResourceUnavailableException, NetworkRuleConflictException, InsufficientAddressCapacityException;
-    
+
     boolean updateStaticNat(long ipId , boolean isDefaultStatic) throws ResourceUnavailableException,NetworkRuleConflictException;
 
     PortForwardingRule updatePortForwardingRule(long id, Integer privatePort, Long virtualMachineId, Ip vmGuestIp, String customId, Boolean forDisplay);

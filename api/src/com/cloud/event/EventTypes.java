@@ -262,12 +262,11 @@ public class EventTypes {
     public static final String EVENT_NETWORK_OFFERING_EDIT = "NETWORK.OFFERING.EDIT";
     public static final String EVENT_NETWORK_OFFERING_REMOVE = "NETWORK.OFFERING.REMOVE";
     public static final String EVENT_NETWORK_OFFERING_DELETE = "NETWORK.OFFERING.DELETE";
-    
+
     //andrew ling add, Bandwidth Offerings
     public static final String EVENT_BANDWIDTH_OFFERING_CREATE = "BANDWIDTH.OFFERING.CREATE";
     public static final String EVENT_BANDWIDTH_OFFERING_EDIT = "BANDWIDTH.OFFERING.EDIT";
     public static final String EVENT_BANDWIDTH_OFFERING_DELETE = "BANDWIDTH.OFFERING.DELETE";
-    
     //andrew ling add bandwidth rules
     public static final String EVENT_ASSIGN_TO_BANDWIDTH_RULE = "BANDWIDTH.ASSIGN.TO.RULE";
     public static final String EVENT_REMOVE_FROM_BANDWIDTH_RULE = "BANDWIDTH.REMOVE.FROM.RULE";

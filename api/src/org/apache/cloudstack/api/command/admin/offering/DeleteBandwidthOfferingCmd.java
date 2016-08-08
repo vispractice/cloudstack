@@ -37,8 +37,8 @@ public class DeleteBandwidthOfferingCmd extends BaseCmd {
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-    
-    
+
+
     @Override
     public void execute() {
         boolean result = _configService.deleteBandwidthOffering(this);

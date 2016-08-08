@@ -26,7 +26,7 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
 
     @Parameter(name=ApiConstants.ID, type=CommandType.STRING, required=true, description="the ID of this bandwidth rule for filter rule.")
     private String id;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -34,7 +34,7 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
     public String getId() {
         return id;
     }
-    
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ public class RemoveFromBandwidthRuleCmd extends BaseAsyncCmd{
             this.setResponseObject(response);
         } else {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to remove bandwidth filter rule");
-        }        
+        }
     }
 
     @Override

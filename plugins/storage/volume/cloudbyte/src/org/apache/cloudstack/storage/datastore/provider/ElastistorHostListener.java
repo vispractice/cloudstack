@@ -95,7 +95,7 @@ public class ElastistorHostListener implements HypervisorHostListener {
             return true;
         }
 
-        ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(true, pool);
+        ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(true, pool, "");
         final Answer answer = agentMgr.easySend(hostId, cmd);
 
         if (answer == null) {

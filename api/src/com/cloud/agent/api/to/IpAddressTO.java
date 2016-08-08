@@ -67,7 +67,7 @@ public class IpAddressTO {
         this.oneToOneNat = isOneToOneNat;
         this.deviceId = deviceId;
     }
-    
+
     protected IpAddressTO() {
     }
 

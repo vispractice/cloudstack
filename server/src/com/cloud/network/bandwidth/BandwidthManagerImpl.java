@@ -67,7 +67,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 @Local(value = { BandwidthService.class, BandwidthManager.class})
 public class BandwidthManagerImpl extends ManagerBase implements BandwidthService, BandwidthManager {
     private static final Logger s_logger = Logger.getLogger(BandwidthManagerImpl.class);
-    
+
     @Inject
     MultilineDao _multilineDao;
     @Inject
@@ -94,12 +94,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
     ConfigurationDao _configDao;
     @Inject
     VMNetworkMapDao _vmNetworkMapDao;
-    
+
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
         return true;
     }
-    
+
     @Override
     public boolean start() {
         return true;
@@ -120,12 +120,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         String type = cmd.getType();
         String multilineId = cmd.getMultilineId();
         Integer trafficRuleId = null;
-        
+
         MultilineVO multilineVO = _multilineDao.findByUuid(multilineId);
         if(multilineVO == null){
             throw new InvalidParameterValueException("The bandwidth rule parameter: multiline lable is not right.");
         }
-        
+
         BandwidthVO bandwidthVO = _bandwidthDao.getBandwidthByMultilineId(multilineVO.getId());
         int bandwidthCapacity = 0;
         BandwidthType bandwidthType = null;
@@ -207,7 +207,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         rules.add(bandwidthRule);
         return applyBandwidthRules(network, rules);
     }
-    
+
     @Override
     public boolean applyBandwidthRules(Network network, List<BandwidthRule> rules) throws ResourceUnavailableException {
         return _bandwidthServiceProvider.applyBandwidthRules(network, rules);
@@ -253,7 +253,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
                 throw new InvalidParameterValueException("The bandwidth rule parameter: rate is not right, The bandwidth Capacity is not enough.");
             }
         }
-        
+
         //first delete the old
         List<BandwidthRule> oldRules = new ArrayList<BandwidthRule>();
         Network network = _networksDao.findById(rule.getNetworksId());
@@ -272,7 +272,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         rule.setRate(cmd.getRate());
         rule.setCeil(cmd.getCeil());
         rule.setPrio(cmd.getPrio());
-        
+
         //reload the filter rules
         List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
         List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(rule.getId());
@@ -286,7 +286,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
             BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, protocol, startPort, endPort, revoke, alreadyAdded);
             bandwidthFilterRules.add(bandwidthFilterRule);
         }
-        
+
         BandwidthRule newBandwidthRule = new BandwidthRule(rule, bandwidthFilterRules);
         newBandwidthRule.setClassRuleRevoked(false);
         newBandwidthRule.setClassRuleKeepState(false);
@@ -309,7 +309,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
 
 
     private boolean validateBandwidthFilterRule(boolean isAdd, Long bandwidthRuleId, BandwidthType type, String ip, String protocol, Integer portStart, Integer portEnd){
-        
+
         if (portStart != null && !NetUtils.isValidPort(portStart)) {
             throw new InvalidParameterValueException("Port is an invalid value: " + portStart);
         }
@@ -325,11 +325,11 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         if(!NetUtils.isValidIp(ip)){
             throw new InvalidParameterValueException("The ip address is not right.");
         }
-        
+
         if(protocol != null && (!protocol.equalsIgnoreCase(NetUtils.TCP_PROTO) && !protocol.equalsIgnoreCase(NetUtils.UDP_PROTO))){
             throw new InvalidParameterValueException("Protocol " + protocol + " is not supported by the bandwidth filter rule, It only support: tcp/udp.");
         }
-        
+
         if(type.equals(BandwidthType.InTraffic)){
             // vm ip address, it want to check the private ip address in the network.
             VMInstanceVO vMInstanceVO = _vMInstanceDao.findVMByIpAddress(ip);
@@ -392,7 +392,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
                 }
             }
         } else {
-            //when the operation is delete the filter rule to the bandwidth class rule, 
+            //when the operation is delete the filter rule to the bandwidth class rule,
             //it must be a old filter rule in the DB.
             BandwidthIPPortMapVO BandwidthIPPortMapVO = _bandwidthIPPortMapDao.findOneByBWClassIdIpPorts(bandwidthRuleId, ip, portStart, portEnd);
             if(BandwidthIPPortMapVO == null){
@@ -401,7 +401,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         }
         return true;
     }
-    
+
     @Override
     public boolean assignToBandwidthRule(AssignToBandwidthRuleCmd cmd) throws ResourceUnavailableException {
         //check the parameters, get the bandwidth rule by the id, and add the filter rule to the bandwidth rule
@@ -418,12 +418,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         }
         BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
         BandwidthType type = bandwidthClassRule.getType();
-        
+
         if(!validateBandwidthFilterRule(true, bandwidthRuleId, type, ip, newProtocol, newStartPort, newEndPort)){
             s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,protocol,start port, end port.");
             throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,protocol,start port, end port");
         }
-        
+
         List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
         Network network = _networksDao.findById(bandwidthClassRule.getNetworksId());
         //get the filter rules in the class
@@ -441,10 +441,10 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
                 bandwidthFilterRules.add(bandwidthFilterRule);
             }
         }
-        
+
         BandwidthFilterRules newBandwidthFilterRule = new BandwidthFilterRules(ip, newProtocol, newStartPort, newEndPort, false, false);
         bandwidthFilterRules.add(newBandwidthFilterRule);
-        
+
         BandwidthRule bandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
         bandwidthRule.setClassRuleRevoked(false);
         bandwidthRule.setClassRuleKeepState(true);
@@ -482,12 +482,12 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         String removedProtocol = oldBandwidthIPPortMap.getProtocol();
         BandwidthRulesVO bandwidthClassRule = _bandwidthRulesDao.findById(bandwidthRuleId);
         BandwidthType type = bandwidthClassRule.getType();
-        
+
         if(!validateBandwidthFilterRule(false, bandwidthRuleId, type, removedIp, removedProtocol, removedStartPort, removedEndPort)){
             s_logger.error("The input parameters is not right, please reconfirm the parameters:ip,start port, end port.");
             throw new InvalidParameterValueException("The input parameters is not right, please reconfirm the parameters:ip,start port, end port");
         }
-        
+
         List<BandwidthRule> rules = new ArrayList<BandwidthRule>();
         Network network = _networksDao.findById(bandwidthClassRule.getNetworksId());
         //update the filter rules
@@ -517,7 +517,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
                 bandwidthFilterRules.add(bandwidthFilterRule);
             }
         }
-        
+
         BandwidthRule bandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
         bandwidthRule.setClassRuleRevoked(false);
         bandwidthRule.setClassRuleKeepState(true);
@@ -550,7 +550,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
             sumOfRuleUsed += vo.getRate();
         }
         int nowSumOfRuleUsed = 0;
-        
+
         nowSumOfRuleUsed = sumOfRuleUsed + newRate - oldRate;
         if(bandwidthCapacity < nowSumOfRuleUsed){
             return false;
@@ -583,14 +583,14 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update bandwidth rule");
             }
         }
-        
+
         for(Long networkId : networksSet){
             List<BandwidthRule> updateRules = new ArrayList<BandwidthRule>();
             for(BandwidthRulesVO bandwidthClassRule : bandwidthRulesList){
                 if(networkId.equals(bandwidthClassRule.getNetworksId())){
                     bandwidthClassRule.setRate(updateRate);
                     bandwidthClassRule.setCeil(updateCeil);
-                    
+
                     //reload the filter rules
                     List<BandwidthFilterRules> bandwidthFilterRules = new ArrayList<BandwidthFilterRules>();
                     List<BandwidthIPPortMapVO> bandwidthIPPortMapList = _bandwidthIPPortMapDao.listByBandwidthRulesId(bandwidthClassRule.getId());
@@ -604,7 +604,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
                         BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, protocol, startPort, endPort, revoke, alreadyAdded);
                         bandwidthFilterRules.add(bandwidthFilterRule);
                     }
-                    
+
                     BandwidthRule updateBandwidthRule = new BandwidthRule(bandwidthClassRule, bandwidthFilterRules);
                     updateBandwidthRule.setClassRuleRevoked(false);
                     updateBandwidthRule.setClassRuleKeepState(false);
@@ -628,14 +628,14 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
                 CallContext.current().setEventDetails("Bandwidth rule id=" + bandwidthRules.getId());
             }
         }
-        
-        
+
+
         return true;
     }
 
     @Override
     public ListResponse<BandwidthRulesResponse> searchForBandwidthRules(ListBandwidthRulesCmd cmd) {
-        
+
         ListResponse<BandwidthRulesResponse> response = new ListResponse<BandwidthRulesResponse>();
         List<BandwidthRulesResponse> respList = new ArrayList<BandwidthRulesResponse>();
         int count = 0;
@@ -677,7 +677,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
                 bandwidthRulesResponse.setObjectName("bandwidthrule");
                 respList.add(bandwidthRulesResponse);
             }
-            
+
         } else if (cmd.getNetworkId() != null){
             //get the bandwidth rule from DB.
             List<BandwidthRulesVO> bandwidthList = _bandwidthRulesDao.listByNetworksId(cmd.getNetworkId());
@@ -716,7 +716,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
                 respList.add(bandwidthRulesResponse);
             }
         } else if (cmd.getId() != null){
-            
+
             //get the bandwidth rule from DB.
             BandwidthRulesVO vo = _bandwidthRulesDao.findById(cmd.getId());
             //id,bandwidth_id, networks_id, bandwidth_offering_id, domain_id, account_id, type, prio, ceil, rate, traffic_rule_id
@@ -755,7 +755,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
             s_logger.error("The search criteria is insufficient, when list the bandwidth rules.");
             throw new InvalidParameterValueException("The search criteria is insufficient.");
         }
-        
+
         response.setResponses(respList, count);
         return response;
     }
@@ -809,7 +809,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
         CallContext.current().setEventDetails("bandwidth id=" + bandwidthId);
         return _bandwidthDao.remove(bandwidthId);
     }
-    
+
     @Override
     public ListResponse<BandwidthResponse> searchForBandwidths(ListBandwidthsCmd cmd) {
         ListResponse<BandwidthResponse> response = new ListResponse<BandwidthResponse>();
@@ -846,7 +846,7 @@ public class BandwidthManagerImpl extends ManagerBase implements BandwidthServic
             bandwidthResponse.setObjectName("bandwidth");
             respList.add(bandwidthResponse);
         }
-        
+
         response.setResponses(respList, count);
         return response;
     }

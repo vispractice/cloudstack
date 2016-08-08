@@ -20,10 +20,10 @@ import java.util.List;
 
 import com.cloud.utils.db.GenericDao;
 /**
- * 
+ *
  * @author add by hai.li
  * @date 2015.08.17
- * @descrption 
+ * @descrption
  */
 public interface MultilineDao extends GenericDao<MultilineVO, Long> {
 
@@ -34,5 +34,5 @@ public interface MultilineDao extends GenericDao<MultilineVO, Long> {
     MultilineVO  getDefaultMultiline();
 
     List<MultilineVO>  getNoDefaultMultiline();
-    
+
 }

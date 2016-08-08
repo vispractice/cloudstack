@@ -234,8 +234,7 @@ public class MockNetworkManagerImpl extends ManagerBase implements MockNetworkMa
     public Answer checkSiteToSiteVpnConnection(CheckS2SVpnConnectionsCommand cmd) {
         return new Answer(cmd);
     }
-    
-    
+
     @Override
     public  Answer setMultilineRoute(SetMultilineRouteCommand cmd){
         return new Answer(cmd);

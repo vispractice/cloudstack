@@ -90,8 +90,8 @@ public interface MockNetworkManager extends Manager {
     Answer siteToSiteVpn(Site2SiteVpnCfgCommand cmd);
 
     Answer checkSiteToSiteVpnConnection(CheckS2SVpnConnectionsCommand cmd);
-    
+
     Answer setMultilineRoute(SetMultilineRouteCommand cmd);
-    
+
     SetBandwidthRulesAnswer SetBandwidthRules(SetBandwidthRulesCommand cmd);
 }

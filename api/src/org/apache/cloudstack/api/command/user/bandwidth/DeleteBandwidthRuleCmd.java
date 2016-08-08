@@ -27,15 +27,15 @@ public class DeleteBandwidthRuleCmd extends BaseAsyncCmd {
     @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = BandwidthRulesResponse.class,
             required=true, description="the ID of the bandwidth rule")
     private Long id;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    
+
     public Long getId() {
         return id;
     }
-    
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -43,7 +43,7 @@ public class DeleteBandwidthRuleCmd extends BaseAsyncCmd {
     public String getEventType() {
         return EventTypes.EVENT_BANDWIDTH_RULE_DELETE;
     }
-    
+
     @Override
     public String getEventDescription() {
         return ("Deleting bandwidth rule id=" + id);

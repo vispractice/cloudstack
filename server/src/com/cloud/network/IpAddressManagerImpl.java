@@ -660,7 +660,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
         throws InsufficientAddressCapacityException {
         return fetchNewPublicIp(dcId, podId, vlanDbIds, owner, type, networkId, false, true, requestedIp, isSystem, null, null);
     }
-    
+
     @DB
     public PublicIp fetchNewPublicIp(final long dcId, final Long podId, final List<Long> vlanDbIds, final Account owner, final VlanType vlanUse, final Long guestNetworkId,
             final boolean sourceNat, final boolean assign, final String requestedIp, final boolean isSystem, final Long vpcId, final Boolean displayIp)
@@ -850,7 +850,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
             return true;
         return false;
     }
-    
+
     public PublicIp assignDedicateIpAddress(Account owner, final Long guestNtwkId, final Long vpcId, final long dcId, final boolean isSourceNat,final String mutlilineLabel) throws ConcurrentOperationException,
     InsufficientAddressCapacityException {
 
@@ -897,7 +897,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
         }
     }
 }
-    
+
     @Override
     public PublicIp assignSourceNatIpAddressToGuestNetwork(Account owner, Network guestNetwork) throws InsufficientAddressCapacityException, ConcurrentOperationException {
         assert (guestNetwork.getTrafficType() != null) : "You're asking for a source nat but your network "
@@ -997,7 +997,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
         }
         return success;
     }
-    
+
     // CloudStack will take a lazy approach to associate an acquired public IP to a network service provider as
     // it will not know what a acquired IP will be used for. An IP is actually associated with a provider when first
     // rule is applied. Similarly when last rule on the acquired IP is revoked, IP is not associated with any provider
@@ -1175,7 +1175,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
 
         return ipaddr;
     }
-    
+
     protected IPAddressVO getExistingSourceNatInNetwork(long ownerId, Long networkId) {
         List<? extends IpAddress> addrs;
         Network guestNetwork = _networksDao.findById(networkId);
@@ -2069,12 +2069,12 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {UseSystemPublicIps};
     }
-    
+
     @DB
     @Override
     public IpAddress allocateIp(final Account ipOwner, final boolean isSystem, Account caller, long callerUserId, final DataCenter zone,final String multilineLabel, final Boolean displayIp) throws ConcurrentOperationException,
         ResourceAllocationException, InsufficientAddressCapacityException {
-        
+
         final VlanType vlanType = VlanType.VirtualNetwork;
         final boolean assign = false;
 
@@ -2133,7 +2133,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
         }
         return ip;
     }
-    
+
     @DB
     public PublicIp fetchNewPublicIp(final long dcId, final Long podId, final List<Long> vlanDbIds, final Account owner, final VlanType vlanUse, final Long guestNetworkId, final boolean sourceNat, final boolean assign,
             final String requestedIp, final boolean isSystem, final Long vpcId,final String multilineLabel, final Boolean displayIp) throws InsufficientAddressCapacityException {
@@ -2187,7 +2187,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                 }
 
                 sc.setParameters("dc", dcId);
-                
+
                 if (multilineLabel != null &&  !multilineLabel.equals("")) {
                     sc.setParameters("multilineLabel", multilineLabel);
                     errorMessage.append(": requested multilineLabel " + multilineLabel + " is not available");
@@ -2206,7 +2206,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                     sc.addAnd("address", SearchCriteria.Op.EQ, requestedIp);
                     errorMessage.append(": requested ip " + requestedIp + " is not available");
                 }
-                
+
                 Filter filter = new Filter(IPAddressVO.class, "vlanId", true, 0l, 1l);
 
                 List<IPAddressVO> addrs = _ipAddressDao.lockRows(sc, filter, true);
@@ -2282,16 +2282,16 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
 
         return PublicIp.createFromAddrAndVlan(addr, _vlanDao.findById(addr.getVlanId()));
     }
-    
+
     @Override
     public PublicIp assignSourceNatIpAddressToGuestNetwork(Account owner, Network guestNetwork, String multilineLabel) {
         PublicIp ipToReturn = null;
         try {
                 assert (guestNetwork.getTrafficType() != null) : "You're asking for a source nat but your network can't participate in source nat.  What do you have to say for yourself?";
-              
+
                 long dcId = guestNetwork.getDataCenterId();
                 IPAddressVO sourceNatIp = getExistMmultilineSourceNatInNetwork(owner.getId(), guestNetwork.getId(), multilineLabel);
-                
+
                 if (sourceNatIp != null) {
                     ipToReturn = PublicIp.createFromAddrAndVlan(sourceNatIp, _vlanDao.findById(sourceNatIp.getVlanId()));
                 } else {
@@ -2304,7 +2304,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
        }
        return ipToReturn;
     }
-    
+
     /**
      * 判断当前网络是否在多线路已经全部获取source nat ip
      * @add by hai.li 2015.08.19
@@ -2336,7 +2336,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
         }
         return sourceNatIp;
     }
-    
+
     @DB
     @Override
     public IPAddressVO associateIPToGuestNetwork(long ipId, long networkId, boolean releaseOnFailure, String multilineLabel) throws ResourceAllocationException, ResourceUnavailableException,
@@ -2421,9 +2421,9 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
 
         NetworkOffering offering = _networkOfferingDao.findById(network.getNetworkOfferingId());
         boolean sharedSourceNat = offering.getSharedSourceNat();
-        
+
         boolean isSourceNat = false;
-        
+
         //update by hai.li 2015.08.19
         if (!sharedSourceNat) {
               /*if (getExistingSourceNatInNetwork(owner.getId(), networkId) == null) {
@@ -2437,7 +2437,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                  }
              }
         }
-        
+
         s_logger.debug("Associating ip " + ipToAssoc + " to network " + network);
 
         IPAddressVO ip = _ipAddressDao.findById(ipId);
@@ -2473,7 +2473,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
             }
         }
     }
-    
+
     @Override
     @DB
     public IpAddress allocatePortableIp(final Account ipOwner, Account caller, final long dcId, final Long networkId, final Long vpcID,final String multilineLabel) throws ConcurrentOperationException, ResourceAllocationException,
@@ -2495,7 +2495,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                         InsufficientAddressCapacityException ex = new InsufficientAddressCapacityException("Unable to find available portable IP addresses", Region.class, new Long(1));
                         throw ex;
                     }
-        
+
                     // allocate first portable IP to the user
                     allocatedPortableIp = portableIpVOs.get(0);
                     allocatedPortableIp.setAllocatedTime(new Date());
@@ -2503,11 +2503,11 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                     allocatedPortableIp.setAllocatedInDomainId(ipOwner.getDomainId());
                     allocatedPortableIp.setState(PortableIp.State.Allocated);
                     _portableIpDao.update(allocatedPortableIp.getId(), allocatedPortableIp);
-        
+
                     // To make portable IP available as a zone level resource we need to emulate portable IP's (which are
                     // provisioned at region level) as public IP provisioned in a zone. user_ip_address and vlan combo give the
                     // identity of a public IP in zone. Create entry for portable ip in these tables.
-        
+
                     // provision portable IP range VLAN into the zone
                     long physicalNetworkId = _networkModel.getDefaultPhysicalNetworkByZoneAndTrafficType(dcId, TrafficType.Public).getId();
                     Network network = _networkModel.getSystemNetworkByZoneAndTrafficType(dcId, TrafficType.Public);

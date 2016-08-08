@@ -27,7 +27,6 @@ import java.util.Properties;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.mail.Authenticator;
 import javax.mail.Message.RecipientType;

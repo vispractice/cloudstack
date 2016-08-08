@@ -273,7 +273,7 @@ public interface ConfigurationService {
     List<? extends PortableIpRange> listPortableIpRanges(ListPortableIpRangesCmd cmd);
 
     List<? extends PortableIp> listPortableIps(long id);
-    
+
   //andrew ling add, bandwidth offering.
     /**
      * Create a bandwidth offering through the API
@@ -284,7 +284,7 @@ public interface ConfigurationService {
      * @return the newly created bandwidth offering if successful, null otherwise
      */
     BandwidthOffering createBandwidthOffering(CreateBandwidthOfferingCmd cmd);
-   
+
     /**
      * Updates a bandwidth offering
      *
@@ -294,7 +294,7 @@ public interface ConfigurationService {
      * @param rate
      * @param ceil
      * @return updated service offering
-  * @throws ResourceUnavailableException 
+  * @throws ResourceUnavailableException
      */
     BandwidthOffering updateBandwidthOffering(UpdateBandwidthOfferingCmd cmd ) throws ResourceUnavailableException;
 
@@ -304,5 +304,5 @@ public interface ConfigurationService {
      * @param serviceOfferingId
      */
     boolean deleteBandwidthOffering( DeleteBandwidthOfferingCmd cmd);
-    
+
 }

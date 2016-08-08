@@ -54,6 +54,6 @@ public interface PortableIp extends InternalIdentity {
     String getNetmask();
 
     String getGateway();
-    
+
     String getMultilineLabel();
 }

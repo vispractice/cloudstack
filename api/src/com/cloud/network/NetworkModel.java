@@ -279,7 +279,7 @@ public interface NetworkModel {
     boolean getNetworkEgressDefaultPolicy(Long networkId);
 
     List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long accountId, long associatedNetworkId, Boolean sourceNat,String multilineLabel);
-    
+
     List<? extends IpAddress> listPublicIpsAssignedToGuestNtwk(long associatedNetworkId, Boolean sourceNat,String multilineLabel);
 
     List<String[]> generateVmData(String userData, String serviceOffering, String zoneName,

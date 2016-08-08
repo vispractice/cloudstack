@@ -145,10 +145,10 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
     @SerializedName(ApiConstants.IS_PORTABLE)
     @Param(description = "is public IP portable across the zones")
     private Boolean isPortable;
-    
+
     @SerializedName(ApiConstants.MULTILINE_LABEL) @Param(description = "the multiline label")
     private String multilineLabel;
-    
+
     @SerializedName(ApiConstants.IS_DEFAULT_STATIC) @Param(description = "the multiline label")
     private Boolean isDefaultStaticNat;
 
@@ -306,7 +306,7 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
     public void setIsDefaultStaticNat(Boolean isDefaultStaticNat) {
         this.isDefaultStaticNat = isDefaultStaticNat;
     }
-    
+
     public void setForDisplay(Boolean forDisplay) {
         this.forDisplay = forDisplay;
     }

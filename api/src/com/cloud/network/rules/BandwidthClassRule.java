@@ -9,28 +9,28 @@ public interface BandwidthClassRule extends ControlledEntity, Identity, Internal
         public enum BandwidthType {
             InTraffic, OutTraffic
         };
-    
+
     String getUuid();
-    
+
     Long getBandwidthId();
-    
+
     Long getNetworksId();
-    
+
     Long getBandwidthOfferingId();
-    
+
     Integer getTrafficRuleId();
-    
+
     BandwidthType getType();
-    
+
     Integer getPrio();
-    
+
     Integer getRate();
-    
+
     Integer getCeil();
-    
+
 //    Boolean isRevoked();
-//    
+//
 //    Boolean isKeepState();
-//    
+//
 //    Boolean isAlreadyAdded();
 }

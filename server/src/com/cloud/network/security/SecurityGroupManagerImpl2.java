@@ -198,7 +198,7 @@ public class SecurityGroupManagerImpl2 extends SecurityGroupManagerImpl {
                 DataCenterVO dcVo = dcDao.findById(hostVo.getDataCenterId());
                 Boolean publicServiceInSGEnabled = dcVo.isPublicServiceInSGEnabled();
                 cmd.setPublicServiceInSGEnabled(publicServiceInSGEnabled);
-                
+
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("SecurityGroupManager v2: sending ruleset update for vm " + vm.getInstanceName() + ":ingress num rules=" +
                         cmd.getIngressRuleSet().length + ":egress num rules=" + cmd.getEgressRuleSet().length + " num cidrs=" + cmd.getTotalNumCidrs() + " sig=" +

@@ -25,7 +25,7 @@ public class DeleteBandwidthCmd extends BaseCmd{
     @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = BandwidthResponse.class,
             required=true, description="the ID of the bandwidth")
     private Long id;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -33,11 +33,11 @@ public class DeleteBandwidthCmd extends BaseCmd{
     public Long getId() {
         return id;
     }
-    
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-    
+
     @Override
     public void execute() {
         boolean result = _bandwidthService.deleteBandwidth(this);

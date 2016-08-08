@@ -778,23 +778,23 @@ linkDomainToLdap=3
 createServiceInstance=1
 
 #### bandwidth commands
-addBandwidth=1
-deleteBandwidth=1
-updateBandwidth=1
-listBandwidths=15
-createBandwidthOffering=1
-deleteBandwidthOffering=1
-updateBandwidthOffering=1
-listBandwidthOfferings=15
-createBandwidthRule=15
-deleteBandwidthRule=15
-updateBandwidthRule=15
-listBandwidthRules=15
-assignToBandwidthRule=15
-RemoveFromBandwidthRuleCmd=15
+#addBandwidth=1
+#deleteBandwidth=1
+#updateBandwidth=1
+#listBandwidths=15
+#createBandwidthOffering=1
+#deleteBandwidthOffering=1
+#updateBandwidthOffering=1
+#listBandwidthOfferings=15
+#createBandwidthRule=15
+#deleteBandwidthRule=15
+#updateBandwidthRule=15
+#listBandwidthRules=15
+#assignToBandwidthRule=15
+#RemoveFromBandwidthRuleCmd=15
 
 #### multiline commands
-listMultiline=1
+#listMultiline=1
 
 ### OpenDaylight plugin commands
 addOpenDaylightController=1

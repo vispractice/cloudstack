@@ -18,21 +18,21 @@ public class ListBandwidthOfferingsCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    
+
     @Parameter(name=ApiConstants.ID, type=CommandType.UUID, entityType = BandwidthOfferingResponse.class,
             description="ID of the bandwidth offering")
     private Long id;
-    
+
     @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.UUID, entityType=ZoneResponse.class, description= "the ID of the zone")
     private Long zoneId;
 
     @Parameter(name=ApiConstants.NAME, type=CommandType.STRING, description="name of the bandwidth offering")
     private String bandwidthOfferingName;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    
+
     public Long getId() {
         return id;
     }
@@ -40,7 +40,7 @@ public class ListBandwidthOfferingsCmd extends BaseListCmd {
     public String getBandwidthOfferingName() {
         return bandwidthOfferingName;
     }
-    
+
     public Long getZoneId() {
         return zoneId;
     }
@@ -58,5 +58,5 @@ public class ListBandwidthOfferingsCmd extends BaseListCmd {
     public String getCommandName() {
         return s_name;
     }
-    
+
 }

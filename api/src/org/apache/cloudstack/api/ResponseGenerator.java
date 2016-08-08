@@ -455,6 +455,6 @@ public interface ResponseGenerator {
     MultilineResponse createMultilineResponse(Multiline result);
     //andrew ling add
     BandwidthOfferingResponse createBandwidthOfferingResponse(BandwidthOffering offering);
-    
+
     SSHKeyPairResponse createSSHKeyPairResponse(SSHKeyPair sshkeyPair, boolean privatekey);
 }

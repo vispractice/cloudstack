@@ -12,13 +12,13 @@ public interface BandwidthOffering extends InfrastructureEntity, Identity, Inter
         Active,
     }
     String getUniqueName();
-    
+
     String getName();
-    
+
     String getDisplayText();
-    
+
     Date getCreated();
-    
+
     /**
      * @return rate in Kbit
      */
@@ -28,8 +28,8 @@ public interface BandwidthOffering extends InfrastructureEntity, Identity, Inter
      * @return ceil size in Kbit
      */
     Integer getCeil();
-    
+
     BandwidthOfferingState getState();
-    
+
     Long getDataCenterId();
 }

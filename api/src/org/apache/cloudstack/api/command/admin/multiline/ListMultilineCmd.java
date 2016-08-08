@@ -77,16 +77,16 @@ public class ListMultilineCmd extends BaseListCmd {
     public boolean listAll() {
         return listAll == null ? true : listAll;
     }
-  
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-       
+
     @Override
     public String getCommandName() {
         return s_name;
     }
-    
+
     @Override
     public void execute(){
         Pair<List<? extends Multiline>, Integer> result = _mgr.searchForMultiline(this);

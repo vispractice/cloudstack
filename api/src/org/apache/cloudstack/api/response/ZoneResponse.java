@@ -99,7 +99,7 @@ public class ZoneResponse extends BaseResponse {
     @SerializedName("securitygroupsenabled")
     @Param(description = "true if security groups support is enabled, false otherwise")
     private boolean securityGroupsEnabled;
-    
+
     @SerializedName("publicserviceinsgenabled") @Param(description="true if public service is enabled in the zone which security groups support was enabled, false otherwise")
     private boolean publicServiceInSGEnabled;
 
@@ -190,7 +190,7 @@ public class ZoneResponse extends BaseResponse {
     public void setSecurityGroupsEnabled(boolean securityGroupsEnabled) {
         this.securityGroupsEnabled = securityGroupsEnabled;
     }
-    
+
     public void setPublicServiceInSGEnabled(boolean publicServiceInSGEnabled) {
         this.publicServiceInSGEnabled = publicServiceInSGEnabled;
     }

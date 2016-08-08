@@ -94,13 +94,13 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
 
     @Parameter(name = ApiConstants.VPC_ID, type = CommandType.UUID, entityType = VpcResponse.class, description = "List IPs belonging to the VPC")
     private Long vpcId;
-    
+
     @Parameter(name=ApiConstants.MULTILINE_LABEL, type=CommandType.STRING, description="The multiline label.")
     private String multilineLabel;
-    
+
     @Parameter(name=ApiConstants.IS_DEFAULT_STATIC, type=CommandType.STRING, description="is default static nat.")
     private String isDefaultStaticNat;
-    
+
 
     @Parameter(name = ApiConstants.FOR_DISPLAY, type = CommandType.BOOLEAN, description = "list resources by display flag; only ROOT admin is eligible to pass this parameter", since = "4.4", authorized = {RoleType.Admin})
     private Boolean display;
@@ -175,7 +175,7 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
     public String getState() {
         return state;
     }
-    
+
     public String getMultilineLabel() {
         return multilineLabel;
     }
@@ -220,5 +220,5 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd {
     public ApiCommandJobType getInstanceType() {
         return ApiCommandJobType.IpAddress;
     }
-    
+
 }

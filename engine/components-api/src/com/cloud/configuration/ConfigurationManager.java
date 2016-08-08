@@ -242,7 +242,7 @@ public interface ConfigurationManager {
     AllocationState findPodAllocationState(HostPodVO pod);
 
     AllocationState findClusterAllocationState(ClusterVO cluster);
-    
+
     Vlan createVlanAndPublicIpRange(long zoneId, long networkId, long physicalNetworkId, boolean forVirtualNetwork, Long podId, String startIP, String endIP,
             String vlanGateway, String vlanNetmask, String vlanId, Domain domain, Account vlanOwner, String startIPv6, String endIPv6, String vlanIp6Gateway, String vlanIp6Cidr,String multilineLabel)
             throws InsufficientCapacityException, ConcurrentOperationException, InvalidParameterValueException;

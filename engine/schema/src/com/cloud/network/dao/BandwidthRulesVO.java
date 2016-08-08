@@ -18,50 +18,50 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id")
     private long id;
-    
+
     @Column(name="uuid")
     private String uuid;
-    
+
     @Column(name="bandwidth_id")
     private Long bandwidthId;
-    
+
     @Column(name="networks_id")
     private Long networksId;
-    
+
     @Column(name="bandwidth_offering_id")
     private Long bandwidthOfferingId;
-    
+
     @Column(name="domain_id")
     private Long domainId;
-    
+
     @Column(name="account_id")
     private Long accountId;
-    
+
     @Column(name="traffic_rule_id")
     private Integer trafficRuleId;
-    
+
     @Column(name = "type")
     BandwidthType type;
-    
+
     @Column(name="prio")
     private Integer prio;
-    
+
     @Column(name="rate")
     private Integer rate;
 
     @Column(name="ceil")
     private Integer ceil;
-    
+
 //    private Boolean revoked;
-//    
+//
 //    private Boolean keepState;
-//    
+//
 //    private Boolean alreadyAdded;
-    
+
     public BandwidthRulesVO(){
         uuid = UUID.randomUUID().toString();
     }
-    
+
     public BandwidthRulesVO(Long bandwidthId, Long networksId, Long bandwidthOfferingId, Integer trafficRuleId, BandwidthType type, Integer prio, Integer rate, Integer ceil ){
         uuid = UUID.randomUUID().toString();
         this.bandwidthId = bandwidthId;
@@ -73,7 +73,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
         this.rate = rate;
         this.ceil = ceil;
     }
-    
+
     public BandwidthRulesVO(Long bandwidthId, Long networksId, Integer trafficRuleId, BandwidthType type, Integer prio, Integer rate, Integer ceil ){
         uuid = UUID.randomUUID().toString();
         this.bandwidthId = bandwidthId;
@@ -84,16 +84,16 @@ public class BandwidthRulesVO implements BandwidthClassRule {
         this.rate = rate;
         this.ceil = ceil;
     }
-    
+
     @Override
     public long getId() {
         return id;
     }
-    
+
     public void setId(long id) {
         this.id = id;
     }
-    
+
     @Override
     public String getUuid() {
         return uuid;
@@ -102,7 +102,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
-    
+
     @Override
     public Long getBandwidthId() {
         return bandwidthId;
@@ -111,7 +111,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     public void setBandwidthId(Long bandwidthId) {
         this.bandwidthId = bandwidthId;
     }
-    
+
     @Override
     public Long getNetworksId() {
         return networksId;
@@ -120,7 +120,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     public void setNetworksId(Long networksId) {
         this.networksId = networksId;
     }
-    
+
     @Override
     public Long getBandwidthOfferingId() {
         return bandwidthOfferingId;
@@ -129,7 +129,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     public void setBandwidthOfferingId(Long bandwidthOfferingId) {
         this.bandwidthOfferingId = bandwidthOfferingId;
     }
-    
+
     @Override
     public Integer getTrafficRuleId() {
         return trafficRuleId;
@@ -138,7 +138,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     public void setTrafficRuleId(Integer trafficRuleId) {
         this.trafficRuleId = trafficRuleId;
     }
-    
+
     @Override
     public BandwidthType getType() {
         return type;
@@ -147,7 +147,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     public void setType(BandwidthType type) {
         this.type = type;
     }
-    
+
     @Override
     public Integer getPrio() {
         return prio;
@@ -156,7 +156,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     public void setPrio(Integer prio) {
         this.prio = prio;
     }
-    
+
     @Override
     public Integer getRate() {
         return rate;
@@ -165,7 +165,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     public void setRate(Integer rate) {
         this.rate = rate;
     }
-    
+
     @Override
     public Integer getCeil() {
         return ceil;
@@ -183,7 +183,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
     }
-    
+
     @Override
     public long getDomainId() {
         return domainId;
@@ -198,7 +198,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
 //    @Override
 //    public Boolean isRevoked() {
 //        return revoked;
@@ -207,7 +207,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
 //    public void setRevoked(Boolean revoked) {
 //        this.revoked = revoked;
 //    }
-//    
+//
 //    @Override
 //    public Boolean isKeepState() {
 //        return keepState;
@@ -216,7 +216,7 @@ public class BandwidthRulesVO implements BandwidthClassRule {
 //    public void setKeepState(Boolean keepState) {
 //        this.keepState = keepState;
 //    }
-//    
+//
 //    @Override
 //    public Boolean isAlreadyAdded() {
 //        return alreadyAdded;
@@ -225,5 +225,5 @@ public class BandwidthRulesVO implements BandwidthClassRule {
 //    public void setAlreadyAdded(boolean alreadyAdded) {
 //        this.alreadyAdded = alreadyAdded;
 //    }
-    
+
 }

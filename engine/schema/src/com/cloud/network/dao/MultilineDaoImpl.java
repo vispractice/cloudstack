@@ -27,10 +27,10 @@ import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 /**
- * 
+ *
  * @author add by hai.li
  * @date 2015.08.17
- * @descrption 
+ * @descrption
  */
 @Component
 @Local(value = MultilineDao.class)
@@ -43,12 +43,12 @@ public class MultilineDaoImpl extends GenericDaoBase<MultilineVO, Long> implemen
         labelSearch = createSearchBuilder();
         labelSearch.and("label", labelSearch.entity().getLabel(), Op.EQ);
         labelSearch.done();
-        
+
         isDefaultSearch = createSearchBuilder();
         isDefaultSearch.and("isDefault", isDefaultSearch.entity().getIsDefault(), Op.EQ);
         isDefaultSearch.done();
     }
-    
+
     @Override
     public List<MultilineVO> getAllMultiline() {
           SearchCriteria<MultilineVO> sc = labelSearch.create();

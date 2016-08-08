@@ -16,31 +16,31 @@ public class BandwidthRulesResponse  extends BaseResponse {
     //ip_address, start_port, end_port
     @SerializedName("id") @Param(description="the id of the bandwidth rule")
     private String id;
-    
+
     @SerializedName("bandwidthId") @Param(description="the bandwidth id of the bandwidth rule")
     private String bandwidthId;
-    
+
     @SerializedName("networkId") @Param(description="the network id of the bandwidth rule")
     private String networkId;
-    
+
     @SerializedName("bandwidthOfferingId") @Param(description="the bandwidth offering id of the bandwidth rule")
     private String bandwidthOfferingId;
-    
+
     @SerializedName("domainId") @Param(description="the domain id of the bandwidth rule")
     private String domainId;
-    
+
     @SerializedName("type") @Param(description="the type of the bandwidth rule")
     private String type;
-    
+
     @SerializedName("rate") @Param(description="the rate of the bandwidth offering in Kbit")
     private Integer rate;
-    
+
     @SerializedName("ceil") @Param(description="the ceil of the bandwidth offering in Kbit")
     private Integer ceil;
-    
+
     @SerializedName("prio") @Param(description="the prio of the bandwidth rule")
     private Integer prio;
-    
+
     @SerializedName("filterRule")  @Param(description="the list of filter rules associated with bandwidth class rule", responseObject = BandwidthFilterRuleResponse.class)
     private Set<BandwidthFilterRuleResponse> filterRules;
 

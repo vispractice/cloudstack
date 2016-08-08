@@ -24,13 +24,13 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name="id")
     private long id;
-    
+
     @Column(name="uuid")
     private String uuid;
-    
+
     @Column(name="data_center_id")
     private Long dataCenterId;
-    
+
     @Column(name = "unique_name")
     private String uniqueName;
 
@@ -39,28 +39,28 @@ public class BandwidthOfferingVO implements BandwidthOffering{
 
     @Column(name = "display_text", length = 4096)
     private String displayText = null;
-    
+
     @Column(name="rate")
     private Integer rate;
 
     @Column(name="ceil")
     private Integer ceil;
-    
+
     @Column(name = GenericDao.REMOVED_COLUMN)
     @Temporal(TemporalType.TIMESTAMP)
     private Date removed;
 
     @Column(name = GenericDao.CREATED_COLUMN)
     private Date created;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "state")
     BandwidthOfferingState state;
-    
+
     public BandwidthOfferingVO(){
         uuid = UUID.randomUUID().toString();
     }
-    
+
     public BandwidthOfferingVO(Long dataCenterId, String name, String displayText, Integer rate, Integer ceil){
         this.dataCenterId = dataCenterId;
         this.name = name;
@@ -70,7 +70,7 @@ public class BandwidthOfferingVO implements BandwidthOffering{
         uuid = UUID.randomUUID().toString();
         state = BandwidthOfferingState.Active;
     }
-    
+
     public Date getRemoved() {
         return removed;
     }
@@ -82,7 +82,7 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     public void setId(long id) {
         this.id = id;
     }
-    
+
     @Override
     public long getId() {
         return id;
@@ -91,7 +91,7 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
-    
+
     @Override
     public String getUuid() {
         return uuid;
@@ -105,11 +105,11 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     public String getUniqueName() {
         return uniqueName;
     }
-    
+
     public void setName(String name) {
         this.name = name;
     }
-    
+
     @Override
     public String getName() {
         return name;
@@ -118,7 +118,7 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     public void setDisplayText(String displayText) {
         this.displayText = displayText;
     }
-    
+
     @Override
     public String getDisplayText() {
         return displayText;
@@ -127,7 +127,7 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     public void setRate(Integer rate) {
         this.rate = rate;
     }
-    
+
     @Override
     public Integer getRate() {
         return rate;
@@ -136,7 +136,7 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     public void setCeil(Integer ceil) {
         this.ceil = ceil;
     }
-    
+
     @Override
     public Integer getCeil() {
         return ceil;
@@ -150,7 +150,7 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     public Date getCreated() {
         return created;
     }
-    
+
     @Override
     public BandwidthOfferingState getState() {
         return state;
@@ -159,7 +159,7 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     public void setState(BandwidthOfferingState state) {
         this.state = state;
     }
-    
+
     @Override
     public Long getDataCenterId() {
         return dataCenterId;
@@ -168,5 +168,5 @@ public class BandwidthOfferingVO implements BandwidthOffering{
     public void setDataCenterId(Long dateCenterId) {
         this.dataCenterId = dateCenterId;
     }
-    
+
 }

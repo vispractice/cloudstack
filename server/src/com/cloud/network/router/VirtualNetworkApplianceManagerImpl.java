@@ -188,7 +188,6 @@ import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.LoadBalancerContainer.Scheme;
 import com.cloud.network.rules.PortForwardingRule;
-import com.cloud.network.rules.RuleApplier;
 import com.cloud.network.rules.RulesManager;
 import com.cloud.network.rules.StaticNat;
 import com.cloud.network.rules.StaticNatImpl;
@@ -377,7 +376,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
     protected VpcDao _vpcDao;
     @Inject
     protected ApiAsyncJobDispatcher _asyncDispatcher;
-    
+
     @Inject
     MultilineDao _multilineLabelDao;
     @Inject
@@ -386,7 +385,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
     BandwidthRulesDao _bandwidthRulesDao;
     @Inject
     BandwidthIPPortMapDao _bandwidthIPPortMapDao;
-    
+
     @Inject
     OpRouterMonitorServiceDao _opRouterMonitorServiceDao;
 
@@ -1759,9 +1758,9 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
 
         return true;
     }
-    
+
     /**
-     * 鑾峰彇澶氱嚎璺殑pubic ip璺敱瑙勫垯锛堝皝瑁呭埌cmds鍙戦�鍒癮gent绔級
+     *
      * @author hai.li
      * @date 2015.08.25
      * @param cmds
@@ -1773,9 +1772,9 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
             s_logger.info("This network doesn't multiline. " );
             return;
         }
-        
+
         HashMap<String, HashMap<String, String>> routeRules = new HashMap<String, HashMap<String, String>>();
-        
+
         SetMultilineRouteCommand setMultilineRouteCommand = new SetMultilineRouteCommand();
         for (NicProfile nic : profile.getNics()) {
             if (nic.getTrafficType() == TrafficType.Public) {
@@ -1784,28 +1783,28 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
                      s_logger.error("Cannot find public ip : "+ nic.getIPv4Address()+" in userIpAddress.");
                      continue;
                  }
-                 
+
                  MultilineVO multiline = _multilineLabelDao.getMultilineByLabel(ipAddressVO.getMultilineLabel());
                  if(multiline == null || multiline.getLabel() == null ){
                      throw new CloudRuntimeException("Cannot find multiline label : "+ multiline.getLabel()+" for userIpAddress.");
                  }
-                 
+
                  if(nic.isDefaultNic()){
                      setMultilineRouteCommand.setVRLabelToDefaultGateway(multiline.getLabel()+"-"+nic.getIPv4Gateway());
                   }
-                 
+
                  HashMap<String, String> netmasks = new HashMap<String, String>();
                  String rules = multiline.getRouteRule().replaceAll(" ", "").replaceAll("\n", "");
                  netmasks.put(nic.getIPv4Gateway(),rules);
                   routeRules.put(multiline.getLabel(),netmasks);
-                  
+
             } else if (nic.getTrafficType() == TrafficType.Control) {
                  setMultilineRouteCommand.setAccessDetail(NetworkElementCommand.ROUTER_IP, nic.getIPv4Address());
             } else {
                 s_logger.info("Cannot find nic traffic type : " + nic.getTrafficType());
             }
         }
-        
+
         setMultilineRouteCommand.setRouteRules(routeRules);
         cmds.addCommand(setMultilineRouteCommand);
     }
@@ -1936,9 +1935,9 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
         if (!firewallRulesEgress.isEmpty()) {
             _commandSetupHelper.createFirewallRulesCommands(firewallRulesEgress, router, cmds, guestNetworkId);
         }
-        
-        //Andrew Ling,if the firewall egress rules did not get some one from the DB,it means that the VR not have the egress rules which 
-        //set by the user,but it must want to be set the default firewall egress rule in the VR,which be determined by the VR network offering. 
+
+        //Andrew Ling,if the firewall egress rules did not get some one from the DB,it means that the VR not have the egress rules which
+        //set by the user,but it must want to be set the default firewall egress rule in the VR,which be determined by the VR network offering.
         else {
             NetworkVO network = _networkDao.findById(guestNetworkId);
             NetworkOfferingVO offering =  _networkOfferingDao.findById(network.getNetworkOfferingId());
@@ -2067,7 +2066,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
                 }
             }
         }
-        
+
         //Andrew ling add , Reapply bandwidth rule
         //first get the bandwidth rules from the DB by the networkId
         List<BandwidthRule> rulesList = new ArrayList<BandwidthRule>();
@@ -2086,7 +2085,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
                 BandwidthFilterRules bandwidthFilterRule = new BandwidthFilterRules(ip, protocol, startPort, endPort, revoke, alreadyAdded);
                 bandwidthFilterRules.add(bandwidthFilterRule);
             }
-            
+
             BandwidthRule reapplyBandwidthRule = new BandwidthRule(classRule, bandwidthFilterRules);
             reapplyBandwidthRule.setClassRuleRevoked(false);
             reapplyBandwidthRule.setClassRuleKeepState(false);
@@ -2095,7 +2094,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
         }
         //build the commands
         createApplyBandwidthRulesCommands(rulesList, router, cmds, guestNetworkId);
-    
+
     }
 
     private void createDefaultEgressFirewallRule(final List<FirewallRule> rules, final long networkId) {
@@ -2802,18 +2801,18 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
             s_logger.debug("No bandwidth rules to be applied for network " + network.getId());
             return true;
         }
-        
+
         if (routers.isEmpty()) {
             s_logger.warn("Unable to apply bandwidth rules, virtual router doesn't exist in the network " + network.getId());
             throw new ResourceUnavailableException("Unable to apply bandwidth rules.", DataCenter.class, network.getDataCenterId());
         }
-        
+
         boolean result = true;
         for (final VirtualRouter router : routers) {
             if (router.getState() == State.Running) {
-                
+
                 result = result && applyBandwidthRule(router, rules, network.getId());
-            
+
             } else if (router.getState() == State.Stopped || router.getState() == State.Stopping) {
                 s_logger.debug("Router " + router.getInstanceName() + " is in " + router.getState() + ", so not sending bandwidth rules command to the backend");
             } else {
@@ -2825,14 +2824,14 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
         }
         return result;
     }
-    
+
     //andrew ling add
     protected boolean applyBandwidthRule(VirtualRouter router, List<? extends BandwidthRule> rules, long guestNetworkId) throws ResourceUnavailableException {
         Commands cmds = new Commands(Command.OnError.Continue);
         createApplyBandwidthRulesCommands(rules, router, cmds, guestNetworkId);
         return _nwHelper.sendCommandsToRouter(router, cmds);
     }
-    
+
     //andrew ling add
     private void createApplyBandwidthRulesCommands(List<? extends BandwidthRule> rules, VirtualRouter router, Commands cmds, long guestNetworkId) {
         List<BandwidthRuleTO> rulesTO = null;
@@ -2884,7 +2883,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
                 BandwidthRuleTO bandwidthRule = new BandwidthRuleTO(deviceId, type, rate, ceil, trafficRuleId, prio, revoked, alreadyAdded, keepState, bandwidthFilters);
                 rulesTO.add(bandwidthRule);
             }
-            
+
         }
 
         SetBandwidthRulesCommand cmd = new SetBandwidthRulesCommand(rulesTO);

@@ -231,7 +231,7 @@ public class CallContext {
         }
         return register(user, account);
     }
-    
+
     public static CallContext register(long callingUserId, long callingAccountId, String contextId) throws CloudAuthenticationException {
         Account account = s_entityMgr.findById(Account.class, callingAccountId);
         if (account == null) {

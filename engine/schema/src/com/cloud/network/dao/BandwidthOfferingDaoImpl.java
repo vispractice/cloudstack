@@ -15,7 +15,7 @@ import com.cloud.utils.db.SearchCriteria;
 @Local(value = { BandwidthOfferingDao.class })
 public class BandwidthOfferingDaoImpl  extends GenericDaoBase<BandwidthOfferingVO, Long> implements BandwidthOfferingDao{
     private final SearchBuilder<BandwidthOfferingVO> StateSearch;
-    
+
     protected BandwidthOfferingDaoImpl(){
         StateSearch = createSearchBuilder();
         StateSearch.and("state", StateSearch.entity().getState(), SearchCriteria.Op.EQ);
@@ -28,6 +28,5 @@ public class BandwidthOfferingDaoImpl  extends GenericDaoBase<BandwidthOfferingV
         sc.setParameters("state", state);
         return listBy(sc);
     }
-    
 
 }

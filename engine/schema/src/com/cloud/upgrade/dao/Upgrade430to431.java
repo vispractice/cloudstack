@@ -18,25 +18,13 @@
 package com.cloud.upgrade.dao;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-
-import com.cloud.hypervisor.Hypervisor;
 import com.cloud.network.Networks.BroadcastDomainType;
-import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.script.Script;
 
 public class Upgrade430to431 implements DbUpgrade {
     final static Logger s_logger = Logger.getLogger(Upgrade430to431.class);

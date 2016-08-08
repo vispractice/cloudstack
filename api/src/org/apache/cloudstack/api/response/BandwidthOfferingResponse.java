@@ -19,16 +19,16 @@ public class BandwidthOfferingResponse extends BaseResponse {
 
     @SerializedName("displaytext") @Param(description="an alternate display text of the bandwidth offering.")
     private String displayText;
-    
+
     @SerializedName("rate") @Param(description="the rate of the bandwidth offering in Kbit")
     private Integer rate;
-    
+
     @SerializedName("ceil") @Param(description="the ceil of the bandwidth offering in Kbit")
     private Integer ceil;
-    
+
     @SerializedName("created") @Param(description="the date this bandwidth offering was created")
     private Date created;
-    
+
 //    @SerializedName("zoneId") @Param(description="the zone ID this bandwidth offering belong to. Ignore this information as it is not must need when all in the same zone.")
 //    private String zoneId;
 

@@ -7,24 +7,20 @@ import com.cloud.network.rules.BandwidthClassRule.BandwidthType;
 
 public class BandwidthRule{
     private BandwidthClassRule bandwidthClassRule;
-    
     private List<BandwidthFilterRules> bandwidthFilterRules;
-    
     private Boolean classRuleRevoked;
-  
     private Boolean classRuleKeepState;
-  
     private Boolean classRuleAlreadyAdded;
-    
+
     public BandwidthRule(BandwidthClassRule bandwidthClassRule, List<BandwidthFilterRules> bandwidthFilterRules){
         this.bandwidthClassRule = bandwidthClassRule;
         this.bandwidthFilterRules = bandwidthFilterRules;
     }
-    
+
     public BandwidthRule(BandwidthClassRule bandwidthClassRule){
         this.bandwidthClassRule = bandwidthClassRule;
     }
-    
+
     public BandwidthClassRule getBandwidthClassRule() {
         return bandwidthClassRule;
     }
@@ -45,47 +41,47 @@ public class BandwidthRule{
     public Long getBandwidthId(){
         return bandwidthClassRule.getBandwidthId();
     }
-    
+
     public Long getNetworksId(){
         return bandwidthClassRule.getNetworksId();
     }
-    
+
     public Long getBandwidthOfferingId(){
         return bandwidthClassRule.getBandwidthOfferingId();
     }
-    
+
     public Integer getTrafficRuleId(){
         return bandwidthClassRule.getTrafficRuleId();
     }
-    
+
     public BandwidthType getType(){
         return bandwidthClassRule.getType();
     }
-    
+
     public Integer getPrio(){
         return bandwidthClassRule.getPrio();
     }
-    
+
     public Integer getRate(){
         return bandwidthClassRule.getRate();
     }
-    
+
     public Integer getCeil(){
         return bandwidthClassRule.getCeil();
     }
-    
+
     public Boolean isClassRuleRevoked(){
         return classRuleRevoked;
     }
-    
+
     public Boolean isClassRuleKeepState() {
         return classRuleKeepState;
     }
-    
+
     public Boolean isClassRuleAlreadyAdded(){
         return classRuleAlreadyAdded;
     }
-    
+
     public void setClassRuleRevoked(Boolean classRuleRevoked) {
         this.classRuleRevoked = classRuleRevoked;
     }
@@ -108,7 +104,7 @@ public class BandwidthRule{
         boolean isRevoke();
         boolean isAlreadyAdded();
     }
-    
+
     public static class BandwidthFilterRules implements BandwidthFilter {
         private String ip;
         private String protocol;
@@ -116,7 +112,7 @@ public class BandwidthRule{
         private Integer endPort;
         private boolean revoke;
         private boolean alreadyAdded;
-        
+
         public BandwidthFilterRules(String ip, String protocol, Integer startPort, Integer endPort, boolean revoke, boolean alreadyAdded){
             this.ip = ip;
             this.protocol = protocol;
@@ -180,5 +176,5 @@ public class BandwidthRule{
         }
 
     }
-    
+
 }

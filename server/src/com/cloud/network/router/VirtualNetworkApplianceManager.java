@@ -102,7 +102,7 @@ public interface VirtualNetworkApplianceManager extends Manager, VirtualNetworkA
     public boolean prepareAggregatedExecution(Network network, List<DomainRouterVO> routers) throws AgentUnavailableException, ResourceUnavailableException;
 
     public boolean completeAggregatedExecution(Network network, List<DomainRouterVO> routers) throws AgentUnavailableException, ResourceUnavailableException;
-    
+
     //andrew ling add
     boolean applyBandwidthRules(Network network, final List<? extends BandwidthRule> rules, List<? extends VirtualRouter> routers) throws ResourceUnavailableException;
 }

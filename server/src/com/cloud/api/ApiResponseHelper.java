@@ -400,7 +400,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         DiskOfferingJoinVO vOffering = ApiDBUtils.newDiskOfferingView(offering);
         return ApiDBUtils.newDiskOfferingResponse(vOffering);
     }
-    
+
     //andrew ling add
     @Override
     public BandwidthOfferingResponse createBandwidthOfferingResponse(BandwidthOffering offering) {
@@ -414,7 +414,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         bandwidthOfferingResponse.setObjectName("bandwidthoffering");
         return bandwidthOfferingResponse;
     }
-    
+
     @Override
     public ResourceLimitResponse createResourceLimitResponse(ResourceLimit limit) {
         ResourceLimitResponse resourceLimitResponse = new ResourceLimitResponse();
@@ -707,7 +707,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             }
         }
         vlanResponse.setMultilineLabel(vlan.getMultilineLabel());
-        
+
         vlanResponse.setObjectName("vlan");
         return vlanResponse;
     }
@@ -744,7 +744,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             ipResponse.setMultilineLabel(ipAddr.getMultilineLabel());
         }
         ipResponse.setIsDefaultStaticNat(ipAddr.getIsDefaultStaticNat());
-        
+
         if (ipAddr.getAssociatedWithVmId() != null) {
             UserVm vm = ApiDBUtils.findUserVmById(ipAddr.getAssociatedWithVmId());
             if (vm != null) {
@@ -1120,7 +1120,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setPublicEndPort(Integer.toString(fwRule.getSourcePortEnd()));
         List<String> cidrs = ApiDBUtils.findFirewallSourceCidrs(fwRule.getId());
         response.setCidrList(StringUtils.join(cidrs, ","));
-        
+
         Network guestNtwk = ApiDBUtils.findNetworkById(fwRule.getNetworkId());
         response.setNetworkId(guestNtwk.getUuid());
 
@@ -3668,7 +3668,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         if (portableIp.getMultilineLabel() != null) {
             response.setMultilineLabel(portableIp.getMultilineLabel());
         }
-        
+
         response.setState(portableIp.getState().name());
         response.setObjectName("portableip");
         return response;
@@ -3728,7 +3728,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setResponses(responses);
         return response;
     }
-    
+
     @Override
     public MultilineResponse createMultilineResponse(Multiline result) {
         MultilineResponse response = new MultilineResponse();

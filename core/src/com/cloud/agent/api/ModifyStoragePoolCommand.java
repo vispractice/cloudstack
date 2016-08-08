@@ -44,7 +44,7 @@ public class ModifyStoragePoolCommand extends Command {
         this.localPath = localPath;
         this.isReboot = isReboot;
     }
-    
+
     public ModifyStoragePoolCommand(boolean add, StoragePool pool, String isReboot) {
         this(add, pool, LOCAL_PATH_PREFIX + File.separator + UUID.nameUUIDFromBytes((pool.getHostAddress() + pool.getPath()).getBytes()), isReboot);
     }
@@ -73,7 +73,7 @@ public class ModifyStoragePoolCommand extends Command {
     public String getIsReboot() {
         return isReboot;
     }
-    
+
     public void setOptions(String[] options) {
         this.options = options;
     }

@@ -266,7 +266,7 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
         DistinctHostNameSearch.and("removed", DistinctHostNameSearch.entity().getRemoved(), SearchCriteria.Op.NULL);
         DistinctHostNameSearch.join("nicSearch", nicSearch, DistinctHostNameSearch.entity().getId(), nicSearch.entity().getInstanceId(), JoinBuilder.JoinType.INNER);
         DistinctHostNameSearch.done();
-        
+
         InstanceIpAddressSearch = createSearchBuilder();
         InstanceIpAddressSearch.and("privateIpAddress", InstanceIpAddressSearch.entity().getPrivateIpAddress(), Op.EQ);
         InstanceIpAddressSearch.done();
@@ -846,7 +846,7 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
             }
         });
     }
-    
+
     @Override
     public VMInstanceVO findVMByIpAddress(String ipAddress) {
         SearchCriteria<VMInstanceVO> sc = InstanceIpAddressSearch.create();

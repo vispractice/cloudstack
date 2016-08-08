@@ -270,7 +270,7 @@ public class MockVpcVirtualNetworkApplianceManager extends ManagerBase implement
         // TODO Auto-generated method stub
         return false;
     }
-    
+
     @Override
     public boolean applyBandwidthRules(Network network,
             List<? extends BandwidthRule> rules,

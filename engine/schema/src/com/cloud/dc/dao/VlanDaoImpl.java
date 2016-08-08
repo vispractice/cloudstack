@@ -117,11 +117,11 @@ public class VlanDaoImpl extends GenericDaoBase<VlanVO, Long> implements VlanDao
         VlanGatewaysearch.and("gateway", VlanGatewaysearch.entity().getVlanGateway(), SearchCriteria.Op.EQ);
         VlanGatewaysearch.and("networkid", VlanGatewaysearch.entity().getNetworkId(), SearchCriteria.Op.EQ);
         VlanGatewaysearch.done();
-        
+
         labelVlanSearch = createSearchBuilder();
         labelVlanSearch.and("multilineLabel", labelVlanSearch.entity().getMultilineLabel(), SearchCriteria.Op.EQ);
         labelVlanSearch.done();
-        
+
     }
 
     @Override

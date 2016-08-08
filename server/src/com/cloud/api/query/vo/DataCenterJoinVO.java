@@ -89,7 +89,7 @@ public class DataCenterJoinVO extends BaseViewVO implements InternalIdentity, Id
 
     @Column(name = "is_security_group_enabled")
     boolean securityGroupEnabled;
-    
+
     //andrew ling add
     @Column(name="is_public_service_in_sg_enabled")
     boolean publicServiceInSGEnabled;
@@ -185,7 +185,7 @@ public class DataCenterJoinVO extends BaseViewVO implements InternalIdentity, Id
     public boolean isSecurityGroupEnabled() {
         return securityGroupEnabled;
     }
-    
+
     public boolean isPublicServiceInSGEnabled() {
         return publicServiceInSGEnabled;
     }

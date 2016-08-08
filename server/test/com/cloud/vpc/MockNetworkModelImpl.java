@@ -920,7 +920,7 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
     public List<String[]> generateVmData(String userData, String serviceOffering, String zoneName, String vmName, long vmId, String publicKey, String password, Boolean isWindows) {
         return null;

@@ -21,7 +21,7 @@ import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
 
 public interface Multiline extends InfrastructureEntity, InternalIdentity, Identity {
-    
+
     public String getUuid();
 
     public String getLabel();
@@ -31,5 +31,5 @@ public interface Multiline extends InfrastructureEntity, InternalIdentity, Ident
     public boolean getIsDefault();
 
     public String getRouteRule();
-    
+
 }

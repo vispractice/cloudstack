@@ -105,7 +105,7 @@ public class AssociateIPAddrCmd extends BaseAsyncCreateCmd {
 
     @Parameter(name=ApiConstants.MULTILINE_LABEL, type=CommandType.STRING,required=false, description="The net of multiline label.")
     private String multilineLabel;
-    
+
     @Parameter(name = ApiConstants.FOR_DISPLAY, type = CommandType.BOOLEAN, description = "an optional field, whether to the display the IP to the end user or not", since = "4.4", authorized = {RoleType.Admin})
     private Boolean display;
 

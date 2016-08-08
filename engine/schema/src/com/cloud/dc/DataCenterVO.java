@@ -131,7 +131,7 @@ public class DataCenterVO implements DataCenter {
 
     @Column(name = "is_security_group_enabled")
     boolean securityGroupEnabled;
-    
+
     //andrew ling add
     @Column(name="is_public_service_in_sg_enabled")
     boolean publicServiceInSGEnabled;
@@ -229,7 +229,7 @@ public class DataCenterVO implements DataCenter {
         this.domain = domainSuffix;
         this.uuid = UUID.randomUUID().toString();
     }
-    
+
     public DataCenterVO(String name, String description, String dns1, String dns2, String dns3, String dns4, String guestCidr, String domain, Long domainId, NetworkType zoneType, String zoneToken, String domainSuffix, boolean securityGroupEnabled, boolean publicServiceInSGEnabled, boolean localStorageEnabled, String ip6Dns1, String ip6Dns2) {
         this.name = name;
         this.description = description;

@@ -840,7 +840,7 @@ public class CommandSetupHelper {
                          throw new InvalidParameterValueException("When you try to one line change for multiline,you must recreate the routing.");
                      }
                 }
-                
+
                 final IpAddressTO ip = new IpAddressTO(ipAddr.getAccountId(), ipAddr.getAddress().addr(), add, firstIP, sourceNat, vlanId, vlanGateway, vlanNetmask,
                         vifMacAddress, networkRate, ipAddr.isOneToOneNat(),deviceId);
 
@@ -1088,7 +1088,7 @@ public class CommandSetupHelper {
         }
         return dhcpRange;
     }
-    
+
     //add by hai.li get device id for nics
     private int getDeviceId(PublicIpAddress ipAddress,long routerId){
          NicVO nic = null;
@@ -1098,7 +1098,7 @@ public class CommandSetupHelper {
                  return nic.getDeviceId();
              }
          }
-         
+
          if(ipAddress.isOneToOneNat()){
              IPAddressVO ip = _ipAddressDao.findByNetworkAndLine(ipAddress.getAssociatedWithNetworkId(),Boolean.TRUE,ipAddress.getMultilineLabel());
              if(ip != null){
@@ -1106,10 +1106,9 @@ public class CommandSetupHelper {
              }
              if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
                  return nic.getDeviceId();
-            } 
+            }
         }
          return 0;
     }
-    
-    
+
 }

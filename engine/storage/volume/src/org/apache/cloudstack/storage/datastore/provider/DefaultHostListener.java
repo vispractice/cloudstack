@@ -61,7 +61,7 @@ public class DefaultHostListener implements HypervisorHostListener {
     HostDao hostDao;
     @Inject
     ClusterDetailsDao clusterDetailsDao;
-    
+
     @Override
     public boolean hostConnect(long hostId, long poolId) throws StorageConflictException {
         /*

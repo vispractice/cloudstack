@@ -17,11 +17,11 @@ public class BandwidthRuleTO {
     boolean alreadyAdded;//it means that the rule was added in the VR.
     boolean keepState;
     private BandwidthFilterTO[] bandwidthFilters;
-    
+
     protected BandwidthRuleTO() {
-        
+
     }
-    
+
     public BandwidthRuleTO(int deviceId, BandwidthType type ,int rate, int ceil, int trafficRuleId, int prio, boolean revoked, boolean alreadyAdded,boolean keepState, List<BandwidthFilterRules> bandwidthFilters){
         if(bandwidthFilters == null){
             bandwidthFilters = new ArrayList<BandwidthFilterRules>();
@@ -41,7 +41,7 @@ public class BandwidthRuleTO {
             this.bandwidthFilters[i++] = new BandwidthFilterTO(bandwidthFilter.getIpAddress(), bandwidthFilter.getProtocol(), bandwidthFilter.getStartPort(), bandwidthFilter.getEndPort(), bandwidthFilter.isRevoke(), bandwidthFilter.isAlreadyAdded());
         }
     }
-    
+
     public int getDeviceId() {
         return deviceId;
     }
@@ -142,7 +142,6 @@ public class BandwidthRuleTO {
         public void setEndPort(Integer endPort) {
             this.endPort = endPort;
         }
-        
         public boolean isRevoke() {
             return revoke;
         }
@@ -155,7 +154,6 @@ public class BandwidthRuleTO {
         public void setAlreadyAdded(boolean alreadyAdded) {
             this.alreadyAdded = alreadyAdded;
         }
-        
         public String getProtocol() {
             return protocol;
         }

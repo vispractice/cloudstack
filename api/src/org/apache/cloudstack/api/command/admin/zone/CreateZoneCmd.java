@@ -84,7 +84,7 @@ public class CreateZoneCmd extends BaseCmd {
 
     @Parameter(name = ApiConstants.SECURITY_GROUP_EANBLED, type = CommandType.BOOLEAN, description = "true if network is security group enabled, false otherwise")
     private Boolean securitygroupenabled;
-    
+
     @Parameter(name=ApiConstants.PUBLIC_SERVICE_IN_SG_EANBLED, type=CommandType.BOOLEAN, description="true if network is public service enabled when in the security group enabled state, false otherwise")
     private Boolean publicServiceInSGEnabled;
 

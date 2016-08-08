@@ -398,7 +398,7 @@ public class ViewResponseHelper {
         }
         return respList;
     }
-    
+
     public static List<ServiceOfferingResponse> createServiceOfferingResponse(ServiceOfferingJoinVO... offerings) {
         List<ServiceOfferingResponse> respList = new ArrayList<ServiceOfferingResponse>();
         for (ServiceOfferingJoinVO vt : offerings) {

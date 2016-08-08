@@ -24,20 +24,20 @@ public class AddBandwidthCmd extends BaseCmd{
     /////////////////////////////////////////////////////
     @Parameter(name=ApiConstants.MULTILINE_ID, type=CommandType.STRING, required=true, description= "the ID of the multiline")
     private String multilineId;
-    
+
     @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.UUID, required=true, entityType=ZoneResponse.class, description= "the ID of the zone")
     private Long zoneId;
 
     @Parameter(name=ApiConstants.BANDWIDTH_IN, type=CommandType.INTEGER, required=true, description="the in traffic of the bandwidth offering in Kbit.")
     private Integer inTraffic;
-    
+
     @Parameter(name=ApiConstants.BANDWIDTH_OUT, type=CommandType.INTEGER, required=true, description="the out traffic of the bandwidth offering in Kbit.")
     private Integer outTraffic;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    
+
     public String getMultilineId() {
         return multilineId;
     }
@@ -53,11 +53,11 @@ public class AddBandwidthCmd extends BaseCmd{
     public Integer getOutTraffic() {
         return outTraffic;
     }
-    
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-    
+
     @Override
     public void execute() {
         boolean result = _bandwidthService.addBandwidth(this);

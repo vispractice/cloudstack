@@ -33,7 +33,7 @@ public class UpdateBandwidthCmd extends BaseCmd {
     // ///////////////////////////////////////////////////
     // ///////////////// Accessors ///////////////////////
     // ///////////////////////////////////////////////////
-    
+
     public Long getBandwidthId() {
         return bandwidthId;
     }
@@ -45,7 +45,7 @@ public class UpdateBandwidthCmd extends BaseCmd {
     public Integer getOutTraffic() {
         return outTraffic;
     }
-    
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -59,7 +59,6 @@ public class UpdateBandwidthCmd extends BaseCmd {
         } else {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update bandwidth.");
         }
-        
     }
 
 

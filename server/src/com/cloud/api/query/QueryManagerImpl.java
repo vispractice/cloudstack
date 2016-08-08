@@ -324,7 +324,7 @@ public class QueryManagerImpl extends ManagerBase implements QueryService, Confi
 
     @Inject
     private BandwidthOfferingDao _bandwidthOfferingDao;
-    
+
     @Inject
     private ServiceOfferingJoinDao _srvOfferingJoinDao;
 
@@ -2647,7 +2647,7 @@ public class QueryManagerImpl extends ManagerBase implements QueryService, Confi
         response.setResponses(offeringResponses, result.second());
         return response;
     }
-    
+
     //andrew ling add
     private Pair<List<BandwidthOfferingVO>, Integer> searchForBandwidthOffering(ListBandwidthOfferingsCmd cmd) {
         Boolean isAscending = Boolean.parseBoolean(_configDao.getValue("sortkey.algorithm"));
@@ -2663,7 +2663,7 @@ public class QueryManagerImpl extends ManagerBase implements QueryService, Confi
             sc.addAnd("dataCenterId", SearchCriteria.Op.EQ, zoneId);
             return _bandwidthOfferingDao.searchAndCount(sc, searchFilter);
         }
-        
+
         if (keyword != null) {
             SearchCriteria<BandwidthOfferingVO> ssc = _bandwidthOfferingDao.createSearchCriteria();
             ssc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
@@ -2679,10 +2679,10 @@ public class QueryManagerImpl extends ManagerBase implements QueryService, Confi
         if (name != null) {
             sc.addAnd("name", SearchCriteria.Op.EQ, name);
         }
-        
+
         return _bandwidthOfferingDao.searchAndCount(sc, searchFilter);
     }
-    
+
     @Override
     public ListResponse<ServiceOfferingResponse> searchForServiceOfferings(ListServiceOfferingsCmd cmd) {
         Pair<List<ServiceOfferingJoinVO>, Integer> result = searchForServiceOfferingsInternal(cmd);

@@ -1210,7 +1210,7 @@ NetworkMigrationResponder,  BandwidthServiceProvider, AggregatedCommandExecutor 
             _userVmMgr.setupVmForPvlan(true, userVm.getHostId(), nic);
         }
     }
-    
+
     //andrew ling add
     @Override
     public boolean applyBandwidthRules(Network network, List<BandwidthRule> rules)

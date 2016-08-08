@@ -314,7 +314,7 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
     IpAddressManager _ipAddrMgr;
     @Inject
     EntityManager _entityMgr;
-    
+
     @Inject
     MultilineDao multilineLabelDao;
 
@@ -361,9 +361,9 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
                                 services.add(Service.SourceNat);
                                 networkGW.add(ip.getGateway());
                                 checkGW = Boolean.FALSE;
-                            } 
-                        } 
-                        
+                            }
+                        }
+
                         if(checkGW){
                             CloudRuntimeException ex = new CloudRuntimeException("Multiple generic soure NAT IPs provided for network");
                             // see the IPAddressVO.java class.
@@ -607,7 +607,7 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
         if ((networkId == null && vpcId == null) || (networkId != null && vpcId != null)) {
             throw new InvalidParameterValueException("One of Network id or VPC is should be passed");
         }
-        
+
         if (networkId != null) {
             Network network = _networksDao.findById(networkId);
             if (network == null) {
@@ -952,7 +952,7 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
         if (ipVO.isOneToOneNat() && ipVO.getIsDefaultStaticNat()) {
             throw new IllegalArgumentException("the default static nat ip address can't be disassociated.");
         }
-        
+
         if (ipVO.isSourceNat()) {
             //throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
             //update by hai.li 2015.09.07
@@ -961,17 +961,17 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
             if(isMultiline == null || !isMultiline.equalsIgnoreCase("true")){
                 throw new IllegalArgumentException("ip address is used for source nat purposes and can not be disassociated.");
             }
-            
+
             MultilineVO multiline = multilineLabelDao.getDefaultMultiline();
             if(multiline != null && multiline.getLabel().equals(ipVO.getMultilineLabel())){
                 throw new IllegalArgumentException("source nat ip address is the default multiline can't be disassociated.");
             }
-            
+
             List<IPAddressVO> networkIpVOs = _ipAddressDao.listByAssociatedNetwork(ipVO.getAssociatedWithNetworkId(), Boolean.TRUE);
             if(networkIpVOs == null || networkIpVOs.size() < 2){
                 throw new IllegalArgumentException("One source nat ip address at least can't be disassociated.");
             }
-            
+
             List<IPAddressVO> sourceIpVOs = _ipAddressDao.listSourceNatPublicIps(ipVO.getAssociatedWithNetworkId(), ipVO.getVlanId(), Boolean.FALSE, State.Allocated);
             if(sourceIpVOs == null || sourceIpVOs.size() > 0){
                 throw new IllegalArgumentException("Before disassociated source nat ip address must disassociated vlan public IP.");
@@ -981,7 +981,7 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
         VlanVO vlan = _vlanDao.findById(ipVO.getVlanId());
         if (!vlan.getVlanType().equals(VlanType.VirtualNetwork)) {
             throw new IllegalArgumentException("only ip addresses that belong to a virtual network may be disassociated.");
-            
+
         }
 
         // don't allow releasing system ip address
@@ -1630,9 +1630,9 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
         accountSearch.and("typeEQ", accountSearch.entity().getType(), SearchCriteria.Op.EQ);
 
         sb.join("accountSearch", accountSearch, sb.entity().getAccountId(), accountSearch.entity().getId(), JoinBuilder.JoinType.INNER);
-        
+
         sb.and("broadcastUri", sb.entity().getBroadcastUri(), Op.EQ);
-        
+
         List<NetworkVO> networksToReturn = new ArrayList<NetworkVO>();
 
         if (isSystem == null || !isSystem) {
@@ -1774,15 +1774,15 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
         if (vpcId != null) {
             sc.addAnd("vpcId", SearchCriteria.Op.EQ, vpcId);
         }
-        
+
         if(name != null){
             sc.addAnd("name", SearchCriteria.Op.LIKE, "%" + name + "%");
         }
-        
+
         if(cidr != null){
             sc.addAnd("cidr", SearchCriteria.Op.LIKE, "%" + cidr + "%");
         }
-        
+
         if (vlanId != null) {
             SearchCriteria<NetworkVO> ssc = _networksDao.createSearchCriteria();
             ssc.addOr("broadcastUri", SearchCriteria.Op.EQ, Networks.BroadcastDomainType.Vlan.toUri(vlanId));
@@ -4033,7 +4033,7 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
         return _ipAddrMgr.associateIPToGuestNetwork(ipId, networkId, true);
 
     }
-    
+
     @Override
     @DB
     public Network createPrivateNetwork(final String networkName, final String displayText, long physicalNetworkId, String broadcastUriString, final String startIp, String endIp,
@@ -4224,7 +4224,7 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
 //
 //        return _ipAddrMgr.allocateIp(ipOwner, false, caller, callerUserId, zone, getMultilineLabl(multilineLabel));
 //    }
-    
+
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_NET_IP_ASSIGN, eventDescription = "associating Ip", async = true)
     public IpAddress associateIPToNetwork(long ipId, long networkId,String multilineLabel) throws InsufficientAddressCapacityException, ResourceAllocationException, ResourceUnavailableException,
@@ -4236,7 +4236,7 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
         }
         return _ipAddrMgr.associateIPToGuestNetwork(ipId, networkId, true, getMultilineLabl(multilineLabel));
     }
-    
+
     /**
      * get default multiline label
      * @param multilineLabel

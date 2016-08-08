@@ -109,7 +109,7 @@ public interface NetworkService {
     PhysicalNetworkServiceProvider getCreatedPhysicalNetworkServiceProvider(Long providerId);
 
     long findPhysicalNetworkId(long zoneId, String tag, TrafficType trafficType);
-    
+
     PhysicalNetworkTrafficType addTrafficTypeToPhysicalNetwork(Long physicalNetworkId, String trafficType, String isolationMethod, String xenLabel, String kvmLabel, String vmwareLabel,
         String simulatorLabel, String vlan, String hypervLabel, String ovm3label);
 
@@ -147,7 +147,7 @@ public interface NetworkService {
 
     IpAddress associateIPToNetwork(long ipId, long networkId, String multilineLabel) throws InsufficientAddressCapacityException,
     ResourceAllocationException, ResourceUnavailableException, ConcurrentOperationException;
-    
+
     /**
      *
      * @param networkName
@@ -179,13 +179,13 @@ public interface NetworkService {
     List<? extends Nic> listNics(ListNicsCmd listNicsCmd);
 
     Map<Network.Capability, String> getNetworkOfferingServiceCapabilities(NetworkOffering offering, Service service);
-    
+
 //    IpAddress allocateIP(Account ipOwner, long zoneId, Long networkId, String multilineLabel) throws ResourceAllocationException,
 //    InsufficientAddressCapacityException, ConcurrentOperationException;
-    
+
     IpAddress allocatePortableIP(Account ipOwner, int regionId, Long zoneId, Long networkId, Long vpcId, String multilineLabel) throws ResourceAllocationException,
     InsufficientAddressCapacityException, ConcurrentOperationException;
-    
+
     IpAddress updateIP(Long id, String customId, Boolean displayIp);
 
     boolean configureNicSecondaryIp(NicSecondaryIp secIp, boolean isZoneSgEnabled);

@@ -139,7 +139,7 @@ public interface QueryService {
     List<ResourceDetailResponse> listResourceDetails(ListResourceDetailsCmd cmd);
 
     ListResponse<DomainRouterResponse> searchForInternalLbVms(ListInternalLBVMsCmd cmd);
-    
+
     // ling add bandwidth offering
     ListResponse<BandwidthOfferingResponse> searchForBandwidthOfferings(ListBandwidthOfferingsCmd cmd);
 
