@@ -243,15 +243,15 @@
                 ipObj.issystem == true) {
                 return [];
             }
-			
+
             if (ipObj.isdefaultstaticnat || !ipObj.isstaticnat) {
-				disallowedActions.push('setDefaultStaticNAT');
-			}
-			
+                disallowedActions.push('setDefaultStaticNAT');
+            }
+
             if (ipObj.issourcenat) { //sourceNAT IP doesn't support staticNAT
                 disallowedActions.push('enableStaticNAT');
                 disallowedActions.push('disableStaticNAT');
-				//update by hai.li support deleted soureNAT ip
+                //update by hai.li support deleted soureNAT ip
                 //disallowedActions.push('remove');
             } else { //non-sourceNAT IP supports staticNAT
                 disallowedActions.push('enableVPN');
@@ -2118,16 +2118,16 @@
                                 'Allocated': 'on',
                                 'Released': 'off'
                             }
-                        }, 
-						multilinelabel: {
+                        },
+                        multilinelabel: {
                             label: 'line'
-							//label: 'label.multiline'
+                            //label: 'label.multiline'
                         }
                     },
                     actions: {
                         add: {
                             label: 'label.acquire.new.ip',
-                            addRow: 'true',	
+                            addRow: 'true',
                             preFilter: function(args) {
                                 var zoneObj;
                                 var dataObj = {};
@@ -2257,40 +2257,40 @@
                                         },
                                         isHidden: true
                                     },
-									ismultiline: {
+                                    ismultiline: {
                                         //label: 'label.multiline',
-										label: 'line',
+                                        label: 'line',
                                         select: function(args) {                                                    
-											$.ajax({
-												url: createURL('listMultiline'),
-												success: function(json) {
-													args.response.success({
-														data: $.map(json.listmultilineresponse.multilines, function(result) {
-															return {
-																id: result.multilinelabel,
-																description: result.name
-															};
-														})
-													});
-												}
-											});
-										},
-										isHidden: true
+                                            $.ajax({
+                                                url: createURL('listMultiline'),
+                                                success: function(json) {
+                                                    args.response.success({
+                                                        data: $.map(json.listmultilineresponse.multilines, function(result) {
+                                                            return {
+                                                                id: result.multilinelabel,
+                                                                description: result.name
+                                                            };
+                                                        })
+                                                    });
+                                                }
+                                            });
+                                        },
+                                        isHidden: true
                                     }
                                 }
                             },
                             action: function(args) {
-                            	var dataObj = {};                            	
-                            	if (args.$form.find('.form-item[rel=isportable]').css("display") != "none") {
-                            		$.extend(dataObj, {
-                            			isportable: args.data.isportable
-                            		});                            	
-                            	}
-                            	if (args.$form.find('.form-item[rel=ismultiline]').css("display") != "none") {
-                            		$.extend(dataObj, {
-										multilineLabel : args.data.ismultiline
-                            		});                            	
-                            	}
+                                var dataObj = {};
+                                if (args.$form.find('.form-item[rel=isportable]').css("display") != "none") {
+                                    $.extend(dataObj, {
+                                        isportable: args.data.isportable
+                                    });
+                                }
+                                if (args.$form.find('.form-item[rel=ismultiline]').css("display") != "none") {
+                                    $.extend(dataObj, {
+                                        multilineLabel : args.data.ismultiline
+                                    });                             
+                                }
                                 if ('vpc' in args.context) { //from VPC section
                                     $.extend(dataObj, {
                                         vpcid: args.context.vpc[0].id
@@ -2831,15 +2831,15 @@
                                     poll: pollAsyncJobResult
                                 }
                             },
-							setDefaultStaticNAT: {
+                            setDefaultStaticNAT: {
                                 label: 'setDefault.staticNAT',
-								//label: 'label.action.setDefault.static.NAT',
+                                //label: 'label.action.setDefault.static.NAT',
                                 action: function(args) {
                                     $.ajax({
                                         url: createURL('updateStaticNat'),
                                         data: {
                                             ipaddressid: args.context.ipAddresses[0].id,
-											isdefaultstaticnat : true
+                                            isdefaultstaticnat : true
                                         },
                                         dataType: 'json',
                                         async: true,
@@ -2851,7 +2851,7 @@
                                                         return {
                                                             //isstaticnat: false,
                                                             //virtualmachinedisplayname: ""
-															isdefaultstaticnat: false
+                                                            isdefaultstaticnat: false
                                                         };
                                                     },
                                                     getActionFilter: function() {
@@ -2878,7 +2878,7 @@
                                     },
                                     notification: function(args) {
                                         //return 'label.action.setDefault.static.NAT';
-										return 'setDefault.staticNAT'; 
+                                        return 'setDefault.staticNAT'; 
                                     }
                                 },
                                 notification: {
@@ -2969,10 +2969,10 @@
                                     vlanname: {
                                         label: 'label.vlan.only'
                                     },
-									isdefaultstaticnat: {
+                                    isdefaultstaticnat: {
                                         label: 'isDefault.StaticNat',
-										converter: cloudStack.converters.toBooleanText
-                                    } 
+                                        converter: cloudStack.converters.toBooleanText
+                                    }
                                 }],
 
                                 tags: cloudStack.api.tags({

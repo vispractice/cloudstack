@@ -113,9 +113,9 @@
         }
     };
 
-	//add by hai.li
-	//add multiline label list
-	cloudStack.multilineLabel = {
+        //add by hai.li
+    //add multiline label list
+    cloudStack.multilineLabel = {
         dialog: function(args) {
             return function(args) {
                 var data = args.data ? args.data : {};
@@ -125,10 +125,10 @@
                         defaultValue: data.multilinelabel,
                         select: function(args) {
                             $.ajax({
-								url: createURL('listMultiline'),
+                                url: createURL('listMultiline'),
                                 success: function(json) {
                                     args.response.success({
-										data: $.map(json.listmultilineresponse.multilines, function(result) {
+                                        data: $.map(json.listmultilineresponse.multilines, function(result) {
                                             return {
                                                 id: result.multilinelabel,
                                                 description: result.name
@@ -145,7 +145,7 @@
                     cloudStack.dialog.createForm({
                         form: {
                             //title: 'label.add.multiline',
-							title: 'add.line',
+                            title: 'add.line',
                             desc: '(required) Please specify an operators in line to be associated with this IP range.',
                             fields: fields
                         },
@@ -160,9 +160,10 @@
             };
         }
     };
-	
-    var getTrafficType = function(physicalNetwork, typeID) {
-        var trafficType = {};
+
+    var getTrafficType = function (physicalNetwork, typeID) {
+        var trafficType = {
+        };
 
         $.ajax({
             url: createURL('listTrafficTypes'),
@@ -265,16 +266,6 @@
         return allowedActions;
     };
 
-    function ovsProviderActionFilter(args) {
-        var allowedActions = [];
-        var jsonObj = args.context.item; //args.context.item == nspMap["virtualRouter"]
-        if (jsonObj.state == "Enabled")
-            allowedActions.push("disable");
-        else if (jsonObj.state == "Disabled")
-            allowedActions.push("enable");
-        return allowedActions;
-    };
-    
     cloudStack.sections.system = {
         title: 'label.menu.infrastructure',
         id: 'system',
@@ -706,11 +697,7 @@
                                         isEditable: true
                                     },
                                     lxcnetworklabel: {
-                                        label: 'LXC Traffic Label',
-                                        isEditable: true
-                                    },
-                                    hypervnetworklabel: {
-                                        label: 'HyperV Traffic Label',
+                                        label: 'label.lxc.traffic.label',
                                         isEditable: true
                                     },
                                     hypervnetworklabel: {
@@ -780,15 +767,15 @@
                                                 edit: true,
                                                 label: 'label.end.IP'
                                             },
-											'multiline': {
-												label: 'line',
-												//label: 'label.multiline',
-												custom: {
-													//buttonLabel: 'label.add.multiline',
-													buttonLabel: 'add.line',
-													action: cloudStack.multilineLabel.dialog()
-												}
-											},
+                                            'multiline': {
+                                                label: 'line',
+                                                //label: 'label.multiline',
+                                                custom: {
+                                                    //buttonLabel: 'label.add.multiline',
+                                                    buttonLabel: 'add.line',
+                                                    action: cloudStack.multilineLabel.dialog()
+                                                }
+                                            },
                                             'account': {
                                                 label: 'label.account',
                                                 custom: {
@@ -823,11 +810,12 @@
                                                     array1.push("&domainid=" + args.data.account.domainid);
                                                 }
 
-												if (args.data.multiline) {
+                                                if (args.data.multiline) {
                                                     array1.push("&multilineLabel=" + args.data.multiline.multilinelabelid);
                                                 }
-												
-                                                array1.push("&forVirtualNetwork=true"); //indicates this new IP range is for public network, not guest network
+
+                                                array1.push("&forVirtualNetwork=true");
+                                                //indicates this new IP range is for public network, not guest network
 
                                                 $.ajax({
                                                     url: createURL("createVlanIpRange" + array1.join("")),
@@ -1044,11 +1032,7 @@
                                         isEditable: true
                                     },
                                     lxcnetworklabel: {
-                                        label: 'LXC Traffic Label',
-                                        isEditable: true
-                                    },
-                                    hypervnetworklabel: {
-                                        label: 'HyperV Traffic Label',
+                                        label: 'label.lxc.traffic.label',
                                         isEditable: true
                                     },
                                     hypervnetworklabel: {
@@ -1264,11 +1248,7 @@
                                         isEditable: true
                                     },
                                     lxcnetworklabel: {
-                                        label: 'LXC Traffic Label',
-                                        isEditable: true
-                                    },
-                                    hypervnetworklabel: {
-                                        label: 'HyperV Traffic Label',
+                                        label: 'label.lxc.traffic.label',
                                         isEditable: true
                                     },
                                     hypervnetworklabel: {
@@ -1461,11 +1441,7 @@
                                         isEditable: true
                                     },
                                     lxcnetworklabel: {
-                                        label: 'LXC Traffic Label',
-                                        isEditable: true
-                                    },
-                                    hypervnetworklabel: {
-                                        label: 'HyperV Traffic Label',
+                                        label: 'label.lxc.traffic.label',
                                         isEditable: true
                                     },
                                     hypervnetworklabel: {
@@ -3698,7 +3674,7 @@
                                                     url: createURL("listRouters&zoneid=" + selectedZoneObj.id + "&listAll=true&page=" + args.page + "&pagesize=" + pageSize + array1.join("") + "&projectid=-1"),
                                                     dataType: 'json',
                                                     data: data2,
-                                                    async: false,
+                                                        async: false,
                                                     success: function (json) {
                                                         var items = json.listroutersresponse.router;
                                                         $(items).map(function (index, item) {
@@ -3707,6 +3683,7 @@
                                                         }
                                                     });
                                                 }
+
                                                         args.response.success({
                                                             actionFilter: routerActionfilter,
                                                             data: $(routers).map(mapRouterType)
@@ -4235,120 +4212,6 @@
                         }
                     },
 
-                    Ovs: {
-                        id: "Ovs",
-                        label: "Ovs",
-                        isMaximized: true,
-                        type: 'detailView',
-                        fields: {
-                            name: {
-                                label: 'label.name'
-                            },                          
-                            state: {
-                                label: 'label.status',
-                                indicator: {
-                                    'Enabled': 'on'
-                                }
-                            }
-                        },
-                        tabs: {
-                            network: {
-                                title: 'label.network',
-                                fields: [{
-                                    name: {
-                                        label: 'label.name'
-                                    }
-                                }, {                                    
-                                    state: {
-                                        label: 'label.state'
-                                    },                                                                      
-                                    supportedServices: {
-                                        label: 'label.supported.services'
-                                    },
-                                    id: {
-                                        label: 'label.id'
-                                    },
-                                    physicalnetworkid: {
-                                        label: 'label.physical.network.ID'
-                                    }
-                                }],
-                                dataProvider: function(args) {
-                                    refreshNspData("Ovs");
-                                    args.response.success({
-                                        actionFilter: ovsProviderActionFilter,
-                                        data: $.extend(nspMap["Ovs"], {
-                                            supportedServices: nspMap["Ovs"] == undefined? "": nspMap["Ovs"].servicelist.join(', ')
-                                        })
-                                    });
-                                }
-                            },
-                        },
-                        actions: {
-                            enable: {
-                                label: 'label.enable.provider',
-                                action: function(args) {
-                                    $.ajax({
-                                        url: createURL("updateNetworkServiceProvider&id=" + nspMap["Ovs"].id + "&state=Enabled"),
-                                        dataType: "json",
-                                        success: function(json) {
-                                            var jid = json.updatenetworkserviceproviderresponse.jobid;
-                                            args.response.success({
-                                                _custom: {
-                                                    jobId: jid,
-                                                    getUpdatedItem: function(json) {
-                                                        $(window).trigger('cloudStack.fullRefresh');
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    });
-                                },
-                                messages: {
-                                    confirm: function(args) {
-                                        return 'message.confirm.enable.provider';
-                                    },
-                                    notification: function() {
-                                        return 'label.enable.provider';
-                                    }
-                                },
-                                notification: {
-                                    poll: pollAsyncJobResult
-                                }
-                            },
-                            disable: {
-                                label: 'label.disable.provider',
-                                action: function(args) {
-                                    $.ajax({
-                                        url: createURL("updateNetworkServiceProvider&id=" + nspMap["Ovs"].id + "&state=Disabled"),
-                                        dataType: "json",
-                                        success: function(json) {
-                                            var jid = json.updatenetworkserviceproviderresponse.jobid;
-                                            args.response.success({
-                                                _custom: {
-                                                    jobId: jid,
-                                                    getUpdatedItem: function(json) {
-                                                        $(window).trigger('cloudStack.fullRefresh');
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    });
-                                },
-                                messages: {
-                                    confirm: function(args) {
-                                        return 'message.confirm.disable.provider';
-                                    },
-                                    notification: function() {
-                                        return 'label.disable.provider';
-                                    }
-                                },
-                                notification: {
-                                    poll: pollAsyncJobResult
-                                }
-                            }
-                        }
-                    },                    
-                   
                     // NetScaler provider detail view
                     netscaler: {
                         type: 'detailView',
@@ -11073,12 +10936,14 @@
                                                         var routerCountFromAllPages = json.listroutersresponse.count;
                                                         var routerCountFromFirstPageToCurrentPage = json.listroutersresponse.router.length;
                                                         var routerRequiresUpgrade = 0;
+
                                                         var items = json.listroutersresponse.router;
                                                         for (var k = 0; k < items.length; k++) {
                                                             if (items[k].requiresupgrade) {
                                                                 routerRequiresUpgrade++;
                                                             }
                                                         }
+
                                                         var callListApiWithPage = function () {
                                                             $.ajax({
                                                                 url: createURL('listRouters'),
@@ -11232,49 +11097,14 @@
                                                         return systemvmActionfilter;
                                                     }
                                                 }
-                                            }
-                                        },
-                                        messages: {
-                                            notification: function(args) {
-                                                return 'label.action.migrate.router';
-                                            }
-                                        },
-                                        action: function(args) {
-                                            $.ajax({
-                                                url: createURL("migrateSystemVm&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.routers[0].id),
-                                                dataType: "json",
-                                                async: true,
-                                                success: function(json) {
-                                                    var jid = json.migratesystemvmresponse.jobid;
-                                                    args.response.success({
-                                                        _custom: {
-                                                            jobId: jid,
-                                                            getUpdatedItem: function(json) {
-                                                                //return json.queryasyncjobresultresponse.jobresult.systemvminstance;    //not all properties returned in systemvminstance
-                                                                $.ajax({
-                                                                    url: createURL("listRouters&id=" + json.queryasyncjobresultresponse.jobresult.systemvm.id),
-                                                                    dataType: "json",
-                                                                    async: false,
-                                                                    success: function(json) {
-                                                                        var items = json.listroutersresponse.router;
-                                                                        if (items != null && items.length > 0) {
-                                                                            return items[0];
-                                                                        }
-                                                                    }
-                                                                });
-                                                            },
-                                                            getActionFilter: function() {
-                                                                return routerActionfilter;
-                                                            }
-                                                        }
-                                                    });
-                                                }
                                             });
-                                        },
-                                        notification: {
-                                            poll: pollAsyncJobResult
                                         }
-                                    },
+                                    });
+                                },
+                                notification: {
+                                    poll: pollAsyncJobResult
+                                }
+                            },
 
                             stop: {
                                 label: 'label.action.stop.systemvm',
@@ -11302,89 +11132,6 @@
                                                     getActionFilter: function () {
                                                         return systemvmActionfilter;
                                                     }
-                                                }
-                                            });
-
-                                            return hiddenFields;
-                                        },
-                                        fields: [{
-                                            name: {
-                                                label: 'label.name'
-                                            },
-                                            project: {
-                                                label: 'label.project'
-                                            }
-                                        }, {
-                                            id: {
-                                                label: 'label.id'
-                                            },
-                                            projectid: {
-                                                label: 'label.project.id'
-                                            },
-                                            state: {
-                                                label: 'label.state'
-                                            },
-                                            version: {
-                                                label: 'label.version'
-                                            },
-                                            requiresupgrade: {
-                                                label: 'Requires Upgrade',
-                                                converter: cloudStack.converters.toBooleanText
-                                            },
-                                            guestnetworkid: {
-                                                label: 'label.network.id'
-                                            },
-                                            publicip: {
-                                                label: 'label.public.ip'
-                                            },
-                                            guestipaddress: {
-                                                label: 'label.guest.ip'
-                                            },
-                                            linklocalip: {
-                                                label: 'label.linklocal.ip'
-                                            },
-                                            hostname: {
-                                                label: 'label.host'
-                                            },
-                                            serviceofferingname: {
-                                                label: 'label.compute.offering'
-                                            },
-                                            networkdomain: {
-                                                label: 'label.network.domain'
-                                            },
-                                            domain: {
-                                                label: 'label.domain'
-                                            },
-                                            account: {
-                                                label: 'label.account'
-                                            },
-                                            created: {
-                                                label: 'label.created',
-                                                converter: cloudStack.converters.toLocalDate
-                                            },
-                                            isredundantrouter: {
-                                                label: 'label.redundant.router',
-                                                converter: cloudStack.converters.toBooleanText
-                                            },
-                                            redundantRouterState: {
-                                                label: 'label.redundant.state'
-                                            },
-                                            vpcid: {
-                                                label: 'VPC ID'
-                                            }
-                                        }],
-                                        dataProvider: function(args) {
-                                            $.ajax({
-                                                url: createURL("listRouters&id=" + args.context.routers[0].id),
-                                                dataType: 'json',
-                                                async: true,
-                                                success: function(json) {
-                                                    var jsonObj = json.listroutersresponse.router[0];
-                                                    addExtraPropertiesToRouterInstanceObject(jsonObj);
-                                                    args.response.success({
-                                                        actionFilter: routerActionfilter,
-                                                        data: jsonObj
-                                                    });
                                                 }
                                             });
                                         }
@@ -11440,20 +11187,6 @@
                                     notification: function (args) {
                                         return 'label.action.destroy.systemvm';
                                     }
-                                }
-                            }
-                        }
-                    },                    
-                    routerGroupByZone: {
-                        id: 'routerGroupByZone',
-                        type: 'select',
-                        title: 'group by zone',
-                        listView: {
-                            id: 'routerGroupByZone',
-                            label: 'label.virtual.appliances',
-                            fields: {
-                                name: {
-                                    label: 'label.zone'
                                 },
                                 action: function (args) {
                                     $.ajax({
@@ -11475,15 +11208,8 @@
                                         }
                                     });
                                 },
-                                routerRequiresUpgrade: {
-                                	label: 'Upgrade is required',
-                                	converter: function(args) {                                		
-                                		if (args > 0) {
-                                			return 'Yes';
-                                		} else {
-                                			return 'No';
-                                		}
-                                	}
+                                notification: {
+                                    poll: pollAsyncJobResult
                                 }
                             },
 
@@ -11561,72 +11287,11 @@
                                                     }
                                                 }
                                             });
-                                        },
-                                        notification: {
-                                            poll: pollAsyncJobResult
                                         }
-                                    }                            	
-                                },   
-                            	tabs: {
-                            		details: {
-                            			title: 'Virtual Routers group by zone',                            			
-                            			fields: [{
-                                            name: {
-                                                label: 'label.zone'
-                                            }
-                            			}, {
-                                            routerCount: {
-                                            	label: 'Total of Virtual Routers'
-                                            },
-                                            routerRequiresUpgrade: {
-                                            	label: 'Upgrade is required',
-                                            	converter: function(args) {                                		
-                                            		if (args > 0) {
-                                            			return 'Yes';
-                                            		} else {
-                                            			return 'No';
-                                            		}
-                                            	}
-                                            },                                            
-                                            numberOfRouterRequiresUpgrade: {
-                                            	label: 'Total of Virtual Routers that require upgrade'
-                                            }
-                                        }],  
-                                        dataProvider: function(args) {                                         
-                                        	addExtraPropertiesToGroupbyObject(args.context.routerGroupByZone[0], 'zoneid');                                         
-                                            args.response.success({
-                                                data: args.context.routerGroupByZone[0],
-                                                actionFilter: routerGroupActionfilter
-                                            });                                            
-                                        }
-                            		}
-                            	}
-                            }                                               
-                        }
-                    },  
-                    routerGroupByPod: {
-                        id: 'routerGroupByPod',
-                        type: 'select',
-                        title: 'group by pod',
-                        listView: {
-                            id: 'routerGroupByPod',
-                            label: 'label.virtual.appliances',
-                            fields: {
-                                name: {
-                                    label: 'label.pod'
+                                    });
                                 },
-                                routerCount: {
-                                    label: 'Total of Virtual Routers'
-                                },
-                                routerRequiresUpgrade: {
-                                    label: 'Upgrade is required',
-                                    converter: function (args) {
-                                        if (args > 0) {
-                                            return 'Yes';
-                                        } else {
-                                            return 'No';
-                                        }
-                                    }
+                                notification: {
+                                    poll: pollAsyncJobResult
                                 }
                             },
 
@@ -11717,35 +11382,13 @@
 
                                         return 'label.system.vm.scaled.up';
                                     }
-                                }
-                            }
-                        }
-                    },
-                    routerGroupByCluster: {
-                        id: 'routerGroupByCluster',
-                        type: 'select',
-                        title: 'group by cluster',
-                        listView: {
-                            id: 'routerGroupByCluster',
-                            label: 'label.virtual.appliances',
-                            fields: {
-                                name: {
-                                    label: 'label.cluster'
                                 },
-                                routerCount: {
-                                    label: 'Total of Virtual Routers'
-                                },
-                                routerRequiresUpgrade: {
-                                    label: 'Upgrade is required',
-                                    converter: function (args) {
-                                        if (args > 0) {
-                                            return 'Yes';
-                                        } else {
-                                            return 'No';
-                                        }
-                                    }
+                                notification: {
+                                    poll: pollAsyncJobResult
                                 }
                             },
+
+
 
                             viewConsole: {
                                 label: 'label.view.console',
@@ -12082,11 +11725,11 @@
                                                 data: item
                                             });
                                         }
-                                    }
+                                    });
                                 }
                             }
                         }
-                    }                   
+                    }
                 }
             },
 
@@ -17371,7 +17014,7 @@
                                                 items.push({
                                                     id: "nfs",
                                                     description: "nfs"
-                                                });                                               
+                                                });
                                                 items.push({
                                                     id: "SharedMountPoint",
                                                     description: "SharedMountPoint"
@@ -17396,7 +17039,7 @@
                                                 items.push({
                                                     id: "nfs",
                                                     description: "nfs"
-                                                });                                               
+                                                });
                                                 items.push({
                                                     id: "PreSetup",
                                                     description: "PreSetup"
@@ -17417,7 +17060,7 @@
                                                 items.push({
                                                     id: "nfs",
                                                     description: "nfs"
-                                                });                                               
+                                                });
                                                 items.push({
                                                     id: "vmfs",
                                                     description: "vmfs"
@@ -17438,21 +17081,12 @@
                                                 args.response.success({
                                                     data: items
                                                 });
-                                            } else if (selectedClusterObj.hypervisortype == "Hyperv") {
-                                                var items = [];
-                                                items.push({
-                                                    id: "SMB",
-                                                    description: "SMB/CIFS"
-                                                });
-                                                args.response.success({
-                                                    data: items
-                                                });
                                             } else if (selectedClusterObj.hypervisortype == "Ovm") {
                                                 var items =[];
                                                 items.push({
                                                     id: "nfs",
                                                     description: "nfs"
-                                                });                                                
+                                                });
                                                 items.push({
                                                     id: "ocfs2",
                                                     description: "ocfs2"
@@ -17465,7 +17099,7 @@
                                                 items.push({
                                                     id: "nfs",
                                                     description: "nfs"
-                                                });                                               
+                                                });
                                                 items.push({
                                                     id: "SharedMountPoint",
                                                     description: "SharedMountPoint"
@@ -17548,7 +17182,6 @@
                                                     $form.find('.form-item[rel=rbdmonitor]').hide();
                                                     $form.find('.form-item[rel=rbdpool]').hide();
                                                     $form.find('.form-item[rel=rbdid]').hide();
-
                                                     $form.find('.form-item[rel=rbdsecret]').hide();
 
                                                     $form.find('.form-item[rel=glustervolume]').hide();
@@ -17569,9 +17202,6 @@
                                                     $form.find('.form-item[rel=lun]').hide();
 
                                                     $form.find('.form-item[rel=volumegroup]').hide();
-                                                    
-                                                    $form.find('.form-item[rel=vCenterDataCenter]').hide();
-                                                    $form.find('.form-item[rel=vCenterDataStore]').hide();
 
                                                     $form.find('.form-item[rel=vCenterDataCenter]').hide();
                                                     $form.find('.form-item[rel=vCenterDataStore]').hide();
@@ -17930,30 +17560,6 @@
                                         isHidden: true
                                     },
 
-                                    //SMB                                           
-                                    smbUsername: {
-                                    	label: 'label.smb.username',
-                                    	validation: {
-                                            required: true
-                                        },
-                                        isHidden: true
-                                    },
-                                    smbPassword: {
-                                    	label: 'label.smb.password',
-                                    	isPassword: true,
-                                    	validation: {
-                                            required: true
-                                        },
-                                        isHidden: true
-                                    },
-                                    smbDomain: {
-                                    	label: 'label.smb.domain',
-                                    	validation: {
-                                            required: true
-                                        },
-                                        isHidden: true
-                                    },                                    
-                                    
                                     //iscsi
                                     iqn: {
                                         label: 'label.target.iqn',
@@ -19285,7 +18891,6 @@
                                                             $form.find('.form-item[rel=url]').hide();
                                                             $form.find('.form-item[rel=account]').hide();
                                                             $form.find('.form-item[rel=username]').hide();
-
                                                             $form.find('.form-item[rel=key]').hide();
                                                         } else if ($(this).val() == "SMB") {
                                                             //NFS, SMB
@@ -19354,7 +18959,6 @@
                                                             $form.find('.form-item[rel=username]').hide();
                                                             $form.find('.form-item[rel=key]').hide();
                                                         } else if ($(this).val() == "Swift") {
-
                                                             //NFS, SMB
                                                             $form.find('.form-item[rel=zoneid]').hide();
                                                             $form.find('.form-item[rel=nfsServer]').hide();
@@ -21437,10 +21041,6 @@
             allowedActions.push('upgradeRouterToUseNewerTemplate');
         }
 
-        if(jsonObj.requiresupgrade == true) {
-            allowedActions.push('upgradeRouterToUseNewerTemplate');
-        }
-        
         if (jsonObj.state == 'Running') {
             allowedActions.push("stop");
 
@@ -21599,9 +21199,6 @@
                             case "Ovs":
                                 nspMap["Ovs"] = items[i];
                                 break;
-                            case "Ovs":
-                                nspMap["Ovs"] = items[i];
-                                break;      
                             case "Netscaler":
                             nspMap[ "netscaler"] = items[i];
                             break;
@@ -21760,12 +21357,6 @@
             });
             */
         }
-        
-        nspHardcodingArray.push({
-            id: "Ovs",
-            name: "Ovs",
-            state: nspMap.Ovs ? nspMap.Ovs.state : 'Disabled'
-        });        
     };
 
     cloudStack.actionFilter.physicalNetwork = function (args) {

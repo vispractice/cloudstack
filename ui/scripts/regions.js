@@ -474,7 +474,6 @@
                             path: 'regions.lbUnderGSLB',
                             label: 'label.gslb.assigned.lb'
                         },
-
                         actions: {
                             edit: {
                                 label: 'label.edit',
@@ -618,9 +617,9 @@
                         vlan: {
                             label: 'label.vlan'
                         },
-						multilinelabel: {
+                        multilinelabel: {
                             //label: 'label.multiline'
-							label: 'line'
+                            label: 'line'
                         }
                     },
                     dataProvider: function(args) {
@@ -681,24 +680,24 @@
                                             required: true
                                         }
                                     },
-									multilineLabel: {
+                                    multilineLabel: {
                                         label: 'line', 
-										//label: 'label.multiline', 										
-										select: function(args) {                                                    
-											$.ajax({
-												url: createURL('listMultiline'),
-												success: function(json) {
-													args.response.success({
-														data: $.map(json.listmultilineresponse.multilines, function(result) {
-															return {
-																id: result.multilinelabel,
-																description: result.name
-															};
-														})
-													});
-												}
-											});
-										}		
+                                        //label: 'label.multiline',                                         
+                                        select: function(args) {                                                    
+                                            $.ajax({
+                                                url: createURL('listMultiline'),
+                                                success: function(json) {
+                                                    args.response.success({
+                                                        data: $.map(json.listmultilineresponse.multilines, function(result) {
+                                                            return {
+                                                                id: result.multilinelabel,
+                                                                description: result.name
+                                                            };
+                                                        })
+                                                    });
+                                                }
+                                            });
+                                        }       
                                     }
                                 }
                             },
@@ -709,7 +708,7 @@
                                     endip: args.data.endip,
                                     gateway: args.data.gateway,
                                     netmask: args.data.netmask,
-									multilinelabel : args.data.multilineLabel
+                                    multilinelabel : args.data.multilineLabel
                                 };
                                 if (args.data.vlan != null && args.data.vlan.length > 0) {
                                     $.extend(data, {
