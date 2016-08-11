@@ -117,6 +117,15 @@ public class VirtualRoutingResource {
                 return executeQueryCommand(cmd);
             }
 
+            //andrew ling add
+            if(cmd instanceof SetMultilineRouteCommand){
+                return execute((SetMultilineRouteCommand)cmd);
+            }
+
+            if(cmd instanceof SetBandwidthRulesCommand){
+                return execute((SetBandwidthRulesCommand)cmd);
+            }
+
             if (cmd instanceof AggregationControlCommand) {
                 return execute((AggregationControlCommand)cmd);
             }
@@ -127,15 +136,6 @@ public class VirtualRoutingResource {
                 // Clean up would be done after command has been executed
                 //TODO: Deal with group answer as well
                 return new Answer(cmd);
-            }
-
-            //andrew ling add
-            if(cmd instanceof SetMultilineRouteCommand){
-                return execute((SetMultilineRouteCommand)cmd);
-            }
-
-            if(cmd instanceof SetBandwidthRulesCommand){
-                return execute((SetBandwidthRulesCommand)cmd);
             }
 
             List<ConfigItem> cfg = generateCommandCfg(cmd);
