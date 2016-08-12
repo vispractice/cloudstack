@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -33,6 +34,7 @@ import com.cloud.network.IpAddressManager;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.dao.IPAddressDao;
+import com.cloud.network.dao.MultilineDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderDao;
@@ -96,6 +98,11 @@ public class RouterDeploymentDefinitionBuilder {
     private VpcManager vpcMgr;
     @Inject
     private VlanDao vlanDao;
+    //andrew ling add, multiline part
+    @Inject
+    private MultilineDao multilineLabelDao;
+    @Inject
+    private ConfigurationDao configDao;
 
     @Autowired
     @Qualifier("networkHelper")
@@ -135,6 +142,9 @@ public class RouterDeploymentDefinitionBuilder {
         routerDeploymentDefinition.serviceOfferingId = offeringId;
 
         routerDeploymentDefinition.nwHelper = nwHelper;
+        //andrew ling add, multiline part
+        routerDeploymentDefinition.configDao = configDao;
+        routerDeploymentDefinition.multilineLabelDao = multilineLabelDao;
 
         if (routerDeploymentDefinition instanceof VpcRouterDeploymentDefinition) {
             injectVpcDependencies((VpcRouterDeploymentDefinition) routerDeploymentDefinition);

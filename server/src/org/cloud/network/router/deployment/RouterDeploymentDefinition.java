@@ -99,6 +99,9 @@ public class RouterDeploymentDefinition {
     protected IPAddressDao ipAddressDao;
     protected VirtualRouterProvider vrProvider;
     protected NetworkHelper nwHelper;
+    //andrew ling add, multiline part
+    protected MultilineDao multilineLabelDao;
+    protected ConfigurationDao configDao;
 
     protected Network guestNetwork;
     protected DeployDestination dest;
@@ -112,8 +115,6 @@ public class RouterDeploymentDefinition {
     protected PublicIp sourceNatIp;
     //andrew ling add, multiline part
     protected List<PublicIp> sourceNatIps;
-    protected MultilineDao multilineLabelDao;
-    protected ConfigurationDao configDao;
 
     protected RouterDeploymentDefinition(final Network guestNetwork, final DeployDestination dest,
             final Account owner, final Map<Param, Object> params) {
