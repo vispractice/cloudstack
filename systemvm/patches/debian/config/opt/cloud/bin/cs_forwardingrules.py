@@ -23,8 +23,6 @@ def merge(dbag, rules):
         source_ip = rule["source_ip_address"]
         destination_ip = rule["destination_ip_address"]
         revoke = rule["revoke"]
-        #andrew ling add
-        multiline_table_name = rule["multiline_label_seq"]
 
         newrule = dict()
         newrule["public_ip"] = source_ip
@@ -32,7 +30,7 @@ def merge(dbag, rules):
 
         if rules["type"] == "staticnatrules":
             #andrew ling add
-            newrule["route_table_name"] == multiline_table_name
+            newrule["route_table_name"] = rule["multiline_label_seq"]
             newrule["type"] = "staticnat"
         elif rules["type"] == "forwardrules":
             newrule["type"] = "forward"
