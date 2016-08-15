@@ -1806,6 +1806,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
         }
 
         setMultilineRouteCommand.setRouteRules(routeRules);
+        setMultilineRouteCommand.setAccessDetail(NetworkElementCommand.ROUTER_NAME, profile.getInstanceName());
         cmds.addCommand(setMultilineRouteCommand);
     }
 
