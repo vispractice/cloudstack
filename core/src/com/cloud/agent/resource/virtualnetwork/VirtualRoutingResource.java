@@ -118,9 +118,9 @@ public class VirtualRoutingResource {
             }
 
             //andrew ling add
-            if(cmd instanceof SetMultilineRouteCommand){
-                return execute((SetMultilineRouteCommand)cmd);
-            }
+//            if(cmd instanceof SetMultilineRouteCommand){
+//                return execute((SetMultilineRouteCommand)cmd);
+//            }
 
             if(cmd instanceof SetBandwidthRulesCommand){
                 return execute((SetBandwidthRulesCommand)cmd);
@@ -373,11 +373,17 @@ public class VirtualRoutingResource {
             Queue<NetworkElementCommand> queue = _vrAggregateCommandsSet.get(routerName);
             int answerCounts = 0;
             try {
+                //if it was used multiline function, the finish commands will be executed two parts.
+                Boolean isMultiline = false;
                 StringBuilder sb = new StringBuilder();
                 sb.append("#Apache CloudStack Virtual Router Config File\n");
                 sb.append("<version>\n" + _cfgVersion + "\n</version>\n");
                 for (NetworkElementCommand command : queue) {
                     answerCounts += command.getAnswersCount();
+                    if(command instanceof SetMultilineRouteCommand){
+                         isMultiline = true;
+                         break;
+                    }
                     List<ConfigItem> cfg = generateCommandCfg(command);
                     if (cfg == null) {
                         s_logger.warn("Unknown commands for VirtualRoutingResource, but continue: " + cmd.toString());
@@ -387,6 +393,7 @@ public class VirtualRoutingResource {
                     for (ConfigItem c : cfg) {
                         sb.append(c.getAggregateCommand());
                     }
+                    queue.remove(command);
                 }
 
                 // TODO replace with applyConfig with a stop on fail
@@ -409,6 +416,50 @@ public class VirtualRoutingResource {
                     return new Answer(cmd, false, result.getDetails());
                 }
 
+                if(isMultiline && !queue.isEmpty()){
+                    StringBuilder sb2 = new StringBuilder();
+                    answerCounts = 0;
+                    sb2.append("#Apache CloudStack Virtual Router Config File\n");
+                    sb2.append("<version>\n" + _cfgVersion + "\n</version>\n");
+                    for (NetworkElementCommand command : queue) {
+                        answerCounts += command.getAnswersCount();
+                        if(command instanceof SetMultilineRouteCommand){
+                            Boolean multilinePartResult = execute((SetMultilineRouteCommand) command);
+                            if(!multilinePartResult){
+                                return new Answer(cmd, false, "Fail to recongize aggregation action " + action.toString() + ", when in execute the mutiline part.");
+                            }
+                        }
+                        List<ConfigItem> cfg = generateCommandCfg(command);
+                        if (cfg == null) {
+                            s_logger.warn("Unknown commands for VirtualRoutingResource, but continue: " + cmd.toString());
+                            continue;
+                        }
+
+                        for (ConfigItem c : cfg) {
+                            sb2.append(c.getAggregateCommand());
+                        }
+                    }
+
+                    // TODO replace with applyConfig with a stop on fail
+                    String cfgFileName2 = "VR-"+ UUID.randomUUID().toString() + ".cfg";
+                    FileConfigItem fileConfigItem2 = new FileConfigItem(VRScripts.CONFIG_CACHE_LOCATION, cfgFileName2, sb2.toString());
+                    ScriptConfigItem scriptConfigItem2 = new ScriptConfigItem(VRScripts.VR_CFG, "-c " + VRScripts.CONFIG_CACHE_LOCATION + cfgFileName2);
+                    // 120s is the minimal timeout
+                    int timeout2 = answerCounts * _eachTimeout;
+                    if (timeout2 < 120) {
+                        timeout2 = 120;
+                    }
+
+                    ExecutionResult result2 = applyConfigToVR(cmd.getRouterAccessIp(), fileConfigItem2);
+                    if (!result2.isSuccess()) {
+                        return new Answer(cmd, false, result2.getDetails());
+                    }
+
+                    result2 = applyConfigToVR(cmd.getRouterAccessIp(), scriptConfigItem2, timeout2);
+                    if (!result2.isSuccess()) {
+                        return new Answer(cmd, false, result2.getDetails());
+                    }
+                }
                 return new Answer(cmd, true, "Command aggregation finished");
             } finally {
                 queue.clear();
@@ -419,7 +470,7 @@ public class VirtualRoutingResource {
     }
 
     //Andrew ling add
-    private Answer execute(SetMultilineRouteCommand cmd){
+    private Boolean execute(SetMultilineRouteCommand cmd){
 //        String script = "route_rules.sh";
 //        String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
         //The store format like :<ctcc,<10.204.120.1; 10.204.104.0/24,10.204.105.0/24>>
@@ -469,7 +520,8 @@ public class VirtualRoutingResource {
             final ExecutionResult result = _vrDeployer.executeInVR(cmd.getRouterAccessIp(), VRScripts.MULTILINE_ROUTE_RULES, mainTableToRouteRules);
 //            String result = routerProxy(script, routerIp, mainTableToRouteRules);
             if (!result.isSuccess()){
-                return new Answer( cmd, false, "SetMultilineRouteCommand failed besause can not create main route table rules.");
+//                return new Answer( cmd, false, "SetMultilineRouteCommand failed besause can not create main route table rules.");
+                return false;
             }
         }
 
@@ -477,17 +529,20 @@ public class VirtualRoutingResource {
         final ExecutionResult result = _vrDeployer.executeInVR(cmd.getRouterAccessIp(), VRScripts.NONE_SCRIPTE, createRouteTableLableRulesCmd);
 //        String result = routerProxy(script, routerIp, createRouteTableLableRulesCmd);
         if (!result.isSuccess()){
-            return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables.");
+//            return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables.");
+            return false;
         }
 
         for(String tableLabelGroupToRouteRules : tableLabelGroupToRouteRulesCmdToArray){
             final ExecutionResult resultSecondary = _vrDeployer.executeInVR(cmd.getRouterAccessIp(), VRScripts.NONE_SCRIPTE, tableLabelGroupToRouteRules);
 //            result = routerProxy(script, routerIp, tableLabelGroupToRouteRules);
             if (!resultSecondary.isSuccess()){
-                return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables rules.");
+//                return new Answer( cmd, false, "SetMultilineRouteCommand failed.besause can not create route tables rules.");
+                return false;
             }
         }
-        return new Answer(cmd);
+//        return new Answer(cmd);
+        return true;
     }
 
     private String[] splitScripteParameter(String scripteParameters, String regex, int maxNumPerLine){

@@ -658,7 +658,7 @@ public class NetworkHelperImpl implements NetworkHelper {
 
                     //If guest nic has already been added we will have 2 devices in the list.
                     if (hasGuestNic) {
-                        defaultNic.setDeviceId(2);
+                        defaultNic.setDeviceId( 2 + defaultNicNum);
                     }
 
                     final String publicIp = defaultNic.getIPv4Address();
