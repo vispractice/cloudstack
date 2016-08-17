@@ -1657,6 +1657,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 if (!broadcastUriAllocatedToVM.containsKey(ip.getBroadcastUri())) {
                     if(ip.isFirstIP()){
                         broadcastUriAllocatedToVM.put(ip.getBroadcastUri(), ip.getDeviceId());
+                        newNic = true;
                     } else {
                         /* plug a vif into router */
                         VifHotPlug(conn, routerName, ip.getBroadcastUri(), ip.getVifMacAddress());

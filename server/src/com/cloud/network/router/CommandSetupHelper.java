@@ -834,13 +834,17 @@ public class CommandSetupHelper {
 
                 int deviceId = 0;
                 //update by hai.li support UNTAGGED vlan
-                if(vlanId.contains(Vlan.UNTAGGED)){
-                     deviceId = getDeviceId(ipAddr, router.getId());
-                     if(deviceId == 0){
-                         throw new InvalidParameterValueException("When you try to one line change for multiline,you must recreate the routing.");
-                     }
+//                if(vlanId.contains(Vlan.UNTAGGED)){
+//                     deviceId = getDeviceId(ipAddr, router.getId());
+//                     if(deviceId == 0){
+//                         throw new InvalidParameterValueException("When you try to one line change for multiline,you must recreate the routing.");
+//                     }
+//                }
+                //update by andrew ling, all the command send to agent will had the deviceId.
+                deviceId = getDeviceId(ipAddr, router.getId());
+                if(deviceId == 0){
+                    throw new InvalidParameterValueException("The first NIC in VR, must be the Link ip address, it can not was the public ip address in the first NIC in the VR.");
                 }
-
                 final IpAddressTO ip = new IpAddressTO(ipAddr.getAccountId(), ipAddr.getAddress().addr(), add, firstIP, sourceNat, vlanId, vlanGateway, vlanNetmask,
                         vifMacAddress, networkRate, ipAddr.isOneToOneNat(),deviceId);
 
@@ -1104,7 +1108,8 @@ public class CommandSetupHelper {
              if(ip != null){
                  nic = _nicDao.findByIp4AddressAndVmId(ip.getAddress().addr(),routerId);
              }
-             if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
+             if (nic != null) {
+//             if (nic != null && nic.getBroadcastUri().toString().contains(Vlan.UNTAGGED)) {
                  return nic.getDeviceId();
             }
         }
