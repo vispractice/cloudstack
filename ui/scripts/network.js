@@ -2224,6 +2224,7 @@
                                             }
                                             var items = json.listregionsresponse.region;
                                             if(items != null) {
+                                                args.$form.find('.form-item[rel=ismultiline]').css('display', 'inline-block');
                                                 for(var i = 0; i < items.length; i++) {
                                                     if(items[i].name == selectedRegionName) {
                                                         if(items[i].portableipserviceenabled == true) {
