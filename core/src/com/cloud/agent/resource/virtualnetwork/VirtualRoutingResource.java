@@ -428,6 +428,7 @@ public class VirtualRoutingResource {
                             if(!multilinePartResult){
                                 return new Answer(cmd, false, "Fail to recongize aggregation action " + action.toString() + ", when in execute the mutiline part.");
                             }
+                            continue;
                         }
                         List<ConfigItem> cfg = generateCommandCfg(command);
                         if (cfg == null) {

@@ -1655,10 +1655,14 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             for (final IpAddressTO ip : ips) {
                 boolean newNic = false;
                 if (!broadcastUriAllocatedToVM.containsKey(ip.getBroadcastUri())) {
-                    /* plug a vif into router */
-                    VifHotPlug(conn, routerName, ip.getBroadcastUri(), ip.getVifMacAddress());
-                    broadcastUriAllocatedToVM.put(ip.getBroadcastUri(), nicPos++);
-                    newNic = true;
+                    if(ip.isFirstIP()){
+                        broadcastUriAllocatedToVM.put(ip.getBroadcastUri(), ip.getDeviceId());
+                    } else {
+                        /* plug a vif into router */
+                        VifHotPlug(conn, routerName, ip.getBroadcastUri(), ip.getVifMacAddress());
+                        broadcastUriAllocatedToVM.put(ip.getBroadcastUri(), nicPos++);
+                        newNic = true;
+                    }
                 }
                 //andrew ling add, when the multiline part was work,and the vlan tagged is untagged,the nic number must been send from manager
                 if(ip.getBroadcastUri().equalsIgnoreCase(BroadcastDomainType.Vlan.toUri(Vlan.UNTAGGED).toString())){
