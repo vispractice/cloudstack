@@ -710,8 +710,6 @@ class CsForwardingRules(CsDataBag):
                     self.processForwardRule(rule)
                 elif rule["type"] == "staticnat":
                     self.processStaticNatRule(rule)
-                    #andrew ling add
-                    self.processMultilineRule(rule)
 
     #return the VR guest interface ip
     def getGuestIp(self):
@@ -887,27 +885,6 @@ class CsForwardingRules(CsDataBag):
                         "-A PREROUTING -d %s -i eth0 -j DNAT --to-destination %s" % (rule["public_ip"], rule["internal_ip"])])
 
         self.fw.append(["nat", "front", "-A POSTROUTING -s %s -d %s -j SNAT -o eth0 --to-source %s" % (self.getNetworkByIp(rule['internal_ip']),rule["internal_ip"], self.getGuestIp())])
-
-    #andrew ling add
-    def processMultilineRule(self, rule):
-        vmInstanceIp = rule['internal_ip']
-        routeTableName = rule['route_table_name']
-        cmd = "ip rule show |grep \"from %s lookup\"|awk -F' ' '{print $5}'" % (vmInstanceIp)
-        oldRouteTableName = CsHelper.execute(cmd)
-        if oldRouteTableName != []:
-            for i in oldRouteTableName:
-                delRouteTableName = i
-            cmd = "ip rule del from %s table %s pref 4000" % (vmInstanceIp,delRouteTableName)
-            CsHelper.execute(cmd)
-            logging.info("Delete old multiline ip rule for %s in the table %s " % (vmInstanceIp, routeTableName))
-            if routeTableName != "none":
-                cmd = "ip rule add from %s table %s pref 4000" % (vmInstanceIp, routeTableName)
-                CsHelper.execute(cmd)
-                logging.info("Added multiline ip rule for %s in the table %s " % (vmInstanceIp, routeTableName))
-        else:
-            cmd = "ip rule add from %s table %s pref 4000" % (vmInstanceIp, routeTableName)
-            CsHelper.execute(cmd)
-            logging.info("Added multiline ip rule for %s in the table %s " % (vmInstanceIp, routeTableName))
 
 def main(argv):
     # The file we are currently processing, if it is "cmd_line.json" everything will be processed.

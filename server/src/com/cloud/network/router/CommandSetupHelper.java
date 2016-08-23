@@ -556,7 +556,7 @@ public class CommandSetupHelper {
                     List<IPAddressVO> staticNatIps = _ipAddressDao.listStaticNatIps(guestNetworkId,sourceIp.getAssociatedWithVmId(), Boolean.TRUE);
                     int i = 1;
                     for (IPAddressVO staticNatIp : staticNatIps) {
-                        if(rule.isForRevoke() && staticNatIp.getAddress().equals(sourceIp.getAddress().addr())){
+                        if(rule.isForRevoke() && staticNatIp.getAddress().toString().equals(sourceIp.getAddress().addr())){
                             continue;
                         }
                         if(i!=1){

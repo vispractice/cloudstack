@@ -32,11 +32,12 @@ class CsRule:
 
     def addMark(self):
         if not self.findMark():
-#            cmd = "ip rule add fwmark %s table %s" % (self.tableNo, self.table)
-            #andrew ling add
-            cmd = "ip rule add fwmark %s table %s pref %s" % (self.tableNo, self.table, self.tableNo)
-            CsHelper.execute(cmd)
-            logging.info("Added fwmark rule for %s" % (self.table))
+            # cmd = "ip rule add fwmark %s table %s" % (self.tableNo, self.table)
+            # andrew ling add
+            if self.tableNo != 0:
+                cmd = "ip rule add fwmark %s table %s pref %s" % (self.tableNo, self.table, self.tableNo)
+                CsHelper.execute(cmd)
+                logging.info("Added fwmark rule for %s" % (self.table))
 
     def findMark(self):
         srch = "from all fwmark %s lookup %s" % (hex(self.tableNo), self.table)
