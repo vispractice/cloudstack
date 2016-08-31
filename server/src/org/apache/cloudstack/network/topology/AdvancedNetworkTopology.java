@@ -18,9 +18,6 @@
 package org.apache.cloudstack.network.topology;
 
 import java.util.List;
-
-import com.cloud.agent.api.Command;
-import com.cloud.agent.manager.Commands;
 import com.cloud.dc.DataCenter;
 import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
@@ -44,7 +41,6 @@ import com.cloud.network.rules.VpcIpAssociationRules;
 import com.cloud.network.vpc.NetworkACLItem;
 import com.cloud.network.vpc.PrivateGateway;
 import com.cloud.network.vpc.StaticRouteProfile;
-import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.VirtualMachine.State;
