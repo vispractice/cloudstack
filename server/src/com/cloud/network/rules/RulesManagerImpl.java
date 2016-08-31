@@ -1618,7 +1618,16 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
             }
             String vmIpAddress = ipAddress.getVmIp();
             MultilineServiceProvider provider = new VirtualRouterElement();
-            boolean result = provider.updateMultilineRouteLabelRule(network, newMutilineLabel.toString(), vmIpAddress);
+            boolean result = false;
+            try{
+                result = provider.updateMultilineRouteLabelRule(network, newMutilineLabel.toString(), vmIpAddress);
+            } catch(Exception e){
+                staticNatIp.setIsDefaultStaticNat(true);
+                _ipAddressDao.update(staticNatIp.getId(), staticNatIp);
+                ipAddress.setIsDefaultStaticNat(false);
+                _ipAddressDao.update(ipAddress.getId(),ipAddress);
+                s_logger.debug(e);
+            }
 
             //roll back
             if(!result){

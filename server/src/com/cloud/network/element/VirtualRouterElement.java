@@ -1264,20 +1264,17 @@ NetworkMigrationResponder,  BandwidthServiceProvider, AggregatedCommandExecutor 
     @Override
     public boolean updateMultilineRouteLabelRule(final Network network, final String newMutilineLabel, final String vmIpAddress) throws ResourceUnavailableException {
         boolean result = true;
-        String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
-        if(!isMultiline.isEmpty() && isMultiline.equalsIgnoreCase("true")){
-            final List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(network.getId(), Role.VIRTUAL_ROUTER);
-            if (routers == null || routers.isEmpty()) {
-                s_logger.debug("Virtual router elemnt doesn't suport to update the mutiline route label rules in the router doesn't exist in the network " + network.getId());
-                return false;
-            }
+        final List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(network.getId(), Role.VIRTUAL_ROUTER);
+        if (routers == null || routers.isEmpty()) {
+            s_logger.debug("Virtual router elemnt doesn't suport to update the mutiline route label rules in the router doesn't exist in the network " + network.getId());
+            return false;
+        }
 
-            final DataCenterVO dcVO = _dcDao.findById(network.getDataCenterId());
-            final NetworkTopology networkTopology = networkTopologyContext.retrieveNetworkTopology(dcVO);
+        final DataCenterVO dcVO = _dcDao.findById(network.getDataCenterId());
+        final NetworkTopology networkTopology = networkTopologyContext.retrieveNetworkTopology(dcVO);
 
-            for (final DomainRouterVO domainRouterVO : routers) {
-                result = result && networkTopology.updateMutilineRouteLabelRule(network, domainRouterVO, newMutilineLabel, vmIpAddress);
-            }
+        for (final DomainRouterVO domainRouterVO : routers) {
+            result = result && networkTopology.updateMutilineRouteLabelRule(network, domainRouterVO, newMutilineLabel, vmIpAddress);
         }
         return result;
     }
