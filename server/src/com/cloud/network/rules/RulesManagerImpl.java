@@ -158,6 +158,8 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
     NetworkDao _networksDao;
     @Inject
     ConfigurationDao _configDao;
+    @Inject
+    MultilineServiceProvider _multilineServiceProvider;
 
     protected void checkIpAndUserVm(IpAddress ipAddress, UserVm userVm, Account caller, Boolean ignoreVmState) {
         if (ipAddress == null || ipAddress.getAllocatedTime() == null || ipAddress.getAllocatedToAccountId() == null) {
@@ -1617,10 +1619,9 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
                 newMutilineLabel.append("_" + staticNatIpAddress.getMultilineLabel());
             }
             String vmIpAddress = ipAddress.getVmIp();
-            MultilineServiceProvider provider = new VirtualRouterElement();
             boolean result = false;
             try{
-                result = provider.updateMultilineRouteLabelRule(network, newMutilineLabel.toString(), vmIpAddress);
+                result = _multilineServiceProvider.updateMultilineRouteLabelRule(network, newMutilineLabel.toString(), vmIpAddress);
             } catch(Exception e){
                 staticNatIp.setIsDefaultStaticNat(true);
                 _ipAddressDao.update(staticNatIp.getId(), staticNatIp);
