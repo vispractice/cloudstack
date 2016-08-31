@@ -47,6 +47,7 @@ import com.cloud.agent.api.routing.AggregationControlCommand;
 import com.cloud.agent.api.routing.AggregationControlCommand.Action;
 import com.cloud.agent.api.routing.GetRouterAlertsCommand;
 import com.cloud.agent.api.routing.GroupAnswer;
+import com.cloud.agent.api.routing.MutilineRouteLabelRuleCommand;
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.agent.api.routing.SetBandwidthRulesAnswer;
 import com.cloud.agent.api.routing.SetBandwidthRulesCommand;
@@ -117,13 +118,12 @@ public class VirtualRoutingResource {
                 return executeQueryCommand(cmd);
             }
 
-            //andrew ling add
-//            if(cmd instanceof SetMultilineRouteCommand){
-//                return execute((SetMultilineRouteCommand)cmd);
-//            }
-
             if(cmd instanceof SetBandwidthRulesCommand){
                 return execute((SetBandwidthRulesCommand)cmd);
+            }
+
+            if(cmd instanceof MutilineRouteLabelRuleCommand){
+                return execute((MutilineRouteLabelRuleCommand) cmd);
             }
 
             if (cmd instanceof AggregationControlCommand) {
@@ -833,4 +833,15 @@ public class VirtualRoutingResource {
         return (int)Top2Exponentiation;
     }
 
+  //Andrew ling add
+    private Answer execute(MutilineRouteLabelRuleCommand cmd){
+        String newMutilineLabel = cmd.getMutilineLabel();
+        String vmIpAddress = cmd.getVmIpAddress();
+        String arg = newMutilineLabel + " " + vmIpAddress;
+        final ExecutionResult result = _vrDeployer.executeInVR(cmd.getRouterAccessIp(), VRScripts.UPDATE_MULTILINE_ROUTE_LABEL, arg);
+        if (!result.isSuccess()){
+            return new Answer( cmd, false, "MutilineRouteLabelRuleCommand executed failed.");
+        }
+        return new Answer( cmd, true, "MutilineRouteLabelRuleCommand executed succeed.");
+    }
 }

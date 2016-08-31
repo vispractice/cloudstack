@@ -212,4 +212,11 @@ public class AdvancedNetworkVisitor extends BasicNetworkVisitor {
         // results accordingly
         return _networkGeneralHelper.sendCommandsToRouter(router, cmds);
     }
+
+    //andrew ling add.
+    public boolean updateMutilineRouteLabelRule(final Network network, final VirtualRouter router, final String newMutilineLabel, final String vmIpAddress) throws ResourceUnavailableException {
+        final Commands commands = new Commands(Command.OnError.Continue);
+        _commandSetupHelper.createMutilineRouteLabelRuleCommand(network.getId(), router, newMutilineLabel, vmIpAddress);
+        return _networkGeneralHelper.sendCommandsToRouter(router, commands);
+    }
 }

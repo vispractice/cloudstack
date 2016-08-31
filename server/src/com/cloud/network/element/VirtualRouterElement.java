@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import com.cloud.agent.api.to.LoadBalancerTO;
+import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
@@ -111,7 +112,7 @@ import org.cloud.network.router.deployment.RouterDeploymentDefinitionBuilder;
 
 public class VirtualRouterElement extends AdapterBase implements VirtualRouterElementService, DhcpServiceProvider, UserDataServiceProvider, SourceNatServiceProvider,
 StaticNatServiceProvider, FirewallServiceProvider, LoadBalancingServiceProvider, PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer,
-NetworkMigrationResponder,  BandwidthServiceProvider, AggregatedCommandExecutor {
+NetworkMigrationResponder,  BandwidthServiceProvider, AggregatedCommandExecutor , MultilineServiceProvider {
     private static final Logger s_logger = Logger.getLogger(VirtualRouterElement.class);
     public static final AutoScaleCounterType AutoScaleCounterCpu = new AutoScaleCounterType("cpu");
     public static final AutoScaleCounterType AutoScaleCounterMemory = new AutoScaleCounterType("memory");
@@ -1257,5 +1258,27 @@ NetworkMigrationResponder,  BandwidthServiceProvider, AggregatedCommandExecutor 
         // The VR code already cleansup in the Finish routine using finally,
         // lets not waste another command
         return true;
+    }
+
+    //andrew ling add.
+    @Override
+    public boolean updateMultilineRouteLabelRule(final Network network, final String newMutilineLabel, final String vmIpAddress) throws ResourceUnavailableException {
+        boolean result = true;
+        String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+        if(!isMultiline.isEmpty() && isMultiline.equalsIgnoreCase("true")){
+            final List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(network.getId(), Role.VIRTUAL_ROUTER);
+            if (routers == null || routers.isEmpty()) {
+                s_logger.debug("Virtual router elemnt doesn't suport to update the mutiline route label rules in the router doesn't exist in the network " + network.getId());
+                return false;
+            }
+
+            final DataCenterVO dcVO = _dcDao.findById(network.getDataCenterId());
+            final NetworkTopology networkTopology = networkTopologyContext.retrieveNetworkTopology(dcVO);
+
+            for (final DomainRouterVO domainRouterVO : routers) {
+                result = result && networkTopology.updateMutilineRouteLabelRule(network, domainRouterVO, newMutilineLabel, vmIpAddress);
+            }
+        }
+        return result;
     }
 }

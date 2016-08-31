@@ -87,5 +87,7 @@ public interface NetworkTopology {
 
     boolean applyRules(final Network network, final VirtualRouter router, final String typeString, final boolean isPodLevelException, final Long podId,
             final boolean failWhenDisconnect, RuleApplierWrapper<RuleApplier> ruleApplier) throws ResourceUnavailableException;
+    //andrew ling add
+    boolean updateMutilineRouteLabelRule(final Network network, final VirtualRouter router, final String newMutilineLabel, final String vmIpAddress) throws ResourceUnavailableException;
 
 }

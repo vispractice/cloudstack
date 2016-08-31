@@ -22,7 +22,6 @@ import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
-import org.apache.cloudstack.api.BaseCmd.CommandType;
 import org.apache.cloudstack.api.response.IPAddressResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.log4j.Logger;

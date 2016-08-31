@@ -120,6 +120,12 @@ public class BasicNetworkTopology implements NetworkTopology {
         throw new CloudRuntimeException("setupDhcpForPvlan not implemented in Basic Network Topology.");
     }
 
+    //andrew ling add
+    @Override
+    public boolean updateMutilineRouteLabelRule(final Network network, final VirtualRouter router, final String newMutilineLabel, final String vmIpAddress) throws ResourceUnavailableException {
+        throw new CloudRuntimeException("update mutiline route label rule not implemented in Basic Network Topology.");
+    }
+
     @Override
     public boolean configDhcpForSubnet(final Network network, final NicProfile nic, final VirtualMachineProfile profile, final DeployDestination dest,
             final List<DomainRouterVO> routers) throws ResourceUnavailableException {

@@ -40,6 +40,7 @@ import com.cloud.agent.api.routing.IpAliasTO;
 import com.cloud.agent.api.routing.IpAssocCommand;
 import com.cloud.agent.api.routing.IpAssocVpcCommand;
 import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
+import com.cloud.agent.api.routing.MutilineRouteLabelRuleCommand;
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SavePasswordCommand;
@@ -1114,6 +1115,17 @@ public class CommandSetupHelper {
             }
         }
          return 0;
+    }
+
+    //andrew ling add.
+    public MutilineRouteLabelRuleCommand createMutilineRouteLabelRuleCommand(final long networkId, final VirtualRouter router, final String newMutilineLabel, final String vmIpAddress){
+        final MutilineRouteLabelRuleCommand cmd = new MutilineRouteLabelRuleCommand(newMutilineLabel, vmIpAddress);
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, _routerControlHelper.getRouterControlIp(router.getId()));
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, _routerControlHelper.getRouterIpInNetwork(networkId, router.getId()));
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
+        final DataCenterVO dcVo = _dcDao.findById(router.getDataCenterId());
+        cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
+        return cmd;
     }
 
 }

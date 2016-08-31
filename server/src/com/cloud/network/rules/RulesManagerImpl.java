@@ -21,11 +21,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.inject.Inject;
+
 import org.apache.cloudstack.api.command.user.firewall.ListPortForwardingRulesCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.log4j.Logger;
+
+import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.dc.dao.VlanDao;
 import com.cloud.domain.dao.DomainDao;
@@ -49,6 +54,9 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.IPAddressVO;
 import com.cloud.network.dao.LoadBalancerVMMapDao;
 import com.cloud.network.dao.LoadBalancerVMMapVO;
+import com.cloud.network.dao.NetworkDao;
+import com.cloud.network.element.MultilineServiceProvider;
+import com.cloud.network.element.VirtualRouterElement;
 import com.cloud.network.rules.FirewallRule.FirewallRuleType;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRule.State;
@@ -145,6 +153,11 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
     VpcService _vpcSvc;
     @Inject
     VlanDao _vlanDao;
+    //andrew ling add.
+    @Inject
+    NetworkDao _networksDao;
+    @Inject
+    ConfigurationDao _configDao;
 
     protected void checkIpAndUserVm(IpAddress ipAddress, UserVm userVm, Account caller, Boolean ignoreVmState) {
         if (ipAddress == null || ipAddress.getAllocatedTime() == null || ipAddress.getAllocatedToAccountId() == null) {
@@ -1576,20 +1589,46 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
                 throw ex;
             }
 
-            Transaction.execute(new TransactionCallbackWithExceptionNoReturn<NetworkRuleConflictException>() {
-                @Override
-                public void doInTransactionWithoutResult(TransactionStatus status) throws NetworkRuleConflictException {
-                    IPAddressVO staticNatIp = _ipAddressDao.findDefaultStaticNat(ipAddress.getAssociatedWithNetworkId(), vmId, Boolean.TRUE);
-                    if(staticNatIp != null  && staticNatIp.getId() != ipAddress.getId()){
-                        staticNatIp.setIsDefaultStaticNat(false);
-                        _ipAddressDao.update(staticNatIp.getId(), staticNatIp);
-                    }
-                    ipAddress.setIsDefaultStaticNat(true);
-                    _ipAddressDao.update(ipAddress.getId(),ipAddress);
-                }
-            });
+            //andrew ling add.
+            String isMultiline = _configDao.getValue(Config.NetworkAllowMmultiLine.key());
+            if(isMultiline.isEmpty() || !isMultiline.equalsIgnoreCase("true")){
+                InvalidParameterValueException ex = new InvalidParameterValueException("You must specify that was used the multiline part.");
+                ex.addProxyObject(ipAddress.getUuid(), "ipId");
+                throw ex;
+            }
+            //update the DB
+            IPAddressVO staticNatIp = _ipAddressDao.findDefaultStaticNat(ipAddress.getAssociatedWithNetworkId(), vmId, Boolean.TRUE);
+            if(staticNatIp != null  && staticNatIp.getId() != ipAddress.getId()){
+                staticNatIp.setIsDefaultStaticNat(false);
+                _ipAddressDao.update(staticNatIp.getId(), staticNatIp);
+            }
+            ipAddress.setIsDefaultStaticNat(true);
+            _ipAddressDao.update(ipAddress.getId(),ipAddress);
 
-            return true;
+            //update the rule in the VR then update the information in DB
+            Network network = _networksDao.findById(ipAddress.getSourceNetworkId());
+            StringBuffer newMutilineLabel = new StringBuffer();
+            newMutilineLabel.append(ipAddress.getMultilineLabel());
+            List<IPAddressVO> staticNatIps = _ipAddressDao.listStaticNatIps(ipAddress.getAssociatedWithNetworkId(), ipAddress.getAssociatedWithVmId(), Boolean.TRUE);
+            for(IPAddressVO staticNatIpAddress : staticNatIps) {
+                if(staticNatIpAddress.getIsDefaultStaticNat()){
+                    continue;
+                }
+                newMutilineLabel.append("_" + staticNatIpAddress.getMultilineLabel());
+            }
+            String vmIpAddress = ipAddress.getVmIp();
+            MultilineServiceProvider provider = new VirtualRouterElement();
+            boolean result = provider.updateMultilineRouteLabelRule(network, newMutilineLabel.toString(), vmIpAddress);
+
+            //roll back
+            if(!result){
+                staticNatIp.setIsDefaultStaticNat(true);
+                _ipAddressDao.update(staticNatIp.getId(), staticNatIp);
+                ipAddress.setIsDefaultStaticNat(false);
+                _ipAddressDao.update(ipAddress.getId(),ipAddress);
+            }
+
+            return result;
     }
 
     @Override

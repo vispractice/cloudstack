@@ -69,5 +69,6 @@ public class VRScripts {
     public static final String MULTILINE_ROUTE_RULES= "route_rules.sh";
     public static final String BANDWIDTH_RULE= "bandwidth_rule.sh";
     public static final String NONE_SCRIPTE= "none.sh";
+    public static final String UPDATE_MULTILINE_ROUTE_LABEL = "update_mutiline_route_label.sh";
 
 }
