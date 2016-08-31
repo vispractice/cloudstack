@@ -1607,7 +1607,7 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
             _ipAddressDao.update(ipAddress.getId(),ipAddress);
 
             //update the rule in the VR then update the information in DB
-            Network network = _networksDao.findById(ipAddress.getSourceNetworkId());
+            Network network = _networksDao.findById(ipAddress.getAssociatedWithNetworkId());
             StringBuffer newMutilineLabel = new StringBuffer();
             newMutilineLabel.append(ipAddress.getMultilineLabel());
             List<IPAddressVO> staticNatIps = _ipAddressDao.listStaticNatIps(ipAddress.getAssociatedWithNetworkId(), ipAddress.getAssociatedWithVmId(), Boolean.TRUE);

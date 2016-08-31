@@ -1118,14 +1118,14 @@ public class CommandSetupHelper {
     }
 
     //andrew ling add.
-    public MutilineRouteLabelRuleCommand createMutilineRouteLabelRuleCommand(final long networkId, final VirtualRouter router, final String newMutilineLabel, final String vmIpAddress){
+    public void createMutilineRouteLabelRuleCommand(final long networkId, final VirtualRouter router, final String newMutilineLabel, final String vmIpAddress, final Commands cmds){
         final MutilineRouteLabelRuleCommand cmd = new MutilineRouteLabelRuleCommand(newMutilineLabel, vmIpAddress);
         cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, _routerControlHelper.getRouterControlIp(router.getId()));
         cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, _routerControlHelper.getRouterIpInNetwork(networkId, router.getId()));
         cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
         final DataCenterVO dcVo = _dcDao.findById(router.getDataCenterId());
         cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
-        return cmd;
+        cmds.addCommand("updateMutlineRouteLabel", cmd);
     }
 
 }
