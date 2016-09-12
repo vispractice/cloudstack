@@ -118,10 +118,6 @@ public class VirtualRoutingResource {
                 return executeQueryCommand(cmd);
             }
 
-            if(cmd instanceof SetBandwidthRulesCommand){
-                return execute((SetBandwidthRulesCommand)cmd);
-            }
-
             if(cmd instanceof MutilineRouteLabelRuleCommand){
                 return execute((MutilineRouteLabelRuleCommand) cmd);
             }
@@ -136,6 +132,11 @@ public class VirtualRoutingResource {
                 // Clean up would be done after command has been executed
                 //TODO: Deal with group answer as well
                 return new Answer(cmd);
+            }
+            //when it is the mutiline part and the VR execute the restart operation, then the NIC will been not set in right state,
+            //so the bandwitdh rules command will execute after the IpAssocCommand was finished.
+            if(cmd instanceof SetBandwidthRulesCommand){
+                return execute((SetBandwidthRulesCommand)cmd);
             }
 
             List<ConfigItem> cfg = generateCommandCfg(cmd);
@@ -384,6 +385,17 @@ public class VirtualRoutingResource {
                          isMultiline = true;
                          break;
                     }
+
+                    //set the bandwidth rules when the VR restart.
+                    if(command instanceof SetBandwidthRulesCommand){
+                        Answer bandwidthAnswer = execute((SetBandwidthRulesCommand) command);
+                        boolean bandwidthResult = bandwidthAnswer.getResult();
+                        if(!bandwidthResult){
+                            return new Answer(cmd, false, bandwidthAnswer.getDetails());
+                        }
+                        continue;
+                    }
+
                     List<ConfigItem> cfg = generateCommandCfg(command);
                     if (cfg == null) {
                         s_logger.warn("Unknown commands for VirtualRoutingResource, but continue: " + cmd.toString());
@@ -430,6 +442,17 @@ public class VirtualRoutingResource {
                             }
                             continue;
                         }
+
+                        //set the bandwidth rules when the VR restart.
+                        if(command instanceof SetBandwidthRulesCommand){
+                            Answer bandwidthAnswer = execute((SetBandwidthRulesCommand) command);
+                            boolean bandwidthResult = bandwidthAnswer.getResult();
+                            if(!bandwidthResult){
+                                return new Answer(cmd, false, bandwidthAnswer.getDetails());
+                            }
+                            continue;
+                        }
+
                         List<ConfigItem> cfg = generateCommandCfg(command);
                         if (cfg == null) {
                             s_logger.warn("Unknown commands for VirtualRoutingResource, but continue: " + cmd.toString());
